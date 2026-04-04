@@ -1557,6 +1557,334 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
 });
 
 // ============================================================
+// ROTAS DE ADMINS (CRUD)
+// ============================================================
+
+// Listar admins
+app.get('/api/admins', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('admins').select('id, username, email, role, created_at').order('id');
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar admins' });
+  }
+});
+
+// Criar admin
+app.post('/api/admins', authMiddleware, async (req, res) => {
+  try {
+    const { username, password, email } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Usuário e senha obrigatórios' });
+    const { data, error } = await supabase.from('admins').insert({ username, password, email: email || null, role: 'admin' }).select().single();
+    if (error) throw error;
+    await logAudit(req.user.username, 'create', 'admins', `Admin criado: ${username}`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar admin' });
+  }
+});
+
+// Excluir admin
+app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('admins').delete().eq('id', id);
+    if (error) throw error;
+    await logAudit(req.user.username, 'delete', 'admins', `Admin excluído: ${id}`, req.ip, req.headers['user-agent']);
+    res.json({ message: 'Admin excluído' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir admin' });
+  }
+});
+
+// ============================================================
+// ROTAS DE SETTINGS (genérico key-value)
+// ============================================================
+
+// Listar todas as configurações
+app.get('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('*').order('key');
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar configurações' });
+  }
+});
+
+// Criar/atualizar configuração
+app.post('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key) return res.status(400).json({ error: 'Chave obrigatória' });
+    const { data, error } = await supabase.from('settings').upsert({ key, value: typeof value === 'object' ? value : { value }, updated_at: new Date().toISOString() }, { onConflict: 'key' }).select().single();
+    if (error) throw error;
+    await logAudit(req.user.username, 'update', 'settings', `Configuração atualizada: ${key}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar configuração' });
+  }
+});
+
+// Excluir configuração
+app.delete('/api/settings/:key', authMiddleware, async (req, res) => {
+  try {
+    const { key } = req.params;
+    const { error } = await supabase.from('settings').delete().eq('key', key);
+    if (error) throw error;
+    await logAudit(req.user.username, 'delete', 'settings', `Configuração excluída: ${key}`, req.ip, req.headers['user-agent']);
+    res.json({ message: 'Configuração excluída' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir configuração' });
+  }
+});
+
+// ============================================================
+// ROTAS DO PORTAL PÚBLICO (captive portal - sem auth)
+// ============================================================
+
+// Listar planos públicos
+app.get('/api/portal/plans', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('plans').select('*').order('price', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar planos' });
+  }
+});
+
+// Login do portal (usuário final)
+app.post('/api/portal/login', async (req, res) => {
+  try {
+    const { identifier, password, mac_address } = req.body;
+    if (!identifier || !password) return res.status(400).json({ error: 'CPF/telefone e senha obrigatórios' });
+
+    // Buscar por CPF ou telefone
+    let user = null;
+    const { data: byCpf } = await supabase.from('users').select('*').eq('cpf', identifier).single();
+    if (byCpf) { user = byCpf; }
+    else {
+      const { data: byPhone } = await supabase.from('users').select('*').eq('phone', identifier).single();
+      if (byPhone) user = byPhone;
+    }
+
+    if (!user) return res.status(401).json({ error: 'Usuário não encontrado' });
+    if (user.password !== password) return res.status(401).json({ error: 'Senha incorreta' });
+
+    // Atualizar MAC se fornecido
+    if (mac_address && mac_address !== user.mac_address) {
+      await supabase.from('users').update({ mac_address, updated_at: new Date().toISOString() }).eq('id', user.id);
+    }
+
+    await logSystem('info', 'portal', `Login portal: ${user.name || user.cpf}`, null, req.ip, req.headers['user-agent']);
+
+    res.json({
+      user_id: user.id,
+      name: user.name,
+      status: user.status || 'inactive',
+      plan_name: user.plan_name || null,
+      expires_at: user.expires_at || null
+    });
+  } catch (err) {
+    console.error('Erro portal login:', err.message);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// Registro do portal (usuário final)
+app.post('/api/portal/register', async (req, res) => {
+  try {
+    const { name, cpf, phone, password, mac_address } = req.body;
+    if (!name || !cpf || !password) return res.status(400).json({ error: 'Nome, CPF e senha obrigatórios' });
+
+    // Verificar se já existe
+    const { data: existing } = await supabase.from('users').select('id').eq('cpf', cpf).single();
+    if (existing) return res.status(409).json({ error: 'CPF já cadastrado' });
+
+    const { data: user, error } = await supabase.from('users').insert({
+      name, cpf, phone: phone || null, password, mac_address: mac_address || null,
+      status: 'inactive', created_at: new Date().toISOString()
+    }).select().single();
+
+    if (error) throw error;
+
+    await logSystem('info', 'portal', `Novo cadastro: ${name} (${cpf})`, null, req.ip, req.headers['user-agent']);
+    res.status(201).json({ user_id: user.id, name: user.name });
+  } catch (err) {
+    console.error('Erro portal register:', err.message);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// Resgatar voucher
+app.post('/api/portal/voucher', async (req, res) => {
+  try {
+    const { code, mac_address } = req.body;
+    if (!code) return res.status(400).json({ error: 'Código do voucher obrigatório' });
+
+    const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', code.toUpperCase()).single();
+    if (error || !voucher) return res.status(404).json({ error: 'Voucher não encontrado' });
+    if (voucher.status === 'used') return res.status(400).json({ error: 'Voucher já utilizado' });
+    if (voucher.status === 'expired') return res.status(400).json({ error: 'Voucher expirado' });
+
+    // Marcar como usado
+    await supabase.from('vouchers').update({
+      status: 'used', used_at: new Date().toISOString(), mac_address: mac_address || null,
+      updated_at: new Date().toISOString()
+    }).eq('id', voucher.id);
+
+    await logSystem('info', 'portal', `Voucher resgatado: ${code}`, { mac_address }, req.ip, req.headers['user-agent']);
+    res.json({ message: 'Voucher ativado com sucesso', duration_hours: voucher.duration_hours || 24 });
+  } catch (err) {
+    console.error('Erro portal voucher:', err.message);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// Gerar PIX para pagamento
+app.post('/api/portal/create-pix', async (req, res) => {
+  try {
+    const { user_id, plan_id, plan_name, amount, mac_address } = req.body;
+    if (!plan_id || !amount) return res.status(400).json({ error: 'Plano e valor obrigatórios' });
+
+    const mpAccessToken = process.env.MP_ACCESS_TOKEN;
+    if (!mpAccessToken) return res.status(500).json({ error: 'Pagamento não configurado' });
+
+    // Criar pagamento no Mercado Pago
+    const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mpAccessToken}`,
+        'X-Idempotency-Key': `${user_id || 'anon'}-${plan_id}-${Date.now()}`
+      },
+      body: JSON.stringify({
+        transaction_amount: parseFloat(amount),
+        description: `Hotspot - ${plan_name || 'Plano'}`,
+        payment_method_id: 'pix',
+        payer: { email: 'cliente@hotspot.local' }
+      })
+    });
+    const mpPayment = await mpRes.json();
+
+    if (!mpPayment.id) return res.status(500).json({ error: 'Erro ao gerar pagamento' });
+
+    // Salvar no banco
+    const { data: payment, error } = await supabase.from('payments').insert({
+      user_id: user_id || null,
+      plan_id,
+      plan_name: plan_name || '',
+      amount: parseFloat(amount),
+      method: 'pix',
+      status: 'pending',
+      mercado_pago_id: String(mpPayment.id),
+      pix_qr_code: mpPayment.point_of_interaction?.transaction_data?.qr_code || '',
+      pix_qr_code_base64: mpPayment.point_of_interaction?.transaction_data?.qr_code_base64 || '',
+      mac_address: mac_address || null,
+      created_at: new Date().toISOString()
+    }).select().single();
+
+    if (error) throw error;
+
+    res.json({
+      payment_id: payment.id,
+      mercado_pago_id: mpPayment.id,
+      pix_copy_paste: mpPayment.point_of_interaction?.transaction_data?.qr_code || '',
+      qr_code_base64: mpPayment.point_of_interaction?.transaction_data?.qr_code_base64 || '',
+      status: 'pending'
+    });
+  } catch (err) {
+    console.error('Erro portal create-pix:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar pagamento' });
+  }
+});
+
+// Verificar status de pagamento
+app.get('/api/portal/check-payment/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: payment, error } = await supabase.from('payments').select('*').eq('id', id).single();
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+
+    // Se ainda pendente, verificar no MP
+    if (payment.status === 'pending' && payment.mercado_pago_id) {
+      const mpAccessToken = process.env.MP_ACCESS_TOKEN;
+      if (mpAccessToken) {
+        try {
+          const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment.mercado_pago_id}`, {
+            headers: { 'Authorization': `Bearer ${mpAccessToken}` }
+          });
+          const mpPayment = await mpRes.json();
+          if (mpPayment.status === 'approved' && payment.status !== 'approved') {
+            await supabase.from('payments').update({
+              status: 'approved', confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+            }).eq('id', payment.id);
+
+            // Ativar usuário
+            if (payment.user_id && payment.plan_id) {
+              const { data: plan } = await supabase.from('plans').select('*').eq('id', payment.plan_id).single();
+              if (plan) {
+                const expiresAt = new Date();
+                expiresAt.setHours(expiresAt.getHours() + (plan.duration_hours || 24));
+                await supabase.from('users').update({
+                  status: 'active', plan_id: plan.id, plan_name: plan.name,
+                  expires_at: expiresAt.toISOString(), updated_at: new Date().toISOString()
+                }).eq('id', payment.user_id);
+              }
+            }
+            return res.json({ status: 'approved' });
+          }
+        } catch (mpErr) { console.error('Erro ao verificar MP:', mpErr.message); }
+      }
+    }
+
+    res.json({ status: payment.status });
+  } catch (err) {
+    console.error('Erro portal check-payment:', err.message);
+    res.status(500).json({ error: 'Erro ao verificar pagamento' });
+  }
+});
+
+// Status do usuário (portal)
+app.get('/api/portal/status', async (req, res) => {
+  try {
+    const { mac, ip } = req.query;
+    let user = null;
+
+    if (mac) {
+      const { data } = await supabase.from('users').select('*').eq('mac_address', mac).single();
+      if (data) user = data;
+    }
+
+    if (!user) return res.json({ plan_name: '-', time_remaining: '-', speed: '-' });
+
+    let timeRemaining = '-';
+    if (user.expires_at) {
+      const diff = new Date(user.expires_at) - new Date();
+      if (diff > 0) {
+        const hours = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        timeRemaining = `${hours}h ${mins}min`;
+      } else {
+        timeRemaining = 'Expirado';
+      }
+    }
+
+    res.json({
+      plan_name: user.plan_name || '-',
+      time_remaining: timeRemaining,
+      speed: user.speed_limit || '-',
+      status: user.status || 'inactive'
+    });
+  } catch (err) {
+    console.error('Erro portal status:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar status' });
+  }
+});
+
+// ============================================================
 // INICIAR SERVIDOR
 // ============================================================
 
