@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento Confirmado - MS TELECOM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>body{font-family:'Inter',sans-serif;} .gradient-bg{background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);}</style>
+</head>
+<body class="gradient-bg min-h-screen text-white flex items-center justify-center">
+
+  <div class="max-w-md w-full px-4 text-center">
+    <div class="bg-white/10 backdrop-blur rounded-xl p-8">
+      <div class="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
+        <i data-lucide="check-circle" class="w-12 h-12 text-green-400"></i>
+      </div>
+      <h1 class="text-2xl font-bold mb-2">Pagamento Confirmado!</h1>
+      <p class="text-gray-300 mb-6">Seu acesso à internet foi liberado com sucesso.</p>
+
+      <div class="bg-gray-800/50 rounded-lg p-4 mb-6 text-left space-y-2">
+        <div class="flex justify-between"><span class="text-gray-400">Plano:</span><span id="planName">-</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">Duração:</span><span id="planDuration">-</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">Velocidade:</span><span id="planSpeed">-</span></div>
+      </div>
+
+      <p class="text-sm text-gray-400 mb-4">Você será redirecionado automaticamente...</p>
+      <a href="status.html" class="inline-block bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-lg font-semibold transition">Ver Status da Conexão</a>
+    </div>
+
+    <p class="mt-6 text-gray-500 text-sm">&copy; 2026 MS TELECOM</p>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('plan')) document.getElementById('planName').textContent = urlParams.get('plan');
+    if (urlParams.get('duration')) document.getElementById('planDuration').textContent = urlParams.get('duration');
+    if (urlParams.get('speed')) document.getElementById('planSpeed').textContent = urlParams.get('speed');
+
+    // Auto redirect after 5 seconds
+    setTimeout(() => {
+      const linkOrig = urlParams.get('link-orig');
+      if (linkOrig) window.location.href = linkOrig;
+    }, 5000);
+  </script>
+</body>
+</html>

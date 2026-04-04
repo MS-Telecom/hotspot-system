@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status da Conexão - MS TELECOM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>body{font-family:'Inter',sans-serif;} .gradient-bg{background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);}</style>
+</head>
+<body class="gradient-bg min-h-screen text-white flex items-center justify-center">
+
+  <div class="max-w-md w-full px-4">
+    <div class="text-center mb-8">
+      <i data-lucide="wifi" class="w-16 h-16 text-cyan-400 mx-auto mb-3"></i>
+      <h1 class="text-2xl font-bold">MS TELECOM</h1>
+    </div>
+
+    <div class="bg-white/10 backdrop-blur rounded-xl p-6">
+      <div class="text-center mb-6">
+        <div id="statusIcon" class="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+          <i data-lucide="check-circle" class="w-10 h-10 text-green-400"></i>
+        </div>
+        <h2 id="statusTitle" class="text-xl font-semibold">Conectado</h2>
+        <p id="statusMessage" class="text-gray-300 mt-1">Você está conectado à internet</p>
+      </div>
+
+      <div class="space-y-3" id="statusDetails">
+        <div class="flex justify-between"><span class="text-gray-400">Plano:</span><span id="detailPlan">-</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">Tempo restante:</span><span id="detailTime">-</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">Velocidade:</span><span id="detailSpeed">-</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">IP:</span><span id="detailIp">-</span></div>
+        <div class="flex justify-between"><span class="text-gray-400">MAC:</span><span id="detailMac">-</span></div>
+      </div>
+
+      <button onclick="disconnect()" class="mt-6 w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg font-semibold transition">Desconectar</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://mstelecom-api.duckdns.org';
+    const urlParams = new URLSearchParams(window.location.search);
+    const mac = urlParams.get('mac') || '';
+    const ip = urlParams.get('ip') || '';
+
+    lucide.createIcons();
+
+    async function loadStatus() {
+      try {
+        const res = await fetch(`${API_URL}/api/portal/status?mac=${mac}&ip=${ip}`);
+        const data = await res.json();
+        if (data.plan_name) document.getElementById('detailPlan').textContent = data.plan_name;
+        if (data.time_remaining) document.getElementById('detailTime').textContent = data.time_remaining;
+        if (data.speed) document.getElementById('detailSpeed').textContent = data.speed;
+        document.getElementById('detailIp').textContent = ip || '-';
+        document.getElementById('detailMac').textContent = mac || '-';
+      } catch (err) { console.error(err); }
+    }
+
+    function disconnect() {
+      if (confirm('Deseja desconectar?')) {
+        window.location.href = 'portal.html';
+      }
+    }
+
+    loadStatus();
+  </script>
+</body>
+</html>

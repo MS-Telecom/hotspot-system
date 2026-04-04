@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MS TELECOM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>body{font-family:'Inter',sans-serif;} .gradient-bg{background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);}</style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center text-white">
+
+  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl">
+    <div class="text-center mb-8">
+      <i data-lucide="wifi" class="w-12 h-12 text-cyan-400 mx-auto mb-3"></i>
+      <h1 class="text-2xl font-bold">MS TELECOM</h1>
+      <p class="text-gray-300 mt-1">Acesso ao Painel Administrativo</p>
+    </div>
+
+    <div id="errorMessage" class="hidden bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Usuário</label>
+        <input type="text" id="inputUsername" placeholder="Digite seu usuário" required
+          class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Senha</label>
+        <input type="password" id="inputPassword" placeholder="Digite sua senha" required
+          class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400">
+      </div>
+      <button type="submit" id="btnLogin"
+        class="w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold text-lg transition flex items-center justify-center gap-2">
+        <i data-lucide="log-in" class="w-5 h-5"></i> Entrar
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const API_URL = 'https://mstelecom-api.duckdns.org';
+
+    lucide.createIcons();
+
+    // Se já estiver logado, redirecionar
+    const existingToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (existingToken) window.location.href = 'dashboard.html';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.classList.add('hidden');
+
+      const username = document.getElementById('inputUsername').value.trim();
+      const password = document.getElementById('inputPassword').value;
+      const btn = document.getElementById('btnLogin');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Entrando...';
+
+      try {
+        const response = await fetch(`${API_URL}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Erro ao fazer login');
+        }
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('ms_token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="log-in" class="w-5 h-5"></i> Entrar';
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>
