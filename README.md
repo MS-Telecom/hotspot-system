@@ -80,3 +80,4 @@ ssh root@your-vps "systemctl restart hotspot-system"
 ## Licença
 
 Propriedade de MS TELECOM. Todos os direitos reservados.
+
