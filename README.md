@@ -72,8 +72,8 @@ ssh root@your-vps "systemctl restart hotspot-system"
 
 | Campo | Valor |
 |-------|-------|
-| Usuário | `admin` |
-| Senha | `admin123` |
+| Usuário | `ADM` |
+| Senha | `44F766@2` |
 
 > Altere a senha imediatamente após o primeiro login.
 
