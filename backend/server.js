@@ -740,6 +740,164 @@ app.get('/api/check-payment-by-mac', async (req, res) => {
   }
 });
 
+// Gerar PIX via Mercado Pago (rota pública)
+app.post('/api/payments/generate-pix', async (req, res) => {
+  try {
+    const { amount, description, email, cpf, name, plan_id, user_mac } = req.body;
+    if (!amount || !description) return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
+
+    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
+
+    const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${MP_TOKEN}`,
+        'X-Idempotency-Key': externalReference
+      },
+      body: JSON.stringify({
+        transaction_amount: parseFloat(amount),
+        description,
+        payment_method_id: 'pix',
+        payer: {
+          email: email || 'cliente@hotspot.com',
+          first_name: name || 'Cliente',
+          identification: { type: 'CPF', number: cpf || '00000000000' }
+        },
+        external_reference: externalReference
+      })
+    });
+
+    const mpData = await mpResponse.json();
+    if (!mpResponse.ok) return res.status(400).json({ error: 'Erro ao gerar pagamento PIX', details: mpData });
+
+    const pixCopyPaste = mpData.point_of_interaction?.transaction_data?.qr_code || '';
+    const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+
+    const { data: payment, error } = await supabase.from('payments').insert({
+      user_mac: user_mac || null, plan_id: plan_id || null,
+      amount: parseFloat(amount), description, status: 'pending',
+      payment_method: 'pix', mercado_pago_id: String(mpData.id),
+      pix_copy_paste: pixCopyPaste, qr_code: qrCodeBase64,
+      external_reference: externalReference,
+      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+    }).select().single();
+
+    if (error) throw error;
+    await registerSystemLog('info', 'payment', `PIX gerado: ${externalReference}`, { amount, plan_id });
+
+    res.json({
+      id: payment.id, mercado_pago_id: mpData.id,
+      pix_copy_paste: pixCopyPaste, qr_code: qrCodeBase64,
+      external_reference: externalReference, status: 'pending', amount: parseFloat(amount)
+    });
+  } catch (err) {
+    console.error('Erro ao gerar PIX:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
+  }
+});
+
+// Verificar status de pagamento por referência ou MP ID
+app.get('/api/check-payment', async (req, res) => {
+  try {
+    const { external_reference, mercado_pago_id } = req.query;
+    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'Referência ou ID do pagamento necessário' });
+
+    let query = supabase.from('payments').select('*');
+    if (external_reference) query = query.eq('external_reference', external_reference);
+    else query = query.eq('mercado_pago_id', mercado_pago_id);
+
+    const { data: payment, error } = await query.single();
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+
+    // Se pendente, verificar no Mercado Pago
+    if (payment.status === 'pending' && payment.mercado_pago_id) {
+      const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+      if (MP_TOKEN) {
+        try {
+          const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment.mercado_pago_id}`, {
+            headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
+          });
+          const mpData = await mpRes.json();
+          if (mpData.status === 'approved') {
+            await supabase.from('payments').update({
+              status: 'approved', confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+            }).eq('id', payment.id);
+            payment.status = 'approved';
+            payment.confirmed_at = new Date().toISOString();
+          }
+        } catch (mpErr) {
+          console.error('Erro ao verificar MP:', mpErr.message);
+        }
+      }
+    }
+
+    res.json(payment);
+  } catch (err) {
+    console.error('Erro ao verificar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao verificar pagamento' });
+  }
+});
+
+// Criar pagamento manual (admin)
+app.post('/api/create-payment', authMiddleware, async (req, res) => {
+  try {
+    const { user_id, plan_id, user_mac, amount, description, status, payment_method } = req.body;
+
+    const { data, error } = await supabase.from('payments').insert({
+      user_id, plan_id, user_mac,
+      amount: parseFloat(amount || 0),
+      description: description || 'Pagamento manual',
+      status: status || 'approved',
+      payment_method: payment_method || 'manual',
+      external_reference: `MANUAL-${Date.now()}`,
+      confirmed_at: status === 'approved' ? new Date().toISOString() : null
+    }).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'create', 'payment', `Pagamento manual criado: ${data.id}`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao criar pagamento' });
+  }
+});
+
+// Confirmar pagamento manualmente (admin)
+app.post('/api/confirm-payment', authMiddleware, async (req, res) => {
+  try {
+    const { payment_id, user_id, plan_id } = req.body;
+
+    const { data: payment, error: payErr } = await supabase.from('payments').update({
+      status: 'approved', confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).eq('id', payment_id).select().single();
+
+    if (payErr) throw payErr;
+
+    // Se tiver user_id e plan_id, ativar acesso do usuário
+    if (user_id && plan_id) {
+      const { data: plan } = await supabase.from('plans').select('*').eq('id', plan_id).single();
+      if (plan) {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + (plan.duration_days || 30));
+        await supabase.from('users').update({
+          status: 'active', plan_id: plan.id, plan_name: plan.name,
+          expires_at: expiresAt.toISOString(), updated_at: new Date().toISOString()
+        }).eq('id', user_id);
+      }
+    }
+
+    await registerAuditLog(req.user.username, 'update', 'payment', `Pagamento confirmado: ${payment_id}`, req.ip, req.headers['user-agent']);
+    res.json({ message: 'Pagamento confirmado com sucesso', payment });
+  } catch (err) {
+    console.error('Erro ao confirmar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao confirmar pagamento' });
+  }
+});
+
 // ============================================================
 // ROTAS DE VOUCHERS
 // ============================================================
@@ -1064,6 +1222,79 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// POP Register (rota pública - auto-registro de POP)
+app.post('/api/pops/register', async (req, res) => {
+  try {
+    const { name, ip, location, unique_id, api_user, api_pass } = req.body;
+    if (!name) return res.status(400).json({ error: 'POP name is required' });
+
+    const popId = unique_id || slugifyValue(name).toUpperCase();
+    const now = new Date().toISOString();
+
+    // Verificar se já existe
+    const { data: existing } = await supabase.from('pops').select('id').eq('id', popId).maybeSingle();
+    if (existing) {
+      await supabase.from('pops').update({
+        status: 'online', ip: ip || null, last_seen_at: now, updated_at: now
+      }).eq('id', popId);
+      return res.json({ success: true, pop_id: popId, action: 'updated' });
+    }
+
+    const { data, error } = await supabase.from('pops').insert({
+      id: popId, name, unique_id: popId, ip: ip || null,
+      location: location || null, status: 'online',
+      api_user: api_user || null, api_pass: api_pass || null,
+      last_seen_at: now, created_at: now, updated_at: now
+    }).select().single();
+
+    if (error) throw error;
+    await registerSystemLog('info', 'pop', `POP registrado: ${name} (${popId})`, { ip });
+    return res.status(201).json({ success: true, pop_id: popId, action: 'created', pop: data });
+  } catch (error) {
+    console.error('POP register error:', error.message);
+    res.status(500).json({ error: 'Failed to register POP' });
+  }
+});
+
+// POP Status (rota admin)
+app.get('/api/pops/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar por id, unique_id ou name
+    let pop = null;
+    let result = await supabase.from('pops').select('*').eq('id', id).maybeSingle();
+    pop = result.data;
+    if (!pop) {
+      result = await supabase.from('pops').select('*').eq('unique_id', id).maybeSingle();
+      pop = result.data;
+    }
+    if (!pop) {
+      result = await supabase.from('pops').select('*').eq('name', id).maybeSingle();
+      pop = result.data;
+    }
+    if (!pop) return res.status(404).json({ error: 'POP not found' });
+
+    // Verificar se está online (last_seen_at < 5 min)
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const isOnline = pop.last_seen_at && new Date(pop.last_seen_at) > fiveMinAgo;
+
+    // Buscar sessões ativas
+    const { data: sessions } = await supabase.from('hotspot_sessions')
+      .select('*').eq('pop_id', pop.id).eq('status', 'active');
+
+    return res.json({
+      ...pop,
+      is_online: isOnline,
+      active_sessions: (sessions || []).length,
+      sessions: sessions || []
+    });
+  } catch (error) {
+    console.error('POP status error:', error.message);
+    res.status(500).json({ error: 'Failed to get POP status' });
+  }
+});
+
 // POP Ping/Heartbeat (rota pública - chamada pelo MikroTik scheduler)
 app.post('/api/pops/:id/ping', async (req, res) => {
   try {
@@ -1111,14 +1342,23 @@ app.post('/api/pop/identity', async (req, res) => {
     const { pop_id, identity } = req.body;
     if (!pop_id || !identity) return res.status(400).json({ error: 'pop_id and identity are required' });
 
-    const { error } = await supabase.from('pops').update({
+    const updatePayload = {
       real_name: identity,
       last_identity_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    }).eq('name', pop_id);
+    };
 
-    if (error) throw error;
-    return res.json({ success: true });
+    // Tentar atualizar por id primeiro, depois unique_id, depois name
+    let result = await supabase.from('pops').update(updatePayload).eq('id', pop_id).select();
+    if (!result.data || result.data.length === 0) {
+      result = await supabase.from('pops').update(updatePayload).eq('unique_id', pop_id).select();
+    }
+    if (!result.data || result.data.length === 0) {
+      result = await supabase.from('pops').update(updatePayload).eq('name', pop_id).select();
+    }
+
+    if (result.error) throw result.error;
+    return res.json({ success: true, matched: (result.data || []).length });
   } catch (error) {
     console.error('Pop identity error:', error.message);
     res.status(500).json({ error: 'Failed to save pop identity' });
@@ -1241,8 +1481,39 @@ app.get('/entrypoint', (req, res) => {
   return res.redirect(target);
 });
 
+// Validar acesso de usuário (rota pública - chamada pelo MikroTik)
+app.post('/api/validate-access', async (req, res) => {
+  try {
+    const { mac, username } = req.body;
+    if (!mac && !username) return res.status(400).json({ error: 'MAC ou username é obrigatório' });
+
+    let query = supabase.from('users').select('*');
+    if (mac) query = query.eq('mac_address', mac);
+    else query = query.eq('username', username);
+
+    const { data: user } = await query.single();
+    if (!user) return res.json({ access: false, reason: 'Usuário não encontrado' });
+    if (user.status !== 'active') return res.json({ access: false, reason: 'Conta inativa' });
+    if (user.expires_at && new Date(user.expires_at) < new Date()) return res.json({ access: false, reason: 'Plano expirado' });
+
+    // Verificar sessão ativa
+    const { data: session } = await supabase.from('hotspot_sessions').select('*')
+      .eq('mac_address', mac || user.mac_address).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    res.json({
+      access: true,
+      user: { id: user.id, name: user.name, plan_name: user.plan_name, expires_at: user.expires_at, is_vip: user.is_vip },
+      session: session || null
+    });
+  } catch (err) {
+    console.error('Erro ao validar acesso:', err.message);
+    res.status(500).json({ error: 'Erro ao validar acesso' });
+  }
+});
+
 // ============================================================
-// PORTAL PÚBLICO (para clientes finais)
+// ROTAS DO PORTAL PÚBLICO (páginas de clientes finais)
 // ============================================================
 
 // Listar planos (público)
@@ -1503,43 +1774,224 @@ app.delete('/api/settings/:key', authMiddleware, async (req, res) => {
   }
 });
 
+// Campos de cadastro
+app.get('/api/settings/fields', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('*').eq('category', 'fields');
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar campos' });
+  }
+});
+
+app.post('/api/settings/fields', authMiddleware, async (req, res) => {
+  try {
+    const { fields } = req.body;
+    const { error } = await supabase.from('settings').upsert({
+      key: 'registration_fields', category: 'fields',
+      value: fields, updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'update', 'settings', 'Campos de cadastro atualizados', req.ip, req.headers['user-agent']);
+    res.json({ message: 'Campos salvos com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar campos' });
+  }
+});
+
+// Configurações do sistema
+app.get('/api/settings/system', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('*').eq('category', 'system');
+    if (error) throw error;
+    const settings = {};
+    (data || []).forEach(item => { settings[item.key] = item.value; });
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar configurações do sistema' });
+  }
+});
+
+app.post('/api/settings/system', authMiddleware, async (req, res) => {
+  try {
+    const entries = Object.entries(req.body);
+    for (const [key, value] of entries) {
+      await supabase.from('settings').upsert({
+        key, category: 'system',
+        value: typeof value === 'object' ? value : { value },
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'key' });
+    }
+    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações do sistema atualizadas', req.ip, req.headers['user-agent']);
+    res.json({ message: 'Configurações salvas com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar configurações do sistema' });
+  }
+});
+
+// Configurações de pagamento
+app.get('/api/settings/payment', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('*').eq('category', 'payment');
+    if (error) throw error;
+    const settings = {};
+    (data || []).forEach(item => { settings[item.key] = item.value; });
+    res.json(settings);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar configurações de pagamento' });
+  }
+});
+
+app.post('/api/settings/payment', authMiddleware, async (req, res) => {
+  try {
+    const entries = Object.entries(req.body);
+    for (const [key, value] of entries) {
+      await supabase.from('settings').upsert({
+        key, category: 'payment',
+        value: typeof value === 'object' ? value : { value },
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'key' });
+    }
+    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações de pagamento atualizadas', req.ip, req.headers['user-agent']);
+    res.json({ message: 'Configurações de pagamento salvas com sucesso' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar configurações de pagamento' });
+  }
+});
+
 // ============================================================
 // ROTAS DE ESTATÍSTICAS
 // ============================================================
 
+// Estatísticas gerais (compatível com dashboard camelCase)
 app.get('/api/stats', authMiddleware, async (req, res) => {
   try {
-    const [users, plans, payments, vouchers, pops, hotspots] = await Promise.all([
-      supabase.from('users').select('id, status, is_vip', { count: 'exact' }),
-      supabase.from('plans').select('id', { count: 'exact' }),
-      supabase.from('payments').select('id, amount, status', { count: 'exact' }),
-      supabase.from('vouchers').select('id, status', { count: 'exact' }),
-      supabase.from('pops').select('id, status', { count: 'exact' }),
-      supabase.from('hotspots').select('id, status', { count: 'exact' })
+    const [
+      { count: totalUsers },
+      { count: activeUsers },
+      { count: totalPayments },
+      { count: pendingPayments },
+      { count: totalHotspots },
+      { count: totalPops },
+      { count: activeSessions },
+      { count: totalVouchers }
+    ] = await Promise.all([
+      supabase.from('users').select('*', { count: 'exact', head: true }),
+      supabase.from('users').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase.from('payments').select('*', { count: 'exact', head: true }),
+      supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('hotspots').select('*', { count: 'exact', head: true }),
+      supabase.from('pops').select('*', { count: 'exact', head: true }),
+      supabase.from('hotspot_sessions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      supabase.from('vouchers').select('*', { count: 'exact', head: true })
     ]);
 
-    const usersData = users.data || [];
-    const paymentsData = payments.data || [];
-    const vouchersData = vouchers.data || [];
-    const popsData = pops.data || [];
+    // Faturamento total
+    const { data: revenueData } = await supabase.from('payments').select('amount').eq('status', 'approved');
+    const totalRevenue = (revenueData || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+    // Faturamento do mês
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const { data: monthRevenueData } = await supabase.from('payments').select('amount')
+      .eq('status', 'approved').gte('confirmed_at', startOfMonth.toISOString());
+    const monthRevenue = (monthRevenueData || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+    // POPs online (last_seen_at < 5 min)
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { count: onlinePops } = await supabase.from('pops').select('*', { count: 'exact', head: true }).gte('last_seen_at', fiveMinAgo);
 
     res.json({
-      total_users: usersData.length,
-      active_users: usersData.filter(u => u.status === 'active').length,
-      vip_users: usersData.filter(u => u.is_vip).length,
-      total_plans: (plans.data || []).length,
-      total_payments: paymentsData.length,
-      approved_payments: paymentsData.filter(p => p.status === 'approved').length,
-      total_revenue: paymentsData.filter(p => p.status === 'approved').reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
-      total_vouchers: vouchersData.length,
-      used_vouchers: vouchersData.filter(v => v.status === 'used').length,
-      total_pops: popsData.length,
-      online_pops: popsData.filter(p => p.status === 'online').length,
-      total_hotspots: (hotspots.data || []).length
+      totalUsers: totalUsers || 0,
+      activeUsers: activeUsers || 0,
+      totalPayments: totalPayments || 0,
+      pendingPayments: pendingPayments || 0,
+      totalHotspots: totalHotspots || 0,
+      totalPops: totalPops || 0,
+      onlinePops: onlinePops || 0,
+      activeSessions: activeSessions || 0,
+      totalVouchers: totalVouchers || 0,
+      totalRevenue,
+      monthRevenue
     });
   } catch (err) {
     console.error('Erro ao buscar estatísticas:', err.message);
     res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// Usuários por hora (últimas 24h)
+app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase.from('hotspot_sessions').select('created_at').gte('created_at', twentyFourHoursAgo);
+
+    const hourly = {};
+    for (let i = 0; i < 24; i++) hourly[i] = 0;
+    (data || []).forEach(s => {
+      const hour = new Date(s.created_at).getHours();
+      hourly[hour] = (hourly[hour] || 0) + 1;
+    });
+
+    res.json(Object.entries(hourly).map(([hour, count]) => ({ hour: parseInt(hour), count })));
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar usuários por hora' });
+  }
+});
+
+// Tráfego total
+app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
+  try {
+    const { data } = await supabase.from('pops').select('bandwidth_used');
+    let totalMbps = 0;
+    (data || []).forEach(pop => {
+      const match = (pop.bandwidth_used || '').match(/[\d.]+/);
+      if (match) totalMbps += parseFloat(match[0]);
+    });
+    res.json({ total_mbps: totalMbps, formatted: `${totalMbps.toFixed(1)} Mbps` });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar tráfego total' });
+  }
+});
+
+// Pico de banda
+app.get('/api/stats/peak-bandwidth', authMiddleware, async (req, res) => {
+  try {
+    const { data } = await supabase.from('pops').select('bandwidth_used');
+    let peakMbps = 0;
+    (data || []).forEach(pop => {
+      const match = (pop.bandwidth_used || '').match(/[\d.]+/);
+      if (match) {
+        const val = parseFloat(match[0]);
+        if (val > peakMbps) peakMbps = val;
+      }
+    });
+    res.json({ peak_mbps: peakMbps, formatted: `${peakMbps.toFixed(1)} Mbps` });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar pico de banda' });
+  }
+});
+
+// Comparação (faturamento por plano)
+app.get('/api/stats/comparison', authMiddleware, async (req, res) => {
+  try {
+    const { data: payments } = await supabase.from('payments').select('plan_id, amount').eq('status', 'approved');
+    const { data: plans } = await supabase.from('plans').select('id, name');
+
+    const planMap = {};
+    (plans || []).forEach(p => { planMap[p.id] = p.name; });
+
+    const comparison = {};
+    (payments || []).forEach(p => {
+      const planName = planMap[p.plan_id] || 'Outros';
+      comparison[planName] = (comparison[planName] || 0) + parseFloat(p.amount || 0);
+    });
+
+    res.json(Object.entries(comparison).map(([name, total]) => ({ name, total })));
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar comparação' });
   }
 });
 
@@ -1549,7 +2001,12 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(200);
+    const { limit: queryLimit, level, source } = req.query;
+    let query = supabase.from('logs').select('*').order('created_at', { ascending: false });
+    if (level) query = query.eq('level', level);
+    if (source) query = query.eq('source', source);
+    query = query.limit(parseInt(queryLimit) || 200);
+    const { data, error } = await query;
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
@@ -1560,12 +2017,32 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
 
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
+    const { limit: queryLimit, type, username } = req.query;
+    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
+    if (type) query = query.eq('type', type);
+    if (username) query = query.eq('username', username);
+    query = query.limit(parseInt(queryLimit) || 200);
+    const { data, error } = await query;
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
     console.error('Erro ao listar logs de auditoria:', err.message);
     res.status(500).json({ error: 'Erro ao listar logs de auditoria' });
+  }
+});
+
+// Criar log de auditoria manual
+app.post('/api/audit-logs', authMiddleware, async (req, res) => {
+  try {
+    const { type, object, action } = req.body;
+    const { data, error } = await supabase.from('audit_logs').insert({
+      username: req.user.username, type, object, action,
+      ip: req.ip, user_agent: req.headers['user-agent']
+    }).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar log de auditoria' });
   }
 });
 
@@ -1727,7 +2204,7 @@ function generateRevertScript({ uniqueId, hotspotName }) {
 app.get('/api/health', (_req, res) => {
   return res.json({
     status: 'ok',
-    version: '3.0.0',
+    version: '3.1.0',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     mikrotik_api: !!RouterOSAPI
@@ -1739,7 +2216,7 @@ app.get('/api/health', (_req, res) => {
 // ============================================================
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Hotspot System API v3.0 running on port ${PORT}`);
+  console.log(`Hotspot System API v3.1 running on port ${PORT}`);
   console.log(`Frontend: ${FRONTEND_BASE_URL}`);
   console.log(`API: ${API_BASE_URL}`);
   console.log(`MikroTik API: ${RouterOSAPI ? 'enabled' : 'disabled'}`);
