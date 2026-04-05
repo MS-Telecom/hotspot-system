@@ -1,6 +1,6 @@
 // ============================================================
 // Hotspot System - MS TELECOM
-// Backend principal (server.js)
+// Backend principal (server.js) - v3.0 MERGED
 // Código interno em inglês, comentários em português
 // ============================================================
 
@@ -13,17 +13,28 @@ const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 
+// RouterOS API para controle MikroTik (opcional - degrada gracefully)
+let RouterOSAPI = null;
+try {
+  RouterOSAPI = require('node-routeros').RouterOSAPI;
+} catch (e) {
+  console.warn('node-routeros not installed - MikroTik API features disabled');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
+const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
+const RADIUS_SERVER_IP = process.env.RADIUS_SERVER_IP || '40.233.118.238';
+const JWT_SECRET = process.env.JWT_SECRET;
 
-// Configuração do Supabase
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+// Validação obrigatória de variáveis de ambiente
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !JWT_SECRET) {
+  console.error('FATAL: Missing required environment variables: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
+  process.exit(1);
+}
 
-// Segredo JWT
-const JWT_SECRET = process.env.JWT_SECRET || 'ms-telecom-jwt-secret-default';
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // ============================================================
 // MIDDLEWARES
@@ -32,57 +43,272 @@ const JWT_SECRET = process.env.JWT_SECRET || 'ms-telecom-jwt-secret-default';
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Servir arquivos estáticos da pasta public
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Middleware de autenticação JWT
 function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token não fornecido' });
-  }
-  const token = authHeader.split(' ')[1];
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token inválido ou expirado' });
   }
 }
 
-// Função auxiliar para registrar log de auditoria
-async function logAudit(username, type, object, action, ip, userAgent) {
+// ============================================================
+// HELPERS
+// ============================================================
+
+function removeAccents(value = '') {
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function slugifyValue(value = '') {
+  return removeAccents(String(value))
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function generateStrongPassword(length = 20) {
+  return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
+}
+
+function parseCurrency(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function jsonOrNull(value) {
+  return value && typeof value === 'object' ? value : null;
+}
+
+// Log de auditoria
+async function registerAuditLog(username, type, objectName, action, ip, userAgent, details = null) {
   try {
     await supabase.from('audit_logs').insert({
-      username,
-      type,
-      object,
-      action,
+      username: username || 'system',
+      type: type || 'info',
+      object: objectName || 'system',
+      action: action || '',
       ip: ip || '',
-      user_agent: userAgent || ''
+      user_agent: userAgent || '',
+      details: details ? JSON.stringify(details) : null,
+      created_at: new Date().toISOString()
     });
-  } catch (err) {
-    console.error('Erro ao registrar log de auditoria:', err.message);
+  } catch (error) {
+    console.error('Audit log error:', error.message);
   }
 }
 
-// Função auxiliar para registrar log do sistema
-async function logSystem(level, source, message, details, ip, userAgent) {
+// Log do sistema
+async function registerSystemLog(level, source, message, details = null, ip = '', userAgent = '') {
   try {
     await supabase.from('logs').insert({
-      level,
-      source,
+      level: level || 'info',
+      source: source || 'system',
       message,
-      details: details || null,
-      ip: ip || '',
-      user_agent: userAgent || ''
+      details: jsonOrNull(details),
+      ip,
+      user_agent: userAgent,
+      created_at: new Date().toISOString()
     });
-  } catch (err) {
-    console.error('Erro ao registrar log do sistema:', err.message);
+  } catch (error) {
+    console.error('System log error:', error.message);
   }
 }
+
+// ============================================================
+// SCHEMA / COMPATIBILITY HELPERS
+// ============================================================
+
+// Buscar credenciais MikroTik de forma resiliente
+async function getMikrotikCredentials(popIp = null, popId = null) {
+  if (popId) {
+    const { data, error } = await supabase.from('mikrotik_credentials').select('*').eq('pop_id', popId).maybeSingle();
+    if (!error && data) return data;
+  }
+  if (popIp) {
+    const { data, error } = await supabase.from('mikrotik_credentials').select('*').eq('pop_ip', popIp).maybeSingle();
+    if (!error && data) return data;
+  }
+  // Tenta também pelas credenciais armazenadas no próprio POP
+  if (popId) {
+    const { data, error } = await supabase.from('pops').select('api_user, api_pass, ip').eq('id', popId).maybeSingle();
+    if (!error && data && data.api_user && data.api_pass) return data;
+  }
+  return null;
+}
+
+// Salvar/atualizar credenciais MikroTik
+async function upsertMikrotikCredentials(payload) {
+  const normalized = {
+    pop_id: payload.pop_id || null,
+    pop_ip: payload.pop_ip || null,
+    api_user: payload.api_user || null,
+    api_pass: payload.api_pass || null,
+    last_seen_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await supabase.from('mikrotik_credentials').upsert(normalized, { onConflict: 'pop_id' });
+  return !error;
+}
+
+// Buscar sessões expiradas ativas
+async function getActiveExpiredSessions() {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('hotspot_sessions')
+    .select('*')
+    .lt('expires_at', now)
+    .eq('status', 'active');
+
+  if (!error) return { table: 'hotspot_sessions', data: data || [] };
+  return { table: null, data: [] };
+}
+
+// Marcar sessão como expirada
+async function markSessionExpired(table, sessionId) {
+  if (!table) return false;
+  const { error } = await supabase.from(table).update({
+    status: 'expired',
+    updated_at: new Date().toISOString()
+  }).eq('id', sessionId);
+  return !error;
+}
+
+// ============================================================
+// MIKROTIK ACCESS CONTROL
+// ============================================================
+
+// Revogar acesso - remove IP Binding do MikroTik
+async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null) {
+  if (!RouterOSAPI) {
+    console.warn('revokeAccess: node-routeros not available');
+    return false;
+  }
+
+  try {
+    let username = apiUser;
+    let password = apiPass;
+
+    if (!username || !password) {
+      const creds = await getMikrotikCredentials(popIp, popId);
+      if (creds) {
+        username = creds.api_user;
+        password = creds.api_pass;
+      }
+    }
+
+    if (!username || !password) {
+      throw new Error('MikroTik API credentials not available');
+    }
+
+    const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
+    await conn.connect();
+    const bindings = await conn.write('/ip/hotspot/ip-binding/print', [`?mac-address=${macAddress}`]);
+
+    for (const binding of bindings || []) {
+      await conn.write('/ip/hotspot/ip-binding/remove', [`=.id=${binding['.id']}`]);
+    }
+
+    await conn.close();
+    return true;
+  } catch (error) {
+    console.error(`Failed to revoke access for ${macAddress}:`, error.message);
+    return false;
+  }
+}
+
+// Autorizar acesso - IP Binding com type=bypassed + RADIUS
+async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null, durationMinutes = 15) {
+  let viaApi = false;
+  let viaRadius = false;
+  const errors = [];
+
+  // Tentativa 1: via API MikroTik (IP Binding)
+  if (RouterOSAPI) {
+    try {
+      let username = apiUser;
+      let password = apiPass;
+
+      if (!username || !password) {
+        const creds = await getMikrotikCredentials(popIp, popId);
+        if (creds) {
+          username = creds.api_user;
+          password = creds.api_pass;
+        }
+      }
+
+      if (username && password) {
+        const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
+        await conn.connect();
+        const existing = await conn.write('/ip/hotspot/ip-binding/print', [`?mac-address=${macAddress}`]);
+
+        if (!existing || existing.length === 0) {
+          await conn.write('/ip/hotspot/ip-binding/add', [
+            `=mac-address=${macAddress}`,
+            '=type=bypassed',
+            '=comment=LIBERADO-MS-TELECOM'
+          ]);
+        }
+
+        await conn.close();
+        viaApi = true;
+      }
+    } catch (error) {
+      errors.push(`API: ${error.message}`);
+    }
+  }
+
+  // Tentativa 2: via RADIUS (radius_replies)
+  try {
+    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+    const { error } = await supabase.from('radius_replies').upsert({
+      username: macAddress,
+      attribute: 'Cleartext-Password',
+      op: ':=',
+      value: macAddress,
+      plan_name: 'free_trial',
+      status: 'active',
+      expires_at: expiresAt,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'username' });
+
+    if (error) throw error;
+    viaRadius = true;
+  } catch (error) {
+    errors.push(`RADIUS: ${error.message}`);
+  }
+
+  return { success: viaApi || viaRadius, viaApi, viaRadius, errors };
+}
+
+// ============================================================
+// CRON - REMOVE ACESSOS EXPIRADOS (a cada 60 segundos)
+// ============================================================
+setInterval(async () => {
+  try {
+    const { table, data } = await getActiveExpiredSessions();
+    if (!table || !data || data.length === 0) return;
+
+    for (const session of data) {
+      const mac = session.mac_address;
+      if (mac && mac !== 'pending') {
+        await revokeAccess(mac, session.pop_ip || '192.168.32.1', null, null, session.pop_id || null);
+      }
+      await markSessionExpired(table, session.id);
+    }
+
+    console.log(`[CRON] expired accesses removed: ${data.length}`);
+  } catch (error) {
+    console.error('[CRON] expiration cleanup error:', error.message);
+  }
+}, 60_000);
 
 // ============================================================
 // ROTAS DE AUTENTICAÇÃO
@@ -106,10 +332,9 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    // Comparação de senha (hash ou texto plano para compatibilidade)
+    // Comparação de senha (hash SHA-256 ou texto plano para compatibilidade)
     let passwordMatch = false;
-    if (admin.password.startsWith('$2') || admin.password.length === 64) {
-      // Hash bcrypt ou SHA-256
+    if (admin.password.length === 64) {
       const sha256 = crypto.createHash('sha256').update(password).digest('hex');
       passwordMatch = admin.password === sha256;
     } else {
@@ -126,17 +351,12 @@ app.post('/api/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    await logAudit(admin.username, 'auth', 'admin', 'login', req.ip, req.headers['user-agent']);
-    await logSystem('info', 'auth', `Login realizado: ${admin.username}`, null, req.ip, req.headers['user-agent']);
+    await registerAuditLog(admin.username, 'auth', 'admin', 'login', req.ip, req.headers['user-agent']);
+    await registerSystemLog('info', 'auth', `Login realizado: ${admin.username}`, null, req.ip, req.headers['user-agent']);
 
     res.json({
       token,
-      user: {
-        id: admin.id,
-        username: admin.username,
-        email: admin.email,
-        role: admin.role
-      }
+      user: { id: admin.id, username: admin.username, email: admin.email, role: admin.role }
     });
   } catch (err) {
     console.error('Erro no login:', err.message);
@@ -147,7 +367,7 @@ app.post('/api/login', async (req, res) => {
 // Logout
 app.post('/api/logout', authMiddleware, async (req, res) => {
   try {
-    await logAudit(req.user.username, 'auth', 'admin', 'logout', req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'auth', 'admin', 'logout', req.ip, req.headers['user-agent']);
     res.json({ message: 'Logout realizado com sucesso' });
   } catch (err) {
     res.status(500).json({ error: 'Erro interno no servidor' });
@@ -165,14 +385,10 @@ app.put('/api/update-profile', authMiddleware, async (req, res) => {
       updateData.password = crypto.createHash('sha256').update(password).digest('hex');
     }
 
-    const { error } = await supabase
-      .from('admins')
-      .update(updateData)
-      .eq('id', req.user.id);
-
+    const { error } = await supabase.from('admins').update(updateData).eq('id', req.user.id);
     if (error) throw error;
 
-    await logAudit(req.user.username, 'update', 'admin', 'Perfil atualizado', req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'admin', 'Perfil atualizado', req.ip, req.headers['user-agent']);
     res.json({ message: 'Perfil atualizado com sucesso' });
   } catch (err) {
     console.error('Erro ao atualizar perfil:', err.message);
@@ -181,1386 +397,9 @@ app.put('/api/update-profile', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// ROTAS DE USUÁRIOS (CLIENTES)
-// ============================================================
-
-// Listar usuários
-app.get('/api/users', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar usuários:', err.message);
-    res.status(500).json({ error: 'Erro ao listar usuários' });
-  }
-});
-
-// Criar usuário
-app.post('/api/users', authMiddleware, async (req, res) => {
-  try {
-    const { name, username, mac_address, phone, cpf, email, address, plan_id, plan_name, hotspot_id, status, is_vip } = req.body;
-
-    const { data, error } = await supabase
-      .from('users')
-      .insert({
-        name, username, mac_address, phone, cpf, email, address,
-        plan_id, plan_name, hotspot_id,
-        status: status || 'inactive',
-        is_vip: is_vip || false
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'user', `Usuário criado: ${name}`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao criar usuário' });
-  }
-});
-
-// Atualizar usuário
-app.put('/api/users/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
-    delete updateData.id;
-    delete updateData.created_at;
-
-    const { data, error } = await supabase
-      .from('users')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, req.ip, req.headers['user-agent']);
-    res.json(data);
-  } catch (err) {
-    console.error('Erro ao atualizar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar usuário' });
-  }
-});
-
-// Deletar usuário
-app.delete('/api/users/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Usuário removido com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar usuário' });
-  }
-});
-
-// ============================================================
-// ROTAS DE PLANOS
-// ============================================================
-
-// Listar planos
-app.get('/api/plans', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('plans')
-      .select('*')
-      .order('price', { ascending: true });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar planos:', err.message);
-    res.status(500).json({ error: 'Erro ao listar planos' });
-  }
-});
-
-// Criar plano
-app.post('/api/plans', authMiddleware, async (req, res) => {
-  try {
-    const { name, price, speed_mbps, duration_days, description, active } = req.body;
-
-    const { data, error } = await supabase
-      .from('plans')
-      .insert({
-        name, price, speed_mbps, duration_days, description,
-        active: active !== undefined ? active : true
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'plan', `Plano criado: ${name}`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar plano:', err.message);
-    res.status(500).json({ error: 'Erro ao criar plano' });
-  }
-});
-
-// Atualizar plano
-app.put('/api/plans/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
-    delete updateData.id;
-    delete updateData.created_at;
-
-    const { data, error } = await supabase
-      .from('plans')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, req.ip, req.headers['user-agent']);
-    res.json(data);
-  } catch (err) {
-    console.error('Erro ao atualizar plano:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar plano' });
-  }
-});
-
-// Deletar plano
-app.delete('/api/plans/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { error } = await supabase
-      .from('plans')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Plano removido com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar plano:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar plano' });
-  }
-});
-
-// ============================================================
-// ROTAS DE PAGAMENTOS
-// ============================================================
-
-// Listar pagamentos
-app.get('/api/payments', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar pagamentos:', err.message);
-    res.status(500).json({ error: 'Erro ao listar pagamentos' });
-  }
-});
-
-// Gerar PIX via Mercado Pago
-app.post('/api/payments/generate-pix', async (req, res) => {
-  try {
-    const { amount, description, email, cpf, name, plan_id, user_mac } = req.body;
-
-    if (!amount || !description) {
-      return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
-    }
-
-    const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-
-    // Integração com Mercado Pago
-    const mpAccessToken = process.env.MP_ACCESS_TOKEN;
-    if (!mpAccessToken) {
-      return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
-    }
-
-    const mpPayload = {
-      transaction_amount: parseFloat(amount),
-      description,
-      payment_method_id: 'pix',
-      payer: {
-        email: email || 'cliente@hotspot.com',
-        first_name: name || 'Cliente',
-        identification: {
-          type: 'CPF',
-          number: cpf || '00000000000'
-        }
-      },
-      external_reference: externalReference
-    };
-
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${mpAccessToken}`,
-        'X-Idempotency-Key': externalReference
-      },
-      body: JSON.stringify(mpPayload)
-    });
-
-    const mpData = await mpResponse.json();
-
-    if (!mpResponse.ok) {
-      console.error('Erro Mercado Pago:', mpData);
-      return res.status(400).json({ error: 'Erro ao gerar pagamento PIX', details: mpData });
-    }
-
-    const pixCopyPaste = mpData.point_of_interaction?.transaction_data?.qr_code || '';
-    const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
-
-    // Salvar pagamento no banco
-    const { data: payment, error } = await supabase
-      .from('payments')
-      .insert({
-        user_mac: user_mac || null,
-        plan_id: plan_id || null,
-        amount: parseFloat(amount),
-        description,
-        status: 'pending',
-        payment_method: 'pix',
-        mercado_pago_id: String(mpData.id),
-        pix_copy_paste: pixCopyPaste,
-        qr_code: qrCodeBase64,
-        external_reference: externalReference,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logSystem('info', 'payment', `PIX gerado: ${externalReference}`, { amount, plan_id }, req.ip, req.headers['user-agent']);
-
-    res.json({
-      id: payment.id,
-      mercado_pago_id: mpData.id,
-      pix_copy_paste: pixCopyPaste,
-      qr_code: qrCodeBase64,
-      external_reference: externalReference,
-      status: 'pending',
-      amount: parseFloat(amount)
-    });
-  } catch (err) {
-    console.error('Erro ao gerar PIX:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
-  }
-});
-
-// Verificar status de pagamento
-app.get('/api/check-payment', async (req, res) => {
-  try {
-    const { external_reference, mercado_pago_id } = req.query;
-
-    if (!external_reference && !mercado_pago_id) {
-      return res.status(400).json({ error: 'Referência ou ID do pagamento necessário' });
-    }
-
-    let query = supabase.from('payments').select('*');
-    if (external_reference) {
-      query = query.eq('external_reference', external_reference);
-    } else {
-      query = query.eq('mercado_pago_id', mercado_pago_id);
-    }
-
-    const { data: payment, error } = await query.single();
-    if (error || !payment) {
-      return res.status(404).json({ error: 'Pagamento não encontrado' });
-    }
-
-    // Verificar no Mercado Pago se ainda pendente
-    if (payment.status === 'pending' && payment.mercado_pago_id) {
-      const mpAccessToken = process.env.MP_ACCESS_TOKEN;
-      if (mpAccessToken) {
-        try {
-          const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment.mercado_pago_id}`, {
-            headers: { 'Authorization': `Bearer ${mpAccessToken}` }
-          });
-          const mpData = await mpRes.json();
-
-          if (mpData.status === 'approved') {
-            await supabase.from('payments').update({
-              status: 'approved',
-              confirmed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }).eq('id', payment.id);
-
-            payment.status = 'approved';
-            payment.confirmed_at = new Date().toISOString();
-          }
-        } catch (mpErr) {
-          console.error('Erro ao verificar MP:', mpErr.message);
-        }
-      }
-    }
-
-    res.json(payment);
-  } catch (err) {
-    console.error('Erro ao verificar pagamento:', err.message);
-    res.status(500).json({ error: 'Erro ao verificar pagamento' });
-  }
-});
-
-// Criar pagamento manual
-app.post('/api/create-payment', authMiddleware, async (req, res) => {
-  try {
-    const { user_id, plan_id, user_mac, amount, description, status, payment_method } = req.body;
-
-    const { data, error } = await supabase
-      .from('payments')
-      .insert({
-        user_id, plan_id, user_mac,
-        amount: parseFloat(amount || 0),
-        description: description || 'Pagamento manual',
-        status: status || 'approved',
-        payment_method: payment_method || 'manual',
-        external_reference: `MANUAL-${Date.now()}`,
-        confirmed_at: status === 'approved' ? new Date().toISOString() : null
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'payment', `Pagamento manual criado: ${data.id}`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar pagamento:', err.message);
-    res.status(500).json({ error: 'Erro ao criar pagamento' });
-  }
-});
-
-// Confirmar pagamento manualmente
-app.post('/api/confirm-payment', authMiddleware, async (req, res) => {
-  try {
-    const { payment_id, user_id, plan_id } = req.body;
-
-    const { data: payment, error: payErr } = await supabase
-      .from('payments')
-      .update({
-        status: 'approved',
-        confirmed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', payment_id)
-      .select()
-      .single();
-
-    if (payErr) throw payErr;
-
-    // Se tiver user_id e plan_id, ativar acesso do usuário
-    if (user_id && plan_id) {
-      const { data: plan } = await supabase.from('plans').select('*').eq('id', plan_id).single();
-      if (plan) {
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + (plan.duration_days || 30));
-
-        await supabase.from('users').update({
-          status: 'active',
-          plan_id: plan.id,
-          plan_name: plan.name,
-          expires_at: expiresAt.toISOString(),
-          updated_at: new Date().toISOString()
-        }).eq('id', user_id);
-      }
-    }
-
-    await logAudit(req.user.username, 'update', 'payment', `Pagamento confirmado: ${payment_id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Pagamento confirmado com sucesso', payment });
-  } catch (err) {
-    console.error('Erro ao confirmar pagamento:', err.message);
-    res.status(500).json({ error: 'Erro ao confirmar pagamento' });
-  }
-});
-
-// ============================================================
-// ROTAS DE VOUCHERS
-// ============================================================
-
-// Listar vouchers
-app.get('/api/vouchers', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('vouchers')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar vouchers:', err.message);
-    res.status(500).json({ error: 'Erro ao listar vouchers' });
-  }
-});
-
-// Criar voucher
-app.post('/api/vouchers', authMiddleware, async (req, res) => {
-  try {
-    const { plan_name, amount, expires_at, quantity } = req.body;
-    const count = parseInt(quantity) || 1;
-    const vouchers = [];
-
-    for (let i = 0; i < count; i++) {
-      const code = crypto.randomBytes(4).toString('hex').toUpperCase();
-      vouchers.push({
-        code,
-        plan_name: plan_name || '',
-        amount: parseFloat(amount || 0),
-        used: false,
-        expires_at: expires_at || null
-      });
-    }
-
-    const { data, error } = await supabase
-      .from('vouchers')
-      .insert(vouchers)
-      .select();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'voucher', `${count} voucher(s) criado(s)`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar voucher:', err.message);
-    res.status(500).json({ error: 'Erro ao criar voucher' });
-  }
-});
-
-// Atualizar voucher
-app.put('/api/vouchers/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
-    delete updateData.id;
-
-    const { data, error } = await supabase
-      .from('vouchers')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.json(data);
-  } catch (err) {
-    console.error('Erro ao atualizar voucher:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar voucher' });
-  }
-});
-
-// Deletar voucher
-app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await supabase.from('vouchers').delete().eq('id', id);
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'delete', 'voucher', `Voucher removido: ${id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Voucher removido com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar voucher:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar voucher' });
-  }
-});
-
-// ============================================================
-// ROTAS DE CAMPANHAS
-// ============================================================
-
-// Listar campanhas
-app.get('/api/campaigns', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('campaigns')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar campanhas:', err.message);
-    res.status(500).json({ error: 'Erro ao listar campanhas' });
-  }
-});
-
-// Criar campanha
-app.post('/api/campaigns', authMiddleware, async (req, res) => {
-  try {
-    const { name, description, coupon_code, status, starts_at, ends_at } = req.body;
-
-    const { data, error } = await supabase
-      .from('campaigns')
-      .insert({
-        name, description, coupon_code,
-        status: status || 'active',
-        starts_at, ends_at
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'campaign', `Campanha criada: ${name}`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar campanha:', err.message);
-    res.status(500).json({ error: 'Erro ao criar campanha' });
-  }
-});
-
-// Atualizar campanha
-app.put('/api/campaigns/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
-    delete updateData.id;
-
-    const { data, error } = await supabase
-      .from('campaigns')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'update', 'campaign', `Campanha atualizada: ${id}`, req.ip, req.headers['user-agent']);
-    res.json(data);
-  } catch (err) {
-    console.error('Erro ao atualizar campanha:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar campanha' });
-  }
-});
-
-// Deletar campanha
-app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await supabase.from('campaigns').delete().eq('id', id);
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'delete', 'campaign', `Campanha removida: ${id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Campanha removida com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar campanha:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar campanha' });
-  }
-});
-
-// ============================================================
-// ROTAS DE WEBHOOKS
-// ============================================================
-
-// Listar webhooks
-app.get('/api/webhooks', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('webhooks')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar webhooks:', err.message);
-    res.status(500).json({ error: 'Erro ao listar webhooks' });
-  }
-});
-
-// Criar webhook
-app.post('/api/webhooks', authMiddleware, async (req, res) => {
-  try {
-    const { name, event, url, method, target, active } = req.body;
-
-    const { data, error } = await supabase
-      .from('webhooks')
-      .insert({
-        name, event, url,
-        method: method || 'POST',
-        target: target || 'all',
-        active: active !== undefined ? active : true
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'webhook', `Webhook criado: ${name}`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar webhook:', err.message);
-    res.status(500).json({ error: 'Erro ao criar webhook' });
-  }
-});
-
-// Deletar webhook
-app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await supabase.from('webhooks').delete().eq('id', id);
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'delete', 'webhook', `Webhook removido: ${id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Webhook removido com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar webhook:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar webhook' });
-  }
-});
-
-// ============================================================
-// ROTAS DE CONFIGURAÇÕES
-// ============================================================
-
-// Obter campos de cadastro
-app.get('/api/settings/fields', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('category', 'fields');
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar campos' });
-  }
-});
-
-// Salvar campos de cadastro
-app.post('/api/settings/fields', authMiddleware, async (req, res) => {
-  try {
-    const { fields } = req.body;
-
-    // Upsert: atualizar ou criar
-    const { error } = await supabase
-      .from('settings')
-      .upsert({
-        key: 'registration_fields',
-        category: 'fields',
-        value: fields,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'key' });
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'update', 'settings', 'Campos de cadastro atualizados', req.ip, req.headers['user-agent']);
-    res.json({ message: 'Campos salvos com sucesso' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao salvar campos' });
-  }
-});
-
-// Obter configurações do sistema
-app.get('/api/settings/system', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('category', 'system');
-
-    if (error) throw error;
-
-    // Transformar em objeto chave-valor
-    const settings = {};
-    (data || []).forEach(item => {
-      settings[item.key] = item.value;
-    });
-
-    res.json(settings);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar configurações do sistema' });
-  }
-});
-
-// Salvar configurações do sistema
-app.post('/api/settings/system', authMiddleware, async (req, res) => {
-  try {
-    const entries = Object.entries(req.body);
-    for (const [key, value] of entries) {
-      await supabase
-        .from('settings')
-        .upsert({
-          key,
-          category: 'system',
-          value: typeof value === 'object' ? value : { value },
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
-    }
-
-    await logAudit(req.user.username, 'update', 'settings', 'Configurações do sistema atualizadas', req.ip, req.headers['user-agent']);
-    res.json({ message: 'Configurações salvas com sucesso' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao salvar configurações do sistema' });
-  }
-});
-
-// Obter configurações de pagamento
-app.get('/api/settings/payment', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('category', 'payment');
-
-    if (error) throw error;
-
-    const settings = {};
-    (data || []).forEach(item => {
-      settings[item.key] = item.value;
-    });
-
-    res.json(settings);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar configurações de pagamento' });
-  }
-});
-
-// Salvar configurações de pagamento
-app.post('/api/settings/payment', authMiddleware, async (req, res) => {
-  try {
-    const entries = Object.entries(req.body);
-    for (const [key, value] of entries) {
-      await supabase
-        .from('settings')
-        .upsert({
-          key,
-          category: 'payment',
-          value: typeof value === 'object' ? value : { value },
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
-    }
-
-    await logAudit(req.user.username, 'update', 'settings', 'Configurações de pagamento atualizadas', req.ip, req.headers['user-agent']);
-    res.json({ message: 'Configurações de pagamento salvas com sucesso' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao salvar configurações de pagamento' });
-  }
-});
-
-// ============================================================
-// ROTAS DE HOTSPOTS
-// ============================================================
-
-// Listar hotspots
-app.get('/api/hotspots', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('hotspots')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    console.error('Erro ao listar hotspots:', err.message);
-    res.status(500).json({ error: 'Erro ao listar hotspots' });
-  }
-});
-
-// Criar hotspot
-app.post('/api/hotspots', authMiddleware, async (req, res) => {
-  try {
-    const { name, location, address, pop_id, radius_enabled, dns_name } = req.body;
-
-    const { data, error } = await supabase
-      .from('hotspots')
-      .insert({
-        name, location, address, pop_id,
-        status: 'active',
-        radius_enabled: radius_enabled || false,
-        dns_name
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'create', 'hotspot', `Hotspot criado: ${name}`, req.ip, req.headers['user-agent']);
-    res.status(201).json(data);
-  } catch (err) {
-    console.error('Erro ao criar hotspot:', err.message);
-    res.status(500).json({ error: 'Erro ao criar hotspot' });
-  }
-});
-
-// Deletar hotspot
-app.delete('/api/hotspots/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { error } = await supabase.from('hotspots').delete().eq('id', id);
-    if (error) throw error;
-
-    await logAudit(req.user.username, 'delete', 'hotspot', `Hotspot removido: ${id}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Hotspot removido com sucesso' });
-  } catch (err) {
-    console.error('Erro ao deletar hotspot:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar hotspot' });
-  }
-});
-
-// ============================================================
-// ROTAS DE POPs E PING
-// ============================================================
-
-// Listar POPs
-app.get('/api/pops', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('pops')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao listar POPs' });
-  }
-});
-
-// Ping de POP (heartbeat) - cria automaticamente se não existir
-app.post('/api/pops/:id/ping', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, ip, connected_users, bandwidth_used, unique_id } = req.body;
-
-    // Verificar se POP existe
-    const { data: existing } = await supabase
-      .from('pops')
-      .select('id')
-      .eq('id', id)
-      .single();
-
-    if (existing) {
-      // Atualizar heartbeat
-      await supabase.from('pops').update({
-        status: 'online',
-        last_seen_at: new Date().toISOString(),
-        ip: ip || undefined,
-        connected_users: connected_users || 0,
-        bandwidth_used: bandwidth_used || '0 Mbps',
-        updated_at: new Date().toISOString()
-      }).eq('id', id);
-    } else {
-      // Criar POP automaticamente
-      await supabase.from('pops').insert({
-        id,
-        name: name || `POP-${id}`,
-        unique_id: unique_id || id,
-        ip: ip || req.ip,
-        status: 'online',
-        last_seen_at: new Date().toISOString(),
-        connected_users: connected_users || 0,
-        bandwidth_used: bandwidth_used || '0 Mbps'
-      });
-    }
-
-    res.json({ status: 'ok', message: 'Ping recebido' });
-  } catch (err) {
-    console.error('Erro no ping do POP:', err.message);
-    res.status(500).json({ error: 'Erro ao processar ping' });
-  }
-});
-
-// ============================================================
-// ROTAS DE TESTE GRATUITO E VALIDAÇÃO DE ACESSO
-// ============================================================
-
-// Liberar teste gratuito
-app.post('/api/free-trial', async (req, res) => {
-  try {
-    const { mac } = req.body;
-    if (!mac) {
-      return res.status(400).json({ error: 'MAC address é obrigatório' });
-    }
-
-    // Buscar configurações de teste gratuito
-    const { data: settingsData } = await supabase
-      .from('settings')
-      .select('*')
-      .in('key', ['free_trial_minutes', 'free_trial_hours_limit']);
-
-    const settings = {};
-    (settingsData || []).forEach(s => {
-      settings[s.key] = s.value?.value || s.value;
-    });
-
-    const trialMinutes = parseInt(settings.free_trial_minutes) || 30;
-    const hoursLimit = parseInt(settings.free_trial_hours_limit) || 24;
-
-    // Verificar se já usou teste recentemente
-    const { data: existing } = await supabase
-      .from('free_trials')
-      .select('*')
-      .eq('mac', mac)
-      .single();
-
-    if (existing) {
-      const lastTrial = new Date(existing.last_trial);
-      const hoursSince = (Date.now() - lastTrial.getTime()) / (1000 * 60 * 60);
-
-      if (hoursSince < hoursLimit) {
-        return res.status(429).json({
-          error: `Teste gratuito já utilizado. Tente novamente em ${Math.ceil(hoursLimit - hoursSince)} horas.`
-        });
-      }
-
-      // Atualizar registro
-      await supabase.from('free_trials').update({
-        last_trial: new Date().toISOString(),
-        attempts: existing.attempts + 1,
-        updated_at: new Date().toISOString()
-      }).eq('id', existing.id);
-    } else {
-      // Criar novo registro
-      await supabase.from('free_trials').insert({
-        mac,
-        last_trial: new Date().toISOString(),
-        attempts: 1
-      });
-    }
-
-    const expiresAt = new Date(Date.now() + trialMinutes * 60 * 1000);
-
-    // Criar sessão de hotspot
-    await supabase.from('hotspot_sessions').insert({
-      mac_address: mac,
-      access_granted: true,
-      status: 'active',
-      expires_at: expiresAt.toISOString()
-    });
-
-    await logSystem('info', 'free-trial', `Teste gratuito liberado: ${mac}`, { trialMinutes }, req.ip, req.headers['user-agent']);
-
-    res.json({
-      message: 'Teste gratuito liberado',
-      duration_minutes: trialMinutes,
-      expires_at: expiresAt.toISOString()
-    });
-  } catch (err) {
-    console.error('Erro ao liberar teste gratuito:', err.message);
-    res.status(500).json({ error: 'Erro ao liberar teste gratuito' });
-  }
-});
-
-// Validar acesso do usuário
-app.post('/api/validate-access', async (req, res) => {
-  try {
-    const { mac, username } = req.body;
-
-    if (!mac && !username) {
-      return res.status(400).json({ error: 'MAC ou username é obrigatório' });
-    }
-
-    // Buscar usuário por MAC ou username
-    let query = supabase.from('users').select('*');
-    if (mac) {
-      query = query.eq('mac_address', mac);
-    } else {
-      query = query.eq('username', username);
-    }
-
-    const { data: user } = await query.single();
-
-    if (!user) {
-      return res.json({ access: false, reason: 'Usuário não encontrado' });
-    }
-
-    if (user.status !== 'active') {
-      return res.json({ access: false, reason: 'Conta inativa' });
-    }
-
-    if (user.expires_at && new Date(user.expires_at) < new Date()) {
-      return res.json({ access: false, reason: 'Plano expirado' });
-    }
-
-    // Verificar sessão ativa
-    const { data: session } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .eq('mac_address', mac || user.mac_address)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    res.json({
-      access: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        plan_name: user.plan_name,
-        expires_at: user.expires_at,
-        is_vip: user.is_vip
-      },
-      session: session || null
-    });
-  } catch (err) {
-    console.error('Erro ao validar acesso:', err.message);
-    res.status(500).json({ error: 'Erro ao validar acesso' });
-  }
-});
-
-// ============================================================
-// ROTAS DE ESTATÍSTICAS
-// ============================================================
-
-// Estatísticas gerais
-app.get('/api/stats', authMiddleware, async (req, res) => {
-  try {
-    const [
-      { count: totalUsers },
-      { count: activeUsers },
-      { count: totalPayments },
-      { count: pendingPayments },
-      { count: totalHotspots },
-      { count: totalPops },
-      { count: activeSessions },
-      { count: totalVouchers }
-    ] = await Promise.all([
-      supabase.from('users').select('*', { count: 'exact', head: true }),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('payments').select('*', { count: 'exact', head: true }),
-      supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('hotspots').select('*', { count: 'exact', head: true }),
-      supabase.from('pops').select('*', { count: 'exact', head: true }),
-      supabase.from('hotspot_sessions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-      supabase.from('vouchers').select('*', { count: 'exact', head: true }).eq('used', false)
-    ]);
-
-    // Faturamento total (pagamentos aprovados)
-    const { data: revenueData } = await supabase
-      .from('payments')
-      .select('amount')
-      .eq('status', 'approved');
-
-    const totalRevenue = (revenueData || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-    // Faturamento do mês
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const { data: monthRevenueData } = await supabase
-      .from('payments')
-      .select('amount')
-      .eq('status', 'approved')
-      .gte('confirmed_at', startOfMonth.toISOString());
-
-    const monthRevenue = (monthRevenueData || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-    // POPs online
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { count: onlinePops } = await supabase
-      .from('pops')
-      .select('*', { count: 'exact', head: true })
-      .gte('last_seen_at', fiveMinutesAgo);
-
-    res.json({
-      totalUsers: totalUsers || 0,
-      activeUsers: activeUsers || 0,
-      totalPayments: totalPayments || 0,
-      pendingPayments: pendingPayments || 0,
-      totalHotspots: totalHotspots || 0,
-      totalPops: totalPops || 0,
-      onlinePops: onlinePops || 0,
-      activeSessions: activeSessions || 0,
-      totalVouchers: totalVouchers || 0,
-      totalRevenue,
-      monthRevenue
-    });
-  } catch (err) {
-    console.error('Erro ao buscar estatísticas:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
-  }
-});
-
-// Usuários por hora (últimas 24h)
-app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
-  try {
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    const { data } = await supabase
-      .from('hotspot_sessions')
-      .select('created_at')
-      .gte('created_at', twentyFourHoursAgo);
-
-    // Agrupar por hora
-    const hourly = {};
-    for (let i = 0; i < 24; i++) {
-      hourly[i] = 0;
-    }
-
-    (data || []).forEach(session => {
-      const hour = new Date(session.created_at).getHours();
-      hourly[hour] = (hourly[hour] || 0) + 1;
-    });
-
-    const result = Object.entries(hourly).map(([hour, count]) => ({
-      hour: parseInt(hour),
-      count
-    }));
-
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar usuários por hora' });
-  }
-});
-
-// Tráfego total
-app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
-  try {
-    const { data } = await supabase
-      .from('pops')
-      .select('bandwidth_used');
-
-    let totalMbps = 0;
-    (data || []).forEach(pop => {
-      const match = (pop.bandwidth_used || '').match(/[\d.]+/);
-      if (match) totalMbps += parseFloat(match[0]);
-    });
-
-    res.json({ total_mbps: totalMbps, formatted: `${totalMbps.toFixed(1)} Mbps` });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar tráfego total' });
-  }
-});
-
-// Pico de banda
-app.get('/api/stats/peak-bandwidth', authMiddleware, async (req, res) => {
-  try {
-    const { data } = await supabase
-      .from('pops')
-      .select('bandwidth_used');
-
-    let peakMbps = 0;
-    (data || []).forEach(pop => {
-      const match = (pop.bandwidth_used || '').match(/[\d.]+/);
-      if (match) {
-        const val = parseFloat(match[0]);
-        if (val > peakMbps) peakMbps = val;
-      }
-    });
-
-    res.json({ peak_mbps: peakMbps, formatted: `${peakMbps.toFixed(1)} Mbps` });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar pico de banda' });
-  }
-});
-
-// Comparação (faturamento por plano)
-app.get('/api/stats/comparison', authMiddleware, async (req, res) => {
-  try {
-    const { data: payments } = await supabase
-      .from('payments')
-      .select('plan_id, amount')
-      .eq('status', 'approved');
-
-    const { data: plans } = await supabase.from('plans').select('id, name');
-
-    const planMap = {};
-    (plans || []).forEach(p => { planMap[p.id] = p.name; });
-
-    const comparison = {};
-    (payments || []).forEach(p => {
-      const planName = planMap[p.plan_id] || 'Outros';
-      comparison[planName] = (comparison[planName] || 0) + parseFloat(p.amount || 0);
-    });
-
-    const result = Object.entries(comparison).map(([name, total]) => ({ name, total }));
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar comparação' });
-  }
-});
-
-// ============================================================
-// ROTAS DE LOGS E AUDITORIA
-// ============================================================
-
-// Listar logs do sistema
-app.get('/api/logs', authMiddleware, async (req, res) => {
-  try {
-    const { limit: queryLimit, level, source } = req.query;
-    let query = supabase.from('logs').select('*').order('created_at', { ascending: false });
-
-    if (level) query = query.eq('level', level);
-    if (source) query = query.eq('source', source);
-    query = query.limit(parseInt(queryLimit) || 100);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar logs' });
-  }
-});
-
-// Listar logs de auditoria
-app.get('/api/audit-logs', authMiddleware, async (req, res) => {
-  try {
-    const { limit: queryLimit, type, username } = req.query;
-    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
-
-    if (type) query = query.eq('type', type);
-    if (username) query = query.eq('username', username);
-    query = query.limit(parseInt(queryLimit) || 100);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    res.json(data || []);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar logs de auditoria' });
-  }
-});
-
-// Criar log de auditoria manual
-app.post('/api/audit-logs', authMiddleware, async (req, res) => {
-  try {
-    const { type, object, action } = req.body;
-
-    const { data, error } = await supabase
-      .from('audit_logs')
-      .insert({
-        username: req.user.username,
-        type, object, action,
-        ip: req.ip,
-        user_agent: req.headers['user-agent']
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    res.status(201).json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao criar log de auditoria' });
-  }
-});
-
-// ============================================================
-// ROTA DE ENTRYPOINT (portal captivo)
-// ============================================================
-
-app.get('/entrypoint', (req, res) => {
-  const { mac, ip, username, link_login, link_orig } = req.query;
-  // Redirecionar para o portal do usuário com parâmetros
-  const params = new URLSearchParams({
-    mac: mac || '',
-    ip: ip || '',
-    username: username || '',
-    link_login: link_login || '',
-    link_orig: link_orig || ''
-  });
-  res.redirect(`/portal-usuario.html?${params.toString()}`);
-});
-
-// ============================================================
-// ROTA DE SAÚDE
-// ============================================================
-
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: '2.0.0'
-  });
-});
-
-// ============================================================
-// WEBHOOK DO MERCADO PAGO (receber notificações de pagamento)
-// ============================================================
-
-app.post('/api/webhooks/mercadopago', async (req, res) => {
-  try {
-    const { type, data: mpData } = req.body;
-
-    if (type === 'payment') {
-      const paymentId = mpData?.id;
-      if (!paymentId) return res.sendStatus(200);
-
-      const mpAccessToken = process.env.MP_ACCESS_TOKEN;
-      if (!mpAccessToken) return res.sendStatus(200);
-
-      // Buscar detalhes do pagamento no MP
-      const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: { 'Authorization': `Bearer ${mpAccessToken}` }
-      });
-      const mpPayment = await mpRes.json();
-
-      if (mpPayment.status === 'approved') {
-        // Atualizar pagamento local
-        const { data: localPayment } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('mercado_pago_id', String(paymentId))
-          .single();
-
-        if (localPayment && localPayment.status !== 'approved') {
-          await supabase.from('payments').update({
-            status: 'approved',
-            confirmed_at: new Date().toISOString(),
-            webhook_payload: req.body,
-            updated_at: new Date().toISOString()
-          }).eq('id', localPayment.id);
-
-          // Ativar acesso do usuário se aplicável
-          if (localPayment.user_id && localPayment.plan_id) {
-            const { data: plan } = await supabase.from('plans').select('*').eq('id', localPayment.plan_id).single();
-            if (plan) {
-              const expiresAt = new Date();
-              expiresAt.setDate(expiresAt.getDate() + (plan.duration_days || 30));
-
-              await supabase.from('users').update({
-                status: 'active',
-                plan_id: plan.id,
-                plan_name: plan.name,
-                expires_at: expiresAt.toISOString(),
-                updated_at: new Date().toISOString()
-              }).eq('id', localPayment.user_id);
-            }
-          }
-
-          await logSystem('info', 'webhook', `Pagamento aprovado via webhook: ${paymentId}`, mpPayment, req.ip, req.headers['user-agent']);
-        }
-      }
-    }
-
-    res.sendStatus(200);
-  } catch (err) {
-    console.error('Erro no webhook MP:', err.message);
-    res.sendStatus(200);
-  }
-});
-
-// ============================================================
 // ROTAS DE ADMINS (CRUD)
 // ============================================================
 
-// Listar admins
 app.get('/api/admins', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('admins').select('id, username, email, role, created_at').order('id');
@@ -1571,27 +410,30 @@ app.get('/api/admins', authMiddleware, async (req, res) => {
   }
 });
 
-// Criar admin
 app.post('/api/admins', authMiddleware, async (req, res) => {
   try {
     const { username, password, email } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Usuário e senha obrigatórios' });
-    const { data, error } = await supabase.from('admins').insert({ username, password, email: email || null, role: 'admin' }).select().single();
+
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    const { data, error } = await supabase.from('admins').insert({
+      username, password: hashedPassword, email: email || null, role: 'admin'
+    }).select().single();
+
     if (error) throw error;
-    await logAudit(req.user.username, 'create', 'admins', `Admin criado: ${username}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'admins', `Admin criado: ${username}`, req.ip, req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao criar admin' });
   }
 });
 
-// Excluir admin
 app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { error } = await supabase.from('admins').delete().eq('id', id);
     if (error) throw error;
-    await logAudit(req.user.username, 'delete', 'admins', `Admin excluído: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'delete', 'admins', `Admin excluído: ${id}`, req.ip, req.headers['user-agent']);
     res.json({ message: 'Admin excluído' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao excluir admin' });
@@ -1599,13 +441,1030 @@ app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// ROTAS DE SETTINGS (genérico key-value)
+// ROTAS DE USUÁRIOS (CLIENTES)
 // ============================================================
 
-// Listar todas as configurações
+app.get('/api/users', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar usuários:', err.message);
+    res.status(500).json({ error: 'Erro ao listar usuários' });
+  }
+});
+
+app.post('/api/users', authMiddleware, async (req, res) => {
+  try {
+    const { name, username, mac_address, phone, cpf, email, address, plan_id, plan_name, hotspot_id, status, is_vip } = req.body;
+
+    const { data, error } = await supabase.from('users').insert({
+      name, username, mac_address, phone, cpf, email, address,
+      plan_id, plan_name, hotspot_id,
+      status: status || 'inactive',
+      is_vip: is_vip || false
+    }).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name}`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar usuário:', err.message);
+    res.status(500).json({ error: 'Erro ao criar usuário' });
+  }
+});
+
+app.put('/api/users/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+    delete updateData.created_at;
+
+    const { data, error } = await supabase.from('users').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao atualizar usuário:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
+app.delete('/api/users/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('users').delete().eq('id', id);
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, req.ip, req.headers['user-agent']);
+    res.json({ message: 'Usuário removido com sucesso' });
+  } catch (err) {
+    console.error('Erro ao deletar usuário:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar usuário' });
+  }
+});
+
+// ============================================================
+// ROTAS DE AÇÕES DO USUÁRIO (renew, block, unblock, vip)
+// ============================================================
+
+app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { plan_name, days = 30 } = req.body;
+    const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabase.from('users')
+      .update({ plan_name, status: 'active', expires_at: expiresAt, updated_at: new Date().toISOString() })
+      .eq('id', id).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (error) {
+    console.error('Renew user error:', error.message);
+    res.status(500).json({ error: 'Failed to renew user plan' });
+  }
+});
+
+app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase.from('users')
+      .update({ status: 'blocked', updated_at: new Date().toISOString() })
+      .eq('id', id).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (error) {
+    console.error('Block user error:', error.message);
+    res.status(500).json({ error: 'Failed to block user' });
+  }
+});
+
+app.post('/api/users/:id/unblock', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase.from('users')
+      .update({ status: 'active', updated_at: new Date().toISOString() })
+      .eq('id', id).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário desbloqueado: ${id}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (error) {
+    console.error('Unblock user error:', error.message);
+    res.status(500).json({ error: 'Failed to unblock user' });
+  }
+});
+
+app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_vip = true } = req.body;
+    const { data, error } = await supabase.from('users')
+      .update({ is_vip, updated_at: new Date().toISOString() })
+      .eq('id', id).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'update', 'user', `VIP atualizado: ${id}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (error) {
+    console.error('VIP user error:', error.message);
+    res.status(500).json({ error: 'Failed to update VIP status' });
+  }
+});
+
+// ============================================================
+// ROTAS DE PLANOS
+// ============================================================
+
+app.get('/api/plans', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('plans').select('*').order('price', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar planos:', err.message);
+    res.status(500).json({ error: 'Erro ao listar planos' });
+  }
+});
+
+app.post('/api/plans', authMiddleware, async (req, res) => {
+  try {
+    const { name, price, speed_mbps, duration_days, description, active } = req.body;
+    const { data, error } = await supabase.from('plans').insert({
+      name, price, speed_mbps, duration_days, description,
+      active: active !== undefined ? active : true
+    }).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'create', 'plan', `Plano criado: ${name}`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar plano:', err.message);
+    res.status(500).json({ error: 'Erro ao criar plano' });
+  }
+});
+
+app.put('/api/plans/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+    delete updateData.created_at;
+
+    const { data, error } = await supabase.from('plans').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, req.ip, req.headers['user-agent']);
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao atualizar plano:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar plano' });
+  }
+});
+
+app.delete('/api/plans/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('plans').delete().eq('id', id);
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, req.ip, req.headers['user-agent']);
+    res.json({ message: 'Plano removido com sucesso' });
+  } catch (err) {
+    console.error('Erro ao deletar plano:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar plano' });
+  }
+});
+
+// Detalhes do plano com contagem de assinantes
+app.get('/api/plans/:id/details', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: plan, error } = await supabase.from('plans').select('*').eq('id', id).maybeSingle();
+    if (error || !plan) return res.status(404).json({ error: 'Plan not found' });
+
+    const subscribers = await supabase.from('users').select('id', { count: 'exact', head: true }).eq('plan_id', id).eq('status', 'active');
+    return res.json({
+      ...plan,
+      active_subscribers: subscribers.count || 0,
+      monthly_revenue: (subscribers.count || 0) * parseCurrency(plan.price)
+    });
+  } catch (error) {
+    console.error('Plan details error:', error.message);
+    res.status(500).json({ error: 'Failed to load plan details' });
+  }
+});
+
+// ============================================================
+// ROTAS DE PAGAMENTOS
+// ============================================================
+
+app.get('/api/payments', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar pagamentos:', err.message);
+    res.status(500).json({ error: 'Erro ao listar pagamentos' });
+  }
+});
+
+app.post('/api/payments', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('payments').insert(req.body).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao criar pagamento' });
+  }
+});
+
+app.put('/api/payments/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+
+    const { data, error } = await supabase.from('payments').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao atualizar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar pagamento' });
+  }
+});
+
+app.delete('/api/payments/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('payments').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Pagamento removido' });
+  } catch (err) {
+    console.error('Erro ao deletar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar pagamento' });
+  }
+});
+
+// Check payment by MAC
+app.get('/api/check-payment-by-mac', async (req, res) => {
+  try {
+    const { mac } = req.query;
+    if (!mac) return res.status(400).json({ error: 'MAC address is required' });
+
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_mac', mac)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && data) {
+      return res.json({ paid: true, payment_id: data.id, amount: data.amount, created_at: data.created_at });
+    }
+    return res.json({ paid: false });
+  } catch (error) {
+    console.error('Check payment by mac error:', error.message);
+    res.status(500).json({ error: 'Failed to check payment by MAC' });
+  }
+});
+
+// ============================================================
+// ROTAS DE VOUCHERS
+// ============================================================
+
+app.get('/api/vouchers', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('vouchers').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar vouchers:', err.message);
+    res.status(500).json({ error: 'Erro ao listar vouchers' });
+  }
+});
+
+app.post('/api/vouchers', authMiddleware, async (req, res) => {
+  try {
+    const { plan_name, duration_hours, quantity } = req.body;
+    const count = Math.min(quantity || 1, 100);
+    const vouchers = [];
+
+    for (let i = 0; i < count; i++) {
+      vouchers.push({
+        code: crypto.randomBytes(4).toString('hex').toUpperCase(),
+        plan_name: plan_name || 'basic',
+        duration_hours: duration_hours || 24,
+        status: 'active',
+        used: false
+      });
+    }
+
+    const { data, error } = await supabase.from('vouchers').insert(vouchers).select();
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'create', 'voucher', `${count} vouchers criados`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar vouchers:', err.message);
+    res.status(500).json({ error: 'Erro ao criar vouchers' });
+  }
+});
+
+app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('vouchers').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Voucher removido' });
+  } catch (err) {
+    console.error('Erro ao deletar voucher:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar voucher' });
+  }
+});
+
+// Validação/resgate de voucher (rota pública)
+app.post('/api/vouchers/validate', async (req, res) => {
+  try {
+    const { code, mac_address } = req.body;
+    if (!code) return res.status(400).json({ error: 'Voucher code is required' });
+
+    const { data: voucher, error } = await supabase
+      .from('vouchers')
+      .select('*')
+      .eq('code', String(code).toUpperCase())
+      .maybeSingle();
+
+    if (error || !voucher) return res.status(404).json({ valid: false, error: 'Voucher not found' });
+    if (voucher.status === 'used' || voucher.used === true) return res.status(400).json({ valid: false, error: 'Voucher already used' });
+    if (voucher.status === 'expired') return res.status(400).json({ valid: false, error: 'Voucher expired' });
+
+    await supabase.from('vouchers').update({
+      status: 'used', used: true, used_at: new Date().toISOString(),
+      mac_address: mac_address || null, updated_at: new Date().toISOString()
+    }).eq('id', voucher.id);
+
+    return res.json({ valid: true, voucher_id: voucher.id, plan_name: voucher.plan_name || null });
+  } catch (error) {
+    console.error('Voucher validation error:', error.message);
+    res.status(500).json({ error: 'Failed to validate voucher' });
+  }
+});
+
+// ============================================================
+// ROTAS DE CAMPANHAS
+// ============================================================
+
+app.get('/api/campaigns', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar campanhas:', err.message);
+    res.status(500).json({ error: 'Erro ao listar campanhas' });
+  }
+});
+
+app.post('/api/campaigns', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaigns').insert(req.body).select().single();
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'create', 'campaign', `Campanha criada: ${req.body.name}`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar campanha:', err.message);
+    res.status(500).json({ error: 'Erro ao criar campanha' });
+  }
+});
+
+app.put('/api/campaigns/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+
+    const { data, error } = await supabase.from('campaigns').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao atualizar campanha:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar campanha' });
+  }
+});
+
+app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('campaigns').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Campanha removida' });
+  } catch (err) {
+    console.error('Erro ao deletar campanha:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar campanha' });
+  }
+});
+
+// ============================================================
+// ROTAS DE WEBHOOKS
+// ============================================================
+
+app.get('/api/webhooks', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('webhooks').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar webhooks:', err.message);
+    res.status(500).json({ error: 'Erro ao listar webhooks' });
+  }
+});
+
+app.post('/api/webhooks', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('webhooks').insert(req.body).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Erro ao criar webhook:', err.message);
+    res.status(500).json({ error: 'Erro ao criar webhook' });
+  }
+});
+
+app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('webhooks').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Webhook removido' });
+  } catch (err) {
+    console.error('Erro ao deletar webhook:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar webhook' });
+  }
+});
+
+// ============================================================
+// ROTAS DE HOTSPOTS
+// ============================================================
+
+app.get('/api/hotspots', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('hotspots').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar hotspots:', err.message);
+    res.status(500).json({ error: 'Erro ao listar hotspots' });
+  }
+});
+
+app.post('/api/hotspots', authMiddleware, async (req, res) => {
+  try {
+    const {
+      name, location, ip,
+      installation_type = 'new', wan_interface = 'ether1', lan_interface = 'ether4',
+      vlan_id = '', wan_type = 'dhcp', pppoe_user = '', pppoe_pass = '',
+      static_ip = '', static_mask = '', static_gw = '',
+      hotspot_type = 'new_vlan', existing_vlan = '', physical_port = ''
+    } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Hotspot name is required' });
+
+    const uniqueId = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const radiusSecret = generateStrongPassword(18);
+    const now = new Date().toISOString();
+
+    const payload = {
+      name, unique_id: uniqueId, location: location || 'Undefined',
+      ip: ip || '0.0.0.0', status: 'offline', created_at: now, updated_at: now,
+      installation_type, wan_interface, lan_interface, vlan_id, wan_type,
+      hotspot_type, existing_vlan, physical_port
+    };
+
+    const { data, error } = await supabase.from('hotspots').insert(payload).select().single();
+    if (error) throw error;
+
+    const script = generateInstallationScript({
+      uniqueId, hotspotName: name, installationType: installation_type,
+      wanInterface: wan_interface, lanInterface: lan_interface, vlanId: vlan_id,
+      wanType: wan_type, pppoeUser: pppoe_user, pppoePass: pppoe_pass,
+      staticIp: static_ip, staticMask: static_mask, staticGw: static_gw,
+      hotspotType: hotspot_type, existingVlan: existing_vlan, physicalPort: physical_port,
+      radiusSecret
+    });
+
+    await registerAuditLog(req.user.username, 'create', 'hotspot', `Hotspot criado: ${name}`, req.ip, req.headers['user-agent']);
+    return res.status(201).json({
+      success: true, id: data.id, unique_id: uniqueId, hotspot: data, script,
+      instructions: 'Copy the script to MikroTik terminal via SSH or Winbox'
+    });
+  } catch (error) {
+    console.error('Create hotspot error:', error.message);
+    res.status(500).json({ error: 'Failed to create hotspot' });
+  }
+});
+
+app.put('/api/hotspots/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+
+    const { data, error } = await supabase.from('hotspots').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao atualizar hotspot:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar hotspot' });
+  }
+});
+
+app.delete('/api/hotspots/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('hotspots').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Hotspot removido' });
+  } catch (err) {
+    console.error('Erro ao deletar hotspot:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar hotspot' });
+  }
+});
+
+// ============================================================
+// ROTAS DE POPs
+// ============================================================
+
+app.get('/api/pops', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('pops').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar POPs:', err.message);
+    res.status(500).json({ error: 'Erro ao listar POPs' });
+  }
+});
+
+app.post('/api/pops', authMiddleware, async (req, res) => {
+  try {
+    const { name, ip, location } = req.body;
+    if (!name) return res.status(400).json({ error: 'POP name is required' });
+
+    const now = new Date().toISOString();
+    const { data, error } = await supabase.from('pops').insert({
+      name, ip: ip || null, location: location || null,
+      status: 'offline', created_at: now, updated_at: now
+    }).select().single();
+
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'create', 'pop', `POP criado: ${name}`, req.ip, req.headers['user-agent']);
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Create POP error:', error.message);
+    res.status(500).json({ error: 'Failed to create POP' });
+  }
+});
+
+app.put('/api/pops/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+
+    const { data, error } = await supabase.from('pops').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Erro ao atualizar POP:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar POP' });
+  }
+});
+
+app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('pops').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'POP removido' });
+  } catch (err) {
+    console.error('Erro ao deletar POP:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar POP' });
+  }
+});
+
+// POP Ping/Heartbeat (rota pública - chamada pelo MikroTik scheduler)
+app.post('/api/pops/:id/ping', async (req, res) => {
+  try {
+    const popId = req.params.id;
+    const { connected_users, bandwidth_used, api_user, api_pass, ip, name } = req.body;
+    const now = new Date().toISOString();
+
+    if (api_user && api_pass) {
+      await upsertMikrotikCredentials({ pop_id: popId, pop_ip: ip || null, api_user, api_pass });
+    }
+
+    const existing = await supabase.from('pops').select('*').eq('id', popId).maybeSingle();
+
+    if (!existing.error && existing.data) {
+      const update = await supabase.from('pops').update({
+        status: 'online', last_seen_at: now,
+        connected_users: connected_users ?? 0,
+        bandwidth_used: bandwidth_used || '0 Mbps',
+        ip: ip || existing.data.ip || null,
+        updated_at: now
+      }).eq('id', popId);
+
+      if (update.error) throw update.error;
+    } else {
+      const create = await supabase.from('pops').insert({
+        id: popId, name: name || popId, status: 'online',
+        last_seen_at: now, connected_users: connected_users ?? 0,
+        bandwidth_used: bandwidth_used || '0 Mbps',
+        ip: ip || null, created_at: now, updated_at: now
+      });
+
+      if (create.error) throw create.error;
+    }
+
+    return res.json({ status: 'ok', pop_id: popId, timestamp: now });
+  } catch (error) {
+    console.error('POP ping error:', error.message);
+    res.status(500).json({ error: 'Failed to process ping' });
+  }
+});
+
+// POP Identity (rota pública - chamada pelo MikroTik)
+app.post('/api/pop/identity', async (req, res) => {
+  try {
+    const { pop_id, identity } = req.body;
+    if (!pop_id || !identity) return res.status(400).json({ error: 'pop_id and identity are required' });
+
+    const { error } = await supabase.from('pops').update({
+      real_name: identity,
+      last_identity_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq('name', pop_id);
+
+    if (error) throw error;
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Pop identity error:', error.message);
+    res.status(500).json({ error: 'Failed to save pop identity' });
+  }
+});
+
+// POP Installation Script
+app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).maybeSingle();
+    if (error || !pop) return res.status(404).json({ error: 'POP not found' });
+
+    const uniqueId = pop.unique_id || pop.id || slugifyValue(pop.name || id).toUpperCase();
+    const radiusSecret = pop.radius_secret || generateStrongPassword(18);
+
+    return res.json({
+      pop_id: id,
+      script: generateInstallationScript({
+        uniqueId, hotspotName: pop.name || id,
+        installationType: pop.installation_type || 'new',
+        wanInterface: pop.wan_interface || 'ether1',
+        lanInterface: pop.lan_interface || 'ether4',
+        vlanId: pop.vlan_id || '', wanType: pop.wan_type || 'dhcp',
+        hotspotType: pop.hotspot_type || 'new_vlan',
+        existingVlan: pop.existing_vlan || '',
+        physicalPort: pop.physical_port || '',
+        pppoeUser: pop.pppoe_user || '', pppoePass: pop.pppoe_pass || '',
+        staticIp: pop.static_ip || '', staticMask: pop.static_mask || '',
+        staticGw: pop.static_gw || '', radiusSecret
+      })
+    });
+  } catch (error) {
+    console.error('Get POP script error:', error.message);
+    res.status(500).json({ error: 'Failed to generate installation script' });
+  }
+});
+
+// POP Revert Script
+app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).maybeSingle();
+    if (error || !pop) return res.status(404).json({ error: 'POP not found' });
+
+    const uniqueId = pop.unique_id || pop.id || slugifyValue(pop.name || id).toUpperCase();
+    return res.json({
+      pop_id: id,
+      script: generateRevertScript({ uniqueId, hotspotName: pop.name || id })
+    });
+  } catch (error) {
+    console.error('Get POP revert script error:', error.message);
+    res.status(500).json({ error: 'Failed to generate revert script' });
+  }
+});
+
+// ============================================================
+// ACCESS / TRIAL / RELEASES
+// ============================================================
+
+// Free trial (rota pública)
+app.post('/api/free-trial', async (req, res) => {
+  try {
+    const { mac, pop_ip, api_user, api_pass, pop_id } = req.body;
+    if (!mac) return res.status(400).json({ error: 'MAC address is required' });
+
+    const now = new Date();
+    const oneHourMs = 60 * 60 * 1000;
+
+    const { data: trial } = await supabase.from('free_trials').select('*').eq('mac', mac).maybeSingle();
+
+    if (trial?.last_trial) {
+      const lastTrial = new Date(trial.last_trial);
+      if (now - lastTrial < oneHourMs) {
+        const minutesRemaining = Math.ceil((oneHourMs - (now - lastTrial)) / 60000);
+        return res.status(429).json({ error: `Wait ${minutesRemaining} minutes before another trial` });
+      }
+    }
+
+    await supabase.from('free_trials').upsert({
+      mac, last_trial: now.toISOString(),
+      attempts: (trial?.attempts || 0) + 1,
+      updated_at: now.toISOString()
+    }, { onConflict: 'mac' });
+
+    const result = await authorizeAccess(mac, pop_ip, api_user, api_pass, pop_id, 15);
+    if (!result.success) {
+      return res.status(500).json({ error: 'Failed to authorize free trial', details: result.errors });
+    }
+
+    await registerSystemLog('info', 'free-trial', `Free trial authorized for ${mac}`, { mac, pop_id, viaApi: result.viaApi, viaRadius: result.viaRadius });
+    return res.json({ success: true, duration_minutes: 15, via_api: result.viaApi, via_radius: result.viaRadius });
+  } catch (error) {
+    console.error('Free trial error:', error.message);
+    res.status(500).json({ error: 'Failed to authorize free trial' });
+  }
+});
+
+// Access releases (admin)
+app.get('/api/access-releases', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('hotspot_sessions').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return res.json(data || []);
+  } catch (error) {
+    console.error('Access releases error:', error.message);
+    res.status(500).json({ error: 'Failed to load access releases' });
+  }
+});
+
+// ============================================================
+// ENTRYPOINT (redirecionamento do MikroTik)
+// ============================================================
+
+app.get('/entrypoint', (req, res) => {
+  const hotspotIdentity = req.query.hotspotIdentity || req.query.server || req.query.server_name || '';
+  const userMac = req.query.userMac || req.query.mac || '';
+  const hostname = req.query.hostname || req.query.ip || '';
+  const target = `${FRONTEND_BASE_URL}/index.html?mac=${encodeURIComponent(userMac)}&ip=${encodeURIComponent(hostname)}&pop=${encodeURIComponent(hotspotIdentity)}`;
+  return res.redirect(target);
+});
+
+// ============================================================
+// PORTAL PÚBLICO (para clientes finais)
+// ============================================================
+
+// Listar planos (público)
+app.get('/api/portal/plans', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('plans').select('*').eq('active', true).order('price', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('Erro ao listar planos do portal:', err.message);
+    res.status(500).json({ error: 'Erro ao listar planos' });
+  }
+});
+
+// Login do portal (cliente)
+app.post('/api/portal/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Usuário e senha obrigatórios' });
+
+    const { data: user, error } = await supabase.from('users').select('*').eq('username', username).single();
+    if (error || !user) return res.status(401).json({ error: 'Credenciais inválidas' });
+
+    // Comparação de senha
+    let passwordMatch = false;
+    if (user.password && user.password.length === 64) {
+      const sha256 = crypto.createHash('sha256').update(password).digest('hex');
+      passwordMatch = user.password === sha256;
+    } else {
+      passwordMatch = user.password === password;
+    }
+
+    if (!passwordMatch) return res.status(401).json({ error: 'Credenciais inválidas' });
+
+    const token = jwt.sign({ id: user.id, username: user.username, role: 'user' }, JWT_SECRET, { expiresIn: '12h' });
+    res.json({ token, user: { id: user.id, username: user.username, name: user.name, plan_name: user.plan_name, status: user.status } });
+  } catch (err) {
+    console.error('Erro no login do portal:', err.message);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// Registro do portal (cliente)
+app.post('/api/portal/register', async (req, res) => {
+  try {
+    const { name, username, password, phone, cpf, mac_address } = req.body;
+    if (!name || !username || !password) return res.status(400).json({ error: 'Nome, usuário e senha obrigatórios' });
+
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    const { data, error } = await supabase.from('users').insert({
+      name, username, password: hashedPassword,
+      phone: phone || null, cpf: cpf || null,
+      mac_address: mac_address || null,
+      status: 'inactive', is_vip: false
+    }).select().single();
+
+    if (error) throw error;
+    res.status(201).json({ message: 'Cadastro realizado', user: { id: data.id, username: data.username, name: data.name } });
+  } catch (err) {
+    console.error('Erro no registro do portal:', err.message);
+    res.status(500).json({ error: 'Erro ao registrar' });
+  }
+});
+
+// Voucher do portal (cliente)
+app.post('/api/portal/voucher', async (req, res) => {
+  try {
+    const { code, mac_address } = req.body;
+    if (!code) return res.status(400).json({ error: 'Código do voucher obrigatório' });
+
+    const { data: voucher, error } = await supabase
+      .from('vouchers')
+      .select('*')
+      .eq('code', String(code).toUpperCase())
+      .maybeSingle();
+
+    if (error || !voucher) return res.status(404).json({ error: 'Voucher não encontrado' });
+    if (voucher.status === 'used' || voucher.used === true) return res.status(400).json({ error: 'Voucher já utilizado' });
+
+    await supabase.from('vouchers').update({
+      status: 'used', used: true, used_at: new Date().toISOString(),
+      mac_address: mac_address || null, updated_at: new Date().toISOString()
+    }).eq('id', voucher.id);
+
+    res.json({ valid: true, plan_name: voucher.plan_name, duration_hours: voucher.duration_hours });
+  } catch (err) {
+    console.error('Erro ao validar voucher do portal:', err.message);
+    res.status(500).json({ error: 'Erro ao validar voucher' });
+  }
+});
+
+// Criar PIX (portal)
+app.post('/api/portal/create-pix', async (req, res) => {
+  try {
+    const { plan_id, plan_name, amount, user_mac, user_name } = req.body;
+    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Mercado Pago not configured' });
+
+    const idempotencyKey = crypto.randomUUID();
+    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${MP_TOKEN}`,
+        'X-Idempotency-Key': idempotencyKey
+      },
+      body: JSON.stringify({
+        transaction_amount: Number(amount),
+        description: `Hotspot - ${plan_name || 'Plano'}`,
+        payment_method_id: 'pix',
+        payer: { email: 'cliente@hotspot.com', first_name: user_name || 'Cliente' },
+        notification_url: `${API_BASE_URL}/api/webhooks/mercadopago`
+      })
+    });
+
+    const mpData = await response.json();
+    if (!response.ok) throw new Error(mpData.message || 'MP API error');
+
+    const pixData = mpData.point_of_interaction?.transaction_data || {};
+
+    const { data, error } = await supabase.from('payments').insert({
+      user_mac: user_mac || null, user_name: user_name || null,
+      plan_id: plan_id || null, plan_name: plan_name || null,
+      amount: Number(amount), method: 'pix', status: 'pending',
+      mp_payment_id: String(mpData.id),
+      pix_qr_code: pixData.qr_code || null,
+      pix_qr_code_base64: pixData.qr_code_base64 || null,
+      created_at: new Date().toISOString()
+    }).select().single();
+
+    if (error) throw error;
+
+    res.json({
+      payment_id: data.id, mp_payment_id: mpData.id,
+      qr_code: pixData.qr_code, qr_code_base64: pixData.qr_code_base64,
+      status: 'pending'
+    });
+  } catch (err) {
+    console.error('Erro ao criar PIX:', err.message);
+    res.status(500).json({ error: 'Erro ao criar pagamento PIX' });
+  }
+});
+
+// Verificar pagamento (portal)
+app.get('/api/portal/check-payment/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
+    if (error || !data) return res.status(404).json({ error: 'Pagamento não encontrado' });
+    res.json({ status: data.status, payment: data });
+  } catch (err) {
+    console.error('Erro ao verificar pagamento:', err.message);
+    res.status(500).json({ error: 'Erro ao verificar pagamento' });
+  }
+});
+
+// Status do portal (cliente)
+app.get('/api/portal/status', async (req, res) => {
+  try {
+    const { mac } = req.query;
+    if (!mac) return res.status(400).json({ error: 'MAC address obrigatório' });
+
+    const { data: user } = await supabase.from('users').select('*').eq('mac_address', mac).maybeSingle();
+    const { data: session } = await supabase.from('hotspot_sessions')
+      .select('*').eq('mac_address', mac).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    res.json({
+      user: user || null,
+      active_session: session || null,
+      has_access: !!session
+    });
+  } catch (err) {
+    console.error('Erro ao verificar status:', err.message);
+    res.status(500).json({ error: 'Erro ao verificar status' });
+  }
+});
+
+// ============================================================
+// WEBHOOK MERCADO PAGO
+// ============================================================
+
+app.post('/api/webhooks/mercadopago', async (req, res) => {
+  try {
+    const { type, data: mpData } = req.body;
+
+    if (type === 'payment') {
+      const paymentId = mpData?.id;
+      if (!paymentId) return res.status(400).json({ error: 'Payment ID missing' });
+
+      const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+      if (!MP_TOKEN) return res.status(500).json({ error: 'MP not configured' });
+
+      const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
+      });
+      const paymentInfo = await response.json();
+
+      if (paymentInfo.status === 'approved') {
+        await supabase.from('payments')
+          .update({ status: 'approved', updated_at: new Date().toISOString() })
+          .eq('mp_payment_id', String(paymentId));
+
+        await registerSystemLog('info', 'mercadopago', `Pagamento aprovado: ${paymentId}`, { amount: paymentInfo.transaction_amount });
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Webhook MP error:', err.message);
+    res.status(500).json({ error: 'Webhook processing error' });
+  }
+});
+
+// ============================================================
+// ROTAS DE SETTINGS
+// ============================================================
+
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('settings').select('*').order('key');
+    const { data, error } = await supabase.from('settings').select('*').order('id');
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
@@ -1613,284 +1472,275 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Criar/atualizar configuração
 app.post('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { key, value } = req.body;
-    if (!key) return res.status(400).json({ error: 'Chave obrigatória' });
-    const { data, error } = await supabase.from('settings').upsert({ key, value: typeof value === 'object' ? value : { value }, updated_at: new Date().toISOString() }, { onConflict: 'key' }).select().single();
+    if (!key) return res.status(400).json({ error: 'Key obrigatória' });
+
+    const { data: existing } = await supabase.from('settings').select('*').eq('key', key).maybeSingle();
+    if (existing) {
+      const { data, error } = await supabase.from('settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key).select().single();
+      if (error) throw error;
+      return res.json(data);
+    }
+
+    const { data, error } = await supabase.from('settings').insert({ key, value }).select().single();
     if (error) throw error;
-    await logAudit(req.user.username, 'update', 'settings', `Configuração atualizada: ${key}`, req.ip, req.headers['user-agent']);
-    res.json(data);
+    res.status(201).json(data);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar configuração' });
   }
 });
 
-// Excluir configuração
 app.delete('/api/settings/:key', authMiddleware, async (req, res) => {
   try {
     const { key } = req.params;
     const { error } = await supabase.from('settings').delete().eq('key', key);
     if (error) throw error;
-    await logAudit(req.user.username, 'delete', 'settings', `Configuração excluída: ${key}`, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Configuração excluída' });
+    res.json({ message: 'Configuração removida' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir configuração' });
+    res.status(500).json({ error: 'Erro ao remover configuração' });
   }
 });
 
 // ============================================================
-// ROTAS DO PORTAL PÚBLICO (captive portal - sem auth)
+// ROTAS DE ESTATÍSTICAS
 // ============================================================
 
-// Listar planos públicos
-app.get('/api/portal/plans', async (req, res) => {
+app.get('/api/stats', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('plans').select('*').order('price', { ascending: true });
+    const [users, plans, payments, vouchers, pops, hotspots] = await Promise.all([
+      supabase.from('users').select('id, status, is_vip', { count: 'exact' }),
+      supabase.from('plans').select('id', { count: 'exact' }),
+      supabase.from('payments').select('id, amount, status', { count: 'exact' }),
+      supabase.from('vouchers').select('id, status', { count: 'exact' }),
+      supabase.from('pops').select('id, status', { count: 'exact' }),
+      supabase.from('hotspots').select('id, status', { count: 'exact' })
+    ]);
+
+    const usersData = users.data || [];
+    const paymentsData = payments.data || [];
+    const vouchersData = vouchers.data || [];
+    const popsData = pops.data || [];
+
+    res.json({
+      total_users: usersData.length,
+      active_users: usersData.filter(u => u.status === 'active').length,
+      vip_users: usersData.filter(u => u.is_vip).length,
+      total_plans: (plans.data || []).length,
+      total_payments: paymentsData.length,
+      approved_payments: paymentsData.filter(p => p.status === 'approved').length,
+      total_revenue: paymentsData.filter(p => p.status === 'approved').reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
+      total_vouchers: vouchersData.length,
+      used_vouchers: vouchersData.filter(v => v.status === 'used').length,
+      total_pops: popsData.length,
+      online_pops: popsData.filter(p => p.status === 'online').length,
+      total_hotspots: (hotspots.data || []).length
+    });
+  } catch (err) {
+    console.error('Erro ao buscar estatísticas:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// ============================================================
+// ROTAS DE LOGS
+// ============================================================
+
+app.get('/api/logs', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(200);
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao listar planos' });
+    console.error('Erro ao listar logs:', err.message);
+    res.status(500).json({ error: 'Erro ao listar logs' });
   }
 });
 
-// Login do portal (usuário final)
-app.post('/api/portal/login', async (req, res) => {
+app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   try {
-    const { identifier, password, mac_address } = req.body;
-    if (!identifier || !password) return res.status(400).json({ error: 'CPF/telefone e senha obrigatórios' });
-
-    // Buscar por CPF ou telefone
-    let user = null;
-    const { data: byCpf } = await supabase.from('users').select('*').eq('cpf', identifier).single();
-    if (byCpf) { user = byCpf; }
-    else {
-      const { data: byPhone } = await supabase.from('users').select('*').eq('phone', identifier).single();
-      if (byPhone) user = byPhone;
-    }
-
-    if (!user) return res.status(401).json({ error: 'Usuário não encontrado' });
-    if (user.password !== password) return res.status(401).json({ error: 'Senha incorreta' });
-
-    // Atualizar MAC se fornecido
-    if (mac_address && mac_address !== user.mac_address) {
-      await supabase.from('users').update({ mac_address, updated_at: new Date().toISOString() }).eq('id', user.id);
-    }
-
-    await logSystem('info', 'portal', `Login portal: ${user.name || user.cpf}`, null, req.ip, req.headers['user-agent']);
-
-    res.json({
-      user_id: user.id,
-      name: user.name,
-      status: user.status || 'inactive',
-      plan_name: user.plan_name || null,
-      expires_at: user.expires_at || null
-    });
-  } catch (err) {
-    console.error('Erro portal login:', err.message);
-    res.status(500).json({ error: 'Erro interno' });
-  }
-});
-
-// Registro do portal (usuário final)
-app.post('/api/portal/register', async (req, res) => {
-  try {
-    const { name, cpf, phone, password, mac_address } = req.body;
-    if (!name || !cpf || !password) return res.status(400).json({ error: 'Nome, CPF e senha obrigatórios' });
-
-    // Verificar se já existe
-    const { data: existing } = await supabase.from('users').select('id').eq('cpf', cpf).single();
-    if (existing) return res.status(409).json({ error: 'CPF já cadastrado' });
-
-    const { data: user, error } = await supabase.from('users').insert({
-      name, cpf, phone: phone || null, password, mac_address: mac_address || null,
-      status: 'inactive', created_at: new Date().toISOString()
-    }).select().single();
-
+    const { data, error } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
     if (error) throw error;
-
-    await logSystem('info', 'portal', `Novo cadastro: ${name} (${cpf})`, null, req.ip, req.headers['user-agent']);
-    res.status(201).json({ user_id: user.id, name: user.name });
+    res.json(data || []);
   } catch (err) {
-    console.error('Erro portal register:', err.message);
-    res.status(500).json({ error: 'Erro interno' });
-  }
-});
-
-// Resgatar voucher
-app.post('/api/portal/voucher', async (req, res) => {
-  try {
-    const { code, mac_address } = req.body;
-    if (!code) return res.status(400).json({ error: 'Código do voucher obrigatório' });
-
-    const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', code.toUpperCase()).single();
-    if (error || !voucher) return res.status(404).json({ error: 'Voucher não encontrado' });
-    if (voucher.status === 'used') return res.status(400).json({ error: 'Voucher já utilizado' });
-    if (voucher.status === 'expired') return res.status(400).json({ error: 'Voucher expirado' });
-
-    // Marcar como usado
-    await supabase.from('vouchers').update({
-      status: 'used', used_at: new Date().toISOString(), mac_address: mac_address || null,
-      updated_at: new Date().toISOString()
-    }).eq('id', voucher.id);
-
-    await logSystem('info', 'portal', `Voucher resgatado: ${code}`, { mac_address }, req.ip, req.headers['user-agent']);
-    res.json({ message: 'Voucher ativado com sucesso', duration_hours: voucher.duration_hours || 24 });
-  } catch (err) {
-    console.error('Erro portal voucher:', err.message);
-    res.status(500).json({ error: 'Erro interno' });
-  }
-});
-
-// Gerar PIX para pagamento
-app.post('/api/portal/create-pix', async (req, res) => {
-  try {
-    const { user_id, plan_id, plan_name, amount, mac_address } = req.body;
-    if (!plan_id || !amount) return res.status(400).json({ error: 'Plano e valor obrigatórios' });
-
-    const mpAccessToken = process.env.MP_ACCESS_TOKEN;
-    if (!mpAccessToken) return res.status(500).json({ error: 'Pagamento não configurado' });
-
-    // Criar pagamento no Mercado Pago
-    const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${mpAccessToken}`,
-        'X-Idempotency-Key': `${user_id || 'anon'}-${plan_id}-${Date.now()}`
-      },
-      body: JSON.stringify({
-        transaction_amount: parseFloat(amount),
-        description: `Hotspot - ${plan_name || 'Plano'}`,
-        payment_method_id: 'pix',
-        payer: { email: 'cliente@hotspot.local' }
-      })
-    });
-    const mpPayment = await mpRes.json();
-
-    if (!mpPayment.id) return res.status(500).json({ error: 'Erro ao gerar pagamento' });
-
-    // Salvar no banco
-    const { data: payment, error } = await supabase.from('payments').insert({
-      user_id: user_id || null,
-      plan_id,
-      plan_name: plan_name || '',
-      amount: parseFloat(amount),
-      method: 'pix',
-      status: 'pending',
-      mercado_pago_id: String(mpPayment.id),
-      pix_qr_code: mpPayment.point_of_interaction?.transaction_data?.qr_code || '',
-      pix_qr_code_base64: mpPayment.point_of_interaction?.transaction_data?.qr_code_base64 || '',
-      mac_address: mac_address || null,
-      created_at: new Date().toISOString()
-    }).select().single();
-
-    if (error) throw error;
-
-    res.json({
-      payment_id: payment.id,
-      mercado_pago_id: mpPayment.id,
-      pix_copy_paste: mpPayment.point_of_interaction?.transaction_data?.qr_code || '',
-      qr_code_base64: mpPayment.point_of_interaction?.transaction_data?.qr_code_base64 || '',
-      status: 'pending'
-    });
-  } catch (err) {
-    console.error('Erro portal create-pix:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar pagamento' });
-  }
-});
-
-// Verificar status de pagamento
-app.get('/api/portal/check-payment/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { data: payment, error } = await supabase.from('payments').select('*').eq('id', id).single();
-    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
-
-    // Se ainda pendente, verificar no MP
-    if (payment.status === 'pending' && payment.mercado_pago_id) {
-      const mpAccessToken = process.env.MP_ACCESS_TOKEN;
-      if (mpAccessToken) {
-        try {
-          const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment.mercado_pago_id}`, {
-            headers: { 'Authorization': `Bearer ${mpAccessToken}` }
-          });
-          const mpPayment = await mpRes.json();
-          if (mpPayment.status === 'approved' && payment.status !== 'approved') {
-            await supabase.from('payments').update({
-              status: 'approved', confirmed_at: new Date().toISOString(), updated_at: new Date().toISOString()
-            }).eq('id', payment.id);
-
-            // Ativar usuário
-            if (payment.user_id && payment.plan_id) {
-              const { data: plan } = await supabase.from('plans').select('*').eq('id', payment.plan_id).single();
-              if (plan) {
-                const expiresAt = new Date();
-                expiresAt.setHours(expiresAt.getHours() + (plan.duration_hours || 24));
-                await supabase.from('users').update({
-                  status: 'active', plan_id: plan.id, plan_name: plan.name,
-                  expires_at: expiresAt.toISOString(), updated_at: new Date().toISOString()
-                }).eq('id', payment.user_id);
-              }
-            }
-            return res.json({ status: 'approved' });
-          }
-        } catch (mpErr) { console.error('Erro ao verificar MP:', mpErr.message); }
-      }
-    }
-
-    res.json({ status: payment.status });
-  } catch (err) {
-    console.error('Erro portal check-payment:', err.message);
-    res.status(500).json({ error: 'Erro ao verificar pagamento' });
-  }
-});
-
-// Status do usuário (portal)
-app.get('/api/portal/status', async (req, res) => {
-  try {
-    const { mac, ip } = req.query;
-    let user = null;
-
-    if (mac) {
-      const { data } = await supabase.from('users').select('*').eq('mac_address', mac).single();
-      if (data) user = data;
-    }
-
-    if (!user) return res.json({ plan_name: '-', time_remaining: '-', speed: '-' });
-
-    let timeRemaining = '-';
-    if (user.expires_at) {
-      const diff = new Date(user.expires_at) - new Date();
-      if (diff > 0) {
-        const hours = Math.floor(diff / 3600000);
-        const mins = Math.floor((diff % 3600000) / 60000);
-        timeRemaining = `${hours}h ${mins}min`;
-      } else {
-        timeRemaining = 'Expirado';
-      }
-    }
-
-    res.json({
-      plan_name: user.plan_name || '-',
-      time_remaining: timeRemaining,
-      speed: user.speed_limit || '-',
-      status: user.status || 'inactive'
-    });
-  } catch (err) {
-    console.error('Erro portal status:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar status' });
+    console.error('Erro ao listar logs de auditoria:', err.message);
+    res.status(500).json({ error: 'Erro ao listar logs de auditoria' });
   }
 });
 
 // ============================================================
-// INICIAR SERVIDOR
+// MIKROTIK SCRIPT GENERATORS
+// ============================================================
+
+function generateInstallationScript(params) {
+  const {
+    uniqueId, hotspotName, installationType = 'new',
+    wanInterface = 'ether1', lanInterface = 'ether4', vlanId,
+    wanType = 'dhcp', pppoeUser = '', pppoePass = '',
+    staticIp = '', staticMask = '', staticGw = '',
+    hotspotType = 'new_vlan', existingVlan = '', physicalPort = '',
+    radiusSecret, frontendHost = 'hotspot-system.vercel.app',
+    apiHost = 'mstelecom-api.duckdns.org'
+  } = params;
+
+  const safeName = slugifyValue(hotspotName || uniqueId);
+  const apiUser = `ms_api_${safeName}`.slice(0, 15);
+  const apiPass = generateStrongPassword(16);
+
+  let outputInterface = lanInterface;
+  let outputConfig = '';
+  let bridgePortConfig = '';
+
+  if (hotspotType === 'existing_vlan' && existingVlan) {
+    outputInterface = `vlan-${uniqueId}`;
+    outputConfig = `/interface vlan add name="${outputInterface}" vlan-id=${existingVlan} interface=${lanInterface} comment="MS-TELECOM-${uniqueId}"`;
+    bridgePortConfig = `/interface bridge port add bridge="ms-bridge-${uniqueId}" interface="${outputInterface}" comment="MS-TELECOM-${uniqueId}"`;
+  } else if (hotspotType === 'physical_port' && physicalPort) {
+    outputInterface = physicalPort;
+    bridgePortConfig = `/interface bridge port add bridge="ms-bridge-${uniqueId}" interface="${outputInterface}" comment="MS-TELECOM-${uniqueId}"`;
+  } else if (vlanId) {
+    outputInterface = `vlan-hotspot-${uniqueId}`;
+    outputConfig = `/interface vlan add name="${outputInterface}" vlan-id=${vlanId} interface=${lanInterface} comment="MS-TELECOM-${uniqueId}"`;
+    bridgePortConfig = `/interface bridge port add bridge="ms-bridge-${uniqueId}" interface="${outputInterface}" comment="MS-TELECOM-${uniqueId}"`;
+  } else {
+    bridgePortConfig = `/interface bridge port add bridge="ms-bridge-${uniqueId}" interface="${outputInterface}" comment="MS-TELECOM-${uniqueId}"`;
+  }
+
+  let wanConfig = '';
+  if (installationType === 'new') {
+    if (wanType === 'pppoe') {
+      wanConfig = `/interface pppoe-client add interface=${wanInterface} user="${pppoeUser}" password="${pppoePass}" disabled=no add-default-route=yes comment="MS-TELECOM-${uniqueId}"`;
+    } else if (wanType === 'static') {
+      wanConfig = `/ip address add address=${staticIp}/${staticMask} interface=${wanInterface} comment="MS-TELECOM-${uniqueId}"
+/ip route add gateway=${staticGw} comment="MS-TELECOM-${uniqueId}"`;
+    } else {
+      wanConfig = `/ip dhcp-client add interface=${wanInterface} disabled=no comment="MS-TELECOM-${uniqueId}"`;
+    }
+  } else {
+    wanConfig = `# WAN preserved in production mode`;
+  }
+
+  return `# ============================================
+# MS TELECOM - INSTALLATION SCRIPT
+# ID: ${uniqueId}
+# HOTSPOT: ${hotspotName}
+# TYPE: ${installationType}
+# ============================================
+
+# 1. BACKUP
+/system backup save name=backup_pre_ms_${uniqueId}
+/export file=config_pre_ms_${uniqueId}
+:delay 2s
+
+# 2. IDENTITY
+/system identity set name="${hotspotName}"
+:delay 500ms
+
+# 3. API USER
+/user add name="${apiUser}" password="${apiPass}" group=full comment="MS-TELECOM-${uniqueId}"
+:delay 500ms
+
+# 4. BRIDGE
+/interface bridge add name="ms-bridge-${uniqueId}" comment="MS-TELECOM-${uniqueId}"
+:delay 500ms
+${outputConfig}
+${bridgePortConfig}
+:delay 1s
+
+# 5. HOTSPOT IP
+/ip address add address=192.168.32.1/20 interface="ms-bridge-${uniqueId}" network=192.168.32.0 comment="MS-TELECOM-${uniqueId}"
+:delay 500ms
+
+# 6. DHCP
+/ip pool add name="ms-pool-${uniqueId}" ranges=192.168.32.10-192.168.47.254 comment="MS-TELECOM-${uniqueId}"
+/ip dhcp-server add address-pool="ms-pool-${uniqueId}" disabled=no interface="ms-bridge-${uniqueId}" name="ms-dhcp-${uniqueId}" lease-time=24h
+/ip dhcp-server network add address=192.168.32.0/20 gateway=192.168.32.1 dns-server=8.8.8.8,1.1.1.1 comment="MS-TELECOM-${uniqueId}"
+:delay 1s
+
+# 7. WAN
+${wanConfig}
+:delay 1s
+
+# 8. NAT
+/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="MS-TELECOM-${uniqueId}"
+:delay 500ms
+
+# 9. DNS
+/ip dns set allow-remote-requests=yes servers=8.8.8.8,1.1.1.1
+:delay 500ms
+
+# 10. RADIUS
+/radius add address=${RADIUS_SERVER_IP} secret=${radiusSecret} service=hotspot comment="MS-TELECOM-${uniqueId}" timeout=1000ms
+/radius incoming set accept=yes
+:delay 1s
+
+# 11. HOTSPOT PROFILE
+/ip hotspot profile add name="ms-profile-${uniqueId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap,mac-cookie use-radius=yes radius-default-domain="${uniqueId}" radius-interim-update=10m html-directory=hotspot
+:delay 500ms
+
+# 12. HOTSPOT
+/ip hotspot add address-pool="ms-pool-${uniqueId}" disabled=no idle-timeout=15m interface="ms-bridge-${uniqueId}" name="${hotspotName}" profile="ms-profile-${uniqueId}"
+:delay 1s
+
+# 13. WALLED GARDEN
+/ip hotspot walled-garden ip add action=accept disabled=no dst-host=${frontendHost} server="${hotspotName}" comment="MS-TELECOM-${uniqueId}"
+/ip hotspot walled-garden ip add action=accept disabled=no dst-host=${apiHost} server="${hotspotName}"
+/ip hotspot walled-garden ip add action=accept disabled=no dst-host=cdn.tailwindcss.com server="${hotspotName}"
+/ip hotspot walled-garden ip add action=accept disabled=no dst-host=unpkg.com server="${hotspotName}"
+/ip hotspot walled-garden ip add action=accept disabled=no dst-host=fonts.googleapis.com server="${hotspotName}"
+/ip hotspot walled-garden ip add action=accept disabled=no dst-host=fonts.gstatic.com server="${hotspotName}"
+:delay 1s
+
+# 14. HEARTBEAT
+/system scheduler add name="ms-heartbeat-${safeName}" interval=00:00:30 on-event="/tool fetch url=\\"${API_BASE_URL}/api/pops/${uniqueId}/ping\\" http-method=post http-data=\\"{\\\\\\"name\\\\\\":\\\\\\"${hotspotName}\\\\\\",\\\\\\"api_user\\\\\\":\\\\\\"${apiUser}\\\\\\",\\\\\\"api_pass\\\\\\":\\\\\\"${apiPass}\\\\\\"}\\" http-header-field=\\"Content-Type: application/json\\" keep-result=no" policy=read,write,test
+`;
+}
+
+function generateRevertScript({ uniqueId, hotspotName }) {
+  return `# ============================================
+# MS TELECOM - REVERT SCRIPT
+# ID: ${uniqueId}
+# HOTSPOT: ${hotspotName}
+# ============================================
+
+/system scheduler remove [find name="ms-heartbeat-${slugifyValue(hotspotName || uniqueId)}"]
+/ip hotspot remove [find name="${hotspotName}"]
+/ip hotspot profile remove [find name="ms-profile-${uniqueId}"]
+/radius remove [find comment="MS-TELECOM-${uniqueId}"]
+/ip firewall nat remove [find comment="MS-TELECOM-${uniqueId}"]
+/ip dhcp-server remove [find name="ms-dhcp-${uniqueId}"]
+/ip dhcp-server network remove [find comment="MS-TELECOM-${uniqueId}"]
+/ip pool remove [find name="ms-pool-${uniqueId}"]
+/ip address remove [find comment="MS-TELECOM-${uniqueId}"]
+/interface bridge port remove [find comment="MS-TELECOM-${uniqueId}"]
+/interface vlan remove [find comment="MS-TELECOM-${uniqueId}"]
+/interface bridge remove [find name="ms-bridge-${uniqueId}"]
+/user remove [find comment="MS-TELECOM-${uniqueId}"]
+`;
+}
+
+// ============================================================
+// HEALTH CHECK
+// ============================================================
+
+app.get('/api/health', (_req, res) => {
+  return res.json({
+    status: 'ok',
+    version: '3.0.0',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    mikrotik_api: !!RouterOSAPI
+  });
+});
+
+// ============================================================
+// START SERVER
 // ============================================================
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor Hotspot System rodando na porta ${PORT}`);
-  console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Hotspot System API v3.0 running on port ${PORT}`);
+  console.log(`Frontend: ${FRONTEND_BASE_URL}`);
+  console.log(`API: ${API_BASE_URL}`);
+  console.log(`MikroTik API: ${RouterOSAPI ? 'enabled' : 'disabled'}`);
 });
-
-module.exports = app;
