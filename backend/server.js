@@ -22,11 +22,24 @@ try {
 }
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
 const RADIUS_SERVER_IP = process.env.RADIUS_SERVER_IP || '40.233.118.238';
 const JWT_SECRET = process.env.JWT_SECRET;
+
+// CORS configurado para aceitar requisições do frontend no Vercel
+app.use(cors({
+    origin: [
+        'https://hotspot-system.vercel.app',
+        'http://localhost:3000'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 
 // Validação de variáveis de ambiente
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !JWT_SECRET) {
@@ -380,6 +393,13 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     console.error('❌ Erro ao atualizar perfil:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
+});
+
+// Aliases de compatibilidade com o frontend
+app.post('/api/login', (req, res, next) => { req.url = '/api/auth/login'; next(); });
+app.post('/api/logout', authMiddleware, (req, res, next) => { req.url = '/api/auth/logout'; next(); });
+app.post('/api/update-profile', authMiddleware, (req, res) => {
+  req.method = 'PUT'; req.url = '/api/profile'; app.handle(req, res);
 });
 
 // ============================================================
@@ -1669,6 +1689,429 @@ app.get('/api/health', (_req, res) => {
     uptime: process.uptime(),
     mikrotik_api: !!RouterOSAPI
   });
+});
+
+// ============================================================
+// 🔄 ALIAS PARA COMPATIBILIDADE COM FRONTEND
+// ============================================================
+
+// Alias /api/hotspots → /api/pops
+app.get('/api/hotspots', authMiddleware, async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('pops').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        console.error('❌ Erro em /api/hotspots:', err.message);
+        res.status(500).json({ error: 'Erro ao listar hotspots' });
+    }
+});
+
+// Estatísticas - Usuários por hora (dados de exemplo)
+app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
+    try {
+        // Retorna array com 24 zeros (placeholder)
+        const hours = Array.from({length: 24}, (_, i) => ({ hour: i, count: 0 }));
+        res.json(hours);
+    } catch (err) {
+        console.error('❌ Erro em /api/stats/users-per-hour:', err.message);
+        res.status(500).json({ error: 'Erro ao buscar dados' });
+    }
+});
+
+// Estatísticas - Tráfego total
+app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
+    try {
+        res.json({ total_gb: 0, peak_mbps: 0 });
+    } catch (err) {
+        console.error('❌ Erro em /api/stats/total-traffic:', err.message);
+        res.status(500).json({ error: 'Erro ao buscar tráfego' });
+    }
+});
+
+// Estatísticas - Comparação por plano
+app.get('/api/stats/comparison', authMiddleware, async (req, res) => {
+    try {
+        const { data: plans } = await supabase.from('plans').select('id, name, price');
+        const comparison = (plans || []).map(p => ({
+            name: p.name,
+            total: 0
+        }));
+        res.json(comparison);
+    } catch (err) {
+        console.error('❌ Erro em /api/stats/comparison:', err.message);
+        res.status(500).json({ error: 'Erro ao buscar comparação' });
+    }
+});
+
+// ============================================================
+// 💳 ROTAS FALTANTES - PAGAMENTOS
+// ============================================================
+
+// Criar pagamento (alias usado pelo financeiro.html)
+app.post('/api/create-payment', authMiddleware, async (req, res) => {
+  try {
+    const { user_id, plan_id, amount, description, payment_method, status } = req.body;
+    const { data, error } = await supabase.from('payments').insert({
+      user_id: user_id || null,
+      plan_id: plan_id || null,
+      amount: parseFloat(amount) || 0,
+      description: description || '',
+      payment_method: payment_method || 'manual',
+      status: status || 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('❌ Erro em /api/create-payment:', err.message);
+    res.status(500).json({ error: 'Erro ao criar pagamento' });
+  }
+});
+
+// Confirmar pagamento (usado pelo financeiro.html)
+app.post('/api/confirm-payment', authMiddleware, async (req, res) => {
+  try {
+    const { payment_id } = req.body;
+    if (!payment_id) return res.status(400).json({ error: 'payment_id é obrigatório' });
+
+    const { data: payment, error: fetchErr } = await supabase.from('payments').select('*').eq('id', payment_id).single();
+    if (fetchErr || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+
+    const { error } = await supabase.from('payments').update({
+      status: 'approved',
+      confirmed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq('id', payment_id);
+    if (error) throw error;
+
+    // Se tem user_id e plan_id, ativar o plano do usuário
+    if (payment.user_id && payment.plan_id) {
+      const { data: plan } = await supabase.from('plans').select('duration_days').eq('id', payment.plan_id).single();
+      if (plan) {
+        const expiresAt = new Date(Date.now() + (plan.duration_days || 30) * 86400000).toISOString();
+        await supabase.from('users').update({ status: 'active', plan_id: payment.plan_id, expires_at: expiresAt, updated_at: new Date().toISOString() }).eq('id', payment.user_id);
+      }
+    }
+
+    res.json({ message: 'Pagamento confirmado com sucesso' });
+  } catch (err) {
+    console.error('❌ Erro em /api/confirm-payment:', err.message);
+    res.status(500).json({ error: 'Erro ao confirmar pagamento' });
+  }
+});
+
+// ============================================================
+// 👤 ROTAS FALTANTES - ADMINS
+// ============================================================
+
+// Listar admins
+app.get('/api/admins', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('admins').select('id, username, email, role, created_at').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('❌ Erro ao listar admins:', err.message);
+    res.status(500).json({ error: 'Erro ao listar admins' });
+  }
+});
+
+// Criar admin
+app.post('/api/admins', authMiddleware, async (req, res) => {
+  try {
+    const { username, email, password, role } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    const { data, error } = await supabase.from('admins').insert({
+      username, email: email || '', password: hashedPassword, role: role || 'admin',
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).select('id, username, email, role, created_at').single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('❌ Erro ao criar admin:', err.message);
+    res.status(500).json({ error: 'Erro ao criar admin' });
+  }
+});
+
+// Deletar admin
+app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('admins').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Admin removido' });
+  } catch (err) {
+    console.error('❌ Erro ao deletar admin:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar admin' });
+  }
+});
+
+// ============================================================
+// 🌐 ROTAS FALTANTES - HOTSPOTS (POST/PUT/DELETE)
+// ============================================================
+
+// Criar hotspot
+app.post('/api/hotspots', authMiddleware, async (req, res) => {
+  try {
+    const { name, location, address, dns_name, radius_enabled } = req.body;
+    const { data, error } = await supabase.from('hotspots').insert({
+      name, location: location || '', address: address || '',
+      dns_name: dns_name || '', radius_enabled: radius_enabled || false,
+      status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('❌ Erro ao criar hotspot:', err.message);
+    res.status(500).json({ error: 'Erro ao criar hotspot' });
+  }
+});
+
+// Atualizar hotspot
+app.put('/api/hotspots/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+    const { data, error } = await supabase.from('hotspots').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('❌ Erro ao atualizar hotspot:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar hotspot' });
+  }
+});
+
+// Deletar hotspot
+app.delete('/api/hotspots/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('hotspots').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'Hotspot removido' });
+  } catch (err) {
+    console.error('❌ Erro ao deletar hotspot:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar hotspot' });
+  }
+});
+
+// ============================================================
+// 📡 ROTAS FALTANTES - PORTAL PÚBLICO
+// ============================================================
+
+// Listar planos públicos
+app.get('/api/portal/plans', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('plans').select('id, name, price, speed_mbps, duration_days, description').eq('active', true).order('price');
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/plans:', err.message);
+    res.status(500).json({ error: 'Erro ao listar planos' });
+  }
+});
+
+// Login do portal (usuário final)
+app.post('/api/portal/login', async (req, res) => {
+  try {
+    const { identifier, password, mac_address } = req.body;
+    if (!identifier || !password) return res.status(400).json({ error: 'Identificador e senha são obrigatórios' });
+
+    const { data: user, error } = await supabase.from('users').select('*')
+      .or(`username.eq.${identifier},email.eq.${identifier},cpf.eq.${identifier},phone.eq.${identifier}`)
+      .single();
+    if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado' });
+
+    let passwordMatch = false;
+    if (user.password && user.password.length === 64) {
+      const sha256 = crypto.createHash('sha256').update(password).digest('hex');
+      passwordMatch = user.password === sha256;
+    } else {
+      passwordMatch = user.password === password;
+    }
+    if (!passwordMatch) return res.status(401).json({ error: 'Senha incorreta' });
+
+    if (mac_address) {
+      await supabase.from('users').update({ mac_address, updated_at: new Date().toISOString() }).eq('id', user.id);
+    }
+
+    const status = (user.status === 'active' && user.expires_at && new Date(user.expires_at) > new Date()) ? 'active' : 'expired';
+    res.json({ user_id: user.id, username: user.username, status, plan_id: user.plan_id });
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/login:', err.message);
+    res.status(500).json({ error: 'Erro no login' });
+  }
+});
+
+// Registro do portal (usuário final)
+app.post('/api/portal/register', async (req, res) => {
+  try {
+    const { name, cpf, phone, password, mac_address } = req.body;
+    if (!name || !password) return res.status(400).json({ error: 'Nome e senha são obrigatórios' });
+
+    const username = cpf || phone || name.toLowerCase().replace(/\s+/g, '.');
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    const { data: existing } = await supabase.from('users').select('id').eq('username', username).maybeSingle();
+    if (existing) return res.status(409).json({ error: 'Usuário já cadastrado' });
+
+    const { data, error } = await supabase.from('users').insert({
+      username, full_name: name, cpf: cpf || '', phone: phone || '',
+      password: hashedPassword, mac_address: mac_address || '',
+      status: 'pending', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).select().single();
+    if (error) throw error;
+    res.status(201).json({ user_id: data.id, username: data.username });
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/register:', err.message);
+    res.status(500).json({ error: 'Erro no cadastro' });
+  }
+});
+
+// Resgatar voucher (portal)
+app.post('/api/portal/voucher', async (req, res) => {
+  try {
+    const { code, mac_address } = req.body;
+    if (!code) return res.status(400).json({ error: 'Código do voucher é obrigatório' });
+
+    const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', code).eq('status', 'active').single();
+    if (error || !voucher) return res.status(404).json({ error: 'Voucher inválido ou já utilizado' });
+
+    await supabase.from('vouchers').update({
+      status: 'used', used_by: mac_address || 'unknown', mac_address: mac_address || '',
+      used_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).eq('id', voucher.id);
+
+    // Se o voucher tem plan_id, criar sessão de acesso
+    if (voucher.plan_id) {
+      const durationMs = (voucher.duration_hours || 24) * 3600000;
+      await supabase.from('hotspot_sessions').insert({
+        mac_address: mac_address || '', access_granted: true, status: 'active',
+        expires_at: new Date(Date.now() + durationMs).toISOString(),
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      });
+    }
+
+    res.json({ message: 'Voucher ativado com sucesso', duration_hours: voucher.duration_hours || 24 });
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/voucher:', err.message);
+    res.status(500).json({ error: 'Erro ao resgatar voucher' });
+  }
+});
+
+// Gerar PIX (portal)
+app.post('/api/portal/create-pix', async (req, res) => {
+  try {
+    const { user_id, plan_id, plan_name, amount, mac_address } = req.body;
+    if (!plan_id || !amount) return res.status(400).json({ error: 'Plano e valor são obrigatórios' });
+
+    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
+
+    const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MP_TOKEN}`, 'X-Idempotency-Key': externalReference },
+      body: JSON.stringify({
+        transaction_amount: parseFloat(amount),
+        description: plan_name || 'Plano Hotspot',
+        payment_method_id: 'pix',
+        payer: { email: 'cliente@hotspot.com', first_name: 'Cliente', identification: { type: 'CPF', number: '00000000000' } },
+        external_reference: externalReference
+      })
+    });
+
+    const mpData = await mpResponse.json();
+    if (!mpResponse.ok) return res.status(400).json({ error: 'Erro ao gerar PIX', details: mpData });
+
+    const pixCopyPaste = mpData.point_of_interaction?.transaction_data?.qr_code || '';
+    const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
+
+    const { data: payment, error } = await supabase.from('payments').insert({
+      user_id: user_id || null, plan_id, plan_name: plan_name || '',
+      user_mac: mac_address || '', mac_address: mac_address || '',
+      amount: parseFloat(amount), description: plan_name || 'Plano Hotspot',
+      status: 'pending', payment_method: 'pix', method: 'pix',
+      mercado_pago_id: String(mpData.id), mp_payment_id: String(mpData.id),
+      pix_copy_paste: pixCopyPaste, pix_qr_code: pixCopyPaste,
+      qr_code: qrCodeBase64, pix_qr_code_base64: qrCodeBase64,
+      external_reference: externalReference,
+      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+    }).select().single();
+    if (error) throw error;
+
+    res.json({
+      payment_id: payment.id, mercado_pago_id: mpData.id,
+      pix_copy_paste: pixCopyPaste, qr_code_base64: qrCodeBase64,
+      external_reference: externalReference, status: 'pending', amount: parseFloat(amount)
+    });
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/create-pix:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
+  }
+});
+
+// Verificar pagamento (portal)
+app.get('/api/portal/check-payment/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: payment, error } = await supabase.from('payments').select('id, status, amount, plan_id, user_id').eq('id', id).single();
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+    res.json(payment);
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/check-payment:', err.message);
+    res.status(500).json({ error: 'Erro ao verificar pagamento' });
+  }
+});
+
+// Status do usuário (portal)
+app.get('/api/portal/status', async (req, res) => {
+  try {
+    const { mac, ip } = req.query;
+
+    // Tentar buscar sessão ativa por MAC
+    if (mac) {
+      const { data: session } = await supabase.from('hotspot_sessions').select('*')
+        .eq('mac_address', mac).eq('status', 'active')
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+      if (session && session.expires_at && new Date(session.expires_at) > new Date()) {
+        const remaining = new Date(session.expires_at) - new Date();
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        return res.json({
+          connected: true, plan_name: 'Sessão Ativa',
+          time_remaining: `${hours}h ${minutes}min`, speed: '-'
+        });
+      }
+
+      // Tentar buscar usuário por MAC
+      const { data: user } = await supabase.from('users').select('*, plans(name, speed_mbps)')
+        .eq('mac_address', mac).eq('status', 'active')
+        .maybeSingle();
+
+      if (user && user.expires_at && new Date(user.expires_at) > new Date()) {
+        const remaining = new Date(user.expires_at) - new Date();
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        return res.json({
+          connected: true, plan_name: user.plans?.name || 'Plano Ativo',
+          time_remaining: `${hours}h ${minutes}min`,
+          speed: user.plans?.speed_mbps ? `${user.plans.speed_mbps} Mbps` : '-'
+        });
+      }
+    }
+
+    res.json({ connected: false, plan_name: '-', time_remaining: '-', speed: '-' });
+  } catch (err) {
+    console.error('❌ Erro em /api/portal/status:', err.message);
+    res.status(500).json({ error: 'Erro ao verificar status' });
+  }
 });
 
 // ============================================================
