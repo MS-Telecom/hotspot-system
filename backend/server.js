@@ -396,8 +396,11 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 });
 
 // Aliases de compatibilidade com o frontend
-app.post('/api/login', (req, res, next) => { req.url = '/api/auth/login'; next(); });
-app.post('/api/logout', authMiddleware, (req, res, next) => { req.url = '/api/auth/logout'; next(); });
+app.post('/api/login', (req, res) => { req.url = '/api/auth/login'; app.handle(req, res); });
+app.post('/api/logout', authMiddleware, (req, res) => { req.url = '/api/auth/logout'; app.handle(req, res); });
+app.put('/api/update-profile', authMiddleware, (req, res) => {
+  req.url = '/api/profile'; app.handle(req, res);
+});
 app.post('/api/update-profile', authMiddleware, (req, res) => {
   req.method = 'PUT'; req.url = '/api/profile'; app.handle(req, res);
 });
