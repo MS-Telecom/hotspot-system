@@ -1962,7 +1962,7 @@ app.post('/api/portal/register', async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Usuário já cadastrado' });
 
     const { data, error } = await supabase.from('users').insert({
-      username, full_name: name, cpf: cpf || '', phone: phone || '',
+      username, name, cpf: cpf || '', phone: phone || '',
       password: hashedPassword, mac_address: mac_address || '',
       status: 'pending', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }).select().single();
@@ -1988,8 +1988,8 @@ app.post('/api/portal/voucher', async (req, res) => {
       used_at: new Date().toISOString(), updated_at: new Date().toISOString()
     }).eq('id', voucher.id);
 
-    // Se o voucher tem plan_id, criar sessão de acesso
-    if (voucher.plan_id) {
+    // Criar sessão de acesso baseada na duração do voucher
+    if (voucher.duration_hours) {
       const durationMs = (voucher.duration_hours || 24) * 3600000;
       await supabase.from('hotspot_sessions').insert({
         mac_address: mac_address || '', access_granted: true, status: 'active',
