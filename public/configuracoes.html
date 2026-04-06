@@ -88,7 +88,7 @@
       <div class="space-y-3">
         <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input id="planName" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Preço (R$)</label><input id="planPrice" type="number" step="0.01" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Duração (horas)</label><input id="planDuration" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Duração (dias)</label><input id="planDuration" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Velocidade (ex: 10M/10M)</label><input id="planSpeed" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Descrição</label><textarea id="planDescription" rows="2" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></textarea></div>
       </div>
@@ -138,7 +138,7 @@
         tbody.innerHTML = '';
         if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-500">Nenhum plano</td></tr>'; return; }
         data.forEach(p => {
-          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${p.name}</td><td class="py-3">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</td><td class="py-3">${p.duration_hours || '-'}h</td><td class="py-3">${p.speed_limit || '-'}</td>
+          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${p.name}</td><td class="py-3">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</td><td class="py-3">${p.duration_days || '-'} dias</td><td class="py-3">${p.speed_mbps ? p.speed_mbps + ' Mbps' : '-'}</td>
             <td class="py-3 flex gap-1"><button onclick='editPlan(${JSON.stringify(p)})' class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs">Editar</button><button onclick="deletePlan(${p.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
         });
       } catch (err) { console.error(err); }
@@ -147,12 +147,12 @@
     function openModalPlan() { document.getElementById('planEditId').value=''; document.getElementById('planModalTitle').textContent='Novo Plano'; document.getElementById('planName').value=''; document.getElementById('planPrice').value=''; document.getElementById('planDuration').value=''; document.getElementById('planSpeed').value=''; document.getElementById('planDescription').value=''; document.getElementById('modalPlan').classList.remove('hidden'); }
     function closeModalPlan() { document.getElementById('modalPlan').classList.add('hidden'); }
 
-    function editPlan(p) { document.getElementById('planEditId').value=p.id; document.getElementById('planModalTitle').textContent='Editar Plano'; document.getElementById('planName').value=p.name||''; document.getElementById('planPrice').value=p.price||''; document.getElementById('planDuration').value=p.duration_hours||''; document.getElementById('planSpeed').value=p.speed_limit||''; document.getElementById('planDescription').value=p.description||''; document.getElementById('modalPlan').classList.remove('hidden'); }
+    function editPlan(p) { document.getElementById('planEditId').value=p.id; document.getElementById('planModalTitle').textContent='Editar Plano'; document.getElementById('planName').value=p.name||''; document.getElementById('planPrice').value=p.price||''; document.getElementById('planDuration').value=p.duration_days||''; document.getElementById('planSpeed').value=p.speed_mbps||''; document.getElementById('planDescription').value=p.description||''; document.getElementById('modalPlan').classList.remove('hidden'); }
 
     async function savePlan() {
       try {
         const id = document.getElementById('planEditId').value;
-        const body = { name: document.getElementById('planName').value, price: document.getElementById('planPrice').value, duration_hours: document.getElementById('planDuration').value, speed_limit: document.getElementById('planSpeed').value, description: document.getElementById('planDescription').value };
+        const body = { name: document.getElementById('planName').value, price: document.getElementById('planPrice').value, duration_days: document.getElementById('planDuration').value, speed_mbps: document.getElementById('planSpeed').value, description: document.getElementById('planDescription').value };
         const url = id ? `${API_URL}/api/plans/${id}` : `${API_URL}/api/plans`;
         const method = id ? 'PUT' : 'POST';
         const res = await fetch(url, { method, headers, body: JSON.stringify(body) });

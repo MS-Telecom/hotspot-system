@@ -166,7 +166,7 @@
         container.innerHTML = '';
         (plans || []).forEach(p => {
           container.innerHTML += `<div class="bg-white/10 backdrop-blur rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-white/20 transition" onclick="selectPlan(${p.id},'${p.name}',${p.price})">
-            <div><h3 class="font-semibold">${p.name}</h3><p class="text-sm text-gray-400">${p.duration_hours || '-'}h - ${p.speed_limit || '-'}</p></div>
+            <div><h3 class="font-semibold">${p.name}</h3><p class="text-sm text-gray-400">${p.duration_days || '-'} dias - ${p.speed_mbps ? p.speed_mbps + ' Mbps' : '-'}</p></div>
             <div class="text-right"><p class="text-xl font-bold text-cyan-400">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</p></div>
           </div>`;
         });

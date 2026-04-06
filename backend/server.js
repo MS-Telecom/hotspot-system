@@ -221,7 +221,7 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
 }
 
 // Autorizar acesso - IP Binding com type=bypassed + RADIUS
-async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null, durationMinutes = 15) {
+async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null, durationMinutes = 15, speedMbps = null, planName = 'free_trial') {
   let viaApi = false;
   let viaRadius = false;
   const errors = [];
@@ -269,7 +269,7 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
       attribute: 'Cleartext-Password',
       op: ':=',
       value: macAddress,
-      plan_name: 'free_trial',
+      plan_name: planName,
       status: 'active',
       expires_at: expiresAt,
       updated_at: new Date().toISOString()
@@ -277,6 +277,17 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
 
     if (error) throw error;
     viaRadius = true;
+
+    // Inserir Mikrotik-Rate-Limit no radreply se velocidade informada
+    if (speedMbps) {
+      const rateLimit = `${speedMbps}M/${speedMbps}M`;
+      await supabase.from('radreply').upsert({
+        username: macAddress,
+        attribute: 'Mikrotik-Rate-Limit',
+        op: ':=',
+        value: rateLimit
+      }, { onConflict: 'username,attribute' }).catch(() => {});
+    }
   } catch (error) {
     errors.push(`RADIUS: ${error.message}`);
   }
@@ -303,11 +314,32 @@ setInterval(async () => {
       const mac = session.mac_address;
       if (mac && mac !== 'pending') {
         await revokeAccess(mac, session.pop_ip || '192.168.32.1', null, null, session.pop_id || null);
+        // Limpar RADIUS: remover do radius_replies e radreply
+        await supabase.from('radius_replies').delete().eq('username', mac).catch(() => {});
+        await supabase.from('radreply').delete().eq('username', mac).catch(() => {});
       }
       await supabase.from('hotspot_sessions').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('id', session.id);
     }
 
-    console.log(`[CRON] ${expiredSessions.length} acessos expirados removidos`);
+    // Também limpar users expirados
+    const { data: expiredUsers } = await supabase
+      .from('users')
+      .select('id, mac_address, status, expires_at')
+      .eq('status', 'active')
+      .lt('expires_at', now);
+
+    if (expiredUsers && expiredUsers.length > 0) {
+      for (const user of expiredUsers) {
+        await supabase.from('users').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('id', user.id);
+        if (user.mac_address) {
+          await supabase.from('radius_replies').delete().eq('username', user.mac_address).catch(() => {});
+          await supabase.from('radreply').delete().eq('username', user.mac_address).catch(() => {});
+        }
+      }
+      console.log(`[CRON] ${expiredUsers.length} usuários expirados atualizados`);
+    }
+
+    console.log(`[CRON] ${expiredSessions.length} sessões expiradas removidas`);
   } catch (error) {
     console.error('[CRON] Erro na limpeza de expiração:', error.message);
   }
@@ -337,15 +369,24 @@ app.post('/api/auth/login', async (req, res) => {
 
     // Comparação de senha (hash SHA-256 ou texto plano)
     let passwordMatch = false;
+    let needsHashUpgrade = false;
     if (admin.password && admin.password.length === 64) {
       const sha256 = crypto.createHash('sha256').update(password).digest('hex');
       passwordMatch = admin.password === sha256;
     } else {
       passwordMatch = admin.password === password;
+      if (passwordMatch) needsHashUpgrade = true;
     }
 
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
+    }
+
+    // Auto-hash: se a senha estava em texto plano, converter para SHA-256
+    if (needsHashUpgrade) {
+      const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+      await supabase.from('admins').update({ password: hashedPassword }).eq('id', admin.id).catch(() => {});
+      console.log(`[AUTH] Senha do admin '${admin.username}' convertida para hash SHA-256`);
     }
 
     const token = jwt.sign(
@@ -1059,9 +1100,28 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
       const paymentInfo = await response.json();
 
       if (paymentInfo.status === 'approved') {
-        await supabase.from('payments')
+        const { data: paymentRecord } = await supabase.from('payments')
           .update({ status: 'approved', updated_at: new Date().toISOString() })
-          .eq('mercado_pago_id', String(paymentId));
+          .eq('mercado_pago_id', String(paymentId))
+          .select()
+          .single();
+
+        // Ativar plano do usuário automaticamente
+        if (paymentRecord && paymentRecord.user_id && paymentRecord.plan_id) {
+          const { data: plan } = await supabase.from('plans').select('duration_days, speed_mbps, name').eq('id', paymentRecord.plan_id).single();
+          if (plan) {
+            const expiresAt = new Date(Date.now() + (plan.duration_days || 30) * 86400000).toISOString();
+            await supabase.from('users').update({ status: 'active', plan_id: paymentRecord.plan_id, plan_name: plan.name, expires_at: expiresAt, updated_at: new Date().toISOString() }).eq('id', paymentRecord.user_id);
+
+            // Liberar acesso RADIUS com velocidade do plano
+            const { data: user } = await supabase.from('users').select('mac_address').eq('id', paymentRecord.user_id).single();
+            if (user && user.mac_address) {
+              const durationMinutes = (plan.duration_days || 30) * 24 * 60;
+              await authorizeAccess(user.mac_address, '192.168.32.1', null, null, null, durationMinutes, plan.speed_mbps, plan.name);
+              console.log(`[WEBHOOK MP] Acesso liberado para ${user.mac_address} - Plano: ${plan.name}`);
+            }
+          }
+        }
       }
     }
 
@@ -1791,10 +1851,17 @@ app.post('/api/confirm-payment', authMiddleware, async (req, res) => {
 
     // Se tem user_id e plan_id, ativar o plano do usuário
     if (payment.user_id && payment.plan_id) {
-      const { data: plan } = await supabase.from('plans').select('duration_days').eq('id', payment.plan_id).single();
+      const { data: plan } = await supabase.from('plans').select('duration_days, speed_mbps, name').eq('id', payment.plan_id).single();
       if (plan) {
         const expiresAt = new Date(Date.now() + (plan.duration_days || 30) * 86400000).toISOString();
-        await supabase.from('users').update({ status: 'active', plan_id: payment.plan_id, expires_at: expiresAt, updated_at: new Date().toISOString() }).eq('id', payment.user_id);
+        await supabase.from('users').update({ status: 'active', plan_id: payment.plan_id, plan_name: plan.name, expires_at: expiresAt, updated_at: new Date().toISOString() }).eq('id', payment.user_id);
+
+        // Liberar acesso RADIUS com velocidade do plano
+        const { data: user } = await supabase.from('users').select('mac_address').eq('id', payment.user_id).single();
+        if (user && user.mac_address) {
+          const durationMinutes = (plan.duration_days || 30) * 24 * 60;
+          await authorizeAccess(user.mac_address, '192.168.32.1', null, null, null, durationMinutes, plan.speed_mbps, plan.name);
+        }
       }
     }
 
