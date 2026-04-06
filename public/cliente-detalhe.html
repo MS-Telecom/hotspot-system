@@ -9,6 +9,12 @@
   <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex">
+
+  <script>
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) window.location.href = 'login.html';
+  </script>
+
   <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
     <div class="flex items-center gap-2 mb-8"><i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i><span class="text-lg font-bold">MS TELECOM</span></div>
     <nav class="flex flex-col gap-1 flex-1">
@@ -90,10 +96,18 @@
 
   <script>
     const API_URL = 'https://mstelecom-api.duckdns.org';
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-    lucide.createIcons(); initMenuMobile();
+    lucide.createIcons();
+
+    function initMenuMobile() {
+        const btnMenu = document.getElementById('btnMenuMobile');
+        const sidebar = document.getElementById('sidebar');
+        if (btnMenu && sidebar) {
+            btnMenu.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+        }
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const clientId = urlParams.get('id');
@@ -103,8 +117,9 @@
       if (!clientId) { alert('ID do cliente não informado'); window.location.href = 'cadastro.html'; return; }
       try {
         const res = await fetch(`${API_URL}/api/users`, { headers });
-        const users = await res.json();
-        currentClient = (users || []).find(u => String(u.id) === String(clientId));
+        const usersPayload = await res.json();
+        const users = usersPayload.data || [];
+        currentClient = users.find(u => String(u.id) === String(clientId));
         if (!currentClient) { alert('Cliente não encontrado'); window.location.href = 'cadastro.html'; return; }
 
         // Info pessoal
@@ -145,7 +160,7 @@
         const res = await fetch(`${API_URL}/api/plans`, { headers });
         const plans = await res.json();
         const select = document.getElementById('editPlan');
-        (plans || []).forEach(p => {
+        (plans.data || []).forEach(p => {
           const selected = currentClient && String(currentClient.plan_id) === String(p.id) ? 'selected' : '';
           select.innerHTML += `<option value="${p.id}" data-name="${p.name}" ${selected}>${p.name} - R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</option>`;
         });
@@ -174,26 +189,75 @@
     async function toggleStatus() {
       const newStatus = currentClient.status === 'active' ? 'inactive' : 'active';
       try {
-        await fetch(`${API_URL}/api/users/${clientId}`, { method: 'PUT', headers, body: JSON.stringify({ status: newStatus }) });
+        await fetch(`${API_URL}/api/users/${clientId}/status`, { method: 'PUT', headers, body: JSON.stringify({ status: newStatus }) });
         loadClient();
-      } catch (err) { alert('Erro'); }
+      } catch (err) { alert('Erro ao alterar status'); }
     }
 
     async function toggleVip() {
+      const newVip = !currentClient.is_vip;
       try {
-        await fetch(`${API_URL}/api/users/${clientId}`, { method: 'PUT', headers, body: JSON.stringify({ is_vip: !currentClient.is_vip }) });
+        await fetch(`${API_URL}/api/users/${clientId}/vip`, { method: 'PUT', headers, body: JSON.stringify({ is_vip: newVip }) });
         loadClient();
-      } catch (err) { alert('Erro'); }
+      } catch (err) { alert('Erro ao alterar status VIP'); }
     }
 
-    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('profileUsername').value = user.username || ''; document.getElementById('profileEmail').value = user.email || ''; }
-    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
-    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-    async function salvarPerfil() { try { const body = {}; const e = document.getElementById('profileEmail').value; const p = document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res = await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
-    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
-    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+    function carregarPerfil() {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                document.getElementById('profileUsername').value = user.username || '';
+                document.getElementById('profileEmail').value = user.email || '';
+            } catch(e) { console.error("Erro ao carregar perfil", e); }
+        }
+    }
 
-    loadClient().then(() => loadPlans());
+    function openModalPerfil() {
+        carregarPerfil();
+        document.getElementById('modalPerfil').classList.remove('hidden');
+    }
+
+    function closeModalPerfil() {
+        document.getElementById('modalPerfil').classList.add('hidden');
+    }
+
+    async function salvarPerfil() {
+        const email = document.getElementById('profileEmail').value;
+        const password = document.getElementById('profilePassword').value;
+        const body = { email };
+        if (password) {
+            body.password = password;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/update-profile`, { method: 'PUT', headers, body: JSON.stringify(body) });
+            if (!res.ok) throw new Error('Erro ao salvar perfil');
+            alert('Perfil atualizado!');
+            closeModalPerfil();
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.email = email;
+            localStorage.setItem('user', JSON.stringify(user));
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function sair() {
+        try {
+            await fetch(`${API_URL}/api/logout`, { method: 'POST', headers });
+        } catch (e) {}
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initMenuMobile();
+        loadClient();
+        loadPlans();
+    });
   </script>
 </body>
 </html>

@@ -6,9 +6,17 @@
   <title>Configurações - MS TELECOM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
+  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}} .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; }</style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex">
+
+<script>
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+</script>
+
   <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
     <div class="flex items-center gap-2 mb-8"><i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i><span class="text-lg font-bold">MS TELECOM</span></div>
     <nav class="flex flex-col gap-1 flex-1">
@@ -35,53 +43,128 @@
       </div>
     </header>
 
-    <!-- Planos -->
-    <div class="bg-gray-800 rounded-xl p-6 mb-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">Planos</h3>
-        <button onclick="openModalPlan()" class="flex items-center gap-2 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Novo Plano</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Nome</th><th class="text-left py-3">Preço</th><th class="text-left py-3">Duração</th><th class="text-left py-3">Velocidade</th><th class="text-left py-3">Ações</th></tr></thead>
-          <tbody id="tablePlans"></tbody>
-        </table>
-      </div>
+    <div class="flex border-b border-gray-700 gap-6 overflow-x-auto mb-6">
+        <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste Grátis</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
     </div>
 
-    <!-- Configurações Gerais -->
-    <div class="bg-gray-800 rounded-xl p-6 mb-6">
-      <h3 class="text-lg font-semibold mb-4">Configurações Gerais</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Chave</th><th class="text-left py-3">Valor</th><th class="text-left py-3">Ações</th></tr></thead>
-          <tbody id="tableSettings"></tbody>
-        </table>
-      </div>
-      <div class="flex gap-3 mt-4">
-        <input id="newSettingKey" type="text" placeholder="Chave" class="px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400 text-sm">
-        <input id="newSettingValue" type="text" placeholder="Valor" class="flex-1 px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400 text-sm">
-        <button onclick="addSetting()" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm">Adicionar</button>
-      </div>
+    <!-- Conteúdo das Abas -->
+    <div id="tab-content-container" class="space-y-6">
+        <!-- Aba Geral -->
+        <div id="geral" class="tab-content space-y-6">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">Identidade Visual</h3>
+                <div class="space-y-4">
+                    <div><label class="text-sm text-gray-400 block mb-2">Nome do Sistema</label><input type="text" id="sistemaNome" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Logo (URL)</label><input type="text" id="sistemaLogo" placeholder="https://..." class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">Informações da Empresa</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="text-sm text-gray-400 block mb-2">Razão Social</label><input type="text" id="razaoSocial" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Endereço</label><input type="text" id="endereco" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Contato (Telefone/Email)</label><input type="text" id="contato" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                </div>
+            </div>
+            <div class="flex justify-end"><button onclick="saveGlobalSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Configurações Gerais</button></div>
+        </div>
+
+        <!-- Aba Planos -->
+        <div id="planos" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Planos de Acesso</h3>
+                    <button onclick="openModalPlan()" class="flex items-center gap-2 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Novo Plano</button>
+                </div>
+                <div id="listaPlanos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Aba Teste Grátis -->
+        <div id="teste_gratis" class="tab-content hidden space-y-6">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">Configuração do Teste Grátis</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <label for="testeGratisAtivo" class="text-sm text-gray-300">Ativar Teste Grátis</label>
+                        <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="testeGratisAtivo" class="sr-only peer"><div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div></label>
+                    </div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Duração do Teste (minutos)</label><input type="number" id="testeGratisDuracao" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Velocidade de Upload (Kbps)</label><input type="number" id="testeGratisVelocidadeUp" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Velocidade de Download (Kbps)</label><input type="number" id="testeGratisVelocidadeDown" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                </div>
+                <div class="flex justify-end mt-6"><button onclick="saveFreeTrialSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Teste Grátis</button></div>
+            </div>
+        </div>
+
+        <!-- Aba Pagamento -->
+        <div id="pagamento" class="tab-content hidden space-y-6">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">Gateway de Pagamento (PIX)</h3>
+                <div class="space-y-4">
+                    <div><label class="text-sm text-gray-400 block mb-2">Chave PIX</label><input type="text" id="pixChave" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Nome do Beneficiário</label><input type="text" id="pixNome" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Cidade do Beneficiário</label><input type="text" id="pixCidade" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                </div>
+                <div class="flex justify-end mt-6"><button onclick="savePaymentSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Pagamento</button></div>
+            </div>
+        </div>
+
+        <!-- Aba Integração -->
+        <div id="integracao" class="tab-content hidden space-y-6">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">Integração API</h3>
+                <div class="space-y-2">
+                    <label class="text-sm text-gray-400 block mb-1">Sua Chave de API</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="apiKey" readonly class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm font-mono">
+                        <button onclick="copyApiKey()" class="p-2.5 bg-gray-600 hover:bg-gray-500 rounded-lg"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button onclick="generateNewApiKey()" class="p-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                 <div class="mt-6">
+                    <button onclick="testConnection()" class="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Testar Conexão com a API</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Backup -->
+        <div id="backup" class="tab-content hidden space-y-6">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <h3 class="font-semibold text-white mb-4">Backup e Restauração</h3>
+                <div class="flex gap-4 mb-6">
+                    <button onclick="createBackup()" class="flex-1 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Criar Novo Backup</button>
+                    <button onclick="document.getElementById('restoreFile').click()" class="flex-1 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Restaurar de Arquivo</button>
+                    <input type="file" id="restoreFile" class="hidden" onchange="restoreBackup()">
+                </div>
+                <h4 class="font-medium text-white mb-3">Backups Disponíveis</h4>
+                <div id="listaBackups" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Aba Usuários Admin -->
+        <div id="usuarios" class="tab-content hidden">
+            <div class="bg-gray-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Administradores</h3>
+                    <button onclick="openModalAdmin()" class="flex items-center gap-2 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Novo Admin</button>
+                </div>
+                <div id="listaAdmins" class="space-y-3"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Admins -->
-    <div class="bg-gray-800 rounded-xl p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">Administradores</h3>
-        <button onclick="openModalAdmin()" class="flex items-center gap-2 px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm"><i data-lucide="plus" class="w-4 h-4"></i>Novo Admin</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Usuário</th><th class="text-left py-3">E-mail</th><th class="text-left py-3">Ações</th></tr></thead>
-          <tbody id="tableAdmins"></tbody>
-        </table>
-      </div>
-    </div>
   </main>
 
-  <!-- Modal Novo Plano -->
-  <div id="modalPlan" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <!-- Modal Plano -->
+  <div id="modalPlan" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
     <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold" id="planModalTitle">Novo Plano</h3><button onclick="closeModalPlan()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <input type="hidden" id="planEditId">
@@ -89,148 +172,449 @@
         <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input id="planName" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Preço (R$)</label><input id="planPrice" type="number" step="0.01" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Duração (dias)</label><input id="planDuration" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Velocidade (ex: 10M/10M)</label><input id="planSpeed" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Velocidade (Mbps)</label><input id="planSpeed" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Descrição</label><textarea id="planDescription" rows="2" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></textarea></div>
       </div>
-      <button onclick="savePlan()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button>
+      <button onclick="savePlan()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2.5 rounded-lg font-medium">Salvar</button>
     </div>
   </div>
 
-  <!-- Modal Novo Admin -->
-  <div id="modalAdmin" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <!-- Modal Admin -->
+  <div id="modalAdmin" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
     <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Novo Administrador</h3><button onclick="closeModalAdmin()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold" id="adminModalTitle">Novo Administrador</h3><button onclick="closeModalAdmin()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <input type="hidden" id="adminEditId">
       <div class="space-y-3">
         <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="adminUsername" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Senha</label><input id="adminPassword" type="password" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="adminEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Senha</label><input id="adminPassword" type="password" placeholder="Deixe em branco para não alterar" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Role</label><select id="adminRole" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"><option value="operador">Operador</option><option value="master">Master</option></select></div>
       </div>
-      <button onclick="createAdmin()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Criar</button>
+      <button onclick="saveAdmin()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2.5 rounded-lg font-medium">Salvar</button>
     </div>
   </div>
 
   <!-- Modal Perfil -->
-  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
     <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700/50 rounded-lg text-gray-400 cursor-not-allowed"></div>
         <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe em branco para não alterar" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
       </div>
-      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button></div>
+      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2.5 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2.5 rounded-lg font-medium">Cancelar</button></div>
     </div>
   </div>
 
   <script>
     const API_URL = 'https://mstelecom-api.duckdns.org';
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-    lucide.createIcons(); initMenuMobile();
+    lucide.createIcons();
 
-    // === PLANOS ===
+    // --- INICIALIZAÇÃO E NAVEGAÇÃO --- 
+    document.addEventListener('DOMContentLoaded', () => {
+        initTabs();
+        initMenuMobile();
+        loadInitialData();
+    });
+
+    function initMenuMobile() {
+        const btnMenu = document.getElementById('btnMenuMobile');
+        const sidebar = document.getElementById('sidebar');
+        if(btnMenu) btnMenu.addEventListener('click', () => sidebar.classList.toggle('open'));
+    }
+
+    function initTabs() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const tab = button.dataset.tab;
+                tabContents.forEach(content => {
+                    content.id === tab ? content.classList.remove('hidden') : content.classList.add('hidden');
+                });
+            });
+        });
+    }
+
+    function loadInitialData() {
+        loadGlobalSettings();
+        loadPlans();
+        loadFreeTrialSettings();
+        loadPaymentSettings();
+        loadApiKey();
+        loadBackups();
+        loadAdmins();
+        carregarPerfil();
+    }
+
+    // --- PERFIL E AUTENTICAÇÃO ---
+    function openModalPerfil() { document.getElementById('modalPerfil').classList.remove('hidden'); }
+    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
+
+    async function carregarPerfil() {
+        // Esta função pode buscar os dados do usuário da API se necessário
+        const username = localStorage.getItem('username') || "Admin";
+        document.getElementById('profileUsername').value = username;
+    }
+
+    async function salvarPerfil() {
+        const email = document.getElementById('profileEmail').value;
+        const password = document.getElementById('profilePassword').value;
+        const body = {};
+        if (email) body.email = email;
+        if (password) body.password = password;
+
+        if (Object.keys(body).length === 0) {
+            alert("Nenhuma alteração para salvar.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/update-profile`, { method: 'PUT', headers, body: JSON.stringify(body) });
+            if (res.ok) {
+                alert('Perfil atualizado com sucesso!');
+                closeModalPerfil();
+            } else {
+                const error = await res.json();
+                alert(`Erro ao atualizar perfil: ${error.message}`);
+            }
+        } catch (err) { console.error(err); alert('Erro de conexão ao atualizar perfil.'); }
+    }
+
+    async function sair() {
+        try {
+            await fetch(`${API_URL}/api/logout`, { method: 'POST', headers });
+        } catch (err) { console.error(err); }
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        localStorage.removeItem('username');
+        window.location.href = 'login.html';
+    }
+
+    // --- CONFIGURAÇÕES GERAIS ---
+    async function loadGlobalSettings() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/global`, { headers });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('sistemaNome').value = data.data.system_name || '';
+                document.getElementById('sistemaLogo').value = data.data.system_logo_url || '';
+                document.getElementById('razaoSocial').value = data.data.company_name || '';
+                document.getElementById('cnpj').value = data.data.company_doc || '';
+                document.getElementById('endereco').value = data.data.company_address || '';
+                document.getElementById('contato').value = data.data.company_contact || '';
+            }
+        } catch (err) { console.error('Erro ao carregar configs gerais:', err); }
+    }
+
+    async function saveGlobalSettings() {
+        const settings = {
+            system_name: document.getElementById('sistemaNome').value,
+            system_logo_url: document.getElementById('sistemaLogo').value,
+            company_name: document.getElementById('razaoSocial').value,
+            company_doc: document.getElementById('cnpj').value,
+            company_address: document.getElementById('endereco').value,
+            company_contact: document.getElementById('contato').value,
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/settings/global`, { method: 'PUT', headers, body: JSON.stringify(settings) });
+            if (res.ok) alert('Configurações globais salvas com sucesso!');
+            else alert('Erro ao salvar configurações globais.');
+        } catch (err) { console.error(err); alert('Erro de conexão ao salvar configs.'); }
+    }
+
+    // --- PLANOS ---
     async function loadPlans() {
       try {
         const res = await fetch(`${API_URL}/api/plans`, { headers });
-        const data = await res.json();
-        const tbody = document.getElementById('tablePlans');
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-500">Nenhum plano</td></tr>'; return; }
-        data.forEach(p => {
-          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${p.name}</td><td class="py-3">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</td><td class="py-3">${p.duration_days || '-'} dias</td><td class="py-3">${p.speed_mbps ? p.speed_mbps + ' Mbps' : '-'}</td>
-            <td class="py-3 flex gap-1"><button onclick='editPlan(${JSON.stringify(p)})' class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs">Editar</button><button onclick="deletePlan(${p.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
+        const plans = await res.json();
+        const container = document.getElementById('listaPlanos');
+        container.innerHTML = '';
+        if (!plans || plans.length === 0) { container.innerHTML = '<p class="text-gray-500 col-span-full text-center">Nenhum plano cadastrado.</p>'; return; }
+        plans.forEach(p => {
+          container.innerHTML += `
+            <div class="bg-gray-700/50 rounded-lg p-4 flex flex-col">
+                <div class="flex-1 mb-4">
+                    <h4 class="font-bold text-white">${p.name}</h4>
+                    <p class="text-cyan-400 text-xl font-bold">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</p>
+                    <p class="text-xs text-gray-400 mt-2">${p.description || 'Sem descrição'}</p>
+                </div>
+                <div class="text-xs text-gray-300 border-t border-gray-600 pt-3 space-y-1">
+                    <p><strong>Duração:</strong> ${p.duration_days} dias</p>
+                    <p><strong>Velocidade:</strong> ${p.speed_mbps} Mbps</p>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick='editPlan(${JSON.stringify(p)})' class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs font-medium">Editar</button>
+                    <button onclick="deletePlan(${p.id})" class="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-xs font-medium">Excluir</button>
+                </div>
+            </div>`;
         });
       } catch (err) { console.error(err); }
     }
 
-    function openModalPlan() { document.getElementById('planEditId').value=''; document.getElementById('planModalTitle').textContent='Novo Plano'; document.getElementById('planName').value=''; document.getElementById('planPrice').value=''; document.getElementById('planDuration').value=''; document.getElementById('planSpeed').value=''; document.getElementById('planDescription').value=''; document.getElementById('modalPlan').classList.remove('hidden'); }
+    function openModalPlan() { 
+        document.getElementById('planEditId').value=''; 
+        document.getElementById('planModalTitle').textContent='Novo Plano'; 
+        document.getElementById('planName').value=''; 
+        document.getElementById('planPrice').value=''; 
+        document.getElementById('planDuration').value=''; 
+        document.getElementById('planSpeed').value=''; 
+        document.getElementById('planDescription').value=''; 
+        document.getElementById('modalPlan').classList.remove('hidden'); 
+    }
     function closeModalPlan() { document.getElementById('modalPlan').classList.add('hidden'); }
 
-    function editPlan(p) { document.getElementById('planEditId').value=p.id; document.getElementById('planModalTitle').textContent='Editar Plano'; document.getElementById('planName').value=p.name||''; document.getElementById('planPrice').value=p.price||''; document.getElementById('planDuration').value=p.duration_days||''; document.getElementById('planSpeed').value=p.speed_mbps||''; document.getElementById('planDescription').value=p.description||''; document.getElementById('modalPlan').classList.remove('hidden'); }
+    function editPlan(p) { 
+        document.getElementById('planEditId').value=p.id; 
+        document.getElementById('planModalTitle').textContent='Editar Plano'; 
+        document.getElementById('planName').value=p.name||''; 
+        document.getElementById('planPrice').value=p.price||''; 
+        document.getElementById('planDuration').value=p.duration_days||''; 
+        document.getElementById('planSpeed').value=p.speed_mbps||''; 
+        document.getElementById('planDescription').value=p.description||''; 
+        document.getElementById('modalPlan').classList.remove('hidden'); 
+    }
 
     async function savePlan() {
       try {
         const id = document.getElementById('planEditId').value;
-        const body = { name: document.getElementById('planName').value, price: document.getElementById('planPrice').value, duration_days: document.getElementById('planDuration').value, speed_mbps: document.getElementById('planSpeed').value, description: document.getElementById('planDescription').value };
-        const url = id ? `${API_URL}/api/plans/${id}` : `${API_URL}/api/plans`;
+        const body = {
+            name: document.getElementById('planName').value,
+            price: parseFloat(document.getElementById('planPrice').value),
+            duration_days: parseInt(document.getElementById('planDuration').value),
+            speed_mbps: parseInt(document.getElementById('planSpeed').value),
+            description: document.getElementById('planDescription').value
+        };
         const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_URL}/api/plans/${id}` : `${API_URL}/api/plans`;
         const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error('Erro');
-        closeModalPlan(); loadPlans();
-      } catch (err) { alert(err.message); }
+        if (res.ok) {
+            alert(`Plano ${id ? 'atualizado' : 'criado'} com sucesso!`);
+            closeModalPlan();
+            loadPlans();
+        } else { alert('Erro ao salvar plano.'); }
+      } catch (err) { console.error(err); alert('Erro de conexão ao salvar plano.'); }
     }
 
-    async function deletePlan(id) { if (!confirm('Excluir plano?')) return; try { await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers }); loadPlans(); } catch (err) { alert('Erro'); } }
-
-    // === SETTINGS ===
-    async function loadSettings() {
-      try {
-        const res = await fetch(`${API_URL}/api/settings`, { headers });
-        const data = await res.json();
-        const tbody = document.getElementById('tableSettings');
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-500">Nenhuma configuração</td></tr>'; return; }
-        data.forEach(s => {
-          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3 font-mono text-sm">${s.key}</td><td class="py-3"><input type="text" value="${s.value||''}" onchange="updateSetting('${s.key}',this.value)" class="px-2 py-1 bg-gray-700 rounded text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 w-full max-w-xs"></td>
-            <td class="py-3"><button onclick="deleteSetting('${s.key}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
-        });
-      } catch (err) { console.error(err); }
+    async function deletePlan(id) {
+        if (!confirm('Tem certeza que deseja excluir este plano?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers });
+            if (res.ok) { alert('Plano excluído com sucesso!'); loadPlans(); }
+            else { alert('Erro ao excluir plano.'); }
+        } catch (err) { console.error(err); alert('Erro de conexão ao excluir plano.'); }
     }
 
-    async function addSetting() {
-      const key = document.getElementById('newSettingKey').value;
-      const value = document.getElementById('newSettingValue').value;
-      if (!key) return;
-      try { await fetch(`${API_URL}/api/settings`, { method: 'POST', headers, body: JSON.stringify({ key, value }) }); document.getElementById('newSettingKey').value=''; document.getElementById('newSettingValue').value=''; loadSettings(); } catch (err) { alert('Erro'); }
+    // --- TESTE GRÁTIS ---
+    async function loadFreeTrialSettings() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/freetrial`, { headers });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('testeGratisAtivo').checked = data.data.enabled;
+                document.getElementById('testeGratisDuracao').value = data.data.duration_minutes || '';
+                document.getElementById('testeGratisVelocidadeUp').value = data.data.upload_kbps || '';
+                document.getElementById('testeGratisVelocidadeDown').value = data.data.download_kbps || '';
+            }
+        } catch (err) { console.error('Erro ao carregar config de teste grátis:', err); }
     }
 
-    async function updateSetting(key, value) {
-      try { await fetch(`${API_URL}/api/settings`, { method: 'POST', headers, body: JSON.stringify({ key, value }) }); } catch (err) { alert('Erro'); }
+    async function saveFreeTrialSettings() {
+        const settings = {
+            enabled: document.getElementById('testeGratisAtivo').checked,
+            duration_minutes: parseInt(document.getElementById('testeGratisDuracao').value),
+            upload_kbps: parseInt(document.getElementById('testeGratisVelocidadeUp').value),
+            download_kbps: parseInt(document.getElementById('testeGratisVelocidadeDown').value)
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/settings/freetrial`, { method: 'PUT', headers, body: JSON.stringify(settings) });
+            if (res.ok) alert('Configurações de teste grátis salvas!');
+            else alert('Erro ao salvar configurações.');
+        } catch (err) { console.error(err); alert('Erro de conexão ao salvar.'); }
     }
 
-    async function deleteSetting(key) {
-      if (!confirm('Excluir configuração?')) return;
-      try { await fetch(`${API_URL}/api/settings/${key}`, { method: 'DELETE', headers }); loadSettings(); } catch (err) { alert('Erro'); }
+    // --- PAGAMENTO ---
+    async function loadPaymentSettings() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/payment`, { headers });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('pixChave').value = data.data.pix_key || '';
+                document.getElementById('pixNome').value = data.data.pix_name || '';
+                document.getElementById('pixCidade').value = data.data.pix_city || '';
+            }
+        } catch (err) { console.error('Erro ao carregar config de pagamento:', err); }
     }
 
-    // === ADMINS ===
+    async function savePaymentSettings() {
+        const settings = {
+            pix_key: document.getElementById('pixChave').value,
+            pix_name: document.getElementById('pixNome').value,
+            pix_city: document.getElementById('pixCidade').value
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/settings/payment`, { method: 'PUT', headers, body: JSON.stringify(settings) });
+            if (res.ok) alert('Configurações de pagamento salvas!');
+            else alert('Erro ao salvar configurações.');
+        } catch (err) { console.error(err); alert('Erro de conexão ao salvar.'); }
+    }
+
+    // --- INTEGRAÇÃO API ---
+    async function loadApiKey() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/integrations`, { headers });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('apiKey').value = data.data.api_key || 'Nenhuma chave gerada';
+            }
+        } catch (err) { console.error('Erro ao carregar chave API:', err); }
+    }
+
+    function copyApiKey() {
+        const key = document.getElementById('apiKey').value;
+        navigator.clipboard.writeText(key).then(() => alert('Chave API copiada!'));
+    }
+
+    async function generateNewApiKey() {
+        if (!confirm('Isso invalidará a chave atual. Deseja continuar?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/settings/integrations/generate-key`, { method: 'POST', headers });
+            if (res.ok) { alert('Nova chave API gerada!'); loadApiKey(); }
+            else { alert('Erro ao gerar nova chave.'); }
+        } catch (err) { console.error(err); alert('Erro de conexão ao gerar chave.'); }
+    }
+
+    async function testConnection() {
+        try {
+            const res = await fetch(`${API_URL}/api/health`, { headers });
+            if (res.ok) alert('Conexão com a API está OK!');
+            else alert('Falha na conexão com a API.');
+        } catch (err) { console.error(err); alert('Erro de conexão.'); }
+    }
+
+    // --- BACKUP ---
+    async function loadBackups() {
+        try {
+            const res = await fetch(`${API_URL}/api/backup/list`, { headers });
+            const backups = await res.json();
+            const container = document.getElementById('listaBackups');
+            container.innerHTML = '';
+            if (!backups || backups.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center">Nenhum backup encontrado.</p>'; return; }
+            backups.forEach(b => {
+                container.innerHTML += `
+                <div class="bg-gray-700/50 p-3 rounded-lg flex items-center justify-between">
+                    <span class="font-mono text-sm">${b.file}</span>
+                    <span class="text-xs text-gray-400">${new Date(b.timestamp).toLocaleString('pt-BR')}</span>
+                </div>`;
+            });
+        } catch (err) { console.error('Erro ao carregar backups:', err); }
+    }
+
+    async function createBackup() {
+        if (!confirm('Deseja criar um novo backup do sistema?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/backup/create`, { method: 'POST', headers });
+            if (res.ok) { alert('Backup criado com sucesso!'); loadBackups(); }
+            else { alert('Erro ao criar backup.'); }
+        } catch (err) { console.error(err); alert('Erro de conexão ao criar backup.'); }
+    }
+
+    async function restoreBackup() {
+        const fileInput = document.getElementById('restoreFile');
+        if (fileInput.files.length === 0) return;
+        if (!confirm('Restaurar um backup substituirá todos os dados atuais. Deseja continuar?')) return;
+        const formData = new FormData();
+        formData.append('backup_file', fileInput.files[0]);
+        try {
+            const res = await fetch(`${API_URL}/api/backup/restore`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+            if (res.ok) { alert('Sistema restaurado com sucesso!'); window.location.reload(); }
+            else { alert('Erro ao restaurar backup.'); }
+        } catch (err) { console.error(err); alert('Erro de conexão ao restaurar.'); }
+    }
+
+    // --- USUÁRIOS ADMIN ---
     async function loadAdmins() {
-      try {
-        const res = await fetch(`${API_URL}/api/admins`, { headers });
-        const data = await res.json();
-        const tbody = document.getElementById('tableAdmins');
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-500">Nenhum admin</td></tr>'; return; }
-        data.forEach(a => {
-          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${a.username}</td><td class="py-3">${a.email||'-'}</td>
-            <td class="py-3"><button onclick="deleteAdmin(${a.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
-        });
-      } catch (err) { console.error(err); }
+        try {
+            const res = await fetch(`${API_URL}/api/admins`, { headers });
+            const admins = await res.json();
+            const container = document.getElementById('listaAdmins');
+            container.innerHTML = '';
+            if (!admins || admins.length === 0) { container.innerHTML = '<p class="text-gray-500 text-center">Nenhum admin cadastrado.</p>'; return; }
+            admins.forEach(admin => {
+                container.innerHTML += `
+                <div class="bg-gray-700/50 p-3 rounded-lg flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-white">${admin.username}</p>
+                        <p class="text-xs text-gray-400">${admin.email}</p>
+                    </div>
+                    <div><span class="px-2 py-1 ${admin.role === 'master' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'} text-[10px] font-bold rounded-full capitalize">${admin.role}</span></div>
+                    <div class="flex gap-2">
+                        <button onclick='editAdmin(${JSON.stringify(admin)})' class="p-2 hover:bg-gray-600 rounded-lg"><i data-lucide="edit" class="w-4 h-4 text-gray-300"></i></button>
+                        <button onclick="deleteAdmin(${admin.id})" class="p-2 hover:bg-red-500/20 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
+                    </div>
+                </div>`;
+            });
+            lucide.createIcons();
+        } catch (err) { console.error('Erro ao carregar admins:', err); }
     }
 
-    function openModalAdmin() { document.getElementById('modalAdmin').classList.remove('hidden'); }
+    function openModalAdmin() {
+        document.getElementById('adminEditId').value = '';
+        document.getElementById('adminModalTitle').textContent = 'Novo Administrador';
+        document.getElementById('adminUsername').value = '';
+        document.getElementById('adminEmail').value = '';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminRole').value = 'operador';
+        document.getElementById('modalAdmin').classList.remove('hidden');
+    }
     function closeModalAdmin() { document.getElementById('modalAdmin').classList.add('hidden'); }
 
-    async function createAdmin() {
-      try {
-        const body = { username: document.getElementById('adminUsername').value, password: document.getElementById('adminPassword').value, email: document.getElementById('adminEmail').value };
-        const res = await fetch(`${API_URL}/api/admins`, { method: 'POST', headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error('Erro');
-        closeModalAdmin(); loadAdmins();
-      } catch (err) { alert(err.message); }
+    function editAdmin(admin) {
+        document.getElementById('adminEditId').value = admin.id;
+        document.getElementById('adminModalTitle').textContent = 'Editar Administrador';
+        document.getElementById('adminUsername').value = admin.username;
+        document.getElementById('adminEmail').value = admin.email;
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminRole').value = admin.role;
+        document.getElementById('modalAdmin').classList.remove('hidden');
     }
 
-    async function deleteAdmin(id) { if (!confirm('Excluir admin?')) return; try { await fetch(`${API_URL}/api/admins/${id}`, { method: 'DELETE', headers }); loadAdmins(); } catch (err) { alert('Erro'); } }
+    async function saveAdmin() {
+        const id = document.getElementById('adminEditId').value;
+        const body = {
+            username: document.getElementById('adminUsername').value,
+            email: document.getElementById('adminEmail').value,
+            password: document.getElementById('adminPassword').value,
+            role: document.getElementById('adminRole').value
+        };
+        if (!body.password) delete body.password; // Não envia senha se estiver vazia
 
-    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('profileUsername').value = user.username || ''; document.getElementById('profileEmail').value = user.email || ''; }
-    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
-    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-    async function salvarPerfil() { try { const body = {}; const e = document.getElementById('profileEmail').value; const p = document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res = await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
-    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
-    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_URL}/api/admins/${id}` : `${API_URL}/api/admins`;
 
-    loadPlans(); loadSettings(); loadAdmins();
+        try {
+            const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
+            if (res.ok) {
+                alert(`Admin ${id ? 'atualizado' : 'criado'} com sucesso!`);
+                closeModalAdmin();
+                loadAdmins();
+            } else { alert('Erro ao salvar admin.'); }
+        } catch (err) { console.error(err); alert('Erro de conexão ao salvar admin.'); }
+    }
+
+    async function deleteAdmin(id) {
+        if (!confirm('Tem certeza que deseja excluir este administrador?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admins/${id}`, { method: 'DELETE', headers });
+            if (res.ok) { alert('Admin excluído com sucesso!'); loadAdmins(); }
+            else { alert('Erro ao excluir admin.'); }
+        } catch (err) { console.error(err); alert('Erro de conexão ao excluir admin.'); }
+    }
+
   </script>
 </body>
 </html>
