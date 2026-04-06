@@ -22,11 +22,13 @@
     </style>
 </head>
 <body class="text-gray-200">
+<!-- Proteção de acesso: redireciona para login se não houver token -->
 <script>
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) window.location.href = 'login.html';
 </script>
 
+<!-- Botão menu mobile (hambúrguer) -->
 <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
     <i data-lucide="menu" class="w-5 h-5"></i>
 </button>
@@ -34,6 +36,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
+    <!-- Sidebar padrão admin -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -71,6 +74,7 @@
     </aside>
 
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+        <!-- Cabeçalho fixo com busca, perfil e logout -->
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
             <div class="relative w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
@@ -94,7 +98,7 @@
         </header>
 
         <div class="p-8 space-y-8">
-            <!-- Cabeçalho da página -->
+            <!-- Título e botão novo webhook -->
             <div class="flex justify-between items-end">
                 <div><h1 class="text-3xl font-black tracking-tight">Webhooks / API</h1><p class="text-gray-500 text-sm mt-1">Configure endpoints para receber notificações de eventos do sistema</p></div>
                 <button onclick="openWebhookModal()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Webhook</button>
@@ -241,10 +245,11 @@
 </div>
 
 <script>
+    // Constante da API (endpoint base)
     const API_URL = 'https://mstelecom-api.duckdns.org';
     let webhooksData = [];
 
-    // Função auxiliar para headers com token
+    // Retorna headers padrão com token de autenticação (se disponível)
     function getAuthHeaders() {
         const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
         const headers = { 'Content-Type': 'application/json' };
@@ -252,18 +257,24 @@
         return headers;
     }
 
-    // Menu mobile
+    // Inicializa o menu mobile (abrir/fechar sidebar em telas pequenas)
     function initMenuMobile() {
         const menuToggle = document.getElementById('menuToggle');
         const menuOverlay = document.getElementById('menuOverlay');
         const sidebar = document.getElementById('sidebar');
         if (menuToggle && sidebar) {
-            menuToggle.addEventListener('click', () => { sidebar.classList.toggle('hidden'); menuOverlay.classList.toggle('hidden'); });
-            menuOverlay.addEventListener('click', () => { sidebar.classList.add('hidden'); menuOverlay.classList.add('hidden'); });
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                menuOverlay.classList.toggle('hidden');
+            });
+            menuOverlay.addEventListener('click', () => {
+                sidebar.classList.add('hidden');
+                menuOverlay.classList.add('hidden');
+            });
         }
     }
 
-    // Carregar webhooks da API
+    // Carrega lista de webhooks da API e renderiza na tabela
     async function carregarWebhooks() {
         try {
             const res = await fetch(`${API_URL}/api/webhooks`, { headers: getAuthHeaders() });
@@ -291,7 +302,7 @@
         }
     }
 
-    // Modal webhook
+    // Abre o modal de criação de webhook
     function openWebhookModal() {
         document.getElementById('webhookModal').classList.remove('hidden');
         document.getElementById('webhookNome').value = '';
@@ -301,11 +312,13 @@
         document.getElementById('webhookAlvo').value = 'todos';
         document.getElementById('webhookAtivo').checked = true;
     }
+
+    // Fecha o modal de criação de webhook
     function closeWebhookModal() {
         document.getElementById('webhookModal').classList.add('hidden');
     }
 
-    // Salvar webhook
+    // Envia requisição para criar um novo webhook
     async function salvarWebhook() {
         const nome = document.getElementById('webhookNome').value;
         const evento = document.getElementById('webhookEvento').value;
@@ -314,7 +327,10 @@
         const alvo = document.getElementById('webhookAlvo').value;
         const ativo = document.getElementById('webhookAtivo').checked;
 
-        if (!nome || !evento || !url) { alert('Preencha todos os campos obrigatórios'); return; }
+        if (!nome || !evento || !url) {
+            alert('Preencha todos os campos obrigatórios');
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/webhooks`, {
@@ -331,7 +347,7 @@
         }
     }
 
-    // Testar webhook
+    // Testa um webhook existente (chama endpoint de teste)
     async function testarWebhook(id) {
         try {
             await fetch(`${API_URL}/api/webhooks/${id}/testar`, { method: 'POST', headers: getAuthHeaders() });
@@ -341,7 +357,7 @@
         }
     }
 
-    // Excluir webhook
+    // Exclui um webhook após confirmação do usuário
     async function excluirWebhook(id) {
         if (!confirm('Tem certeza que deseja excluir este webhook?')) return;
         try {
@@ -353,13 +369,13 @@
         }
     }
 
-    // Copiar exemplo cURL
+    // Copia o comando cURL de exemplo para a área de transferência
     function copiarExemplo() {
         navigator.clipboard.writeText(`curl -X POST https://mstelecom-api.duckdns.org/api/webhook/pagamento \\\n  -H "Content-Type: application/json" \\\n  -d '{"evento":"pagamento.confirmado","cliente":"CLIENTE_NOME","valor":15.00,"mac":"XX:XX:XX:XX:XX:XX"}'`);
         alert('Exemplo copiado!');
     }
 
-    // Busca local
+    // Filtro local na lista de webhooks (busca por URL ou evento)
     document.getElementById('searchInput')?.addEventListener('input', function(e) {
         const term = e.target.value.toLowerCase();
         document.querySelectorAll('#webhooksList > div').forEach(item => {
@@ -367,7 +383,7 @@
         });
     });
 
-    // Perfil
+    // Carrega dados do perfil do usuário a partir do localStorage
     function carregarPerfil() {
         const userStr = localStorage.getItem('user');
         if (userStr) {
@@ -380,6 +396,7 @@
         }
     }
 
+    // Abre o modal de perfil e limpa campos de senha
     function openModalPerfil() {
         carregarPerfil();
         const modal = document.getElementById('modalPerfil');
@@ -390,11 +407,13 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    // Fecha o modal de perfil
     function closeModalPerfil() {
         const modal = document.getElementById('modalPerfil');
         if (modal) modal.classList.add('hidden');
     }
 
+    // Salva alterações de perfil (nome, e-mail e senha)
     async function salvarPerfil() {
         const authToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
         const username = document.getElementById('editUsername')?.value;
@@ -443,6 +462,7 @@
         }
     }
 
+    // Logout: chama endpoint de logout e limpa storage
     async function sair() {
         const authToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
         const username = localStorage.getItem('ms_user');
@@ -465,7 +485,7 @@
         window.location.href = 'login.html';
     }
 
-    // Inicialização
+    // Inicializa tudo quando a página carrega
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
         carregarWebhooks();
@@ -473,7 +493,7 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
     });
 
-    // Atualização automática a cada 30 segundos
+    // Atualiza a lista de webhooks automaticamente a cada 30 segundos
     setInterval(carregarWebhooks, 30000);
 </script>
 
