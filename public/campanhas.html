@@ -1,164 +1,779 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campanhas - MS TELECOM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Campanhas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .campaign-card { transition: all 0.2s ease; cursor: pointer; }
+        .campaign-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        #sidebar { z-index: 100; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex">
-  <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
-    <div class="flex items-center gap-2 mb-8"><i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i><span class="text-lg font-bold">MS TELECOM</span></div>
-    <nav class="flex flex-col gap-1 flex-1">
-      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</a>
-      <a href="hotspots.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="router" class="w-5 h-5"></i>Hotspots</a>
-      <a href="pops.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="radio-tower" class="w-5 h-5"></i>POPs</a>
-      <a href="cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="users" class="w-5 h-5"></i>Clientes</a>
-      <a href="financeiro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="banknote" class="w-5 h-5"></i>Financeiro</a>
-      <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
-      <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
-      <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
-      <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
-      <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
-    </nav>
-  </aside>
+<body class="text-gray-200">
 
-  <main class="flex-1 p-4 md:p-6 overflow-auto">
-    <header class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3"><button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="text-2xl font-bold">Campanhas</h1></div><div class="relative w-full md:w-96"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i><input type="text" id="searchInput" placeholder="Buscar campanha por nome, cupom..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition"></div>
-      <div class="flex items-center gap-3">
-        <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium"><i data-lucide="plus" class="w-4 h-4"></i>Nova Campanha</button>
-        <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
-        <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
-      </div>
-    </header>
+<script>
+    // PROTEÇÃO DE ACESSO - CORRIGIDO: padronizado para usar 'token'
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+</script>
 
-    <div class="bg-gray-800 rounded-xl p-4">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Nome</th><th class="text-left py-3">Cupom</th><th class="text-left py-3">Status</th><th class="text-left py-3">Início</th><th class="text-left py-3">Fim</th><th class="text-left py-3">Ações</th></tr></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </main>
+<!-- HAMBURGER MENU (Mobile) -->
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
 
-  <!-- Modal Criar/Editar -->
-  <div id="modalCampaign" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 id="modalTitle" class="text-lg font-bold">Nova Campanha</h3><button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <input type="hidden" id="editId">
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input id="inputName" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Descrição</label><textarea id="inputDescription" rows="2" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></textarea></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Código do Cupom</label><input id="inputCoupon" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-sm text-gray-400 mb-1">Início</label><input id="inputStartsAt" type="date" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none"></div>
-          <div><label class="block text-sm text-gray-400 mb-1">Fim</label><input id="inputEndsAt" type="date" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none"></div>
+<div class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
         </div>
-        <div><label class="block text-sm text-gray-400 mb-1">Status</label><select id="inputStatus" class="w-full px-3 py-2 bg-gray-700 rounded-lg"><option value="ativa">Ativa</option><option value="inativa">Inativa</option></select></div><div><label class="block text-sm text-gray-400 mb-1">Gênero</label><select id="campaignGenero" class="w-full px-3 py-2 bg-gray-700 rounded-lg"><option value="todos">Todos</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option><option value="outro">Outro</option></select></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm text-gray-400 mb-1">Idade Mínima</label><input id="campaignIdadeMin" type="number" placeholder="18" min="0" max="120" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div><div><label class="block text-sm text-gray-400 mb-1">Idade Máxima</label><input id="campaignIdadeMax" type="number" placeholder="65" min="0" max="120" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div></div>
-      </div>
-      <button onclick="saveCampaign()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button>
+
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+            </a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
+            <div class="relative w-full md:w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar campanha por nome, cupom..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-xs md:text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-8 space-y-6 md:space-y-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight">Campanhas de Marketing</h1>
+                    <p class="text-gray-500 text-xs md:text-sm mt-1">Crie e gerencie campanhas promocionais e mensagens personalizadas</p>
+                </div>
+                <button onclick="openCampaignModal()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Nova Campanha
+                </button>
+            </div>
+
+            <div id="campanhasList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
+                <div class="text-center text-gray-500 py-8 col-span-2">Carregando campanhas...</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL: NOVA CAMPANHA -->
+<div id="campaignModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[90vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="megaphone" class="w-4 h-4 text-blue-500"></i>
+                Nova Campanha
+            </h2>
+            <button onclick="closeCampaignModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label>
+                <input type="text" id="campaignNome" placeholder="Black Friday 2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
+                <textarea id="campaignDescricao" rows="2" placeholder="Descrição da campanha..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / Código</label>
+                <input type="text" id="campaignCupom" placeholder="BLACK2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                <select id="campaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                    <option value="ativa">Ativa</option>
+                    <option value="inativa">Inativa</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label>
+                <select id="campaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                    <option value="todos">Todos</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label>
+                    <input type="number" id="campaignIdadeMin" placeholder="18" min="0" max="120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label>
+                    <input type="number" id="campaignIdadeMax" placeholder="65" min="0" max="120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label>
+                    <input type="date" id="campaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Fim</label>
+                    <input type="date" id="campaignDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                </div>
+            </div>
+        </div>
+        <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeCampaignModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
+            <button onclick="salvarCampanha()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Salvar</button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- Modal Perfil -->
-  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-      </div>
-      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button></div>
+<!-- MODAL: DETALHES DA CAMPANHA -->
+<div id="campaignDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
+                Detalhes da Campanha
+            </h2>
+            <button onclick="closeCampaignDetailModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="detalhesCampanhaContent" class="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="editarCampanha()" id="editarCampanhaBtn" class="px-3 py-1.5 bg-blue-600/30 text-blue-400 rounded-lg text-xs hover:bg-blue-600/50 transition">Editar</button>
+            <button onclick="excluirCampanha()" id="excluirCampanhaBtn" class="px-3 py-1.5 bg-red-600/30 text-red-400 rounded-lg text-xs hover:bg-red-600/50 transition">Excluir</button>
+            <button onclick="closeCampaignDetailModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Fechar</button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <script>
-    const API_URL = 'https://mstelecom-api.duckdns.org';
-    let campaignsData = [];
-    let currentCampaignId = null;
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
-    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-    lucide.createIcons(); initMenuMobile();
+<!-- MODAL: EDITAR CAMPANHA -->
+<div id="editCampaignModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[90vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="edit" class="w-4 h-4 text-blue-500"></i>
+                Editar Campanha
+            </h2>
+            <button onclick="closeEditCampaignModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+            <input type="hidden" id="editCampaignId">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label>
+                <input type="text" id="editCampaignNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
+                <textarea id="editCampaignDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom</label>
+                <input type="text" id="editCampaignCupom" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                <select id="editCampaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                    <option value="ativa">Ativa</option>
+                    <option value="inativa">Inativa</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label>
+                    <input type="date" id="editCampaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Fim</label>
+                    <input type="date" id="editCampaignDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                </div>
+            </div>
+        </div>
+        <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeEditCampaignModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
+            <button onclick="atualizarCampanha()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Atualizar</button>
+        </div>
+    </div>
+</div>
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredCampaigns = campaignsData.filter(c => 
-            c.name.toLowerCase().includes(searchTerm) || 
-            (c.coupon_code && c.coupon_code.toLowerCase().includes(searchTerm))
-        );
-        renderCampaigns(filteredCampaigns);
-    });
+<!-- MODAL: MEU PERFIL -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
+                        <input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
+                        <input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
 
-    async function loadCampaigns() {
-      try {
-        const res = await fetch(`${API_URL}/api/campaigns`, { headers });
+<script>
+// ==================== CONFIGURAÇÕES GLOBAIS ====================
+const API_URL = 'https://mstelecom-api.duckdns.org';
+let campanhasData = [];    // Dados normalizados (campos em português)
+let campanhaAtualId = null;
+
+// Função auxiliar para obter headers com autenticação
+function getAuthHeaders(includeJson = true) {
+    const headers = {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    };
+    if (includeJson) {
+        headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+}
+
+// ==================== NORMALIZAÇÃO DE DADOS (backend <-> frontend) ====================
+// Converte campanha do formato backend (inglês) para formato frontend (português)
+function normalizeCampaignFromBackend(camp) {
+    // Mapeamento de status: 'active' -> 'ativa', 'inactive' -> 'inativa'
+    let statusFront = camp.status === 'active' ? 'ativa' : (camp.status === 'inactive' ? 'inativa' : camp.status);
+    return {
+        id: camp.id,
+        nome: camp.name,
+        descricao: camp.description,
+        cupom: camp.coupon,
+        status: statusFront,
+        genero: camp.gender || 'todos',
+        idade_min: camp.min_age,
+        idade_max: camp.max_age,
+        data_inicio: camp.start_date,
+        data_fim: camp.end_date,
+        created_at: camp.created_at,
+        updated_at: camp.updated_at
+    };
+}
+
+// Converte campanha do formato frontend (português) para backend (inglês)
+function normalizeCampaignToBackend(campFront) {
+    let statusBack = campFront.status === 'ativa' ? 'active' : (campFront.status === 'inativa' ? 'inactive' : campFront.status);
+    return {
+        name: campFront.nome,
+        description: campFront.descricao,
+        coupon: campFront.cupom,
+        status: statusBack,
+        gender: campFront.genero,
+        min_age: campFront.idade_min ? parseInt(campFront.idade_min) : null,
+        max_age: campFront.idade_max ? parseInt(campFront.idade_max) : null,
+        start_date: campFront.data_inicio || null,
+        end_date: campFront.data_fim || null
+    };
+}
+
+// ==================== CRUD CAMPANHAS ====================
+async function carregarCampanhas() {
+    try {
+        // CORRIGIDO: endpoint /api/campanhas -> /api/campaigns
+        const res = await fetch(`${API_URL}/api/campaigns`, {
+            headers: getAuthHeaders(true)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        campaignsData = data;
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        renderCampaigns(data);
-        function renderCampaigns(campaigns) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        if (!campaigns || campaigns.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-gray-500">Nenhuma campanha encontrada</td></tr>'; return; }
-        campaigns.forEach(c => {
-          const statusColor = c.status === 'active' ? 'text-green-400' : 'text-gray-400';
-          const start = c.starts_at ? new Date(c.starts_at).toLocaleDateString('pt-BR') : '-';
-          const end = c.ends_at ? new Date(c.ends_at).toLocaleDateString('pt-BR') : '-';
-          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${c.name}</td><td class="py-3">${c.coupon_code || '-'}</td><td class="py-3 ${statusColor}">${c.status}</td><td class="py-3">${start}</td><td class="py-3">${end}</td>
-            <td class="py-3 flex gap-1"><button onclick='editCampaign(${JSON.stringify(c)})' class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs">Editar</button><button onclick="deleteCampaign(${c.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
-                });
+        // Normaliza os dados recebidos (array diretamente)
+        campanhasData = (data || []).map(c => normalizeCampaignFromBackend(c));
+        if (campanhasData.length === 0) {
+            mostrarListaVazia();
+            return;
+        }
+        renderizarCampanhas(campanhasData);
+    } catch (error) {
+        console.error('Erro ao carregar campanhas:', error);
+        mostrarListaVazia();
     }
-      } catch (err) { console.error('Erro:', err); }
+}
+
+function mostrarListaVazia() {
+    const container = document.getElementById('campanhasList');
+    container.innerHTML = `<div class="text-center text-gray-500 py-12 col-span-2"><i data-lucide="megaphone" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Nenhuma campanha encontrada</p><p class="text-xs mt-1">Clique em "Nova Campanha" para criar sua primeira campanha</p></div>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function renderizarCampanhas(campanhas) {
+    const container = document.getElementById('campanhasList');
+    const statusClass = {
+        'ativa': 'bg-emerald-500/10 text-emerald-500',
+        'inativa': 'bg-red-500/20 text-red-400'
+    };
+    
+    container.innerHTML = campanhas.map(camp => `
+        <div class="glass-card rounded-2xl overflow-hidden border border-gray-800 campaign-card" onclick="openCampaignDetail(${camp.id})">
+            <div class="p-4 md:p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-white">${escapeHtml(camp.nome)}</h3>
+                        <p class="text-[10px] text-gray-500">${camp.data_inicio || '--'} - ${camp.data_fim || '--'}</p>
+                    </div>
+                    <span class="px-2 md:px-3 py-1 ${statusClass[camp.status] || 'bg-gray-500/20 text-gray-400'} text-[10px] font-bold rounded-full">${camp.status?.toUpperCase() || 'RASCUNHO'}</span>
+                </div>
+                <p class="text-gray-400 text-xs md:text-sm mb-3 line-clamp-2">${escapeHtml(camp.descricao) || 'Sem descrição'}</p>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-800">
+                    <span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3"></i> ${camp.cupom || 'Sem cupom'}</span>
+                    <button class="text-blue-500 text-xs font-medium hover:text-blue-400" onclick="event.stopPropagation(); openCampaignDetail(${camp.id})">Detalhes</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function openCampaignModal() {
+    document.getElementById('campaignModal').classList.remove('hidden');
+    document.getElementById('campaignNome').value = '';
+    document.getElementById('campaignDescricao').value = '';
+    document.getElementById('campaignCupom').value = '';
+    document.getElementById('campaignStatus').value = 'ativa';
+    document.getElementById('campaignGenero').value = 'todos';
+    document.getElementById('campaignIdadeMin').value = '';
+    document.getElementById('campaignIdadeMax').value = '';
+    document.getElementById('campaignDataInicio').value = '';
+    document.getElementById('campaignDataFim').value = '';
+}
+
+function closeCampaignModal() {
+    document.getElementById('campaignModal').classList.add('hidden');
+}
+
+async function salvarCampanha() {
+    const nome = document.getElementById('campaignNome').value;
+    if (!nome) { alert('Informe o nome da campanha'); return; }
+    
+    // Coleta dados no formato frontend (português)
+    const campFront = {
+        nome,
+        descricao: document.getElementById('campaignDescricao').value,
+        cupom: document.getElementById('campaignCupom').value,
+        status: document.getElementById('campaignStatus').value,
+        genero: document.getElementById('campaignGenero').value,
+        idade_min: document.getElementById('campaignIdadeMin').value,
+        idade_max: document.getElementById('campaignIdadeMax').value,
+        data_inicio: document.getElementById('campaignDataInicio').value,
+        data_fim: document.getElementById('campaignDataFim').value
+    };
+    
+    // Converte para formato backend
+    const payload = normalizeCampaignToBackend(campFront);
+    
+    try {
+        // CORRIGIDO: endpoint /api/campanhas -> /api/campaigns
+        const res = await fetch(`${API_URL}/api/campaigns`, {
+            method: 'POST',
+            headers: getAuthHeaders(true),
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            alert(`✅ Campanha "${nome}" criada!`);
+            closeCampaignModal();
+            carregarCampanhas();
+        } else {
+            const err = await res.text();
+            throw new Error(err);
+        }
+    } catch (error) {
+        console.error(error);
+        alert(`Erro ao criar campanha: ${error.message}`);
     }
+}
 
-    function openModal() { document.getElementById('editId').value = ''; document.getElementById('modalTitle').textContent = 'Nova Campanha'; document.getElementById('inputName').value = ''; document.getElementById('inputDescription').value = ''; document.getElementById('inputCoupon').value = ''; document.getElementById('inputStartsAt').value = ''; document.getElementById('inputEndsAt').value = ''; document.getElementById('inputStatus').value = 'active'; document.getElementById('modalCampaign').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('modalCampaign').classList.add('hidden'); }
+function openCampaignDetail(id) {
+    const campanha = campanhasData.find(c => c.id == id);
+    if (!campanha) return;
+    campanhaAtualId = id;
+    
+    const content = document.getElementById('detalhesCampanhaContent');
+    const statusClass = campanha.status === 'ativa' ? 'text-emerald-500' : 'text-red-500';
+    
+    content.innerHTML = `
+        <div class="space-y-2">
+            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(campanha.nome)}</p></div>
+            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Período</p><p>${campanha.data_inicio || '--'} - ${campanha.data_fim || '--'}</p></div>
+            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p class="${statusClass} font-bold">${campanha.status?.toUpperCase() || 'RASCUNHO'}</p></div>
+            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Cupom</p><p class="font-mono text-blue-400">${campanha.cupom || 'N/A'}</p></div>
+            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Descrição</p><p class="text-gray-300">${escapeHtml(campanha.descricao) || 'Sem descrição'}</p></div>
+            ${campanha.genero ? `<div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Segmentação</p><p>Gênero: ${campanha.genero} | Idade: ${campanha.idade_min || '0'} - ${campanha.idade_max || '+'}</p></div>` : ''}
+        </div>
+    `;
+    
+    document.getElementById('campaignDetailModal').classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
-    function editCampaign(c) {
-      document.getElementById('editId').value = c.id;
-      document.getElementById('modalTitle').textContent = 'Editar Campanha';
-      document.getElementById('inputName').value = c.name || '';
-      document.getElementById('inputDescription').value = c.description || '';
-      document.getElementById('inputCoupon').value = c.coupon_code || '';
-      document.getElementById('inputStartsAt').value = c.starts_at ? c.starts_at.split('T')[0] : '';
-      document.getElementById('inputEndsAt').value = c.ends_at ? c.ends_at.split('T')[0] : '';
-      document.getElementById('inputStatus').value = c.status || 'active';
-      document.getElementById('modalCampaign').classList.remove('hidden');
+function closeCampaignDetailModal() {
+    document.getElementById('campaignDetailModal').classList.add('hidden');
+    campanhaAtualId = null;
+}
+
+function editarCampanha() {
+    if (!campanhaAtualId) return;
+    const campanha = campanhasData.find(c => c.id == campanhaAtualId);
+    if (!campanha) return;
+    
+    document.getElementById('editCampaignId').value = campanha.id;
+    document.getElementById('editCampaignNome').value = campanha.nome || '';
+    document.getElementById('editCampaignDescricao').value = campanha.descricao || '';
+    document.getElementById('editCampaignCupom').value = campanha.cupom || '';
+    document.getElementById('editCampaignStatus').value = campanha.status || 'ativa';
+    document.getElementById('editCampaignDataInicio').value = campanha.data_inicio || '';
+    document.getElementById('editCampaignDataFim').value = campanha.data_fim || '';
+    
+    closeCampaignDetailModal();
+    document.getElementById('editCampaignModal').classList.remove('hidden');
+}
+
+function closeEditCampaignModal() {
+    document.getElementById('editCampaignModal').classList.add('hidden');
+}
+
+async function atualizarCampanha() {
+    const id = document.getElementById('editCampaignId').value;
+    const nome = document.getElementById('editCampaignNome').value;
+    if (!nome) { alert('Informe o nome da campanha'); return; }
+    
+    const campFront = {
+        nome,
+        descricao: document.getElementById('editCampaignDescricao').value,
+        cupom: document.getElementById('editCampaignCupom').value,
+        status: document.getElementById('editCampaignStatus').value,
+        genero: 'todos',  // manter padrão ou buscar do original? Vamos usar o original
+        idade_min: null,
+        idade_max: null,
+        data_inicio: document.getElementById('editCampaignDataInicio').value,
+        data_fim: document.getElementById('editCampaignDataFim').value
+    };
+    
+    // Preserva gênero e idade da campanha original
+    const original = campanhasData.find(c => c.id == id);
+    if (original) {
+        campFront.genero = original.genero;
+        campFront.idade_min = original.idade_min;
+        campFront.idade_max = original.idade_max;
     }
-
-    async function saveCampaign() {
-      try {
-        const id = document.getElementById('editId').value;
-        const body = { name: document.getElementById('inputName').value, description: document.getElementById('inputDescription').value, coupon_code: document.getElementById('inputCoupon').value, starts_at: document.getElementById('inputStartsAt').value || null, ends_at: document.getElementById('inputEndsAt').value || null, status: document.getElementById('inputStatus').value, gender: document.getElementById('campaignGenero').value, min_age: document.getElementById('campaignIdadeMin').value, max_age: document.getElementById('campaignIdadeMax').value };
-        const url = id ? `${API_URL}/api/campaigns/${id}` : `${API_URL}/api/campaigns`;
-        const method = id ? 'PUT' : 'POST';
-        const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error('Erro ao salvar');
-        closeModal(); loadCampaigns();
-      } catch (err) { alert(err.message); }
+    
+    const payload = normalizeCampaignToBackend(campFront);
+    
+    try {
+        // CORRIGIDO: endpoint /api/campanhas/:id -> /api/campaigns/:id
+        const res = await fetch(`${API_URL}/api/campaigns/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(true),
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            alert(`✅ Campanha "${nome}" atualizada!`);
+        } else {
+            throw new Error();
+        }
+    } catch (error) {
+        alert(`Erro ao atualizar campanha.`);
     }
+    
+    closeEditCampaignModal();
+    carregarCampanhas();
+}
 
-    async function deleteCampaign(id) {
-      if (!confirm('Excluir esta campanha?')) return;
-      try { await fetch(`${API_URL}/api/campaigns/${id}`, { method: 'DELETE', headers }); loadCampaigns(); } catch (err) { alert('Erro'); }
+async function excluirCampanha() {
+    if (!campanhaAtualId) return;
+    const campanha = campanhasData.find(c => c.id == campanhaAtualId);
+    if (!confirm(`Tem certeza que deseja excluir a campanha "${campanha.nome}"?`)) return;
+    
+    try {
+        // CORRIGIDO: endpoint /api/campanhas/:id -> /api/campaigns/:id
+        const res = await fetch(`${API_URL}/api/campaigns/${campanhaAtualId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(false)
+        });
+        if (res.ok) alert(`✅ Campanha "${campanha.nome}" excluída!`);
+        else throw new Error();
+    } catch (error) {
+        alert(`Erro ao excluir campanha.`);
     }
+    closeCampaignDetailModal();
+    carregarCampanhas();
+}
 
-    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('profileUsername').value = user.username || ''; document.getElementById('profileEmail').value = user.email || ''; }
-    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
-    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-    async function salvarPerfil() { try { const body = {}; const e = document.getElementById('profileEmail').value; const p = document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res = await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
-    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
-    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+// ==================== BUSCA LOCAL ====================
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('#campanhasList > div');
+    cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(term) ? 'block' : 'none';
+    });
+});
 
-    loadCampaigns();
-  </script>
+// ==================== PERFIL ====================
+async function carregarPerfil() {
+    try {
+        // CORRIGIDO: busca dados atualizados do backend via GET /api/profile
+        const res = await fetch(`${API_URL}/api/profile`, {
+            headers: getAuthHeaders(true)
+        });
+        if (res.ok) {
+            const userData = await res.json();
+            // userData pode ser { id, username, email, ... }
+            if (document.getElementById('editUsername')) document.getElementById('editUsername').value = userData.username || '';
+            if (document.getElementById('editEmail')) document.getElementById('editEmail').value = userData.email || '';
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = userData.username || 'Administrador';
+            // Salva no localStorage para cache
+            localStorage.setItem('user', JSON.stringify({ username: userData.username, email: userData.email }));
+        } else {
+            // Fallback para localStorage
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
+                if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+                if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
+            }
+        }
+    } catch (error) {
+        console.warn('Erro ao carregar perfil do backend, usando localStorage');
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
+            if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
+        }
+    }
+}
+
+function openModalPerfil() {
+    carregarPerfil();
+    const modal = document.getElementById('modalPerfil');
+    if (modal) modal.classList.remove('hidden');
+    if (document.getElementById('senhaAtual')) document.getElementById('senhaAtual').value = '';
+    if (document.getElementById('novaSenha')) document.getElementById('novaSenha').value = '';
+    if (document.getElementById('confirmarSenha')) document.getElementById('confirmarSenha').value = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeModalPerfil() {
+    const modal = document.getElementById('modalPerfil');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function salvarPerfil() {
+    const token = localStorage.getItem('token');
+    const username = document.getElementById('editUsername')?.value;
+    const email = document.getElementById('editEmail')?.value;
+    const senhaAtual = document.getElementById('senhaAtual')?.value;
+    const novaSenha = document.getElementById('novaSenha')?.value;
+    const confirmarSenha = document.getElementById('confirmarSenha')?.value;
+    
+    if (novaSenha && novaSenha !== confirmarSenha) {
+        alert('As novas senhas não coincidem');
+        return;
+    }
+    
+    if (novaSenha && !senhaAtual) {
+        alert('Digite a senha atual para alterar');
+        return;
+    }
+    
+    if (!token) {
+        alert('Você precisa estar logado para alterar o perfil');
+        return;
+    }
+    
+    // CORRIGIDO: endpoint /api/atualizar-perfil -> /api/profile
+    // Payload: { username, email, current_password, new_password }
+    const payload = {
+        username,
+        email,
+        current_password: senhaAtual || null,
+        new_password: novaSenha || null
+    };
+    
+    try {
+        const res = await fetch(`${API_URL}/api/profile`, {
+            method: 'PUT',
+            headers: getAuthHeaders(true),
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        
+        // O backend pode retornar { success: true, data: {...} } ou diretamente o objeto atualizado
+        if (res.ok && (data.success === true || data.id)) {
+            alert('Perfil atualizado com sucesso!');
+            // Atualiza localStorage
+            const user = { username, email };
+            localStorage.setItem('user', JSON.stringify(user));
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
+            closeModalPerfil();
+        } else {
+            alert(data.error || data.message || 'Erro ao atualizar perfil');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao atualizar perfil. Verifique sua conexão.');
+    }
+}
+
+async function sair() {
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('ms_user') || (localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).username : null);
+    
+    try {
+        if (token) {
+            // CORRIGIDO: endpoint /api/logout -> /api/auth/logout
+            await fetch(`${API_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: getAuthHeaders(true),
+                body: JSON.stringify({ username })
+            });
+        }
+    } catch(e) { console.warn(e); }
+    
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('ms_user');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// ==================== MENU MOBILE ====================
+function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            menuOverlay.classList.toggle('hidden');
+        });
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
+            menuOverlay.classList.add('hidden');
+        });
+    }
+}
+
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    carregarCampanhas();
+    carregarPerfil();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+// Atualização automática a cada 30 segundos
+setInterval(carregarCampanhas, 30000);
+</script>
 </body>
 </html>
