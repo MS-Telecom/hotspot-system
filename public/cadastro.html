@@ -1,174 +1,252 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clientes - MS TELECOM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - MS Telecom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background: linear-gradient(135deg, #0a0c15 0%, #1a1d2e 100%); }
+        .glass-effect { background: rgba(15, 17, 25, 0.8); backdrop-filter: blur(10px); }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex">
-  <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
-    <div class="flex items-center gap-2 mb-8"><i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i><span class="text-lg font-bold">MS TELECOM</span></div>
-    <nav class="flex flex-col gap-1 flex-1">
-      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</a>
-      <a href="hotspots.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="router" class="w-5 h-5"></i>Hotspots</a>
-      <a href="pops.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="radio-tower" class="w-5 h-5"></i>POPs</a>
-      <a href="cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="users" class="w-5 h-5"></i>Clientes</a>
-      <a href="financeiro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="banknote" class="w-5 h-5"></i>Financeiro</a>
-      <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
-      <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
-      <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
-      <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
-      <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
-    </nav>
-  </aside>
+<body class="text-white min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">MS Telecom</h1>
+            <p class="text-gray-400">Crie sua conta para gerenciar hotspots</p>
+        </div>
 
-  <main class="flex-1 p-4 md:p-6 overflow-auto">
-    <header class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
-        <h1 class="text-2xl font-bold">Clientes</h1>
-      </div>
-      <div class="flex items-center gap-3">
-        <button onclick="openModalCreate()" class="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium"><i data-lucide="plus" class="w-4 h-4"></i>Novo Cliente</button>
-        <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
-        <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
-      </div>
-    </header>
+        <div class="glass-effect rounded-3xl border border-gray-700 p-6 md:p-8 shadow-2xl">
+            <h2 class="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-5 h-5 text-blue-500"></i>
+                Criar Conta
+            </h2>
 
-    <!-- Busca -->
-    <div class="mb-4"><input id="searchInput" type="text" placeholder="Buscar por nome, CPF, MAC..." class="w-full max-w-md px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400" oninput="filterClients()"></div>
+            <form id="registrationForm" class="space-y-4 md:space-y-5">
+                <div>
+                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Nome Completo</label>
+                    <input type="text" id="name" placeholder="Seu nome completo" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
+                           required>
+                    <p id="errorName" class="text-xs text-red-500 mt-1 hidden"></p>
+                </div>
 
-    <div class="bg-gray-800 rounded-xl p-4">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Nome</th><th class="text-left py-3">CPF</th><th class="text-left py-3">Telefone</th><th class="text-left py-3">MAC</th><th class="text-left py-3">Plano</th><th class="text-left py-3">Status</th><th class="text-left py-3">Ações</th></tr></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
+                <div>
+                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Email</label>
+                    <input type="email" id="email" placeholder="seu@email.com" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
+                           required>
+                    <p id="errorEmail" class="text-xs text-red-500 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Senha</label>
+                    <div class="relative">
+                        <input type="password" id="password" placeholder="Mínimo 8 caracteres" 
+                               class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition pr-10"
+                               required>
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-3 text-gray-500 hover:text-gray-300">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p id="errorPassword" class="text-xs text-red-500 mt-1 hidden"></p>
+                    <div id="passwordStrength" class="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden hidden">
+                        <div id="passwordStrengthBar" class="h-full bg-red-500 transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Confirmar Senha</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirme sua senha" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
+                           required>
+                    <p id="errorConfirmPassword" class="text-xs text-red-500 mt-1 hidden"></p>
+                </div>
+
+                <div>
+                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Tipo de Conta</label>
+                    <select id="accountType" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
+                            required>
+                        <option value="">Selecione um tipo</option>
+                        <option value="pessoal">Pessoal (até 5 hotspots)</option>
+                        <option value="profissional">Profissional (até 20 hotspots)</option>
+                        <option value="empresa">Empresa (ilimitado)</option>
+                    </select>
+                    <p id="errorAccountType" class="text-xs text-red-500 mt-1 hidden"></p>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <input type="checkbox" id="terms" class="mt-1 w-4 h-4 cursor-pointer" required>
+                    <label for="terms" class="text-xs md:text-sm text-gray-400 cursor-pointer">
+                        Concordo com os <a href="#" class="text-blue-500 hover:underline">Termos de Serviço</a> e 
+                        <a href="#" class="text-blue-500 hover:underline">Política de Privacidade</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-xl px-4 py-3 font-bold text-sm md:text-base transition mt-6">
+                    Criar Conta
+                </button>
+            </form>
+
+            <div class="text-center mt-6">
+                <p class="text-gray-400 text-sm">Já tem uma conta? 
+                    <a href="login.html" class="text-blue-500 hover:underline font-bold">Faça login</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+            <p class="text-xs md:text-sm text-blue-400 flex items-start gap-2">
+                <i data-lucide="info" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+                <span>Após cadastrar, você poderá criar e gerenciar seus hotspots WiFi.</span>
+            </p>
+        </div>
     </div>
-  </main>
 
-  <!-- Modal Criar Cliente -->
-  <div id="modalCreate" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Novo Cliente</h3><button onclick="closeModalCreate()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input id="inputName" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">CPF</label><input id="inputCpf" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Telefone</label><input id="inputPhone" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="inputEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">MAC Address</label><input id="inputMac" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Endereço</label><input id="inputAddress" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Plano</label><select id="inputPlan" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none"><option value="">Selecione...</option></select></div>
-      </div>
-      <div class="flex gap-3 mt-6">
-        <button onclick="createClient()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Criar</button>
-        <button onclick="closeModalCreate()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button>
-      </div>
-    </div>
-  </div>
+    <script>
+        /**
+         * CONFIGURAÇÃO DA API
+         * CORRIGIDO: Endpoint centralizado e seguindo padrão RESTful
+         */
+        const API_BASE_URL = 'https://mstelecom-api.duckdns.org/api';
 
-  <!-- Modal Perfil -->
-  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-      </div>
-      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button></div>
-    </div>
-  </div>
-
-  <script>
-    const API_URL = 'https://mstelecom-api.duckdns.org';
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
-    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-    lucide.createIcons(); initMenuMobile();
-
-    let allClients = [];
-
-    async function loadClients() {
-      try {
-        const res = await fetch(`${API_URL}/api/users`, { headers });
-        allClients = await res.json();
-        renderClients(allClients);
-      } catch (err) { console.error('Erro:', err); }
-    }
-
-    function renderClients(clients) {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
-      if (!clients || clients.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">Nenhum cliente cadastrado</td></tr>'; return; }
-      clients.forEach(c => {
-        const statusColor = c.status === 'active' ? 'text-green-400' : 'text-red-400';
-        tbody.innerHTML += `<tr class="border-b border-gray-700">
-          <td class="py-3">${c.name || '-'}</td><td class="py-3">${c.cpf || '-'}</td><td class="py-3">${c.phone || '-'}</td><td class="py-3 text-xs">${c.mac_address || '-'}</td><td class="py-3">${c.plan_name || '-'}</td><td class="py-3 ${statusColor}">${c.status || 'inactive'}</td>
-          <td class="py-3 flex gap-1">
-            <a href="cliente-detalhe.html?id=${c.id}" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs">Detalhes</a>
-            <button onclick="deleteClient(${c.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button>
-          </td></tr>`;
-      });
-    }
-
-    function filterClients() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = allClients.filter(c => (c.name||'').toLowerCase().includes(q) || (c.cpf||'').includes(q) || (c.mac_address||'').toLowerCase().includes(q) || (c.phone||'').includes(q));
-      renderClients(filtered);
-    }
-
-    async function loadPlans() {
-      try {
-        const res = await fetch(`${API_URL}/api/plans`, { headers });
-        const plans = await res.json();
-        const select = document.getElementById('inputPlan');
-        (plans || []).forEach(p => { select.innerHTML += `<option value="${p.id}" data-name="${p.name}">${p.name} - R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</option>`; });
-      } catch (err) { console.error('Erro:', err); }
-    }
-
-    function openModalCreate() { document.getElementById('modalCreate').classList.remove('hidden'); }
-    function closeModalCreate() { document.getElementById('modalCreate').classList.add('hidden'); }
-
-    async function createClient() {
-      try {
-        const planSelect = document.getElementById('inputPlan');
-        const planId = planSelect.value;
-        const planName = planSelect.options[planSelect.selectedIndex]?.dataset?.name || '';
-        const body = {
-          name: document.getElementById('inputName').value,
-          cpf: document.getElementById('inputCpf').value,
-          phone: document.getElementById('inputPhone').value,
-          email: document.getElementById('inputEmail').value,
-          mac_address: document.getElementById('inputMac').value,
-          address: document.getElementById('inputAddress').value,
-          plan_id: planId || null,
-          plan_name: planName
+        const API = {
+            async register(userData) {
+                // CORRIGIDO: endpoint /api/cadastro -> /api/users (POST para criação)
+                const response = await fetch(`${API_BASE_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                return await response.json();
+            }
         };
-        const res = await fetch(`${API_URL}/api/users`, { method: 'POST', headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error('Erro ao criar cliente');
-        closeModalCreate(); loadClients();
-      } catch (err) { alert(err.message); }
-    }
 
-    async function deleteClient(id) {
-      if (!confirm('Deseja realmente excluir este cliente?')) return;
-      try { await fetch(`${API_URL}/api/users/${id}`, { method: 'DELETE', headers }); loadClients(); } catch (err) { alert('Erro ao excluir'); }
-    }
+        // Mostrar/esconder senha
+        function togglePasswordVisibility() {
+            const input = document.getElementById('password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
 
-    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('profileUsername').value = user.username || ''; document.getElementById('profileEmail').value = user.email || ''; }
-    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
-    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-    async function salvarPerfil() { try { const body = {}; const e = document.getElementById('profileEmail').value; const p = document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res = await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
-    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
-    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+        // Validar força da senha
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const bar = document.getElementById('passwordStrengthBar');
+            const container = document.getElementById('passwordStrength');
+            
+            if (password.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            
+            let strength = 0;
+            if (password.length >= 8) strength += 25;
+            if (password.length >= 12) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[!@#$%^&*]/.test(password)) strength += 10;
+            
+            bar.style.width = strength + '%';
+            
+            if (strength < 50) {
+                bar.className = 'h-full bg-red-500 transition-all';
+            } else if (strength < 75) {
+                bar.className = 'h-full bg-yellow-500 transition-all';
+            } else {
+                bar.className = 'h-full bg-green-500 transition-all';
+            }
+        });
 
-    loadClients(); loadPlans();
-  </script>
+        // Validadores auxiliares
+        const validators = {
+            email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+            password: (password) => password.length >= 8
+        };
+
+        // Enviar formulário
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Captura de elementos
+            const fields = {
+                name: document.getElementById('name'),
+                email: document.getElementById('email'),
+                password: document.getElementById('password'),
+                confirmPassword: document.getElementById('confirmPassword'),
+                accountType: document.getElementById('accountType')
+            };
+
+            // Limpar erros
+            document.querySelectorAll('[id^="error"]').forEach(el => el.classList.add('hidden'));
+
+            let isValid = true;
+
+            // Validações de Frontend
+            if (!fields.name.value.trim()) {
+                document.getElementById('errorName').textContent = 'Nome é obrigatório';
+                document.getElementById('errorName').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (!validators.email(fields.email.value.trim())) {
+                document.getElementById('errorEmail').textContent = 'Email inválido';
+                document.getElementById('errorEmail').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (!validators.password(fields.password.value)) {
+                document.getElementById('errorPassword').textContent = 'Senha deve ter no mínimo 8 caracteres';
+                document.getElementById('errorPassword').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (fields.password.value !== fields.confirmPassword.value) {
+                document.getElementById('errorConfirmPassword').textContent = 'Senhas não conferem';
+                document.getElementById('errorConfirmPassword').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (!fields.accountType.value) {
+                document.getElementById('errorAccountType').textContent = 'Selecione um tipo de conta';
+                document.getElementById('errorAccountType').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Preparação do Payload conforme novo Backend
+            // CORRIGIDO: Mapeamento de campos para Inglês (name, email, password, account_type)
+            const payload = {
+                name: fields.name.value.trim(),
+                email: fields.email.value.trim(),
+                password: fields.password.value,
+                account_type: fields.accountType.value
+            };
+
+            try {
+                const data = await API.register(payload);
+
+                // CORRIGIDO: Verificação flexível de resposta (success ou existência de ID)
+                if (data.success || data.id) {
+                    alert('Cadastro realizado com sucesso! Redirecionando para login...');
+                    window.location.href = 'login.html';
+                } else {
+                    alert('Erro ao cadastrar: ' + (data.error || data.message || 'Tente novamente'));
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                alert('Erro ao conectar com o servidor. Verifique sua conexão.');
+            }
+        });
+
+        // Inicializar ícones
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
