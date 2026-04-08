@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>MS Telecom | Perfil de Cadastro</title>
+    <title>MS Telecom | Clientes / SGP</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #0a0c15; }
-        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); transition: all 0.2s ease; }
-        .glass-card:hover { border-color: rgba(59,130,246,0.5); }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
         .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
-        .sidebar-link:hover { background: rgba(59,130,246,0.1); color: #60a5fa; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .status-active { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .status-inactive { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+        .status-blocked { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .status-premium { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
         #sidebar { z-index: 100; }
         #menuToggle { z-index: 101; }
         #menuOverlay { z-index: 99; }
@@ -23,160 +26,746 @@
 </head>
 <body class="text-gray-200">
 
+<!-- PROTEÇÃO DE ACESSO -->
 <script>
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
+    if (!token) {
+        window.location.href = 'login.html';
+    }
 </script>
 
-<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white"><i data-lucide="menu" class="w-5 h-5"></i></button>
+<!-- HAMBURGER MENU (Mobile) -->
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
 <div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
 
 <div class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
-        <div class="p-6 border-b border-gray-800"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="zap" class="text-white w-5 h-5"></i></div><div><h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1><p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p></div></div></div>
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
             <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
-            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="cliente-detalhe.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
-            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
-            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
-            <a href="perfil-cadastro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+            </a>
         </nav>
-        <div class="p-4 border-t border-gray-800 bg-black/30"><div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div><div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div></div>
+
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div>
+        </div>
     </aside>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
-        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
-            <div class="relative w-full md:w-96"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i><input type="text" id="searchInput" placeholder="Buscar campo por nome ou identificador..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition"></div>
-            <div class="flex items-center gap-3 md:gap-4"><div class="text-right hidden sm:block"><p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div><button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i></button><button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg"><i data-lucide="log-out" class="w-5 h-5 text-red-400"></i></button><div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg"><span class="text-white font-bold text-xs md:text-sm">AD</span></div></div>
+
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+            <div class="relative w-96"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i><input type="text" id="searchInput" placeholder="Buscar cliente por CPF, Nome, MAC ou Telefone..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition"></div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
         </header>
 
-        <div class="p-4 md:p-8 space-y-6 md:space-y-8">
-            <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Perfil de Cadastro</h1><p class="text-gray-500 text-xs md:text-sm mt-1">Configure quais campos serão exibidos no formulário de cadastro de clientes</p></div>
-            <div id="loadingState" class="text-center py-12"><i data-lucide="loader-circle" class="w-8 h-8 animate-spin mx-auto text-blue-500"></i><p class="text-gray-500 mt-2">Carregando configurações...</p></div>
-            <div id="camposContainer" class="space-y-3"></div>
-            <div class="flex flex-col sm:flex-row gap-3 pt-4"><button id="salvarBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2"><i data-lucide="check" class="w-5 h-5"></i> Salvar Configurações</button><button onclick="window.history.back()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"><i data-lucide="x" class="w-5 h-5"></i> Cancelar</button></div>
+        <div class="p-8 space-y-8">
+
+            <div class="flex justify-between items-end flex-wrap gap-4">
+                <div><h1 class="text-3xl font-black tracking-tight">Clientes / SGP Intelligence</h1><p class="text-gray-500 text-sm mt-1">Consulta e gestão de assinantes, histórico de conexões e status financeiro</p></div>
+                <div class="flex gap-3">
+                    <button id="exportarClientesBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition">
+                        <i data-lucide="download" class="w-4 h-4"></i> Baixar leads (CSV)
+                    </button>
+                    <button onclick="openModalNovoUsuario()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo Cliente</button>
+                </div>
+            </div>
+
+            <!-- Filtros Avançados -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <input type="text" id="filtroNome" placeholder="Buscar por nome..." class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                <select id="filtroStatus" class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    <option value="">Todos os status</option>
+                    <option value="active">Ativos</option>
+                    <option value="inactive">Inativos</option>
+                    <option value="blocked">Bloqueados</option>
+                </select>
+                <select id="filtroPlano" class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    <option value="">Todos os planos</option>
+                </select>
+                <button id="aplicarFiltros" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition">Filtrar</button>
+                <button id="limparFiltros" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm font-medium transition">Limpar</button>
+            </div>
+
+            <div class="flex gap-3 flex-wrap">
+                <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white" data-filter="todos">Todos</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="active">Ativos</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="inactive">Inativos</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="blocked">Bloqueados</button>
+            </div>
+
+            <div id="clientesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                <div class="text-center text-gray-500 py-8 col-span-2"><i data-lucide="users" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Carregando clientes...</p></div>
+            </div>
         </div>
     </main>
 </div>
 
+<!-- MODAL: NOVO USUÁRIO -->
+<div id="modalNovoUsuario" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] md:max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Novo Usuário
+            </h2>
+            <button onclick="closeModalNovoUsuario()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo *</label>
+                <input type="text" id="novoNome" placeholder="Nome do cliente" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Telefone *</label>
+                <input type="text" id="novoTelefone" placeholder="(91) 98877-6655" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">MAC Address *</label>
+                <input type="text" id="novoMac" placeholder="AA:BB:CC:DD:EE:FF" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                <p class="text-[10px] text-gray-500 mt-1">Formato: AA:BB:CC:DD:EE:FF</p>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF</label>
+                <input type="text" id="novoCpf" placeholder="000.123.456-78" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="novoEmail" placeholder="cliente@email.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Endereço</label>
+                <input type="text" id="novoEndereco" placeholder="Rua, número, bairro" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
+                <select id="novoPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="">Selecione um plano</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
+            <button onclick="closeModalNovoUsuario()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Cancelar</button>
+            <button onclick="salvarNovoUsuario()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs sm:text-sm font-bold text-white">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO CLIENTE -->
+<div id="modalDetalhesCliente" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do Cliente
+            </h2>
+            <button onclick="closeModalDetalhes()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="detalhesClienteContent" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closeModalDetalhes()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR CLIENTE -->
+<div id="modalEditarCliente" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="edit" class="w-5 h-5 text-blue-500"></i>
+                Editar Cliente
+            </h2>
+            <button onclick="closeModalEditar()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <input type="hidden" id="editClienteId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome</label><input type="text" id="editNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Telefone</label><input type="text" id="editTelefone" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">MAC</label><input type="text" id="editMac" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF</label><input type="text" id="editCpf" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Endereço</label><input type="text" id="editEndereco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="editPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="">Selecione</option></select></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalEditar()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarEdicaoCliente()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: RENOVAR PLANO -->
+<div id="modalRenovarPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5 text-emerald-500"></i> Renovar Plano</h2>
+            <button onclick="closeModalRenovar()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="p-4 space-y-3">
+            <input type="hidden" id="renovarClienteId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="renovarPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Dias de Acesso</label><input type="number" id="renovarDias" value="30" min="1" max="365" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalRenovar()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="confirmarRenovacao()" class="px-4 py-2 bg-emerald-600 rounded-lg text-sm font-bold">Renovar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: MEU PERFIL -->
 <div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="glass-card rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500 inline mr-2"></i>Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button></div>
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i> Meu Perfil</h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmailPerfil" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+        </div>
     </div>
 </div>
 
 <script>
+// ==================== CONFIGURAÇÕES GLOBAIS ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
-let allCampos = [];
+let clientesData = [];
+let plansData = [];
+let autoUpdateInterval = null;
 
-function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
-function authHeaders(contentType = true) {
-    const headers = { 'Authorization': `Bearer ${getToken()}` };
-    if (contentType) headers['Content-Type'] = 'application/json';
-    return headers;
+// Helper para requisições autenticadas (CORREÇÃO: adiciona header Authorization)
+async function apiRequest(endpoint, options = {}) {
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) throw new Error('Token não encontrado');
+    const defaultHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: { ...defaultHeaders, ...options.headers }
+    });
+    if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        window.location.href = 'login.html';
+        throw new Error('Sessão expirada');
+    }
+    // Algumas rotas retornam texto vazio em DELETE ou sucesso sem corpo
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+    }
+    return { success: response.ok };
 }
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m)); }
 
-async function carregarCampos() {
+// ==================== CARREGAR PLANOS ====================
+async function carregarPlanos() {
     try {
-        const loading = document.getElementById('loadingState');
-        const container = document.getElementById('camposContainer');
-        loading.classList.remove('hidden');
-        container.classList.add('hidden');
-        const res = await fetch(`${API_URL}/api/settings`, { headers: authHeaders(false) });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        // Espera-se que o campo 'registration_fields' exista nas configurações. Se não, criar array padrão.
-        allCampos = data.registration_fields || [
-            { field: 'name', label: 'Nome Completo', enabled: true, required: true },
-            { field: 'cpf', label: 'CPF', enabled: true, required: false },
-            { field: 'phone', label: 'Telefone', enabled: true, required: true },
-            { field: 'email', label: 'E-mail', enabled: false, required: false },
-            { field: 'address', label: 'Endereço', enabled: false, required: false },
-            { field: 'mac_address', label: 'MAC Address', enabled: true, required: true }
-        ];
-        loading.classList.add('hidden');
-        container.classList.remove('hidden');
-        renderizarCampos(allCampos);
-    } catch (error) { console.error('Erro:', error); document.getElementById('loadingState').innerHTML = `<div class="text-center py-12"><i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500"></i><p class="text-red-400 mt-2">Erro ao carregar configurações</p><button onclick="carregarCampos()" class="mt-4 px-4 py-2 bg-blue-600 rounded-lg text-sm">Tentar novamente</button></div>`; lucide.createIcons(); }
+        const plans = await apiRequest('/api/plans');
+        plansData = Array.isArray(plans) ? plans : [];
+        // Popular selects de plano nos modais
+        const planSelects = ['novoPlano', 'editPlano', 'renovarPlano'];
+        planSelects.forEach(id => {
+            const select = document.getElementById(id);
+            if (select) {
+                select.innerHTML = '<option value="">Selecione um plano</option>';
+                plansData.forEach(plan => {
+                    const option = document.createElement('option');
+                    option.value = plan.id;
+                    option.textContent = `${plan.name} - R$ ${parseFloat(plan.price).toFixed(2).replace('.',',')} (${plan.duration_days} dias)`;
+                    select.appendChild(option);
+                });
+            }
+        });
+        // Popular filtro de plano
+        const filtroPlano = document.getElementById('filtroPlano');
+        if (filtroPlano) {
+            filtroPlano.innerHTML = '<option value="">Todos os planos</option>';
+            plansData.forEach(plan => {
+                const option = document.createElement('option');
+                option.value = plan.id;
+                option.textContent = plan.name;
+                filtroPlano.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar planos:', error);
+    }
 }
-function renderizarCampos(campos) {
-    const container = document.getElementById('camposContainer');
-    if (!campos || campos.length === 0) { container.innerHTML = `<div class="text-center py-12 glass-card rounded-2xl"><i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-500"></i><p class="text-gray-400 mt-2">Nenhum campo encontrado</p></div>`; lucide.createIcons(); return; }
-    container.innerHTML = campos.map(campo => `<div class="glass-card rounded-2xl p-4 sm:p-6 border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-campo-nome="${campo.label.toLowerCase()}" data-campo-id="${campo.field.toLowerCase()}"><div class="flex-1"><h3 class="font-bold text-white text-sm sm:text-base">${escapeHtml(campo.label)}</h3><p class="text-xs sm:text-sm text-gray-500 font-mono mt-1">${escapeHtml(campo.field)}</p></div><div class="flex items-center gap-4 sm:gap-6"><label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition"><input type="checkbox" class="habilitado-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.field}" ${campo.enabled ? 'checked' : ''}><span class="text-xs sm:text-sm text-gray-400">Habilitado</span></label><label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition"><input type="checkbox" class="obrigatorio-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.field}" ${campo.required ? 'checked' : ''}><span class="text-xs sm:text-sm text-gray-400">Obrigatório</span></label></div></div>`).join('');
-    lucide.createIcons();
-}
-function buscarCampos(termo) {
-    if (!termo || termo.trim() === '') { renderizarCampos(allCampos); return; }
-    const termoLower = termo.toLowerCase().trim();
-    const camposFiltrados = allCampos.filter(campo => campo.label.toLowerCase().includes(termoLower) || campo.field.toLowerCase().includes(termoLower));
-    renderizarCampos(camposFiltrados);
-    if (camposFiltrados.length === 0 && allCampos.length > 0) { document.getElementById('camposContainer').innerHTML = `<div class="text-center py-12 glass-card rounded-2xl"><i data-lucide="search-x" class="w-12 h-12 mx-auto text-gray-500"></i><p class="text-gray-400 mt-2">Nenhum campo encontrado para "${escapeHtml(termo)}"</p><button onclick="document.getElementById('searchInput').value=''; buscarCampos('');" class="mt-4 px-4 py-2 bg-blue-600 rounded-lg text-sm">Limpar busca</button></div>`; lucide.createIcons(); }
-}
-async function salvarConfiguracoes() {
-    const salvarBtn = document.getElementById('salvarBtn');
-    const originalText = salvarBtn.innerHTML;
+
+// ==================== CARREGAR CLIENTES ====================
+async function carregarClientes() {
     try {
-        salvarBtn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 animate-spin"></i> Salvando...';
-        salvarBtn.disabled = true;
-        lucide.createIcons();
-        const fieldsToSave = [];
-        document.querySelectorAll('.habilitado-toggle').forEach(toggle => {
-            const fieldName = toggle.dataset.campo;
-            const enabled = toggle.checked;
-            const requiredToggle = document.querySelector(`.obrigatorio-toggle[data-campo="${fieldName}"]`);
-            const required = requiredToggle ? requiredToggle.checked : false;
-            const originalField = allCampos.find(f => f.field === fieldName);
-            const label = originalField ? originalField.label : fieldName;
-            fieldsToSave.push({ field: fieldName, label, enabled, required });
-        });
-        // Salvar dentro do objeto de configurações geral (campo registration_fields)
-        const res = await fetch(`${API_URL}/api/settings`, {
-            method: 'PUT',
-            headers: authHeaders(),
-            body: JSON.stringify({ registration_fields: fieldsToSave })
-        });
-        if (res.ok) { alert('✅ Configurações salvas!'); await carregarCampos(); }
-        else alert('❌ Erro ao salvar');
-    } catch (error) { alert('❌ Erro ao salvar'); }
-    finally { salvarBtn.innerHTML = originalText; salvarBtn.disabled = false; lucide.createIcons(); }
+        const clientes = await apiRequest('/api/users');
+        clientesData = Array.isArray(clientes) ? clientes : [];
+        if (clientesData.length === 0) {
+            mostrarListaVazia();
+        } else {
+            renderizarClientes(clientesData);
+        }
+    } catch (error) {
+        console.error('[Clientes] Erro:', error);
+        mostrarListaVazia();
+    }
 }
 
-document.getElementById('salvarBtn')?.addEventListener('click', salvarConfiguracoes);
-document.getElementById('searchInput')?.addEventListener('input', (e) => buscarCampos(e.target.value));
+function mostrarListaVazia() {
+    const container = document.getElementById('clientesGrid');
+    container.innerHTML = `<div class="text-center text-gray-500 py-12 col-span-2"><i data-lucide="users" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Nenhum cliente encontrado</p><p class="text-xs mt-1">Clique em "Novo Cliente" para adicionar o primeiro cliente</p></div>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
-function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('editUsername').value = user.username || ''; document.getElementById('editEmail').value = user.email || ''; document.getElementById('userName').innerText = user.username || 'Administrador'; }
-function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); document.getElementById('senhaAtual').value = ''; document.getElementById('novaSenha').value = ''; document.getElementById('confirmarSenha').value = ''; lucide.createIcons(); }
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case 'active': return 'status-active';
+        case 'inactive': return 'status-inactive';
+        case 'blocked': return 'status-blocked';
+        default: return 'status-inactive';
+    }
+}
+
+function getStatusText(status) {
+    switch(status) {
+        case 'active': return 'Ativo';
+        case 'inactive': return 'Inativo';
+        case 'blocked': return 'Bloqueado';
+        default: return 'Desconhecido';
+    }
+}
+
+function renderizarClientes(clientes) {
+    const container = document.getElementById('clientesGrid');
+    if (!container) return;
+    
+    const html = clientes.map(cliente => {
+        // Buscar nome do plano
+        const planoObj = plansData.find(p => p.id === cliente.plan_id);
+        const planoNome = planoObj ? planoObj.name : (cliente.plan_name || 'N/A');
+        const statusClass = getStatusBadgeClass(cliente.status);
+        const statusText = getStatusText(cliente.status);
+        const isVip = cliente.is_vip ? '⭐ VIP' : '';
+        
+        return `
+        <div class="glass-card rounded-2xl overflow-hidden border border-gray-800 hover:border-blue-500/50 transition-all cursor-pointer" onclick="openClienteModal(${cliente.id})">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xl font-bold text-white shadow-lg">${(cliente.name || 'U').substring(0, 2).toUpperCase()}</div>
+                        <div><h3 class="text-lg font-bold text-white">${cliente.name || 'Cliente'}</h3><p class="text-xs text-gray-500 font-mono mt-1">CPF: ${cliente.cpf || 'N/A'}</p></div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <span class="status-badge status-premium">${planoNome} ${isVip}</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-gray-900/50 p-3 rounded-xl text-center"><p class="text-[9px] text-gray-500 uppercase">Telefone</p><p class="text-sm font-medium">${cliente.phone || 'N/A'}</p></div>
+                    <div class="bg-gray-900/50 p-3 rounded-xl text-center"><p class="text-[9px] text-gray-500 uppercase">MAC</p><p class="text-xs font-mono text-blue-400">${cliente.mac_address || 'N/A'}</p></div>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-800">
+                    <div class="flex gap-2"><span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${cliente.address || 'N/A'}</span></div>
+                    <div class="flex gap-2">
+                        <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); excluirCliente(${cliente.id})" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
+                        <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); editarCliente(${cliente.id})" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>
+                        <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); bloquearCliente(${cliente.id})" title="Bloquear"><i data-lucide="ban" class="w-4 h-4 text-red-500"></i></button>
+                        <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); marcarVIP(${cliente.id})" title="Marcar VIP"><i data-lucide="crown" class="w-4 h-4 text-yellow-500"></i></button>
+                        <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); renovarPlano(${cliente.id})" title="Renovar"><i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    container.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ==================== CRUD CLIENTES ====================
+function openModalNovoUsuario() {
+    document.getElementById('modalNovoUsuario').classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeModalNovoUsuario() { document.getElementById('modalNovoUsuario').classList.add('hidden'); }
+
+async function salvarNovoUsuario() {
+    const name = document.getElementById('novoNome').value;
+    const phone = document.getElementById('novoTelefone').value;
+    const cpf = document.getElementById('novoCpf').value;
+    const mac_address = document.getElementById('novoMac').value;
+    const email = document.getElementById('novoEmail').value;
+    const address = document.getElementById('novoEndereco').value;
+    const plan_id = document.getElementById('novoPlano').value;
+    
+    if (!name || !mac_address) {
+        alert('Por favor, informe o nome e o MAC address do cliente');
+        return;
+    }
+    if (!plan_id) {
+        alert('Selecione um plano');
+        return;
+    }
+    
+    try {
+        await apiRequest('/api/users', {
+            method: 'POST',
+            body: JSON.stringify({ name, phone, cpf, mac_address, email, address, plan_id: parseInt(plan_id) })
+        });
+        alert('Cliente cadastrado com sucesso!');
+        closeModalNovoUsuario();
+        carregarClientes();
+    } catch (error) {
+        console.error(error);
+        alert('Erro ao cadastrar cliente');
+    }
+}
+
+function excluirCliente(id) {
+    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+        apiRequest(`/api/users/${id}`, { method: 'DELETE' })
+            .then(() => {
+                alert('Cliente excluído com sucesso!');
+                carregarClientes();
+            })
+            .catch(err => alert('Erro ao excluir cliente'));
+    }
+}
+
+async function openClienteModal(id) {
+    const modal = document.getElementById('modalDetalhesCliente');
+    const content = document.getElementById('detalhesClienteContent');
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+    
+    try {
+        const cliente = clientesData.find(c => c.id === id);
+        if (cliente) {
+            const planoObj = plansData.find(p => p.id === cliente.plan_id);
+            const planoNome = planoObj ? planoObj.name : (cliente.plan_name || 'N/A');
+            content.innerHTML = `
+                <div class="space-y-2">
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium text-sm">${cliente.name || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">MAC Address</p><p class="font-mono text-blue-400 text-xs">${cliente.mac_address || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Telefone</p><p class="text-sm">${cliente.phone || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">CPF</p><p class="text-sm">${cliente.cpf || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">E-mail</p><p class="text-sm break-all">${cliente.email || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Endereço</p><p class="text-sm">${cliente.address || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Plano</p><p><span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 rounded-lg text-xs">${planoNome}</span></p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${getStatusBadgeClass(cliente.status)} rounded-lg text-xs">${getStatusText(cliente.status)}</span></p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Data Cadastro</p><p class="text-xs">${cliente.created_at ? new Date(cliente.created_at).toLocaleString('pt-BR') : '-'}</p></div>
+                </div>`;
+        } else {
+            content.innerHTML = '<div class="text-center text-red-500">Cliente não encontrado</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>';
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeModalDetalhes() { document.getElementById('modalDetalhesCliente').classList.add('hidden'); }
+
+async function editarCliente(id) {
+    const cliente = clientesData.find(c => c.id === id);
+    if (!cliente) { alert('Cliente não encontrado'); return; }
+    document.getElementById('editClienteId').value = id;
+    document.getElementById('editNome').value = cliente.name || '';
+    document.getElementById('editTelefone').value = cliente.phone || '';
+    document.getElementById('editMac').value = cliente.mac_address || '';
+    document.getElementById('editCpf').value = cliente.cpf || '';
+    document.getElementById('editEmail').value = cliente.email || '';
+    document.getElementById('editEndereco').value = cliente.address || '';
+    document.getElementById('editPlano').value = cliente.plan_id || '';
+    document.getElementById('modalEditarCliente').classList.remove('hidden');
+}
+function closeModalEditar() { document.getElementById('modalEditarCliente').classList.add('hidden'); }
+
+async function salvarEdicaoCliente() {
+    const id = document.getElementById('editClienteId').value;
+    const dados = {
+        name: document.getElementById('editNome').value,
+        phone: document.getElementById('editTelefone').value,
+        mac_address: document.getElementById('editMac').value,
+        cpf: document.getElementById('editCpf').value,
+        email: document.getElementById('editEmail').value,
+        address: document.getElementById('editEndereco').value,
+        plan_id: parseInt(document.getElementById('editPlano').value)
+    };
+    try {
+        await apiRequest(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
+        alert('Cliente atualizado com sucesso!');
+        closeModalEditar();
+        carregarClientes();
+    } catch (error) {
+        alert('Erro ao atualizar cliente');
+    }
+}
+
+async function bloquearCliente(id) {
+    if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
+    try {
+        await apiRequest(`/api/users/${id}/block`, { method: 'POST' });
+        alert('Cliente bloqueado');
+        carregarClientes();
+    } catch (error) {
+        alert('Erro ao bloquear cliente');
+    }
+}
+
+async function marcarVIP(id) {
+    if (!confirm('Marcar este cliente como VIP?')) return;
+    try {
+        await apiRequest(`/api/users/${id}/vip`, { method: 'POST', body: JSON.stringify({ is_vip: true }) });
+        alert('Cliente marcado como VIP');
+        carregarClientes();
+    } catch (error) {
+        alert('Erro ao marcar VIP');
+    }
+}
+
+function renovarPlano(id) {
+    document.getElementById('renovarClienteId').value = id;
+    document.getElementById('renovarPlano').value = '';
+    document.getElementById('renovarDias').value = '30';
+    document.getElementById('modalRenovarPlano').classList.remove('hidden');
+}
+function closeModalRenovar() { document.getElementById('modalRenovarPlano').classList.add('hidden'); }
+
+async function confirmarRenovacao() {
+    const id = document.getElementById('renovarClienteId').value;
+    const plan_id = document.getElementById('renovarPlano').value;
+    const duration_days = parseInt(document.getElementById('renovarDias').value);
+    if (!plan_id) { alert('Selecione um plano'); return; }
+    try {
+        await apiRequest(`/api/users/${id}/renew`, { method: 'POST', body: JSON.stringify({ plan_id: parseInt(plan_id), duration_days }) });
+        alert('Plano renovado com sucesso!');
+        closeModalRenovar();
+        carregarClientes();
+    } catch (error) {
+        alert('Erro ao renovar plano');
+    }
+}
+
+// ==================== FILTROS (CLIENT-SIDE) ====================
+function aplicarFiltrosFrontend() {
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const activeFilter = document.querySelector('.filter-btn.active')?.getAttribute('data-filter') || 'todos';
+    const filtroNome = document.getElementById('filtroNome')?.value.toLowerCase() || '';
+    const filtroStatus = document.getElementById('filtroStatus')?.value || '';
+    const filtroPlanoId = document.getElementById('filtroPlano')?.value || '';
+    
+    let filtered = [...clientesData];
+    
+    if (searchTerm) {
+        filtered = filtered.filter(c => 
+            (c.name && c.name.toLowerCase().includes(searchTerm)) ||
+            (c.cpf && c.cpf.includes(searchTerm)) ||
+            (c.mac_address && c.mac_address.toLowerCase().includes(searchTerm)) ||
+            (c.phone && c.phone.includes(searchTerm))
+        );
+    }
+    if (filtroNome) {
+        filtered = filtered.filter(c => c.name && c.name.toLowerCase().includes(filtroNome));
+    }
+    if (filtroStatus) {
+        filtered = filtered.filter(c => c.status === filtroStatus);
+    }
+    if (filtroPlanoId) {
+        filtered = filtered.filter(c => c.plan_id === parseInt(filtroPlanoId));
+    }
+    if (activeFilter !== 'todos') {
+        filtered = filtered.filter(c => c.status === activeFilter);
+    }
+    
+    renderizarClientes(filtered);
+}
+
+document.getElementById('searchInput')?.addEventListener('input', aplicarFiltrosFrontend);
+document.getElementById('aplicarFiltros')?.addEventListener('click', aplicarFiltrosFrontend);
+document.getElementById('limparFiltros')?.addEventListener('click', () => {
+    document.getElementById('filtroNome').value = '';
+    document.getElementById('filtroStatus').value = '';
+    document.getElementById('filtroPlano').value = '';
+    document.getElementById('searchInput').value = '';
+    aplicarFiltrosFrontend();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('bg-gray-800', 'text-gray-300');
+        });
+        this.classList.add('bg-blue-600', 'text-white');
+        aplicarFiltrosFrontend();
+    });
+});
+
+// Exportar CSV (client-side)
+document.getElementById('exportarClientesBtn')?.addEventListener('click', () => {
+    const headers = ['ID', 'Nome', 'CPF', 'Telefone', 'Email', 'Endereço', 'MAC', 'Plano', 'Status', 'VIP'];
+    const rows = clientesData.map(c => [
+        c.id, c.name || '', c.cpf || '', c.phone || '', c.email || '', c.address || '', c.mac_address || '',
+        plansData.find(p => p.id === c.plan_id)?.name || '', getStatusText(c.status), c.is_vip ? 'Sim' : 'Não'
+    ]);
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'clientes.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+});
+
+// ==================== PERFIL E LOGOUT ====================
+function carregarPerfil() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            document.getElementById('editUsername').value = user.username || '';
+            document.getElementById('editEmailPerfil').value = user.email || '';
+            document.getElementById('userName').innerText = user.username || 'Administrador';
+        } catch(e) {}
+    }
+}
+function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); if(typeof lucide!=='undefined') lucide.createIcons(); }
 function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-async function salvarPerfil() {
-    const email = document.getElementById('editEmail').value.trim();
-    const senhaAtual = document.getElementById('senhaAtual').value;
-    const novaSenha = document.getElementById('novaSenha').value;
-    const confirmar = document.getElementById('confirmarSenha').value;
-    if (novaSenha && novaSenha !== confirmar) { alert('Senhas não coincidem'); return; }
-    if (novaSenha && !senhaAtual) { alert('Digite a senha atual'); return; }
-    const payload = {};
-    if (email) payload.email = email;
-    if (novaSenha) { payload.current_password = senhaAtual; payload.new_password = novaSenha; }
-    try {
-        const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
-        if (res.ok) { alert('Perfil atualizado!'); const user = JSON.parse(localStorage.getItem('user') || '{}'); user.email = email; localStorage.setItem('user', JSON.stringify(user)); closeModalPerfil(); }
-        else alert('Erro');
-    } catch (error) { alert('Erro'); }
-}
-async function sair() { try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) {} localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href = 'login.html'; }
-function initMenuMobile() { const btn = document.getElementById('menuToggle'), overlay = document.getElementById('menuOverlay'), sidebar = document.getElementById('sidebar'); if (btn && sidebar) { btn.addEventListener('click', () => { sidebar.classList.toggle('hidden'); overlay.classList.toggle('hidden'); }); overlay.addEventListener('click', () => { sidebar.classList.add('hidden'); overlay.classList.add('hidden'); }); } }
 
-document.addEventListener('DOMContentLoaded', () => { initMenuMobile(); carregarCampos(); carregarPerfil(); if (typeof lucide !== 'undefined') lucide.createIcons(); });
+async function salvarPerfil() {
+    const username = document.getElementById('editUsername')?.value;
+    const email = document.getElementById('editEmailPerfil')?.value;
+    const senhaAtual = document.getElementById('senhaAtual')?.value;
+    const novaSenha = document.getElementById('novaSenha')?.value;
+    const confirmarSenha = document.getElementById('confirmarSenha')?.value;
+    if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas não coincidem'); return; }
+    if (novaSenha && !senhaAtual) { alert('Digite a senha atual para alterar'); return; }
+    
+    try {
+        const body = { username, email };
+        if (novaSenha) {
+            body.current_password = senhaAtual;
+            body.new_password = novaSenha;
+        }
+        await apiRequest('/api/profile', { method: 'PUT', body: JSON.stringify(body) });
+        alert('Perfil atualizado com sucesso!');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.username = username;
+        user.email = email;
+        localStorage.setItem('user', JSON.stringify(user));
+        closeModalPerfil();
+    } catch (error) {
+        alert('Erro ao atualizar perfil');
+    }
+}
+
+async function sair() {
+    try { await apiRequest('/api/auth/logout', { method: 'POST' }); } catch(e) {}
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// ==================== MOBILE MENU ====================
+function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            menuOverlay.classList.toggle('hidden');
+        });
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
+            menuOverlay.classList.add('hidden');
+        });
+    }
+}
+
+// ==================== AUTO UPDATE ====================
+function iniciarAtualizacaoAutomatica() {
+    if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+    autoUpdateInterval = setInterval(() => { carregarClientes(); }, 30000);
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', async () => {
+    initMenuMobile();
+    await carregarPlanos();
+    await carregarClientes();
+    iniciarAtualizacaoAutomatica();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
 </script>
 </body>
 </html>
