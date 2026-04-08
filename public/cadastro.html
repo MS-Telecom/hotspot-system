@@ -24,62 +24,57 @@
                 Criar Conta
             </h2>
 
-            <form id="registrationForm" class="space-y-4 md:space-y-5">
+            <form id="cadastroForm" class="space-y-4 md:space-y-5">
                 <div>
                     <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Nome Completo</label>
-                    <input type="text" id="name" placeholder="Seu nome completo" 
-                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
-                           required>
-                    <p id="errorName" class="text-xs text-red-500 mt-1 hidden"></p>
+                    <input type="text" id="nome" placeholder="Seu nome completo" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
+                    <p id="erroNome" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
                 <div>
                     <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Email</label>
                     <input type="email" id="email" placeholder="seu@email.com" 
-                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
-                           required>
-                    <p id="errorEmail" class="text-xs text-red-500 mt-1 hidden"></p>
+                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
+                    <p id="erroEmail" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
                 <div>
                     <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Senha</label>
                     <div class="relative">
-                        <input type="password" id="password" placeholder="Mínimo 8 caracteres" 
-                               class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition pr-10"
-                               required>
-                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-3 text-gray-500 hover:text-gray-300">
+                        <input type="password" id="senha" placeholder="Mínimo 8 caracteres" 
+                               class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition pr-10" required>
+                        <button type="button" onclick="toggleSenha()" class="absolute right-3 top-3 text-gray-500 hover:text-gray-300">
                             <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
-                    <p id="errorPassword" class="text-xs text-red-500 mt-1 hidden"></p>
-                    <div id="passwordStrength" class="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden hidden">
-                        <div id="passwordStrengthBar" class="h-full bg-red-500 transition-all" style="width: 0%"></div>
+                    <p id="erroSenha" class="text-xs text-red-500 mt-1 hidden"></p>
+                    <div id="forcaSenha" class="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden hidden">
+                        <div id="forcaSenhaBar" class="h-full bg-red-500 transition-all" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Confirmar Senha</label>
-                    <input type="password" id="confirmPassword" placeholder="Confirme sua senha" 
-                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
-                           required>
-                    <p id="errorConfirmPassword" class="text-xs text-red-500 mt-1 hidden"></p>
+                    <input type="password" id="confirmaSenha" placeholder="Confirme sua senha" 
+                           class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
+                    <p id="erroConfirmaSenha" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
                 <div>
                     <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Tipo de Conta</label>
-                    <select id="accountType" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition"
-                            required>
+                    <select id="tipoConta" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
                         <option value="">Selecione um tipo</option>
                         <option value="pessoal">Pessoal (até 5 hotspots)</option>
                         <option value="profissional">Profissional (até 20 hotspots)</option>
                         <option value="empresa">Empresa (ilimitado)</option>
                     </select>
-                    <p id="errorAccountType" class="text-xs text-red-500 mt-1 hidden"></p>
+                    <p id="erroTipoConta" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
                 <div class="flex items-start gap-3">
-                    <input type="checkbox" id="terms" class="mt-1 w-4 h-4 cursor-pointer" required>
-                    <label for="terms" class="text-xs md:text-sm text-gray-400 cursor-pointer">
+                    <input type="checkbox" id="termos" class="mt-1 w-4 h-4 cursor-pointer" required>
+                    <label for="termos" class="text-xs md:text-sm text-gray-400 cursor-pointer">
                         Concordo com os <a href="#" class="text-blue-500 hover:underline">Termos de Serviço</a> e 
                         <a href="#" class="text-blue-500 hover:underline">Política de Privacidade</a>
                     </label>
@@ -106,144 +101,121 @@
     </div>
 
     <script>
-        /**
-         * CONFIGURAÇÃO DA API
-         * CORRIGIDO: Endpoint centralizado e seguindo padrão RESTful
-         */
-        const API_BASE_URL = 'https://mstelecom-api.duckdns.org/api';
+        const API_URL = 'https://mstelecom-api.duckdns.org';
 
-        const API = {
-            async register(userData) {
-                // CORRIGIDO: endpoint /api/cadastro -> /api/users (POST para criação)
-                const response = await fetch(`${API_BASE_URL}/users`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                return await response.json();
-            }
-        };
-
-        // Mostrar/esconder senha
-        function togglePasswordVisibility() {
-            const input = document.getElementById('password');
+        function toggleSenha() {
+            const input = document.getElementById('senha');
             input.type = input.type === 'password' ? 'text' : 'password';
         }
 
-        // Validar força da senha
-        document.getElementById('password').addEventListener('input', function() {
-            const password = this.value;
-            const bar = document.getElementById('passwordStrengthBar');
-            const container = document.getElementById('passwordStrength');
+        // Medidor de força da senha
+        document.getElementById('senha').addEventListener('input', function() {
+            const senha = this.value;
+            const forcaSenhaBar = document.getElementById('forcaSenhaBar');
+            const forcaSenha = document.getElementById('forcaSenha');
             
-            if (password.length === 0) {
-                container.classList.add('hidden');
+            if (senha.length === 0) {
+                forcaSenha.classList.add('hidden');
                 return;
             }
+            forcaSenha.classList.remove('hidden');
             
-            container.classList.remove('hidden');
+            let forca = 0;
+            if (senha.length >= 8) forca += 25;
+            if (senha.length >= 12) forca += 25;
+            if (/[a-z]/.test(senha) && /[A-Z]/.test(senha)) forca += 25;
+            if (/[0-9]/.test(senha)) forca += 15;
+            if (/[!@#$%^&*]/.test(senha)) forca += 10;
             
-            let strength = 0;
-            if (password.length >= 8) strength += 25;
-            if (password.length >= 12) strength += 25;
-            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
-            if (/[0-9]/.test(password)) strength += 15;
-            if (/[!@#$%^&*]/.test(password)) strength += 10;
-            
-            bar.style.width = strength + '%';
-            
-            if (strength < 50) {
-                bar.className = 'h-full bg-red-500 transition-all';
-            } else if (strength < 75) {
-                bar.className = 'h-full bg-yellow-500 transition-all';
-            } else {
-                bar.className = 'h-full bg-green-500 transition-all';
-            }
+            forcaSenhaBar.style.width = forca + '%';
+            if (forca < 50) forcaSenhaBar.className = 'h-full bg-red-500 transition-all';
+            else if (forca < 75) forcaSenhaBar.className = 'h-full bg-yellow-500 transition-all';
+            else forcaSenhaBar.className = 'h-full bg-green-500 transition-all';
         });
 
-        // Validadores auxiliares
-        const validators = {
-            email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
-            password: (password) => password.length >= 8
-        };
+        function validarEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
 
-        // Enviar formulário
-        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        // CORRIGIDO: Envio para o endpoint correto /api/auth/register
+        document.getElementById('cadastroForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // Captura de elementos
-            const fields = {
-                name: document.getElementById('name'),
-                email: document.getElementById('email'),
-                password: document.getElementById('password'),
-                confirmPassword: document.getElementById('confirmPassword'),
-                accountType: document.getElementById('accountType')
-            };
+            const nome = document.getElementById('nome').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value;
+            const confirmaSenha = document.getElementById('confirmaSenha').value;
+            const tipoConta = document.getElementById('tipoConta').value;
 
-            // Limpar erros
-            document.querySelectorAll('[id^="error"]').forEach(el => el.classList.add('hidden'));
+            // Limpar mensagens de erro
+            document.querySelectorAll('[id^="erro"]').forEach(el => el.classList.add('hidden'));
 
-            let isValid = true;
+            let valido = true;
 
-            // Validações de Frontend
-            if (!fields.name.value.trim()) {
-                document.getElementById('errorName').textContent = 'Nome é obrigatório';
-                document.getElementById('errorName').classList.remove('hidden');
-                isValid = false;
+            if (!nome) {
+                document.getElementById('erroNome').textContent = 'Nome é obrigatório';
+                document.getElementById('erroNome').classList.remove('hidden');
+                valido = false;
             }
 
-            if (!validators.email(fields.email.value.trim())) {
-                document.getElementById('errorEmail').textContent = 'Email inválido';
-                document.getElementById('errorEmail').classList.remove('hidden');
-                isValid = false;
+            if (!validarEmail(email)) {
+                document.getElementById('erroEmail').textContent = 'Email inválido';
+                document.getElementById('erroEmail').classList.remove('hidden');
+                valido = false;
             }
 
-            if (!validators.password(fields.password.value)) {
-                document.getElementById('errorPassword').textContent = 'Senha deve ter no mínimo 8 caracteres';
-                document.getElementById('errorPassword').classList.remove('hidden');
-                isValid = false;
+            if (senha.length < 8) {
+                document.getElementById('erroSenha').textContent = 'Senha deve ter no mínimo 8 caracteres';
+                document.getElementById('erroSenha').classList.remove('hidden');
+                valido = false;
             }
 
-            if (fields.password.value !== fields.confirmPassword.value) {
-                document.getElementById('errorConfirmPassword').textContent = 'Senhas não conferem';
-                document.getElementById('errorConfirmPassword').classList.remove('hidden');
-                isValid = false;
+            if (senha !== confirmaSenha) {
+                document.getElementById('erroConfirmaSenha').textContent = 'Senhas não conferem';
+                document.getElementById('erroConfirmaSenha').classList.remove('hidden');
+                valido = false;
             }
 
-            if (!fields.accountType.value) {
-                document.getElementById('errorAccountType').textContent = 'Selecione um tipo de conta';
-                document.getElementById('errorAccountType').classList.remove('hidden');
-                isValid = false;
+            if (!tipoConta) {
+                document.getElementById('erroTipoConta').textContent = 'Selecione um tipo de conta';
+                document.getElementById('erroTipoConta').classList.remove('hidden');
+                valido = false;
             }
 
-            if (!isValid) return;
+            if (!valido) return;
 
-            // Preparação do Payload conforme novo Backend
-            // CORRIGIDO: Mapeamento de campos para Inglês (name, email, password, account_type)
+            // CORRIGIDO: Payload com campos em inglês (name, email, password, account_type)
             const payload = {
-                name: fields.name.value.trim(),
-                email: fields.email.value.trim(),
-                password: fields.password.value,
-                account_type: fields.accountType.value
+                name: nome,
+                email: email,
+                password: senha,
+                account_type: tipoConta   // "pessoal", "profissional", "empresa"
             };
 
             try {
-                const data = await API.register(payload);
+                // CORRIGIDO: endpoint /api/auth/register
+                const res = await fetch(`${API_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-                // CORRIGIDO: Verificação flexível de resposta (success ou existência de ID)
-                if (data.success || data.id) {
+                const data = await res.json();
+
+                // O backend pode retornar { success: true, user: {...} } ou diretamente { id, ... }
+                if (res.ok && (data.success === true || data.id)) {
                     alert('Cadastro realizado com sucesso! Redirecionando para login...');
                     window.location.href = 'login.html';
                 } else {
-                    alert('Erro ao cadastrar: ' + (data.error || data.message || 'Tente novamente'));
+                    const msg = data.error || data.message || 'Tente novamente';
+                    alert('Erro ao cadastrar: ' + msg);
                 }
             } catch (error) {
-                console.error('Erro na requisição:', error);
+                console.error('Erro:', error);
                 alert('Erro ao conectar com o servidor. Verifique sua conexão.');
             }
         });
 
-        // Inicializar ícones
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
         }
