@@ -9,8 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #0a0c15; }
-        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); transition: all 0.2s ease; }
+        .glass-card:hover { border-color: rgba(59,130,246,0.5); }
         .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .sidebar-link:hover { background: rgba(59,130,246,0.1); color: #60a5fa; }
         .campaign-card { transition: all 0.2s ease; cursor: pointer; }
         .campaign-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
         #sidebar { z-index: 100; }
@@ -24,7 +26,7 @@
 <body class="text-gray-200">
 
 <script>
-    // PROTEÇÃO DE ACESSO (CORRIGIDO: verifica token)
+    // 🔒 PROTEÇÃO DE ACESSO
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
@@ -39,7 +41,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (PADRÃO DO SISTEMA) -->
+    <!-- SIDEBAR (padrão MS Telecom) -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -63,20 +65,17 @@
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
-            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
-            </a>
-            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
-            </a>
-            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro
-            </a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
         </nav>
 
         <div class="p-4 border-t border-gray-800 bg-black/30">
             <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
-            <div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div>
+            <div class="space-y-2 text-[10px] font-mono">
+                <div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div>
+                <div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div>
+            </div>
         </div>
     </aside>
 
@@ -88,105 +87,41 @@
                 <input type="text" id="searchInput" placeholder="Buscar campanha por nome, cupom..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-3 md:gap-4">
-                <div class="text-right hidden sm:block">
-                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
-                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
-                </div>
-                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
-                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
-                </button>
-                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
-                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
-                </button>
-                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
-                    <span class="text-white font-bold text-xs md:text-sm">AD</span>
-                </div>
+                <div class="text-right hidden sm:block"><p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil"><i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i></button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair"><i data-lucide="log-out" class="w-5 h-5 text-red-400"></i></button>
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg"><span class="text-white font-bold text-xs md:text-sm">AD</span></div>
             </div>
         </header>
 
         <div class="p-4 md:p-8 space-y-6 md:space-y-8">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight">Campanhas de Marketing</h1>
-                    <p class="text-gray-500 text-xs md:text-sm mt-1">Crie e gerencie campanhas promocionais e mensagens personalizadas</p>
-                </div>
-                <button onclick="openCampaignModal()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i> Nova Campanha
-                </button>
+                <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Campanhas de Marketing</h1><p class="text-gray-500 text-xs md:text-sm mt-1">Crie e gerencie campanhas promocionais e mensagens personalizadas</p></div>
+                <button onclick="openCampaignModal()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Campanha</button>
             </div>
 
-            <div id="campanhasList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
+            <div id="campanhasList" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div class="text-center text-gray-500 py-8 col-span-2">Carregando campanhas...</div>
             </div>
         </div>
     </main>
 </div>
 
-<!-- MODAL: NOVA CAMPANHA (COM SEGMENTAÇÃO) -->
+<!-- MODAL: NOVA CAMPANHA (com segmentação) -->
 <div id="campaignModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[90vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-                <i data-lucide="megaphone" class="w-4 h-4 text-blue-500"></i>
-                Nova Campanha
-            </h2>
-            <button onclick="closeCampaignModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
-                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
-            </button>
+            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2"><i data-lucide="megaphone" class="w-4 h-4 text-blue-500"></i> Nova Campanha</h2>
+            <button onclick="closeCampaignModal()" class="p-1.5 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-4 h-4 text-gray-400"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label>
-                <input type="text" id="campaignNome" placeholder="Black Friday 2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
-                <textarea id="campaignDescricao" rows="2" placeholder="Descrição da campanha..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / Código</label>
-                <input type="text" id="campaignCupom" placeholder="BLACK2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                <select id="campaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                    <option value="active">Ativa</option>
-                    <option value="inactive">Inativa</option>
-                </select>
-            </div>
-            
-            <!-- Segmentação -->
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label>
-                <select id="campaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                    <option value="todos">Todos</option>
-                    <option value="masculino">Masculino</option>
-                    <option value="feminino">Feminino</option>
-                    <option value="outro">Outro</option>
-                </select>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label>
-                    <input type="number" id="campaignIdadeMin" placeholder="18" min="0" max="120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label>
-                    <input type="number" id="campaignIdadeMax" placeholder="65" min="0" max="120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label>
-                    <input type="date" id="campaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Fim</label>
-                    <input type="date" id="campaignDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-            </div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label><input type="text" id="campaignNome" placeholder="Black Friday 2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label><textarea id="campaignDescricao" rows="2" placeholder="Descrição da campanha..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / Código</label><input type="text" id="campaignCupom" placeholder="BLACK2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label><select id="campaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="active">Ativa</option><option value="inactive">Inativa</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label><select id="campaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="todos">Todos</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option><option value="outro">Outro</option></select></div>
+            <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label><input type="number" id="campaignIdadeMin" placeholder="18" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label><input type="number" id="campaignIdadeMax" placeholder="65" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
+            <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label><input type="date" id="campaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Fim</label><input type="date" id="campaignDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
         </div>
         <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeCampaignModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
@@ -198,18 +133,8 @@
 <!-- MODAL: DETALHES DA CAMPANHA -->
 <div id="campaignDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[85vh] flex flex-col border border-gray-700">
-        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-                <i data-lucide="info" class="w-4 h-4 text-blue-500"></i>
-                Detalhes da Campanha
-            </h2>
-            <button onclick="closeCampaignDetailModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
-                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
-            </button>
-        </div>
-        <div id="detalhesCampanhaContent" class="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 custom-scrollbar">
-            <div class="text-center text-gray-500">Carregando...</div>
-        </div>
+        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0"><h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2"><i data-lucide="info" class="w-4 h-4 text-blue-500"></i> Detalhes da Campanha</h2><button onclick="closeCampaignDetailModal()" class="p-1.5 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-4 h-4 text-gray-400"></i></button></div>
+        <div id="detalhesCampanhaContent" class="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 custom-scrollbar"><div class="text-center text-gray-500">Carregando...</div></div>
         <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="editarCampanha()" id="editarCampanhaBtn" class="px-3 py-1.5 bg-blue-600/30 text-blue-400 rounded-lg text-xs hover:bg-blue-600/50 transition">Editar</button>
             <button onclick="excluirCampanha()" id="excluirCampanhaBtn" class="px-3 py-1.5 bg-red-600/30 text-red-400 rounded-lg text-xs hover:bg-red-600/50 transition">Excluir</button>
@@ -218,69 +143,19 @@
     </div>
 </div>
 
-<!-- MODAL: EDITAR CAMPANHA (COM SEGMENTAÇÃO) -->
+<!-- MODAL: EDITAR CAMPANHA -->
 <div id="editCampaignModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[90vh] flex flex-col border border-gray-700">
-        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-                <i data-lucide="edit" class="w-4 h-4 text-blue-500"></i>
-                Editar Campanha
-            </h2>
-            <button onclick="closeEditCampaignModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
-                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
-            </button>
-        </div>
+        <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0"><h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i> Editar Campanha</h2><button onclick="closeEditCampaignModal()" class="p-1.5 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-4 h-4 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
             <input type="hidden" id="editCampaignId">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label>
-                <input type="text" id="editCampaignNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
-                <textarea id="editCampaignDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom</label>
-                <input type="text" id="editCampaignCupom" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                <select id="editCampaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                    <option value="active">Ativa</option>
-                    <option value="inactive">Inativa</option>
-                </select>
-            </div>
-            <!-- Segmentação no edit -->
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label>
-                <select id="editCampaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                    <option value="todos">Todos</option>
-                    <option value="masculino">Masculino</option>
-                    <option value="feminino">Feminino</option>
-                    <option value="outro">Outro</option>
-                </select>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label>
-                    <input type="number" id="editCampaignIdadeMin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label>
-                    <input type="number" id="editCampaignIdadeMax" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label>
-                    <input type="date" id="editCampaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Fim</label>
-                    <input type="date" id="editCampaignDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                </div>
-            </div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label><input type="text" id="editCampaignNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label><textarea id="editCampaignDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom</label><input type="text" id="editCampaignCupom" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label><select id="editCampaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="active">Ativa</option><option value="inactive">Inativa</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label><select id="editCampaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="todos">Todos</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option><option value="outro">Outro</option></select></div>
+            <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label><input type="number" id="editCampaignIdadeMin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label><input type="number" id="editCampaignIdadeMax" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
+            <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label><input type="date" id="editCampaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Fim</label><input type="date" id="editCampaignDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
         </div>
         <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeEditCampaignModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
@@ -289,122 +164,72 @@
     </div>
 </div>
 
-<!-- MODAL: MEU PERFIL -->
+<!-- MODAL: PERFIL (padronizado) -->
 <div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
-                Meu Perfil
-            </h2>
-            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg">
-                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
-            </button>
-        </div>
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
-                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
-                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-            </div>
-            <div class="border-t border-gray-800 pt-4 mt-2">
-                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
-                        <input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
-                        <input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-                    </div>
-                </div>
-            </div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div>
         </div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
-        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button></div>
     </div>
 </div>
 
 <script>
-    // ==================== CONFIGURAÇÕES GLOBAIS ====================
-    const API_URL = 'https://mstelecom-api.duckdns.org';
-    let campanhasData = [];
-    let campanhaAtualId = null;
+// ==================== CONFIGURAÇÕES GLOBAIS ====================
+const API_URL = 'https://mstelecom-api.duckdns.org';
+let campanhasData = [];
+let campanhaAtualId = null;
 
-    // Helper para obter headers com autenticação (CORRIGIDO)
-    function getAuthHeaders() {
-        const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-        return {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        };
+function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
+function authHeaders(contentType = true) {
+    const headers = { 'Authorization': `Bearer ${getToken()}` };
+    if (contentType) headers['Content-Type'] = 'application/json';
+    return headers;
+}
+
+// ==================== MENU MOBILE ====================
+function initMenuMobile() {
+    const btn = document.getElementById('menuToggle');
+    const overlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (btn && sidebar) {
+        btn.addEventListener('click', () => { sidebar.classList.toggle('hidden'); overlay.classList.toggle('hidden'); });
+        overlay.addEventListener('click', () => { sidebar.classList.add('hidden'); overlay.classList.add('hidden'); });
     }
+}
 
-    // ==================== MENU MOBILE ====================
-    function initMenuMobile() {
-        const menuToggle = document.getElementById('menuToggle');
-        const menuOverlay = document.getElementById('menuOverlay');
-        const sidebar = document.getElementById('sidebar');
-        if (menuToggle && sidebar) {
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('hidden');
-                menuOverlay.classList.toggle('hidden');
-            });
-            menuOverlay.addEventListener('click', () => {
-                sidebar.classList.add('hidden');
-                menuOverlay.classList.add('hidden');
-            });
-        }
-    }
+// ==================== CRUD CAMPANHAS ====================
+async function carregarCampanhas() {
+    try {
+        const res = await fetch(`${API_URL}/api/campaigns`, { headers: authHeaders(false) });
+        if (!res.ok) throw new Error('Erro ao carregar campanhas');
+        campanhasData = await res.json();
+        if (!campanhasData || campanhasData.length === 0) { mostrarListaVazia(); return; }
+        renderizarCampanhas(campanhasData);
+    } catch (error) { console.error('Erro:', error); mostrarListaVazia(); }
+}
 
-    // ==================== CRUD CAMPANHAS (ENDPOINTS PADRONIZADOS) ====================
-    async function carregarCampanhas() {
-        try {
-            const res = await fetch(`${API_URL}/api/campaigns`, { headers: getAuthHeaders() });
-            if (!res.ok) throw new Error('Erro ao carregar campanhas');
-            campanhasData = await res.json(); // Array diretamente
-            if (!campanhasData || campanhasData.length === 0) {
-                mostrarListaVazia();
-                return;
-            }
-            renderizarCampanhas(campanhasData);
-        } catch (error) {
-            console.error('Erro:', error);
-            mostrarListaVazia();
-        }
-    }
+function mostrarListaVazia() {
+    const container = document.getElementById('campanhasList');
+    container.innerHTML = `<div class="text-center text-gray-500 py-12 col-span-2"><i data-lucide="megaphone" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Nenhuma campanha encontrada</p><p class="text-xs mt-1">Clique em "Nova Campanha" para criar sua primeira campanha</p></div>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
-    function mostrarListaVazia() {
-        const container = document.getElementById('campanhasList');
-        container.innerHTML = `<div class="text-center text-gray-500 py-12 col-span-2"><i data-lucide="megaphone" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Nenhuma campanha encontrada</p><p class="text-xs mt-1">Clique em "Nova Campanha" para criar sua primeira campanha</p></div>`;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-
-    function renderizarCampanhas(campanhas) {
-        const container = document.getElementById('campanhasList');
-        const statusClass = {
-            'active': 'bg-emerald-500/10 text-emerald-500',
-            'inactive': 'bg-red-500/20 text-red-400'
-        };
-        
-        container.innerHTML = campanhas.map(camp => {
-            const statusText = camp.status === 'active' ? 'ATIVA' : 'INATIVA';
-            const startDate = camp.starts_at ? new Date(camp.starts_at).toLocaleDateString('pt-BR') : '--';
-            const endDate = camp.ends_at ? new Date(camp.ends_at).toLocaleDateString('pt-BR') : '--';
-            return `
+function renderizarCampanhas(campanhas) {
+    const container = document.getElementById('campanhasList');
+    const statusClass = { 'active': 'bg-emerald-500/10 text-emerald-500', 'inactive': 'bg-red-500/20 text-red-400' };
+    container.innerHTML = campanhas.map(camp => {
+        const statusText = camp.status === 'active' ? 'ATIVA' : 'INATIVA';
+        const startDate = camp.starts_at ? new Date(camp.starts_at).toLocaleDateString('pt-BR') : '--';
+        const endDate = camp.ends_at ? new Date(camp.ends_at).toLocaleDateString('pt-BR') : '--';
+        return `
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800 campaign-card" onclick="openCampaignDetail(${camp.id})">
                 <div class="p-4 md:p-5">
                     <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <h3 class="text-base md:text-lg font-bold text-white">${escapeHtml(camp.name)}</h3>
-                            <p class="text-[10px] text-gray-500">${startDate} - ${endDate}</p>
-                        </div>
+                        <div><h3 class="text-base md:text-lg font-bold text-white">${escapeHtml(camp.name)}</h3><p class="text-[10px] text-gray-500">${startDate} - ${endDate}</p></div>
                         <span class="px-2 md:px-3 py-1 ${statusClass[camp.status] || 'bg-gray-500/20 text-gray-400'} text-[10px] font-bold rounded-full">${statusText}</span>
                     </div>
                     <p class="text-gray-400 text-xs md:text-sm mb-3 line-clamp-2">${escapeHtml(camp.description) || 'Sem descrição'}</p>
@@ -414,301 +239,172 @@
                     </div>
                 </div>
             </div>`;
-        }).join('');
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
+    }).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m)); }
 
-    function openCampaignModal() {
-        document.getElementById('campaignModal').classList.remove('hidden');
-        document.getElementById('campaignNome').value = '';
-        document.getElementById('campaignDescricao').value = '';
-        document.getElementById('campaignCupom').value = '';
-        document.getElementById('campaignStatus').value = 'active';
-        document.getElementById('campaignGenero').value = 'todos';
-        document.getElementById('campaignIdadeMin').value = '';
-        document.getElementById('campaignIdadeMax').value = '';
-        document.getElementById('campaignDataInicio').value = '';
-        document.getElementById('campaignDataFim').value = '';
-    }
+function openCampaignModal() {
+    document.getElementById('campaignModal').classList.remove('hidden');
+    document.getElementById('campaignNome').value = '';
+    document.getElementById('campaignDescricao').value = '';
+    document.getElementById('campaignCupom').value = '';
+    document.getElementById('campaignStatus').value = 'active';
+    document.getElementById('campaignGenero').value = 'todos';
+    document.getElementById('campaignIdadeMin').value = '';
+    document.getElementById('campaignIdadeMax').value = '';
+    document.getElementById('campaignDataInicio').value = '';
+    document.getElementById('campaignDataFim').value = '';
+}
+function closeCampaignModal() { document.getElementById('campaignModal').classList.add('hidden'); }
 
-    function closeCampaignModal() {
-        document.getElementById('campaignModal').classList.add('hidden');
-    }
+async function salvarCampanha() {
+    const nome = document.getElementById('campaignNome').value;
+    if (!nome) { alert('Informe o nome da campanha'); return; }
+    const dados = {
+        name: nome,
+        description: document.getElementById('campaignDescricao').value,
+        coupon_code: document.getElementById('campaignCupom').value,
+        status: document.getElementById('campaignStatus').value,
+        gender: document.getElementById('campaignGenero').value,
+        min_age: document.getElementById('campaignIdadeMin').value ? parseInt(document.getElementById('campaignIdadeMin').value) : null,
+        max_age: document.getElementById('campaignIdadeMax').value ? parseInt(document.getElementById('campaignIdadeMax').value) : null,
+        starts_at: document.getElementById('campaignDataInicio').value || null,
+        ends_at: document.getElementById('campaignDataFim').value || null
+    };
+    try {
+        const res = await fetch(`${API_URL}/api/campaigns`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(dados) });
+        if (res.ok) { alert(`✅ Campanha "${nome}" criada!`); closeCampaignModal(); carregarCampanhas(); }
+        else throw new Error();
+    } catch (error) { alert(`⚠️ Erro ao criar campanha. Tente novamente.`); }
+}
 
-    async function salvarCampanha() {
-        const nome = document.getElementById('campaignNome').value;
-        if (!nome) { alert('Informe o nome da campanha'); return; }
-        
-        // CORRIGIDO: campos mapeados para inglês
-        const dados = {
-            name: nome,
-            description: document.getElementById('campaignDescricao').value,
-            coupon_code: document.getElementById('campaignCupom').value,
-            status: document.getElementById('campaignStatus').value, // 'active' ou 'inactive'
-            gender: document.getElementById('campaignGenero').value,
-            min_age: document.getElementById('campaignIdadeMin').value ? parseInt(document.getElementById('campaignIdadeMin').value) : null,
-            max_age: document.getElementById('campaignIdadeMax').value ? parseInt(document.getElementById('campaignIdadeMax').value) : null,
-            starts_at: document.getElementById('campaignDataInicio').value || null,
-            ends_at: document.getElementById('campaignDataFim').value || null
-        };
-        
-        try {
-            const res = await fetch(`${API_URL}/api/campaigns`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(dados)
-            });
-            if (res.ok) {
-                alert(`✅ Campanha "${nome}" criada!`);
-                closeCampaignModal();
-                carregarCampanhas();
-            } else {
-                throw new Error('Erro na requisição');
-            }
-        } catch (error) {
-            console.error(error);
-            alert(`⚠️ Erro ao criar campanha. Tente novamente.`);
-        }
-    }
+function openCampaignDetail(id) {
+    const campanha = campanhasData.find(c => c.id == id);
+    if (!campanha) return;
+    campanhaAtualId = id;
+    const content = document.getElementById('detalhesCampanhaContent');
+    const statusClass = campanha.status === 'active' ? 'text-emerald-500' : 'text-red-500';
+    const statusText = campanha.status === 'active' ? 'ATIVA' : 'INATIVA';
+    const startDate = campanha.starts_at ? new Date(campanha.starts_at).toLocaleDateString('pt-BR') : '--';
+    const endDate = campanha.ends_at ? new Date(campanha.ends_at).toLocaleDateString('pt-BR') : '--';
+    content.innerHTML = `<div class="space-y-2"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(campanha.name)}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Período</p><p>${startDate} - ${endDate}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p class="${statusClass} font-bold">${statusText}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Cupom</p><p class="font-mono text-blue-400">${campanha.coupon_code || 'N/A'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Descrição</p><p class="text-gray-300">${escapeHtml(campanha.description) || 'Sem descrição'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Segmentação</p><p>Gênero: ${campanha.gender || 'todos'} | Idade: ${campanha.min_age || '0'} - ${campanha.max_age || '+'}</p></div></div>`;
+    document.getElementById('campaignDetailModal').classList.remove('hidden');
+}
+function closeCampaignDetailModal() { document.getElementById('campaignDetailModal').classList.add('hidden'); campanhaAtualId = null; }
 
-    function openCampaignDetail(id) {
-        const campanha = campanhasData.find(c => c.id == id);
-        if (!campanha) return;
-        campanhaAtualId = id;
-        
-        const content = document.getElementById('detalhesCampanhaContent');
-        const statusClass = campanha.status === 'active' ? 'text-emerald-500' : 'text-red-500';
-        const statusText = campanha.status === 'active' ? 'ATIVA' : 'INATIVA';
-        const startDate = campanha.starts_at ? new Date(campanha.starts_at).toLocaleDateString('pt-BR') : '--';
-        const endDate = campanha.ends_at ? new Date(campanha.ends_at).toLocaleDateString('pt-BR') : '--';
-        
-        content.innerHTML = `
-            <div class="space-y-2">
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(campanha.name)}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Período</p><p>${startDate} - ${endDate}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p class="${statusClass} font-bold">${statusText}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Cupom</p><p class="font-mono text-blue-400">${campanha.coupon_code || 'N/A'}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Descrição</p><p class="text-gray-300">${escapeHtml(campanha.description) || 'Sem descrição'}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Segmentação</p><p>Gênero: ${campanha.gender || 'todos'} | Idade: ${campanha.min_age || '0'} - ${campanha.max_age || '+'}</p></div>
-            </div>
-        `;
-        
-        document.getElementById('campaignDetailModal').classList.remove('hidden');
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
+function editarCampanha() {
+    if (!campanhaAtualId) return;
+    const campanha = campanhasData.find(c => c.id == campanhaAtualId);
+    if (!campanha) return;
+    document.getElementById('editCampaignId').value = campanha.id;
+    document.getElementById('editCampaignNome').value = campanha.name || '';
+    document.getElementById('editCampaignDescricao').value = campanha.description || '';
+    document.getElementById('editCampaignCupom').value = campanha.coupon_code || '';
+    document.getElementById('editCampaignStatus').value = campanha.status || 'active';
+    document.getElementById('editCampaignGenero').value = campanha.gender || 'todos';
+    document.getElementById('editCampaignIdadeMin').value = campanha.min_age || '';
+    document.getElementById('editCampaignIdadeMax').value = campanha.max_age || '';
+    document.getElementById('editCampaignDataInicio').value = campanha.starts_at ? campanha.starts_at.split('T')[0] : '';
+    document.getElementById('editCampaignDataFim').value = campanha.ends_at ? campanha.ends_at.split('T')[0] : '';
+    closeCampaignDetailModal();
+    document.getElementById('editCampaignModal').classList.remove('hidden');
+}
+function closeEditCampaignModal() { document.getElementById('editCampaignModal').classList.add('hidden'); }
 
-    function closeCampaignDetailModal() {
-        document.getElementById('campaignDetailModal').classList.add('hidden');
-        campanhaAtualId = null;
-    }
+async function atualizarCampanha() {
+    const id = document.getElementById('editCampaignId').value;
+    const nome = document.getElementById('editCampaignNome').value;
+    if (!nome) { alert('Informe o nome da campanha'); return; }
+    const dados = {
+        name: nome,
+        description: document.getElementById('editCampaignDescricao').value,
+        coupon_code: document.getElementById('editCampaignCupom').value,
+        status: document.getElementById('editCampaignStatus').value,
+        gender: document.getElementById('editCampaignGenero').value,
+        min_age: document.getElementById('editCampaignIdadeMin').value ? parseInt(document.getElementById('editCampaignIdadeMin').value) : null,
+        max_age: document.getElementById('editCampaignIdadeMax').value ? parseInt(document.getElementById('editCampaignIdadeMax').value) : null,
+        starts_at: document.getElementById('editCampaignDataInicio').value || null,
+        ends_at: document.getElementById('editCampaignDataFim').value || null
+    };
+    try {
+        const res = await fetch(`${API_URL}/api/campaigns/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
+        if (res.ok) { alert(`✅ Campanha "${nome}" atualizada!`); closeEditCampaignModal(); carregarCampanhas(); }
+        else throw new Error();
+    } catch (error) { alert(`⚠️ Erro ao atualizar campanha.`); }
+}
 
-    function editarCampanha() {
-        if (!campanhaAtualId) return;
-        const campanha = campanhasData.find(c => c.id == campanhaAtualId);
-        if (!campanha) return;
-        
-        document.getElementById('editCampaignId').value = campanha.id;
-        document.getElementById('editCampaignNome').value = campanha.name || '';
-        document.getElementById('editCampaignDescricao').value = campanha.description || '';
-        document.getElementById('editCampaignCupom').value = campanha.coupon_code || '';
-        document.getElementById('editCampaignStatus').value = campanha.status || 'active';
-        document.getElementById('editCampaignGenero').value = campanha.gender || 'todos';
-        document.getElementById('editCampaignIdadeMin').value = campanha.min_age || '';
-        document.getElementById('editCampaignIdadeMax').value = campanha.max_age || '';
-        document.getElementById('editCampaignDataInicio').value = campanha.starts_at ? campanha.starts_at.split('T')[0] : '';
-        document.getElementById('editCampaignDataFim').value = campanha.ends_at ? campanha.ends_at.split('T')[0] : '';
-        
-        closeCampaignDetailModal();
-        document.getElementById('editCampaignModal').classList.remove('hidden');
-    }
+async function excluirCampanha() {
+    if (!campanhaAtualId) return;
+    const campanha = campanhasData.find(c => c.id == campanhaAtualId);
+    if (!confirm(`Tem certeza que deseja excluir a campanha "${campanha.name}"?`)) return;
+    try {
+        const res = await fetch(`${API_URL}/api/campaigns/${campanhaAtualId}`, { method: 'DELETE', headers: authHeaders(false) });
+        if (res.ok) { alert(`✅ Campanha "${campanha.name}" excluída!`); closeCampaignDetailModal(); carregarCampanhas(); }
+        else throw new Error();
+    } catch (error) { alert(`⚠️ Campanha "${campanha.name}" excluída localmente.`); closeCampaignDetailModal(); carregarCampanhas(); }
+}
 
-    function closeEditCampaignModal() {
-        document.getElementById('editCampaignModal').classList.add('hidden');
-    }
+// ==================== BUSCA ====================
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const filtered = campanhasData.filter(camp => camp.name.toLowerCase().includes(term) || (camp.coupon_code && camp.coupon_code.toLowerCase().includes(term)));
+    if (filtered.length === 0 && campanhasData.length > 0) {
+        document.getElementById('campanhasList').innerHTML = `<div class="text-center text-gray-500 py-12 col-span-2">Nenhuma campanha encontrada para "${escapeHtml(term)}"</div>`;
+    } else { renderizarCampanhas(filtered); }
+});
 
-    async function atualizarCampanha() {
-        const id = document.getElementById('editCampaignId').value;
-        const nome = document.getElementById('editCampaignNome').value;
-        if (!nome) { alert('Informe o nome da campanha'); return; }
-        
-        const dados = {
-            name: nome,
-            description: document.getElementById('editCampaignDescricao').value,
-            coupon_code: document.getElementById('editCampaignCupom').value,
-            status: document.getElementById('editCampaignStatus').value,
-            gender: document.getElementById('editCampaignGenero').value,
-            min_age: document.getElementById('editCampaignIdadeMin').value ? parseInt(document.getElementById('editCampaignIdadeMin').value) : null,
-            max_age: document.getElementById('editCampaignIdadeMax').value ? parseInt(document.getElementById('editCampaignIdadeMax').value) : null,
-            starts_at: document.getElementById('editCampaignDataInicio').value || null,
-            ends_at: document.getElementById('editCampaignDataFim').value || null
-        };
-        
-        try {
-            const res = await fetch(`${API_URL}/api/campaigns/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(dados)
-            });
-            if (res.ok) {
-                alert(`✅ Campanha "${nome}" atualizada!`);
-                closeEditCampaignModal();
-                carregarCampanhas();
-            } else {
-                throw new Error();
-            }
-        } catch (error) {
-            alert(`⚠️ Erro ao atualizar campanha.`);
-        }
-    }
-
-    async function excluirCampanha() {
-        if (!campanhaAtualId) return;
-        const campanha = campanhasData.find(c => c.id == campanhaAtualId);
-        if (!confirm(`Tem certeza que deseja excluir a campanha "${campanha.name}"?`)) return;
-        
-        try {
-            const res = await fetch(`${API_URL}/api/campaigns/${campanhaAtualId}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-            if (res.ok) {
-                alert(`✅ Campanha "${campanha.name}" excluída!`);
-                closeCampaignDetailModal();
-                carregarCampanhas();
-            } else {
-                throw new Error();
-            }
-        } catch (error) {
-            alert(`✅ Campanha "${campanha.name}" excluída localmente.`);
-            closeCampaignDetailModal();
-            carregarCampanhas();
-        }
-    }
-
-    // ==================== BUSCA ====================
-    document.getElementById('searchInput')?.addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        const filtered = campanhasData.filter(camp => 
-            camp.name.toLowerCase().includes(term) || 
-            (camp.coupon_code && camp.coupon_code.toLowerCase().includes(term))
-        );
-        if (filtered.length === 0 && campanhasData.length > 0) {
-            document.getElementById('campanhasList').innerHTML = `<div class="text-center text-gray-500 py-12 col-span-2">Nenhuma campanha encontrada para "${escapeHtml(term)}"</div>`;
-        } else {
-            renderizarCampanhas(filtered);
-        }
-    });
-
-    // ==================== PERFIL (ENDPOINT PADRONIZADO) ====================
-    function carregarPerfil() {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            try {
-                const user = JSON.parse(userStr);
-                if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
-                if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
-                if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
-            } catch(e) {}
-        }
-    }
-
-    function openModalPerfil() {
-        carregarPerfil();
-        const modal = document.getElementById('modalPerfil');
-        if (modal) modal.classList.remove('hidden');
-        document.getElementById('novaSenha').value = '';
-        document.getElementById('confirmarSenha').value = '';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-
-    function closeModalPerfil() {
-        const modal = document.getElementById('modalPerfil');
-        if (modal) modal.classList.add('hidden');
-    }
-
-    async function salvarPerfil() {
-        const token = localStorage.getItem('token');
-        const username = document.getElementById('editUsername')?.value;
-        const email = document.getElementById('editEmail')?.value;
-        const novaSenha = document.getElementById('novaSenha')?.value;
-        const confirmarSenha = document.getElementById('confirmarSenha')?.value;
-        
-        if (novaSenha && novaSenha !== confirmarSenha) {
-            alert('As novas senhas não coincidem');
-            return;
-        }
-        
-        if (!token) {
-            alert('Você precisa estar logado para alterar o perfil');
-            return;
-        }
-        
-        const payload = { username, email };
-        if (novaSenha) payload.password = novaSenha;
-        
-        try {
-            const res = await fetch(`${API_URL}/api/profile`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(payload)
-            });
-            
-            const data = await res.json();
-            if (res.ok) {
-                alert('Perfil atualizado com sucesso!');
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                user.username = username;
-                user.email = email;
-                localStorage.setItem('user', JSON.stringify(user));
-                if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
-                closeModalPerfil();
-            } else {
-                alert(data.error || 'Erro ao atualizar perfil');
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao atualizar perfil.');
-        }
-    }
-
-    // ==================== LOGOUT ====================
-    async function sair() {
-        const token = localStorage.getItem('token');
-        try {
-            if (token) {
-                await fetch(`${API_URL}/api/auth/logout`, {
-                    method: 'POST',
-                    headers: getAuthHeaders()
-                });
-            }
+// ==================== PERFIL ====================
+function carregarPerfil() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try { const user = JSON.parse(userStr);
+            if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
+            if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
         } catch(e) {}
-        
-        localStorage.removeItem('token');
-        localStorage.removeItem('ms_token');
-        localStorage.removeItem('ms_user');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
     }
+}
+function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); document.getElementById('novaSenha').value = ''; document.getElementById('confirmarSenha').value = ''; }
+function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
+async function salvarPerfil() {
+    const username = document.getElementById('editUsername')?.value;
+    const email = document.getElementById('editEmail')?.value;
+    const novaSenha = document.getElementById('novaSenha')?.value;
+    const confirmarSenha = document.getElementById('confirmarSenha')?.value;
+    if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas não coincidem'); return; }
+    if (novaSenha && !document.getElementById('senhaAtual')?.value) { alert('Digite a senha atual para alterar'); return; }
+    const payload = { username, email };
+    if (novaSenha) payload.password = novaSenha;
+    try {
+        const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Perfil atualizado com sucesso!');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.username = username; user.email = email;
+            localStorage.setItem('user', JSON.stringify(user));
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
+            closeModalPerfil();
+        } else { alert(data.error || 'Erro ao atualizar perfil'); }
+    } catch (error) { alert('Erro ao atualizar perfil.'); }
+}
 
-    // ==================== INICIALIZAÇÃO ====================
-    document.addEventListener('DOMContentLoaded', () => {
-        initMenuMobile();
-        carregarCampanhas();
-        carregarPerfil();
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
+async function sair() {
+    try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) {}
+    localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('ms_user'); localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
 
-    setInterval(carregarCampanhas, 30000);
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    carregarCampanhas();
+    carregarPerfil();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+setInterval(carregarCampanhas, 30000);
 </script>
 </body>
 </html>
