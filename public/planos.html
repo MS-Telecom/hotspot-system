@@ -33,35 +33,107 @@
   </footer>
 
   <script>
+    // CORRIGIDO: URL da API agora aponta para o endpoint padronizado do novo backend
+    // Antigo: https://mstelecom-api.duckdns.org/api/portal/plans
+    // Novo: /api/plans (rota pública, sem autenticação, retorna array diretamente)
     const API_URL = 'https://mstelecom-api.duckdns.org';
+    
+    // Inicializa os ícones do Lucide
     lucide.createIcons();
 
+    /**
+     * Carrega a lista de planos do backend padronizado.
+     * - Endpoint: GET /api/plans
+     * - Resposta esperada: array de objetos com campos em inglês (name, price, duration_days, speed_mbps, description)
+     * - Compatibilidade: se a resposta for um objeto com campo 'data', extrai o array; caso contrário, usa a resposta diretamente.
+     */
     async function loadPlans() {
       try {
-        const res = await fetch(`${API_URL}/api/portal/plans`);
-        const plans = await res.json();
+        const response = await fetch(`${API_URL}/api/plans`);
+        
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        let plans = await response.json();
+        
+        // Garantia de compatibilidade: se a resposta for um objeto com a propriedade 'data', extraímos o array
+        // (algumas rotas do novo backend podem retornar { success, data } - embora a tabela indique array direto)
+        if (plans && typeof plans === 'object' && !Array.isArray(plans) && plans.data) {
+          plans = plans.data;
+        }
+        
+        // Se ainda não for array, trata como vazio
+        if (!Array.isArray(plans)) {
+          plans = [];
+        }
+        
         const container = document.getElementById('plansList');
         container.innerHTML = '';
-        if (!plans || plans.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 col-span-3 py-12">Nenhum plano disponível</div>'; return; }
-        plans.forEach((p, i) => {
-          const highlight = i === 1 ? 'border-cyan-400 bg-cyan-500/10' : 'border-gray-700 bg-white/5';
-          const badge = i === 1 ? '<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs px-3 py-1 rounded-full font-medium">Popular</span>' : '';
-          container.innerHTML += `<div class="relative border ${highlight} rounded-xl p-6 text-center">
-            ${badge}
-            <h3 class="text-xl font-bold mb-2">${p.name}</h3>
-            <p class="text-4xl font-bold text-cyan-400 mb-1">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</p>
-            <p class="text-gray-400 mb-6">${p.duration_days || '-'} dias</p>
-            <ul class="text-left space-y-2 mb-6">
-              <li class="flex items-center gap-2 text-gray-300"><i data-lucide="check" class="w-4 h-4 text-green-400"></i>Velocidade: ${p.speed_mbps ? p.speed_mbps + ' Mbps' : 'Ilimitada'}</li>
-              <li class="flex items-center gap-2 text-gray-300"><i data-lucide="check" class="w-4 h-4 text-green-400"></i>${p.description || 'Acesso completo'}</li>
-            </ul>
-            <a href="portal.html" class="block bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition">Assinar</a>
-          </div>`;
+        
+        if (plans.length === 0) {
+          container.innerHTML = '<div class="text-center text-gray-400 col-span-3 py-12">Nenhum plano disponível</div>';
+          return;
+        }
+        
+        // Renderiza cada plano usando os campos padronizados em inglês
+        plans.forEach((plan, index) => {
+          // Destaque para o segundo plano (índice 1) como "Popular"
+          const highlight = index === 1 ? 'border-cyan-400 bg-cyan-500/10' : 'border-gray-700 bg-white/5';
+          const badge = index === 1 
+            ? '<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs px-3 py-1 rounded-full font-medium">Popular</span>' 
+            : '';
+          
+          // Formatação do preço (R$)
+          const formattedPrice = `R$ ${parseFloat(plan.price).toFixed(2).replace('.', ',')}`;
+          
+          // Campo de velocidade: se existir e for numérico, exibe "X Mbps", senão "Ilimitada"
+          const speedText = plan.speed_mbps ? `${plan.speed_mbps} Mbps` : 'Ilimitada';
+          
+          // Descrição amigável: usa o campo description se existir, senão mensagem padrão
+          const descriptionText = plan.description || 'Acesso completo';
+          
+          container.innerHTML += `
+            <div class="relative border ${highlight} rounded-xl p-6 text-center">
+              ${badge}
+              <h3 class="text-xl font-bold mb-2">${escapeHtml(plan.name)}</h3>
+              <p class="text-4xl font-bold text-cyan-400 mb-1">${formattedPrice}</p>
+              <p class="text-gray-400 mb-6">${plan.duration_days || '-'} dias</p>
+              <ul class="text-left space-y-2 mb-6">
+                <li class="flex items-center gap-2 text-gray-300"><i data-lucide="check" class="w-4 h-4 text-green-400"></i>Velocidade: ${speedText}</li>
+                <li class="flex items-center gap-2 text-gray-300"><i data-lucide="check" class="w-4 h-4 text-green-400"></i>${escapeHtml(descriptionText)}</li>
+              </ul>
+              <a href="portal.html" class="block bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition">Assinar</a>
+            </div>
+          `;
         });
+        
+        // Recria os ícones para os novos elementos adicionados
         lucide.createIcons();
-      } catch (err) { console.error(err); }
+        
+      } catch (error) {
+        console.error('Erro ao carregar planos:', error);
+        const container = document.getElementById('plansList');
+        container.innerHTML = `<div class="text-center text-red-400 col-span-3 py-12">Falha ao carregar planos. Tente novamente mais tarde.</div>`;
+      }
     }
-
+    
+    /**
+     * Função auxiliar para escapar caracteres HTML e evitar XSS
+     * @param {string} str - String a ser escapada
+     * @returns {string} String segura
+     */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    
+    // Inicia o carregamento dos planos assim que a página estiver pronta
     loadPlans();
   </script>
 </body>
