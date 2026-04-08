@@ -1,221 +1,464 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal Wi-Fi - MS TELECOM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .gradient-bg{background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS TELECOM | Portal Wi-Fi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0c15 0%, #020617 100%); min-height: 100vh; }
+        .glass-card { background: rgba(15, 25, 35, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(59,130,246,0.25); }
+        .plan-card { transition: all 0.2s ease; cursor: pointer; }
+        .plan-card:hover { transform: translateY(-4px); border-color: #3b82f6; box-shadow: 0 20px 35px -12px rgba(59,130,246,0.25); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .toast-success { background: rgba(16,185,129,0.2); border-left: 4px solid #10b981; }
+        .toast-error { background: rgba(239,68,68,0.2); border-left: 4px solid #ef4444; }
+        .toast-warning { background: rgba(245,158,11,0.2); border-left: 4px solid #f59e0b; }
+    </style>
 </head>
-<body class="gradient-bg min-h-screen text-white">
+<body class="text-gray-200">
 
-  <div class="max-w-md mx-auto px-4 py-8">
-    <!-- Logo -->
-    <div class="text-center mb-8">
-      <i data-lucide="wifi" class="w-16 h-16 text-cyan-400 mx-auto mb-3"></i>
-      <h1 class="text-3xl font-bold">MS TELECOM</h1>
-      <p class="text-gray-300 mt-2">Conecte-se à internet</p>
-    </div>
+<div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-gray-800 bg-black/30 backdrop-blur-sm sticky top-0 z-20">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center flex-wrap gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">Wi-Fi Hotspot</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-full">
+                    <span class="status-dot bg-emerald-500"></span>
+                    <span class="text-[10px] font-medium text-emerald-500">Rede disponível</span>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-[10px] text-gray-500">Vila Icuí, Belém/PA</p>
+                    <p class="text-[9px] text-gray-600">32°C • Parc ensolarado</p>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <!-- Tabs -->
-    <div class="flex bg-gray-800 rounded-lg p-1 mb-6">
-      <button onclick="showTab('login')" id="tabLogin" class="flex-1 py-2 rounded-lg text-sm font-medium bg-cyan-500 text-white transition">Login</button>
-      <button onclick="showTab('register')" id="tabRegister" class="flex-1 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition">Cadastro</button>
-      <button onclick="showTab('voucher')" id="tabVoucher" class="flex-1 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition">Voucher</button>
-    </div>
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Banner -->
+        <div class="glass-card rounded-3xl p-8 mb-10 text-center border border-blue-500/20">
+            <h2 class="text-3xl md:text-4xl font-black text-white mb-2">Conecte-se agora mesmo!</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">Escolha o plano ideal e aproveite internet de alta velocidade da MS Telecom</p>
+        </div>
 
-    <div id="errorMessage" class="hidden bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg mb-4 text-sm"></div>
-    <div id="successMessage" class="hidden bg-green-500/20 border border-green-500 text-green-300 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+        <!-- Status do dispositivo e ações rápidas -->
+        <div class="bg-gray-900/50 rounded-2xl p-4 mb-8 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i data-lucide="smartphone" class="text-blue-500 w-5 h-5"></i>
+                <span class="text-sm text-gray-300">Seu dispositivo:</span>
+                <code id="dispositivoMac" class="bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono text-blue-400">Detectando...</code>
+            </div>
+            <div class="flex gap-3 flex-wrap">
+                <button id="liberar5minBtn" class="px-5 py-2 bg-amber-600/20 border border-amber-500/50 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-600/30 transition flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
+                </button>
+                <button id="testeGratisBtn" class="px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
+                    <i data-lucide="flask" class="w-4 h-4"></i> Teste Grátis 15min
+                </button>
+                <button id="jaPagueiBtn" class="px-5 py-2 bg-blue-600/20 border border-blue-500/50 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> Já paguei
+                </button>
+            </div>
+        </div>
 
-    <!-- Login Form -->
-    <div id="formLogin" class="bg-white/10 backdrop-blur rounded-xl p-6">
-      <h2 class="text-lg font-semibold mb-4">Acesse sua conta</h2>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-300 mb-1">CPF ou Telefone</label><input id="loginIdentifier" type="text" placeholder="000.000.000-00" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400"></div>
-        <div><label class="block text-sm text-gray-300 mb-1">Senha</label><input id="loginPassword" type="password" placeholder="Sua senha" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400"></div>
-      </div>
-      <button onclick="portalLogin()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition">Conectar</button>
-    </div>
+        <!-- Tabs: Login / Cadastro / Voucher -->
+        <div class="flex border-b border-gray-800 gap-6 mb-6 overflow-x-auto">
+            <button class="tab-btn active px-1 py-2 text-sm font-medium transition-all whitespace-nowrap" data-tab="login">Acessar Conta</button>
+            <button class="tab-btn px-1 py-2 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="register">Criar Conta</button>
+            <button class="tab-btn px-1 py-2 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="voucher">Usar Voucher</button>
+        </div>
 
-    <!-- Register Form -->
-    <div id="formRegister" class="hidden bg-white/10 backdrop-blur rounded-xl p-6">
-      <h2 class="text-lg font-semibold mb-4">Crie sua conta</h2>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-300 mb-1">Nome completo</label><input id="regName" type="text" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400"></div>
-        <div><label class="block text-sm text-gray-300 mb-1">CPF</label><input id="regCpf" type="text" placeholder="000.000.000-00" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400"></div>
-        <div><label class="block text-sm text-gray-300 mb-1">Telefone</label><input id="regPhone" type="text" placeholder="(00) 00000-0000" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400"></div>
-        <div><label class="block text-sm text-gray-300 mb-1">Senha</label><input id="regPassword" type="password" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400"></div>
-      </div>
-      <button onclick="portalRegister()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition">Cadastrar</button>
-    </div>
+        <!-- Conteúdo dos Tabs -->
+        <div id="tabLogin" class="tab-content">
+            <div class="glass-card rounded-2xl p-6 max-w-md mx-auto">
+                <h3 class="text-xl font-bold mb-4 text-center">Login</h3>
+                <div class="space-y-4">
+                    <div><label class="block text-sm text-gray-300 mb-1">CPF ou Telefone</label><input id="loginIdentifier" type="text" placeholder="000.000.000-00" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-sm text-gray-300 mb-1">Senha</label><input id="loginPassword" type="password" placeholder="Sua senha" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:border-blue-500 outline-none"></div>
+                    <button onclick="portalLogin()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-3 rounded-xl font-bold transition">Conectar</button>
+                </div>
+            </div>
+        </div>
 
-    <!-- Voucher Form -->
-    <div id="formVoucher" class="hidden bg-white/10 backdrop-blur rounded-xl p-6">
-      <h2 class="text-lg font-semibold mb-4">Usar Voucher</h2>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-300 mb-1">Código do Voucher</label><input id="voucherCode" type="text" placeholder="XXXX-XXXX-XXXX" class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400 font-mono text-center text-lg tracking-wider"></div>
-      </div>
-      <button onclick="redeemVoucher()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-3 rounded-lg font-semibold transition">Ativar Voucher</button>
-    </div>
+        <div id="tabRegister" class="tab-content hidden">
+            <div class="glass-card rounded-2xl p-6 max-w-md mx-auto">
+                <h3 class="text-xl font-bold mb-4 text-center">Criar Conta</h3>
+                <div class="space-y-4">
+                    <div><label class="block text-sm text-gray-300 mb-1">Nome completo</label><input id="regName" type="text" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-sm text-gray-300 mb-1">CPF</label><input id="regCpf" type="text" placeholder="000.000.000-00" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-sm text-gray-300 mb-1">Telefone</label><input id="regPhone" type="text" placeholder="(00) 00000-0000" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-sm text-gray-300 mb-1">Senha</label><input id="regPassword" type="password" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:border-blue-500 outline-none"></div>
+                    <button onclick="portalRegister()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-3 rounded-xl font-bold transition">Cadastrar</button>
+                </div>
+            </div>
+        </div>
 
-    <!-- Planos -->
-    <div id="plansSection" class="hidden mt-6">
-      <h2 class="text-lg font-semibold mb-4 text-center">Escolha seu plano</h2>
-      <div id="plansList" class="space-y-3"></div>
-    </div>
+        <div id="tabVoucher" class="tab-content hidden">
+            <div class="glass-card rounded-2xl p-6 max-w-md mx-auto">
+                <h3 class="text-xl font-bold mb-4 text-center">Usar Voucher</h3>
+                <div class="space-y-4">
+                    <div><label class="block text-sm text-gray-300 mb-1">Código do Voucher</label><input id="voucherCode" type="text" placeholder="XXXX-XXXX-XXXX" class="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-center font-mono text-lg tracking-wider focus:border-blue-500 outline-none"></div>
+                    <button onclick="redeemVoucher()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-3 rounded-xl font-bold transition">Ativar Voucher</button>
+                </div>
+            </div>
+        </div>
 
-    <!-- PIX Payment -->
-    <div id="pixSection" class="hidden mt-6 bg-white/10 backdrop-blur rounded-xl p-6 text-center">
-      <h2 class="text-lg font-semibold mb-4">Pagamento PIX</h2>
-      <img id="pixQrImg" src="" alt="QR Code PIX" class="mx-auto w-48 h-48 bg-white rounded-lg p-2 mb-4">
-      <div class="bg-gray-800 rounded-lg p-3 mb-4"><p class="text-xs text-gray-400 mb-1">Copia e Cola:</p><p id="pixCode" class="text-sm break-all text-cyan-400 font-mono"></p></div>
-      <button onclick="copyPix()" class="w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium mb-2">Copiar Código PIX</button>
-      <p class="text-xs text-gray-400 mt-2">Aguardando confirmação do pagamento...</p>
-      <div id="pixSpinner" class="mt-3"><i data-lucide="loader-2" class="w-6 h-6 text-cyan-400 animate-spin mx-auto"></i></div>
-    </div>
-  </div>
+        <!-- Planos (sempre visíveis) -->
+        <div class="mt-12">
+            <h3 class="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2"><i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano</h3>
+            <div id="plansList" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center text-gray-500 py-8 col-span-3">Carregando planos...</div>
+            </div>
+        </div>
 
-  <footer class="text-center py-4 text-gray-500 text-sm">&copy; 2026 MS TELECOM</footer>
+        <!-- Seção de pagamento PIX (inicialmente oculta) -->
+        <div id="paymentSection" class="hidden mt-8 glass-card rounded-3xl p-8 border border-blue-500/30">
+            <div class="flex flex-col md:flex-row gap-8 items-center">
+                <div class="flex-1 text-center md:text-left">
+                    <h3 class="text-2xl font-bold text-white mb-2">Pagamento via PIX</h3>
+                    <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o código para pagar</p>
+                    <div class="bg-gray-900/80 rounded-2xl p-4 inline-block">
+                        <div id="qrCodeContainer" class="bg-white rounded-2xl flex items-center justify-center w-48 h-48">
+                            <i data-lucide="qrcode" class="w-24 h-24 text-gray-800"></i>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">QR Code válido por 15 minutos</p>
+                </div>
+                <div class="flex-1 space-y-4">
+                    <div class="bg-gray-900/50 rounded-2xl p-4">
+                        <p class="text-[10px] text-gray-500 uppercase mb-1">Código PIX Copia e Cola</p>
+                        <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">Gerando PIX...</code>
+                        <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar código</button>
+                    </div>
+                    <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4">
+                        <p class="text-xs text-yellow-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Após o pagamento, clique em "Já paguei" para liberar seu acesso</p>
+                    </div>
+                    <button id="cancelarPagamentoBtn" class="w-full bg-gray-800 hover:bg-gray-700 py-2 rounded-xl text-sm transition">Cancelar</button>
+                </div>
+            </div>
+        </div>
 
-  <script>
-    const API_URL = 'https://mstelecom-api.duckdns.org';
-    const urlParams = new URLSearchParams(window.location.search);
-    const mac = urlParams.get('mac') || '';
-    const ip = urlParams.get('ip') || '';
-    const link_orig = urlParams.get('link-orig') || '';
+        <!-- Toast de mensagem -->
+        <div id="statusMessage" class="hidden fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm">
+            <div class="flex items-center gap-3">
+                <i data-lucide="check-circle" class="text-emerald-500 w-6 h-6"></i>
+                <div><p id="statusMessageText" class="text-sm font-medium text-white">Mensagem</p><p class="text-[10px] text-gray-500">Aguarde...</p></div>
+            </div>
+        </div>
+    </main>
 
-    lucide.createIcons();
+    <footer class="border-t border-gray-800 py-6 text-center text-[10px] text-gray-600">
+        <p>MS TELECOM - Internet de qualidade para sua conexão | Conformidade com Marco Civil da Internet</p>
+        <p class="mt-1">© 2026 - Todos os direitos reservados</p>
+    </footer>
+</div>
 
-    function showTab(tab) {
-      document.getElementById('formLogin').classList.add('hidden');
-      document.getElementById('formRegister').classList.add('hidden');
-      document.getElementById('formVoucher').classList.add('hidden');
-      document.getElementById('tabLogin').className = 'flex-1 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition';
-      document.getElementById('tabRegister').className = 'flex-1 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition';
-      document.getElementById('tabVoucher').className = 'flex-1 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition';
+<script>
+    // ==================== CONFIGURAÇÕES ====================
+    const API_BASE = 'https://mstelecom-api.duckdns.org';
+    const MIKROTIK_LOGIN_URL = 'http://192.168.32.1/login';
+    let selectedPlan = null;
+    let currentPaymentId = null;
 
-      document.getElementById(`form${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.remove('hidden');
-      document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).className = 'flex-1 py-2 rounded-lg text-sm font-medium bg-cyan-500 text-white transition';
-      hideMessages();
+    // ==================== FUNÇÕES AUXILIARES ====================
+    function getMacFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const mac = params.get('mac');
+        const ip = params.get('ip');
+        const pop = params.get('pop');
+        if (mac) return mac.toUpperCase();
+        if (ip) return ip;
+        if (pop) return pop;
+        return null;
     }
 
-    function showError(msg) { const el = document.getElementById('errorMessage'); el.textContent = msg; el.classList.remove('hidden'); document.getElementById('successMessage').classList.add('hidden'); }
-    function showSuccess(msg) { const el = document.getElementById('successMessage'); el.textContent = msg; el.classList.remove('hidden'); document.getElementById('errorMessage').classList.add('hidden'); }
-    function hideMessages() { document.getElementById('errorMessage').classList.add('hidden'); document.getElementById('successMessage').classList.add('hidden'); }
-
-    async function portalLogin() {
-      hideMessages();
-      try {
-        const res = await fetch(`${API_URL}/api/portal/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier: document.getElementById('loginIdentifier').value, password: document.getElementById('loginPassword').value, mac_address: mac })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro no login');
-
-        if (data.status === 'active') {
-          showSuccess('Conectado! Redirecionando...');
-          setTimeout(() => { if (link_orig) window.location.href = link_orig; }, 2000);
-        } else {
-          showSuccess('Login realizado! Escolha um plano para se conectar.');
-          localStorage.setItem('portal_user_id', data.user_id);
-          loadPlans();
+    function showStatusMessage(message, type = 'success') {
+        const msgDiv = document.getElementById('statusMessage');
+        const msgText = document.getElementById('statusMessageText');
+        const icon = msgDiv.querySelector('i');
+        msgText.innerText = message;
+        msgDiv.className = `fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm toast-${type}`;
+        msgDiv.classList.remove('hidden');
+        if (icon) {
+            const iconName = { success: 'check-circle', error: 'alert-circle', warning: 'alert-triangle' }[type] || 'info';
+            icon.setAttribute('data-lucide', iconName);
+            lucide.createIcons();
         }
-      } catch (err) { showError(err.message); }
+        setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+    }
+
+    function redirectToMikrotik(mac) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = MIKROTIK_LOGIN_URL;
+        form.style.display = 'none';
+        const userInput = document.createElement('input');
+        userInput.type = 'hidden';
+        userInput.name = 'username';
+        userInput.value = mac;
+        const passInput = document.createElement('input');
+        passInput.type = 'hidden';
+        passInput.name = 'password';
+        passInput.value = mac;
+        const dstInput = document.createElement('input');
+        dstInput.type = 'hidden';
+        dstInput.name = 'dst';
+        dstInput.value = window.location.href;
+        form.appendChild(userInput);
+        form.appendChild(passInput);
+        form.appendChild(dstInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // ==================== API (padrão backend) ====================
+    const API = {
+        async generatePix(macAddress, planName, amount) {
+            const res = await fetch(`${API_BASE}/api/payments/generate-pix`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mac_address: macAddress, plan_name: planName, amount: parseFloat(amount) })
+            });
+            if (!res.ok) throw new Error('Erro ao gerar PIX');
+            return await res.json();
+        },
+        async checkPayment(macAddress) {
+            const res = await fetch(`${API_BASE}/api/payments?mac_address=${macAddress}`);
+            if (!res.ok) return { paid: false };
+            const payments = await res.json();
+            const approved = payments.find(p => p.status === 'approved' || p.status === 'paid');
+            return { paid: !!approved };
+        },
+        async requestTestAccess(macAddress, durationMinutes) {
+            const res = await fetch(`${API_BASE}/api/users/test-access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mac_address: macAddress, duration_minutes: durationMinutes })
+            });
+            if (!res.ok) throw new Error('Falha ao liberar teste');
+            return await res.json();
+        }
+    };
+
+    // ==================== TABS ====================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-white'));
+            this.classList.add('active', 'text-white');
+            this.classList.remove('text-gray-400');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            const targetMap = { login: 'tabLogin', register: 'tabRegister', voucher: 'tabVoucher' };
+            document.getElementById(targetMap[tabId]).classList.remove('hidden');
+        });
+    });
+
+    // ==================== PLANOS ====================
+    async function loadPlans() {
+        try {
+            const res = await fetch(`${API_BASE}/api/plans`);
+            if (!res.ok) throw new Error();
+            let plans = await res.json();
+            if (plans && typeof plans === 'object' && !Array.isArray(plans) && plans.data) plans = plans.data;
+            const container = document.getElementById('plansList');
+            if (!plans || plans.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 col-span-3">Nenhum plano disponível</div>';
+                return;
+            }
+            container.innerHTML = plans.map((plan, idx) => `
+                <div class="plan-card glass-card rounded-2xl p-6 border ${idx === 1 ? 'border-blue-500/30 relative' : 'border-gray-800'}" data-plan-name="${plan.name}" data-plan-price="${plan.price}" data-plan-id="${plan.id}">
+                    ${idx === 1 ? '<div class="absolute top-0 right-0 bg-gradient-to-l from-blue-600 to-cyan-500 px-4 py-1 rounded-bl-2xl text-[9px] font-bold uppercase">Recomendado</div>' : ''}
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 ${idx === 1 ? 'bg-purple-500/10' : 'bg-blue-500/10'} rounded-xl flex items-center justify-center">
+                            <i data-lucide="${idx === 0 ? 'clock' : (idx === 1 ? 'crown' : 'calendar')}" class="${idx === 1 ? 'text-purple-500' : 'text-blue-500'} w-6 h-6"></i>
+                        </div>
+                        <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full">${plan.duration_days || '-'} dias</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-white">${plan.name}</h4>
+                    <p class="text-gray-400 text-sm mt-1">${plan.description || 'Acesso completo'}</p>
+                    <div class="mt-4"><span class="text-3xl font-black text-white">R$ ${parseFloat(plan.price).toFixed(2).replace('.',',')}</span></div>
+                    <ul class="mt-4 space-y-2 text-sm text-gray-400">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> ${plan.speed_mbps || 10} Mbps</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Suporte 24h</li>
+                    </ul>
+                    <button class="btn-plano w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition">Escolher plano</button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+            attachPlanButtons();
+        } catch (err) {
+            console.error(err);
+            document.getElementById('plansList').innerHTML = '<div class="text-center text-red-400 col-span-3">Erro ao carregar planos</div>';
+        }
+    }
+
+    function attachPlanButtons() {
+        document.querySelectorAll('.btn-plano').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.plan-card');
+                const planName = card.getAttribute('data-plan-name');
+                const price = card.getAttribute('data-plan-price');
+                if (!macAddress) { showStatusMessage('MAC não detectado. Reconecte-se ao Wi-Fi.', 'error'); return; }
+                selectedPlan = { name: planName, price: price };
+                const paymentSection = document.getElementById('paymentSection');
+                const qrContainer = document.getElementById('qrCodeContainer');
+                const pixCodeSpan = document.getElementById('pixCode');
+                qrContainer.innerHTML = '<div class="animate-pulse text-gray-800">Gerando QR Code...</div>';
+                pixCodeSpan.innerText = 'Aguarde, gerando PIX...';
+                paymentSection.classList.remove('hidden');
+                paymentSection.scrollIntoView({ behavior: 'smooth' });
+                try {
+                    const pixData = await API.generatePix(macAddress, planName, price);
+                    if (pixData.qr_code_base64) qrContainer.innerHTML = `<img src="data:image/png;base64,${pixData.qr_code_base64}" class="w-48 h-48">`;
+                    else if (pixData.qr_code_url) qrContainer.innerHTML = `<img src="${pixData.qr_code_url}" class="w-48 h-48">`;
+                    else qrContainer.innerHTML = '<i data-lucide="qrcode" class="w-24 h-24 text-gray-800"></i>';
+                    pixCodeSpan.innerText = pixData.pix_code || 'Código PIX não disponível';
+                    currentPaymentId = pixData.payment_id || null;
+                    lucide.createIcons();
+                } catch (error) {
+                    showStatusMessage(error.message || 'Erro ao gerar PIX', 'error');
+                    paymentSection.classList.add('hidden');
+                    selectedPlan = null;
+                }
+            });
+        });
+    }
+
+    // ==================== AÇÕES ====================
+    async function portalLogin() {
+        const identifier = document.getElementById('loginIdentifier').value;
+        const password = document.getElementById('loginPassword').value;
+        if (!identifier || !password) { showStatusMessage('Preencha todos os campos', 'warning'); return; }
+        try {
+            const res = await fetch(`${API_BASE}/api/portal/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier, password, mac_address: macAddress })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erro no login');
+            if (data.status === 'active') {
+                showStatusMessage('Conectado! Redirecionando...', 'success');
+                setTimeout(() => redirectToMikrotik(macAddress), 1500);
+            } else {
+                showStatusMessage('Login realizado! Escolha um plano.', 'success');
+                localStorage.setItem('portal_user_id', data.user_id);
+            }
+        } catch (err) { showStatusMessage(err.message, 'error'); }
     }
 
     async function portalRegister() {
-      hideMessages();
-      try {
-        const res = await fetch(`${API_URL}/api/portal/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: document.getElementById('regName').value, cpf: document.getElementById('regCpf').value, phone: document.getElementById('regPhone').value, password: document.getElementById('regPassword').value, mac_address: mac })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro no cadastro');
-        showSuccess('Cadastro realizado! Escolha um plano.');
-        localStorage.setItem('portal_user_id', data.user_id);
-        loadPlans();
-      } catch (err) { showError(err.message); }
+        const name = document.getElementById('regName').value;
+        const cpf = document.getElementById('regCpf').value;
+        const phone = document.getElementById('regPhone').value;
+        const password = document.getElementById('regPassword').value;
+        if (!name || !cpf || !phone || !password) { showStatusMessage('Preencha todos os campos', 'warning'); return; }
+        try {
+            const res = await fetch(`${API_BASE}/api/portal/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, cpf, phone, password, mac_address: macAddress })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erro no cadastro');
+            showStatusMessage('Cadastro realizado! Escolha um plano.', 'success');
+            localStorage.setItem('portal_user_id', data.user_id);
+        } catch (err) { showStatusMessage(err.message, 'error'); }
     }
 
     async function redeemVoucher() {
-      hideMessages();
-      try {
         const code = document.getElementById('voucherCode').value.trim();
-        const res = await fetch(`${API_URL}/api/portal/voucher`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, mac_address: mac })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Voucher inválido');
-        showSuccess('Voucher ativado! Conectando...');
-        setTimeout(() => { if (link_orig) window.location.href = link_orig; }, 2000);
-      } catch (err) { showError(err.message); }
-    }
-
-    async function loadPlans() {
-      try {
-        const res = await fetch(`${API_URL}/api/portal/plans`);
-        const plans = await res.json();
-        const container = document.getElementById('plansList');
-        container.innerHTML = '';
-        (plans || []).forEach(p => {
-          container.innerHTML += `<div class="bg-white/10 backdrop-blur rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-white/20 transition" onclick="selectPlan(${p.id},'${p.name}',${p.price})">
-            <div><h3 class="font-semibold">${p.name}</h3><p class="text-sm text-gray-400">${p.duration_days || '-'} dias - ${p.speed_mbps ? p.speed_mbps + ' Mbps' : '-'}</p></div>
-            <div class="text-right"><p class="text-xl font-bold text-cyan-400">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</p></div>
-          </div>`;
-        });
-        document.getElementById('plansSection').classList.remove('hidden');
-      } catch (err) { console.error(err); }
-    }
-
-    async function selectPlan(planId, planName, price) {
-      hideMessages();
-      const userId = localStorage.getItem('portal_user_id');
-      try {
-        const res = await fetch(`${API_URL}/api/portal/create-pix`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, plan_id: planId, plan_name: planName, amount: price, mac_address: mac })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro ao gerar PIX');
-
-        document.getElementById('plansSection').classList.add('hidden');
-        document.getElementById('pixQrImg').src = data.qr_code_base64 ? `data:image/png;base64,${data.qr_code_base64}` : '';
-        document.getElementById('pixCode').textContent = data.pix_copy_paste || '';
-        document.getElementById('pixSection').classList.remove('hidden');
-        lucide.createIcons();
-
-        // Poll para verificar pagamento
-        if (data.payment_id) pollPayment(data.payment_id);
-      } catch (err) { showError(err.message); }
-    }
-
-    async function pollPayment(paymentId) {
-      const interval = setInterval(async () => {
+        if (!code) { showStatusMessage('Digite o código do voucher', 'warning'); return; }
         try {
-          const res = await fetch(`${API_URL}/api/portal/check-payment/${paymentId}`);
-          const data = await res.json();
-          if (data.status === 'approved') {
-            clearInterval(interval);
-            showSuccess('Pagamento confirmado! Conectando...');
-            document.getElementById('pixSection').classList.add('hidden');
-            setTimeout(() => { if (link_orig) window.location.href = link_orig; }, 2000);
-          }
-        } catch (err) { console.error(err); }
-      }, 5000);
+            const res = await fetch(`${API_BASE}/api/portal/voucher`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, mac_address: macAddress })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Voucher inválido');
+            showStatusMessage('Voucher ativado! Conectando...', 'success');
+            setTimeout(() => redirectToMikrotik(macAddress), 1500);
+        } catch (err) { showStatusMessage(err.message, 'error'); }
     }
 
-    function copyPix() {
-      const text = document.getElementById('pixCode').textContent;
-      navigator.clipboard.writeText(text).then(() => alert('Código PIX copiado!')).catch(() => {});
-    }
-  </script>
+    // Botões rápidos
+    let lastFreeTest = localStorage.getItem('last_free_test') || 0;
+    document.getElementById('liberar5minBtn')?.addEventListener('click', async () => {
+        if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
+        const now = Date.now();
+        if (lastFreeTest && (now - lastFreeTest) < 3600000) {
+            const remaining = Math.ceil((3600000 - (now - lastFreeTest)) / 60000);
+            showStatusMessage(`Aguarde ${remaining} minutos para outro teste gratuito.`, 'warning');
+            return;
+        }
+        try {
+            await API.requestTestAccess(macAddress, 5);
+            lastFreeTest = now;
+            localStorage.setItem('last_free_test', lastFreeTest);
+            showStatusMessage('5 minutos de acesso liberado! Autenticando...', 'success');
+            setTimeout(() => redirectToMikrotik(macAddress), 1500);
+        } catch (err) { showStatusMessage(err.message, 'error'); }
+    });
+
+    document.getElementById('testeGratisBtn')?.addEventListener('click', async () => {
+        if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
+        try {
+            await API.requestTestAccess(macAddress, 15);
+            showStatusMessage('Teste grátis de 15 minutos liberado! Autenticando...', 'success');
+            setTimeout(() => redirectToMikrotik(macAddress), 1500);
+        } catch (err) { showStatusMessage(err.message, 'error'); }
+    });
+
+    document.getElementById('jaPagueiBtn')?.addEventListener('click', async () => {
+        if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
+        try {
+            const { paid } = await API.checkPayment(macAddress);
+            if (paid) {
+                showStatusMessage('Pagamento confirmado! Acesso liberado. Redirecionando...', 'success');
+                setTimeout(() => redirectToMikrotik(macAddress), 1500);
+            } else {
+                showStatusMessage('Nenhum pagamento aprovado encontrado. Efetue o pagamento via PIX.', 'warning');
+                if (selectedPlan) document.getElementById('paymentSection').classList.remove('hidden');
+            }
+        } catch (err) { showStatusMessage('Erro ao verificar pagamento', 'error'); }
+    });
+
+    document.getElementById('cancelarPagamentoBtn')?.addEventListener('click', () => {
+        document.getElementById('paymentSection').classList.add('hidden');
+        selectedPlan = null;
+        currentPaymentId = null;
+    });
+
+    document.getElementById('copyPixBtn')?.addEventListener('click', () => {
+        const code = document.getElementById('pixCode').innerText;
+        if (!code || code === 'Gerando PIX...') { showStatusMessage('Aguarde o código PIX ser gerado.', 'warning'); return; }
+        navigator.clipboard.writeText(code).then(() => showStatusMessage('Código PIX copiado!', 'info')).catch(() => showStatusMessage('Erro ao copiar.', 'error'));
+    });
+
+    // ==================== INICIALIZAÇÃO ====================
+    const macAddress = getMacFromUrl();
+    document.getElementById('dispositivoMac').innerText = macAddress || 'MAC não detectado';
+    if (!macAddress) showStatusMessage('MAC não detectado. Conecte-se novamente ao Wi-Fi.', 'error');
+
+    lucide.createIcons();
+    setInterval(() => lucide.createIcons(), 2000);
+    loadPlans();
+</script>
 </body>
 </html>
