@@ -417,13 +417,27 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
 // Atualizar perfil do admin
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, current_password, new_password } = req.body;
     const updateData = { updated_at: new Date().toISOString() };
 
-    if (email) updateData.email = email;
-    if (password) {
-      updateData.password = crypto.createHash('sha256').update(password).digest('hex');
+    // Validar senha atual se estiver tentando mudar a senha
+    if (new_password) {
+      if (!current_password) {
+        return res.status(400).json({ error: 'Senha atual é obrigatória para definir uma nova senha' });
+      }
+
+      const { data: admin, error: adminError } = await supabase.from('admins').select('password').eq('id', req.user.id).single();
+      if (adminError || !admin) return res.status(404).json({ error: 'Admin não encontrado' });
+
+      const hashedCurrent = crypto.createHash('sha256').update(current_password).digest('hex');
+      if (hashedCurrent !== admin.password) {
+        return res.status(401).json({ error: 'Senha atual incorreta' });
+      }
+
+      updateData.password = crypto.createHash('sha256').update(new_password).digest('hex');
     }
+
+    if (email) updateData.email = email;
 
     const { error } = await supabase.from('admins').update(updateData).eq('id', req.user.id);
     if (error) throw error;
@@ -591,6 +605,33 @@ app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
   }
 });
 
+// Buscar usuário por ID
+app.get('/api/users/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar dados básicos do usuário
+    const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+    if (userError || !user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    // Calcular total_spent (soma dos pagamentos aprovados)
+    const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
+    const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    // Buscar last_access (última sessão)
+    const { data: lastSession } = await supabase.from('hotspot_sessions').select('created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    res.json({
+      ...user,
+      total_spent: totalSpent,
+      last_access: lastSession?.created_at || user.last_seen_at || null
+    });
+  } catch (err) {
+    console.error('❌ Erro ao buscar usuário:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar usuário' });
+  }
+});
+
 // Exportar usuários para CSV
 app.get('/api/users/export', authMiddleware, async (req, res) => {
   try {
@@ -715,9 +756,25 @@ app.get('/api/plans/:id/details', authMiddleware, async (req, res) => {
 // Listar pagamentos
 app.get('/api/payments', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('payments')
+      .select(`
+        *,
+        users:user_id (name, mac_address),
+        pops:pop_id (name)
+      `)
+      .order('created_at', { ascending: false });
+
     if (error) throw error;
-    res.json(data || []);
+
+    const formattedData = (data || []).map(payment => ({
+      ...payment,
+      user_name: payment.users?.name || 'N/A',
+      mac_address: payment.users?.mac_address || 'N/A',
+      pop_name: payment.pops?.name || 'N/A'
+    }));
+
+    res.json(formattedData);
   } catch (err) {
     console.error('❌ Erro ao listar pagamentos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagamentos' });
@@ -1141,7 +1198,14 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('pops').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    res.json(data || []);
+    
+    const formattedData = (data || []).map(pop => ({
+      ...pop,
+      active_clients: pop.connected_users || 0,
+      last_activity: pop.last_seen_at || null
+    }));
+
+    res.json(formattedData);
   } catch (err) {
     console.error('❌ Erro ao listar POPs:', err.message);
     res.status(500).json({ error: 'Erro ao listar POPs' });
@@ -1775,7 +1839,7 @@ app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
     try {
         // Retorna array com 24 zeros (placeholder)
         const hours = Array.from({length: 24}, (_, i) => ({ hour: i, count: 0 }));
-        res.json(hours);
+        res.json({ data: hours });
     } catch (err) {
         console.error('❌ Erro em /api/stats/users-per-hour:', err.message);
         res.status(500).json({ error: 'Erro ao buscar dados' });
