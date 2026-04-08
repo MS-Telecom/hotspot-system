@@ -1,147 +1,528 @@
-
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Webhooks - MS TELECOM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Webhooks / API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .code-block { background: #0a0c15; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 12px; overflow-x: auto; }
+        #sidebar { z-index: 100; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex">
-  <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
-    <div class="flex items-center gap-2 mb-8"><i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i><span class="text-lg font-bold">MS TELECOM</span></div>
-    <nav class="flex flex-col gap-1 flex-1">
-      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</a>
-      <a href="hotspots.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="router" class="w-5 h-5"></i>Hotspots</a>
-      <a href="pops.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="radio-tower" class="w-5 h-5"></i>POPs</a>
-      <a href="cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="users" class="w-5 h-5"></i>Clientes</a>
-      <a href="financeiro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="banknote" class="w-5 h-5"></i>Financeiro</a>
-      <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
-      <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
-      <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
-      <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
-      <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
-    </nav>
-  </aside>
-
-  <main class="flex-1 p-4 md:p-6 overflow-auto">
-    <header class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3"><button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="text-2xl font-bold">Webhooks</h1></div>
-      <div class="flex items-center gap-3">
-        <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium"><i data-lucide="plus" class="w-4 h-4"></i>Novo Webhook</button>
-        <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
-        <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
-      </div>
-    </header>
-
-    <div class="space-y-8">
-        <div class="bg-gray-800 rounded-xl p-6">
-            <div class="flex items-center gap-3 mb-4"><i data-lucide="book-open" class="text-cyan-400 w-5 h-5"></i><h3 class="font-bold text-white">Documentação da API</h3></div>
-            <p class="text-sm text-gray-400 mb-4">Endpoints disponíveis para integração com sistemas externos.</p>
-            <div class="space-y-3">
-                <div class="bg-gray-900/50 rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded">POST</span><code class="mono text-sm text-blue-400">/api/webhooks/mercado-pago</code></div><p class="text-xs text-gray-500">Recebe notificações de pagamento do Mercado Pago / PIX</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-bold rounded">POST</span><code class="mono text-sm text-blue-400">/api/webhooks</code></div><p class="text-xs text-gray-500">Notificações de criação/atualização de usuários</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-[10px] font-bold rounded">POST</span><code class="mono text-sm text-blue-400">/api/hotspot-sessions</code></div><p class="text-xs text-gray-500">Eventos de início/término de sessão de clientes</p></div>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 rounded-xl p-4">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Nome</th><th class="text-left py-3">Evento</th><th class="text-left py-3">URL</th><th class="text-left py-3">Método</th><th class="text-left py-3">Ativo</th><th class="text-left py-3">Ações</th></tr></thead>
-              <tbody id="tableBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="bg-gray-800 rounded-xl p-6">
-            <div class="flex items-center gap-3 mb-4"><i data-lucide="code-2" class="text-cyan-400 w-5 h-5"></i><h3 class="font-bold text-white">Exemplo de Integração (cURL)</h3></div>
-            <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs overflow-x-auto">
-                <span class="text-emerald-400">curl -X POST</span> <span class="text-blue-400">https://mstelecom-api.duckdns.org/api/webhooks/mercado-pago</span> \
-                <br>  -H <span class="text-yellow-400">"Content-Type: application/json"</span> \
-                <br>  -d <span class="text-yellow-400">'{"evento":"pagamento.confirmado","cliente":"CLIENTE_NOME","valor":99.90}'</span>
-            </div>
-        </div>
-    </div>
-  </main>
-
-  <!-- Modal Criar -->
-  <div id="modalWebhook" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Novo Webhook</h3><button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input id="inputName" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Evento</label><select id="inputEvent" class="w-full px-3 py-2 bg-gray-700 rounded-lg"><option value="payment.approved">Pagamento Aprovado</option><option value="payment.pending">Pagamento Pendente</option><option value="user.created">Usuário Criado</option><option value="user.activated">Usuário Ativado</option><option value="session.started">Sessão Iniciada</option></select></div>
-        <div><label class="block text-sm text-gray-400 mb-1">URL</label><input id="inputUrl" type="url" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Método</label><select id="inputMethod" class="w-full px-3 py-2 bg-gray-700 rounded-lg"><option value="POST">POST</option><option value="GET">GET</option></select></div>
-      </div>
-      <button onclick="createWebhook()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Criar</button>
-    </div>
-  </div>
-
-  <!-- Modal Perfil -->
-  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-      </div>
-      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button></div>
-    </div>
-  </div>
-
-  <script>
-    const API_URL = 'https://mstelecom-api.duckdns.org';
+<body class="text-gray-200">
+<script>
+    // CORRIGIDO: verificação de token unificada
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
-    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-    lucide.createIcons(); initMenuMobile();
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+</script>
 
-    async function loadWebhooks() {
-      try {
-        const res = await fetch(`${API_URL}/api/webhooks`, { headers });
-        const data = await res.json();
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-gray-500">Nenhum webhook cadastrado</td></tr>'; return; }
-        data.forEach(w => {
-          const activeColor = w.active ? 'text-green-400' : 'text-gray-400';
-          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${w.name || '-'}</td><td class="py-3">${w.event || '-'}</td><td class="py-3 text-xs max-w-xs truncate">${w.url || '-'}</td><td class="py-3">${w.method}</td><td class="py-3 ${activeColor}">${w.active ? 'Sim' : 'Não'}</td>
-            <td class="py-3"><button onclick="deleteWebhook(${w.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
+
+<div class="flex h-screen overflow-hidden">
+    <!-- SIDEBAR (mesmo layout original, links atualizados) -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
+        </nav>
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+            <div class="relative w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar webhook por nome, URL ou evento..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 space-y-8">
+            <div class="flex justify-between items-end">
+                <div><h1 class="text-3xl font-black tracking-tight">Webhooks / API</h1><p class="text-gray-500 text-sm mt-1">Configure endpoints para receber notificações de eventos do sistema</p></div>
+                <button onclick="openWebhookModal()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Webhook</button>
+            </div>
+
+            <!-- Documentação da API (mantida) -->
+            <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                <div class="flex items-center gap-3 mb-4"><i data-lucide="book-open" class="text-blue-500 w-5 h-5"></i><h3 class="font-bold text-white">Documentação da API</h3></div>
+                <p class="text-sm text-gray-400 mb-4">Endpoints disponíveis para integração com sistemas externos</p>
+                <div class="space-y-3">
+                    <div class="bg-gray-900/50 rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded">POST</span><code class="mono text-sm text-blue-400">/api/webhooks</code></div><p class="text-xs text-gray-500">Recebe notificações de eventos configurados (pagamentos, usuários, sessões)</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-4"><div class="flex items-center gap-2 mb-2"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-bold rounded">POST</span><code class="mono text-sm text-blue-400">/api/webhooks/:id/test</code></div><p class="text-xs text-gray-500">Dispara um evento de teste para validar o webhook</p></div>
+                </div>
+            </div>
+
+            <!-- Lista de Webhooks -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white">Webhooks Configurados</h3>
+                    <button id="verLogsBtn" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver logs</button>
+                </div>
+                <div id="webhooksList" class="divide-y divide-gray-800">
+                    <div class="p-6 text-center text-gray-500">Carregando webhooks...</div>
+                </div>
+            </div>
+
+            <!-- Exemplo cURL -->
+            <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                <div class="flex items-center gap-3 mb-4"><i data-lucide="code-2" class="text-blue-500 w-5 h-5"></i><h3 class="font-bold text-white">Exemplo de Integração (cURL)</h3></div>
+                <div class="code-block">
+                    <span class="text-emerald-400">curl -X POST</span> <span class="text-blue-400">https://mstelecom-api.duckdns.org/api/webhooks</span> \<br>
+                    &nbsp;&nbsp;-H <span class="text-yellow-400">"Content-Type: application/json"</span> \<br>
+                    &nbsp;&nbsp;-H <span class="text-yellow-400">"Authorization: Bearer SEU_TOKEN"</span> \<br>
+                    &nbsp;&nbsp;-d <span class="text-yellow-400">'{"name":"Meu Webhook","event":"payment.confirmed","url":"https://meusistema.com/webhook","method":"POST","active":true}'</span>
+                </div>
+                <button onclick="copiarExemplo()" class="mt-4 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar exemplo</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL: Novo Webhook / Editar (padronizado) -->
+<div id="webhookModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-3 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="webhook" class="w-4 h-4 text-blue-500"></i>
+                <span id="modalTitle">Novo Webhook</span>
+            </h2>
+            <button onclick="closeWebhookModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+            <input type="hidden" id="editId" value="">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome do Webhook</label>
+                <input type="text" id="webhookNome" placeholder="Ex: Notificador de Pagamentos" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Evento</label>
+                <select id="webhookEvento" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                    <option value="">Selecione um evento</option>
+                    <option value="user.created">Usuário Criado</option>
+                    <option value="payment.confirmed">Pagamento Confirmado</option>
+                    <option value="session.started">Sessão Iniciada</option>
+                    <option value="session.ended">Sessão Encerrada</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL</label>
+                <input type="url" id="webhookUrl" placeholder="https://seu-servidor.com/webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Método HTTP</label>
+                <select id="webhookMetodo" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                    <option value="POST">POST</option>
+                    <option value="GET">GET</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Alvo (opcional)</label>
+                <select id="webhookAlvo" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                    <option value="all">Todos</option>
+                    <option value="customers">Clientes</option>
+                    <option value="non_customers">Não Clientes</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="webhookAtivo" checked class="w-4 h-4">
+                <label for="webhookAtivo" class="text-xs font-medium">Ativo</label>
+            </div>
+        </div>
+        <div class="p-3 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeWebhookModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
+            <button onclick="salvarWebhook()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Salvar Webhook</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Perfil do Usuário (padronizado para /api/profile) -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <input type="text" id="editUsername" disabled class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm opacity-70">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
+                        <input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
+                        <input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===================== CONFIGURAÇÕES GLOBAIS =====================
+    const API_URL = 'https://mstelecom-api.duckdns.org';
+    let webhooksData = [];
+
+    // Helper: obtém token e headers de autenticação
+    function getToken() {
+        return localStorage.getItem('token') || localStorage.getItem('ms_token');
+    }
+
+    function authHeaders(contentType = true) {
+        const headers = { 'Authorization': `Bearer ${getToken()}` };
+        if (contentType) headers['Content-Type'] = 'application/json';
+        return headers;
+    }
+
+    // ===================== MENU MOBILE =====================
+    function initMenuMobile() {
+        const menuToggle = document.getElementById('menuToggle');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sidebar = document.getElementById('sidebar');
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => { sidebar.classList.toggle('hidden'); menuOverlay.classList.toggle('hidden'); });
+            menuOverlay.addEventListener('click', () => { sidebar.classList.add('hidden'); menuOverlay.classList.add('hidden'); });
+        }
+    }
+
+    // ===================== WEBHOOKS (CRUD / TEST) =====================
+    async function carregarWebhooks() {
+        try {
+            const res = await fetch(`${API_URL}/api/webhooks`, { headers: authHeaders() });
+            if (res.status === 401) { window.location.href = 'login.html'; return; }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            // CORRIGIDO: resposta é um array diretamente
+            const webhooks = await res.json();
+            webhooksData = Array.isArray(webhooks) ? webhooks : [];
+            const container = document.getElementById('webhooksList');
+            if (!webhooksData.length) {
+                container.innerHTML = '<div class="p-6 text-center text-gray-500">Nenhum webhook configurado. Clique em "Novo Webhook" para adicionar.</div>';
+                return;
+            }
+            const html = webhooksData.map(w => {
+                const statusClass = w.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400';
+                const statusText = w.active ? 'Ativo' : 'Inativo';
+                return `
+                    <div class="p-5 hover:bg-gray-900/30 transition" data-webhook-id="${w.id}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-1 ${statusClass} text-[10px] font-bold rounded">${statusText}</span>
+                                    <code class="mono text-xs text-white break-all">${escapeHtml(w.name)}</code>
+                                </div>
+                                <p class="text-[10px] text-gray-500">Evento: ${escapeHtml(w.event)} | Método: ${w.method} | URL: ${w.url}</p>
+                            </div>
+                            <div class="flex gap-1">
+                                <button onclick="testarWebhook(${w.id})" class="p-1 hover:bg-gray-800 rounded-lg" title="Testar"><i data-lucide="play" class="w-3 h-3 text-gray-500"></i></button>
+                                <button onclick="excluirWebhook(${w.id})" class="p-1 hover:bg-red-500/10 rounded-lg" title="Excluir"><i data-lucide="trash-2" class="w-3 h-3 text-red-500"></i></button>
+                            </div>
+                        </div>
+                        <div class="text-[9px] text-gray-600 flex gap-3 mt-2">
+                            <span>Última execução: ${w.last_triggered_at ? new Date(w.last_triggered_at).toLocaleString() : '-'}</span>
+                            <span>Total eventos: ${w.triggered_count || 0}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.innerHTML = html;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        } catch (error) {
+            console.error('Erro ao carregar webhooks:', error);
+            document.getElementById('webhooksList').innerHTML = '<div class="p-6 text-center text-red-500">Erro ao carregar webhooks. Verifique a conexão com a API.</div>';
+        }
+    }
+
+    function openWebhookModal(webhook = null) {
+        document.getElementById('modalTitle').innerText = webhook ? 'Editar Webhook' : 'Novo Webhook';
+        document.getElementById('editId').value = webhook ? webhook.id : '';
+        document.getElementById('webhookNome').value = webhook ? webhook.name : '';
+        document.getElementById('webhookEvento').value = webhook ? webhook.event : '';
+        document.getElementById('webhookUrl').value = webhook ? webhook.url : '';
+        document.getElementById('webhookMetodo').value = webhook ? webhook.method : 'POST';
+        document.getElementById('webhookAlvo').value = webhook && webhook.target ? webhook.target : 'all';
+        document.getElementById('webhookAtivo').checked = webhook ? webhook.active : true;
+        document.getElementById('webhookModal').classList.remove('hidden');
+    }
+
+    function closeWebhookModal() {
+        document.getElementById('webhookModal').classList.add('hidden');
+        document.getElementById('editId').value = '';
+    }
+
+    async function salvarWebhook() {
+        const id = document.getElementById('editId').value;
+        const name = document.getElementById('webhookNome').value.trim();
+        const event = document.getElementById('webhookEvento').value;
+        const url = document.getElementById('webhookUrl').value.trim();
+        const method = document.getElementById('webhookMetodo').value;
+        const target = document.getElementById('webhookAlvo').value;
+        const active = document.getElementById('webhookAtivo').checked;
+
+        if (!name || !event || !url) {
+            alert('Preencha todos os campos obrigatórios (Nome, Evento, URL).');
+            return;
+        }
+
+        const payload = { name, event, url, method, target, active };
+        const methodHttp = id ? 'PUT' : 'POST';
+        const endpoint = id ? `${API_URL}/api/webhooks/${id}` : `${API_URL}/api/webhooks`;
+
+        try {
+            const res = await fetch(endpoint, {
+                method: methodHttp,
+                headers: authHeaders(),
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+            alert(id ? '✅ Webhook atualizado!' : '✅ Webhook criado!');
+            closeWebhookModal();
+            carregarWebhooks();
+        } catch (err) {
+            console.error(err);
+            alert('❌ Erro ao salvar webhook. Verifique os dados e tente novamente.');
+        }
+    }
+
+    async function testarWebhook(id) {
+        try {
+            const res = await fetch(`${API_URL}/api/webhooks/${id}/test`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            if (!res.ok) throw new Error('Falha no teste');
+            alert('✅ Webhook testado com sucesso! Verifique os logs.');
+        } catch (err) {
+            alert('❌ Erro ao testar webhook. Verifique se a URL está acessível.');
+        }
+    }
+
+    async function excluirWebhook(id) {
+        if (!confirm('Tem certeza que deseja excluir este webhook?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/webhooks/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (!res.ok) throw new Error();
+            alert('✅ Webhook deletado!');
+            carregarWebhooks();
+        } catch (err) {
+            alert('❌ Erro ao deletar webhook.');
+        }
+    }
+
+    // ===================== PERFIL DO USUÁRIO =====================
+    function carregarPerfil() {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                document.getElementById('editUsername').value = user.username || '';
+                document.getElementById('editEmail').value = user.email || '';
+                document.getElementById('userName').innerText = user.username || 'Administrador';
+            } catch(e) {}
+        }
+    }
+
+    function openModalPerfil() {
+        carregarPerfil();
+        document.getElementById('senhaAtual').value = '';
+        document.getElementById('novaSenha').value = '';
+        document.getElementById('confirmarSenha').value = '';
+        document.getElementById('modalPerfil').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeModalPerfil() {
+        document.getElementById('modalPerfil').classList.add('hidden');
+    }
+
+    async function salvarPerfil() {
+        const email = document.getElementById('editEmail').value.trim();
+        const currentPassword = document.getElementById('senhaAtual').value;
+        const newPassword = document.getElementById('novaSenha').value;
+        const confirmPassword = document.getElementById('confirmarSenha').value;
+
+        if (newPassword && newPassword !== confirmPassword) {
+            alert('As novas senhas não coincidem');
+            return;
+        }
+        if (newPassword && !currentPassword) {
+            alert('Digite a senha atual para alterar a senha');
+            return;
+        }
+
+        const payload = {};
+        if (email) payload.email = email;
+        if (newPassword) {
+            payload.current_password = currentPassword;
+            payload.new_password = newPassword;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/profile`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Perfil atualizado com sucesso!');
+                // Atualiza dados no localStorage
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                user.email = email;
+                localStorage.setItem('user', JSON.stringify(user));
+                closeModalPerfil();
+            } else {
+                alert(data.error || 'Erro ao atualizar perfil');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao conectar com o servidor.');
+        }
+    }
+
+    // ===================== LOGOUT =====================
+    async function sair() {
+        try {
+            await fetch(`${API_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+        } catch(e) {}
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        localStorage.removeItem('ms_user');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    }
+
+    // ===================== UTILIDADES =====================
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
         });
-      } catch (err) { console.error('Erro:', err); }
     }
 
-    function openModal() { document.getElementById('modalWebhook').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('modalWebhook').classList.add('hidden'); }
-
-    async function createWebhook() {
-      try {
-        const body = { name: document.getElementById('inputName').value, event: document.getElementById('inputEvent').value, url: document.getElementById('inputUrl').value, method: document.getElementById('inputMethod').value };
-        const res = await fetch(`${API_URL}/api/webhooks`, { method: 'POST', headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error('Erro ao criar');
-        closeModal(); loadWebhooks();
-      } catch (err) { alert(err.message); }
+    function copiarExemplo() {
+        const exemplo = `curl -X POST ${API_URL}/api/webhooks \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer SEU_TOKEN" \\
+  -d '{"name":"Meu Webhook","event":"payment.confirmed","url":"https://meusistema.com/webhook","method":"POST","active":true}'`;
+        navigator.clipboard.writeText(exemplo);
+        alert('Exemplo copiado!');
     }
 
-    async function deleteWebhook(id) {
-      if (!confirm('Excluir este webhook?')) return;
-      try { await fetch(`${API_URL}/api/webhooks/${id}`, { method: 'DELETE', headers }); loadWebhooks(); } catch (err) { alert('Erro'); }
-    }
+    // Filtro de busca
+    document.getElementById('searchInput')?.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('#webhooksList > div[data-webhook-id]');
+        items.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            item.style.display = text.includes(term) ? '' : 'none';
+        });
+    });
 
-    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('profileUsername').value = user.username || ''; document.getElementById('profileEmail').value = user.email || ''; }
-    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
-    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-    async function salvarPerfil() { try { const body = {}; const e = document.getElementById('profileEmail').value; const p = document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res = await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
-    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
-    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+    // Logs (placeholder)
+    document.getElementById('verLogsBtn')?.addEventListener('click', () => {
+        alert('Funcionalidade de logs em desenvolvimento. Em breve você poderá visualizar o histórico de execuções.');
+    });
 
-    loadWebhooks();
-  </script>
+    // ===================== INICIALIZAÇÃO =====================
+    document.addEventListener('DOMContentLoaded', () => {
+        initMenuMobile();
+        carregarWebhooks();
+        carregarPerfil();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+    setInterval(carregarWebhooks, 30000);
+</script>
 </body>
 </html>
