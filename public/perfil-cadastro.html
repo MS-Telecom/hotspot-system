@@ -1,234 +1,586 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Perfil de Cadastro - MS TELECOM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Perfil de Cadastro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); transition: all 0.2s ease; }
+        .glass-card:hover { border-color: rgba(59,130,246,0.5); transform: translateX(2px); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover { background: rgba(59,130,246,0.1); color: #fff; }
+        #sidebar { z-index: 100; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex">
-  <!-- Sidebar -->
-  <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
-    <div class="flex items-center gap-2 mb-8"><i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i><span class="text-lg font-bold">MS TELECOM</span></div>
-    <nav class="flex flex-col gap-1 flex-1">
-      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</a>
-      <a href="hotspots.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="router" class="w-5 h-5"></i>Hotspots</a>
-      <a href="pops.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="radio-tower" class="w-5 h-5"></i>POPs</a>
-      <a href="cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="users" class="w-5 h-5"></i>Clientes</a>
-      <a href="financeiro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="banknote" class="w-5 h-5"></i>Financeiro</a>
-      <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
-      <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
-      <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
-      <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
-      <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
-      <a href="perfil-cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="clipboard-list" class="w-5 h-5"></i>Perfil de Cadastro</a>
-    </nav>
-  </aside>
+<body class="text-gray-200">
 
-  <main class="flex-1 p-4 md:p-6 overflow-auto">
-    <header class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
-        <div>
-          <h1 class="text-2xl font-bold">Perfil de Cadastro</h1>
-          <p class="text-gray-400 text-sm">Configure quais campos serão exibidos no formulário de cadastro de clientes</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
-        <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
-      </div>
-    </header>
-
-    <!-- Busca -->
-    <div class="mb-4">
-      <input type="text" id="searchInput" placeholder="Buscar campo por nome ou identificador..." class="w-full md:w-96 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400">
-    </div>
-
-    <!-- Estado de carregamento -->
-    <div id="fieldsLoadingState" class="text-center py-12">
-      <div class="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-gray-500 mt-3">Carregando configurações...</p>
-    </div>
-
-    <!-- Container dos campos -->
-    <div id="fieldsContainer" class="space-y-3 hidden"></div>
-
-    <!-- Botões de ação -->
-    <div id="actionButtons" class="flex gap-3 mt-6 hidden">
-      <button id="saveBtn" onclick="saveSettings()" class="flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-medium"><i data-lucide="check" class="w-5 h-5"></i>Salvar Configurações</button>
-      <button onclick="window.history.back()" class="flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium"><i data-lucide="x" class="w-5 h-5"></i>Cancelar</button>
-    </div>
-  </main>
-
-  <!-- Modal Perfil -->
-  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
-      <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-      <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-      </div>
-      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button></div>
-    </div>
-  </div>
-
-  <script>
-    const API_URL = 'https://mstelecom-api.duckdns.org';
+<script>
+    // ============================================
+    // PROTEÇÃO DE ACESSO - Verifica token JWT
+    // ============================================
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) window.location.href = 'login.html';
-    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-
-    // Variáveis globais para campos
-    let allFields = [];
-
-    lucide.createIcons();
-    initMenuMobile();
-
-    // Escapar HTML para evitar XSS
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    if (!token) {
+        window.location.href = 'login.html';
     }
+</script>
 
-    // Carregar campos do servidor
-    async function loadFields() {
-      const loadingState = document.getElementById('fieldsLoadingState');
-      const container = document.getElementById('fieldsContainer');
-      const actionButtons = document.getElementById('actionButtons');
-      try {
-        loadingState.classList.remove('hidden');
-        container.classList.add('hidden');
-        actionButtons.classList.add('hidden');
+<!-- HAMBURGER MENU (Mobile) -->
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white shadow-lg">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/70 z-[90]"></div>
 
-        const res = await fetch(`${API_URL}/api/settings/fields`, { headers });
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+<div class="flex h-screen overflow-hidden">
 
-        const payload = await res.json();
-        allFields = payload.data || payload || [];
-        console.log('[Perfil Cadastro] Campos carregados:', allFields.length);
-
-        loadingState.classList.add('hidden');
-        container.classList.remove('hidden');
-        actionButtons.classList.remove('hidden');
-        renderFields(allFields);
-      } catch (error) {
-        console.error('[Perfil Cadastro] Erro ao carregar campos:', error);
-        loadingState.innerHTML = `
-          <div class="text-center py-12">
-            <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500"></i>
-            <p class="text-red-400 mt-2">Erro ao carregar configurações</p>
-            <p class="text-gray-500 text-sm mt-1">${escapeHtml(error.message)}</p>
-            <button onclick="loadFields()" class="mt-4 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm">Tentar novamente</button>
-          </div>`;
-        lucide.createIcons();
-      }
-    }
-
-    // Renderizar lista de campos com toggles
-    function renderFields(fields) {
-      const container = document.getElementById('fieldsContainer');
-      if (!fields || fields.length === 0) {
-        container.innerHTML = '<div class="text-center py-12 bg-gray-800 rounded-xl"><p class="text-gray-500">Nenhum campo encontrado</p></div>';
-        return;
-      }
-      container.innerHTML = fields.map(field => `
-        <div class="bg-gray-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 field-item" data-field-name="${escapeHtml(field.label?.toLowerCase())}" data-field-id="${escapeHtml(field.field?.toLowerCase())}">
-          <div class="flex-1">
-            <h3 class="font-bold text-sm">${escapeHtml(field.label)}</h3>
-            <p class="text-xs text-gray-500 font-mono mt-1">${escapeHtml(field.field)}</p>
-          </div>
-          <div class="flex items-center gap-6">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" class="enabled-toggle w-5 h-5 rounded accent-cyan-500 cursor-pointer" data-field="${escapeHtml(field.field)}" ${field.enabled ? 'checked' : ''}>
-              <span class="text-sm text-gray-400">Habilitado</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" class="required-toggle w-5 h-5 rounded accent-cyan-500 cursor-pointer" data-field="${escapeHtml(field.field)}" ${field.required ? 'checked' : ''}>
-              <span class="text-sm text-gray-400">Obrigatório</span>
-            </label>
-          </div>
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
         </div>
-      `).join('');
+
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs
+            </a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP
+            </a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="banknote" class="w-5 h-5"></i> Financeiro
+            </a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas
+            </a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
+            </a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+            </a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
+            </a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+            </a>
+            <a href="perfil-cadastro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            </div>
+            <div class="space-y-2 text-[10px] font-mono">
+                <div class="flex justify-between text-gray-500">
+                    <span>Admin Master</span>
+                    <span class="text-cyan-400">177.34.21.109</span>
+                </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>VPS Node</span>
+                    <span class="text-gray-600">40.233.118.238</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 sm:px-8 py-4 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-center">
+            <div class="relative w-full sm:w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar campo por nome ou identificador..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition focus:bg-gray-900">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTEÚDO -->
+        <div class="p-4 sm:p-8 space-y-6 sm:space-y-8">
+
+            <!-- Header da Página -->
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Perfil de Cadastro</h1>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">Configure quais campos serão exibidos no formulário de cadastro de clientes</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <i data-lucide="loader-circle" class="w-8 h-8 animate-spin mx-auto text-blue-500"></i>
+                <p class="text-gray-500 mt-2">Carregando configurações...</p>
+            </div>
+
+            <!-- Campos Container -->
+            <div id="camposContainer" class="space-y-3">
+                <!-- Carregado via JavaScript -->
+            </div>
+
+            <!-- Botões -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                <button id="salvarBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2">
+                    <i data-lucide="check" class="w-5 h-5"></i> Salvar Configurações
+                </button>
+                <button onclick="window.history.back()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                    <i data-lucide="x" class="w-5 h-5"></i> Cancelar
+                </button>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+    // ============================================
+    // CONFIGURAÇÕES GLOBAIS
+    // ============================================
+    const API_URL = 'https://mstelecom-api.duckdns.org';  // URL base do backend oficial
+    let allCampos = []; // Armazena todos os campos carregados
+
+    // ============================================
+    // MENU MOBILE
+    // ============================================
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            menuOverlay.classList.toggle('hidden');
+        });
     }
 
-    // Busca/filtro local de campos
-    document.getElementById('searchInput').addEventListener('input', function() {
-      const term = this.value.toLowerCase().trim();
-      if (!term) { renderFields(allFields); return; }
-      const filtered = allFields.filter(f => (f.label||'').toLowerCase().includes(term) || (f.field||'').toLowerCase().includes(term));
-      if (filtered.length === 0) {
-        document.getElementById('fieldsContainer').innerHTML = `
-          <div class="text-center py-12 bg-gray-800 rounded-xl">
-            <p class="text-gray-500">Nenhum campo encontrado para "${escapeHtml(this.value)}"</p>
-            <button onclick="document.getElementById('searchInput').value=''; renderFields(allFields);" class="mt-3 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm">Limpar busca</button>
-          </div>`;
-      } else {
-        renderFields(filtered);
-      }
-    });
-
-    // Salvar configurações de campos
-    async function saveSettings() {
-      const saveBtn = document.getElementById('saveBtn');
-      const originalHtml = saveBtn.innerHTML;
-      try {
-        saveBtn.innerHTML = '<div class="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div> Salvando...';
-        saveBtn.disabled = true;
-
-        const fields = [];
-        document.querySelectorAll('.enabled-toggle').forEach(toggle => {
-          const fieldName = toggle.dataset.field;
-          const enabled = toggle.checked;
-          const requiredToggle = document.querySelector(`.required-toggle[data-field="${fieldName}"]`);
-          const required = requiredToggle ? requiredToggle.checked : false;
-          const previousField = allFields.find(f => f.field === fieldName) || {};
-          fields.push({
-            field: fieldName,
-            label: previousField.label || fieldName,
-            enabled,
-            required,
-            sort_order: previousField.sort_order || 0
-          });
+    if (menuOverlay) {
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
+            menuOverlay.classList.add('hidden');
         });
+    }
 
-        const res = await fetch(`${API_URL}/api/settings/fields`, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(fields)
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
         });
+    }
 
-        if (res.ok) {
-          alert('Configurações salvas com sucesso!');
-          await loadFields();
-        } else {
-          const errorText = await res.text();
-          alert(`Erro ao salvar: ${res.status} - ${errorText}`);
+    // ============================================
+    // CARREGAR CONFIGURAÇÕES DE CAMPOS (GET /api/settings/fields)
+    // CORRIGIDO: endpoint antigo /api/configuracoes/campos -> /api/settings/fields
+    // Resposta esperada: array de objetos com { field, label, enabled, required }
+    // ============================================
+    async function carregarCampos() {
+        try {
+            const loadingState = document.getElementById('loadingState');
+            const container = document.getElementById('camposContainer');
+            
+            loadingState.classList.remove('hidden');
+            container.classList.add('hidden');
+            
+            const res = await fetch(`${API_URL}/api/settings/fields`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+            }
+            
+            // O novo backend retorna o array diretamente (ou pode estar dentro de { data })
+            const data = await res.json();
+            allCampos = Array.isArray(data) ? data : (data.data || []);
+            console.log('✅ Campos carregados:', allCampos);
+            
+            loadingState.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            renderizarCampos(allCampos);
+        } catch (error) {
+            console.error('❌ Erro ao carregar campos:', error);
+            document.getElementById('loadingState').innerHTML = `
+                <div class="text-center py-12">
+                    <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500"></i>
+                    <p class="text-red-400 mt-2">Erro ao carregar configurações</p>
+                    <p class="text-gray-500 text-sm mt-1">${escapeHtml(error.message)}</p>
+                    <button onclick="carregarCampos()" class="mt-4 px-4 py-2 bg-blue-600 rounded-lg text-sm">Tentar novamente</button>
+                </div>
+            `;
+            lucide.createIcons();
         }
-      } catch (error) {
-        console.error('[Perfil Cadastro] Erro ao salvar:', error);
-        alert('Erro ao salvar configurações. Verifique sua conexão.');
-      } finally {
-        saveBtn.innerHTML = originalHtml;
-        saveBtn.disabled = false;
-        lucide.createIcons();
-      }
     }
 
-    // Funções padrão admin: perfil e logout
-    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user')||'{}'); document.getElementById('profileUsername').value=user.username||''; document.getElementById('profileEmail').value=user.email||''; }
-    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
-    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-    async function salvarPerfil() { try { const body={}; const e=document.getElementById('profileEmail').value; const p=document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res=await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
-    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
-    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+    // Renderiza a lista de campos com toggles (habilitado/obrigatório)
+    function renderizarCampos(campos) {
+        const container = document.getElementById('camposContainer');
+        
+        if (!campos || campos.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 glass-card rounded-2xl">
+                    <i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-500"></i>
+                    <p class="text-gray-400 mt-2">Nenhum campo encontrado</p>
+                </div>
+            `;
+            lucide.createIcons();
+            return;
+        }
+        
+        container.innerHTML = campos.map(campo => `
+            <div class="glass-card rounded-2xl p-4 sm:p-6 border border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 campo-item" data-campo-nome="${campo.label.toLowerCase()}" data-campo-id="${campo.field.toLowerCase()}">
+                <div class="flex-1">
+                    <h3 class="font-bold text-white text-sm sm:text-base">${escapeHtml(campo.label)}</h3>
+                    <p class="text-xs sm:text-sm text-gray-500 font-mono mt-1">${escapeHtml(campo.field)}</p>
+                </div>
+                <div class="flex items-center gap-4 sm:gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition group">
+                        <input type="checkbox" class="habilitado-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.field}" ${campo.enabled ? 'checked' : ''}>
+                        <span class="text-xs sm:text-sm text-gray-400 group-hover:text-blue-400 transition">Habilitado</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition group">
+                        <input type="checkbox" class="obrigatorio-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.field}" ${campo.required ? 'checked' : ''}>
+                        <span class="text-xs sm:text-sm text-gray-400 group-hover:text-blue-400 transition">Obrigatório</span>
+                    </label>
+                </div>
+            </div>
+        `).join('');
+        
+        lucide.createIcons();
+    }
 
-    // Inicialização
-    loadFields();
-  </script>
+    // ============================================
+    // FUNÇÃO DE BUSCA (filtro local)
+    // ============================================
+    function buscarCampos(termo) {
+        if (!termo || termo.trim() === '') {
+            renderizarCampos(allCampos);
+            return;
+        }
+        
+        const termoLower = termo.toLowerCase().trim();
+        const camposFiltrados = allCampos.filter(campo => 
+            campo.label.toLowerCase().includes(termoLower) ||
+            campo.field.toLowerCase().includes(termoLower)
+        );
+        
+        renderizarCampos(camposFiltrados);
+        
+        // Feedback visual da busca
+        const container = document.getElementById('camposContainer');
+        if (camposFiltrados.length === 0 && allCampos.length > 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 glass-card rounded-2xl">
+                    <i data-lucide="search-x" class="w-12 h-12 mx-auto text-gray-500"></i>
+                    <p class="text-gray-400 mt-2">Nenhum campo encontrado para "${escapeHtml(termo)}"</p>
+                    <button onclick="document.getElementById('searchInput').value=''; buscarCampos('');" class="mt-4 px-4 py-2 bg-blue-600 rounded-lg text-sm">Limpar busca</button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+    }
+
+    // ============================================
+    // SALVAR CONFIGURAÇÕES (PUT /api/settings/fields)
+    // CORRIGIDO: método POST antigo -> PUT, payload adaptado para { field, label, enabled, required }
+    // ============================================
+    async function salvarConfiguracoes() {
+        const salvarBtn = document.getElementById('salvarBtn');
+        const originalText = salvarBtn.innerHTML;
+        
+        try {
+            // Mostrar loading
+            salvarBtn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 animate-spin"></i> Salvando...';
+            salvarBtn.disabled = true;
+            lucide.createIcons();
+            
+            // Monta o array de campos conforme o padrão do novo backend
+            const fieldsToSave = [];
+            document.querySelectorAll('.habilitado-toggle').forEach(toggle => {
+                const fieldName = toggle.dataset.campo;
+                const enabled = toggle.checked;
+                const requiredToggle = document.querySelector(`.obrigatorio-toggle[data-campo="${fieldName}"]`);
+                const required = requiredToggle ? requiredToggle.checked : false;
+                
+                // Recupera o label original do allCampos (preserva o nome de exibição)
+                const originalField = allCampos.find(f => f.field === fieldName);
+                const label = originalField ? originalField.label : fieldName;
+                
+                fieldsToSave.push({
+                    field: fieldName,
+                    label: label,
+                    enabled: enabled,
+                    required: required
+                });
+            });
+            
+            console.log('📤 Salvando configurações (padrão novo):', fieldsToSave);
+            
+            const res = await fetch(`${API_URL}/api/settings/fields`, {
+                method: 'PUT',   // CORRIGIDO: usar PUT para atualização completa (ou POST conforme backend, mas PUT é mais RESTful)
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(fieldsToSave)
+            });
+            
+            if (res.ok) {
+                alert('✅ Configurações salvas com sucesso!');
+                console.log('✅ Configurações salvas');
+                await carregarCampos(); // Recarregar para garantir consistência
+            } else {
+                const errorText = await res.text();
+                console.error('❌ Erro:', errorText);
+                alert(`❌ Erro ao salvar configurações: ${res.status} - ${errorText}`);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao salvar:', error);
+            alert('❌ Erro ao salvar configurações. Verifique sua conexão.');
+        } finally {
+            salvarBtn.innerHTML = originalText;
+            salvarBtn.disabled = false;
+            lucide.createIcons();
+        }
+    }
+
+    // ============================================
+    // FUNÇÕES DE PERFIL (MEU PERFIL)
+    // CORRIGIDO: endpoint antigo /api/atualizar-perfil -> /api/profile (PUT)
+    // ============================================
+    function carregarPerfil() {
+        const userStr = localStorage.getItem('user') || localStorage.getItem('ms_user');
+        if (userStr) {
+            try {
+                const user = typeof userStr === 'string' ? JSON.parse(userStr) : userStr;
+                if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || user.name || '';
+                if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+                if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || user.name || 'Administrador';
+            } catch(e) {
+                console.error('Erro ao parsear user:', e);
+            }
+        }
+    }
+    
+    function openModalPerfil() {
+        carregarPerfil();
+        const modal = document.getElementById('modalPerfil');
+        if (modal) {
+            modal.classList.remove('hidden');
+            // Limpar campos de senha
+            const senhaAtual = document.getElementById('senhaAtual');
+            const novaSenha = document.getElementById('novaSenha');
+            const confirmarSenha = document.getElementById('confirmarSenha');
+            if (senhaAtual) senhaAtual.value = '';
+            if (novaSenha) novaSenha.value = '';
+            if (confirmarSenha) confirmarSenha.value = '';
+            lucide.createIcons();
+        }
+    }
+    
+    function closeModalPerfil() {
+        const modal = document.getElementById('modalPerfil');
+        if (modal) modal.classList.add('hidden');
+    }
+    
+    async function salvarPerfil() {
+        const tokenAtual = localStorage.getItem('token') || localStorage.getItem('ms_token');
+        const username = document.getElementById('editUsername')?.value;
+        const email = document.getElementById('editEmail')?.value;
+        const senhaAtual = document.getElementById('senhaAtual')?.value;
+        const novaSenha = document.getElementById('novaSenha')?.value;
+        const confirmarSenha = document.getElementById('confirmarSenha')?.value;
+        
+        if (novaSenha && novaSenha !== confirmarSenha) {
+            alert('As novas senhas não coincidem');
+            return;
+        }
+        
+        if (novaSenha && !senhaAtual) {
+            alert('Digite a senha atual para alterar a senha');
+            return;
+        }
+        
+        if (!tokenAtual) {
+            alert('Você precisa estar logado para alterar o perfil');
+            return;
+        }
+        
+        try {
+            // CORRIGIDO: endpoint /api/profile (antes /api/atualizar-perfil)
+            const res = await fetch(`${API_URL}/api/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenAtual}`
+                },
+                body: JSON.stringify({ 
+                    username, 
+                    email, 
+                    current_password: senhaAtual || null,  // campo em inglês conforme padrão
+                    new_password: novaSenha || null 
+                })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert('Perfil atualizado com sucesso!');
+                const user = { username, email };
+                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('ms_user', JSON.stringify(user));
+                if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
+                closeModalPerfil();
+            } else {
+                alert(data.error || data.message || 'Erro ao atualizar perfil');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao atualizar perfil. Verifique sua conexão.');
+        }
+    }
+    
+    // ============================================
+    // FUNÇÃO DE LOGOUT
+    // CORRIGIDO: endpoint /api/auth/logout (antes /api/logout)
+    // ============================================
+    async function sair() {
+        const tokenAtual = localStorage.getItem('token') || localStorage.getItem('ms_token');
+        const username = localStorage.getItem('ms_user') || '';
+        
+        try {
+            if (tokenAtual) {
+                await fetch(`${API_URL}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tokenAtual}`
+                    },
+                    body: JSON.stringify({ username })
+                });
+            }
+        } catch(e) {
+            console.error('Erro no logout:', e);
+        }
+        
+        // Limpar localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        localStorage.removeItem('ms_user');
+        localStorage.removeItem('user');
+        
+        // Redirecionar para login
+        window.location.href = 'login.html';
+    }
+    
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    document.getElementById('salvarBtn')?.addEventListener('click', salvarConfiguracoes);
+    
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            buscarCampos(e.target.value);
+        });
+    }
+    
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    carregarCampos();
+    carregarPerfil();
+    lucide.createIcons();
+</script>
+
+<!-- MODAL: MEU PERFIL -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
+                        <input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
+                        <input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/50 rounded-lg text-sm font-bold transition">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
