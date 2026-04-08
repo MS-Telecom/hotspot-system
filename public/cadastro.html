@@ -8,28 +8,28 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { background: linear-gradient(135deg, #0a0c15 0%, #1a1d2e 100%); }
-        .glass-effect { background: rgba(15, 17, 25, 0.8); backdrop-filter: blur(10px); }
+        .glass-effect { background: rgba(15, 17, 25, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
     </style>
 </head>
 <body class="text-white min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold mb-2">MS Telecom</h1>
-            <p class="text-gray-400">Crie sua conta para gerenciar hotspots</p>
+            <p class="text-gray-400">Crie sua conta de administrador</p>
         </div>
 
         <div class="glass-effect rounded-3xl border border-gray-700 p-6 md:p-8 shadow-2xl">
             <h2 class="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
                 <i data-lucide="user-plus" class="w-5 h-5 text-blue-500"></i>
-                Criar Conta
+                Criar Conta Administrativa
             </h2>
 
             <form id="cadastroForm" class="space-y-4 md:space-y-5">
                 <div>
-                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Nome Completo</label>
-                    <input type="text" id="nome" placeholder="Seu nome completo" 
+                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Nome de Usuário</label>
+                    <input type="text" id="username" placeholder="Seu nome de usuário" 
                            class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
-                    <p id="erroNome" class="text-xs text-red-500 mt-1 hidden"></p>
+                    <p id="erroUsername" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
                 <div>
@@ -61,17 +61,6 @@
                     <p id="erroConfirmaSenha" class="text-xs text-red-500 mt-1 hidden"></p>
                 </div>
 
-                <div>
-                    <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Tipo de Conta</label>
-                    <select id="tipoConta" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
-                        <option value="">Selecione um tipo</option>
-                        <option value="pessoal">Pessoal (até 5 hotspots)</option>
-                        <option value="profissional">Profissional (até 20 hotspots)</option>
-                        <option value="empresa">Empresa (ilimitado)</option>
-                    </select>
-                    <p id="erroTipoConta" class="text-xs text-red-500 mt-1 hidden"></p>
-                </div>
-
                 <div class="flex items-start gap-3">
                     <input type="checkbox" id="termos" class="mt-1 w-4 h-4 cursor-pointer" required>
                     <label for="termos" class="text-xs md:text-sm text-gray-400 cursor-pointer">
@@ -81,7 +70,7 @@
                 </div>
 
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-xl px-4 py-3 font-bold text-sm md:text-base transition mt-6">
-                    Criar Conta
+                    Criar Conta de Administrador
                 </button>
             </form>
 
@@ -95,7 +84,7 @@
         <div class="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
             <p class="text-xs md:text-sm text-blue-400 flex items-start gap-2">
                 <i data-lucide="info" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
-                <span>Após cadastrar, você poderá criar e gerenciar seus hotspots WiFi.</span>
+                <span>Esta conta terá privilégios de administrador para gerenciar hotspots, clientes e configurações.</span>
             </p>
         </div>
     </div>
@@ -108,7 +97,6 @@
             input.type = input.type === 'password' ? 'text' : 'password';
         }
 
-        // Medidor de força da senha
         document.getElementById('senha').addEventListener('input', function() {
             const senha = this.value;
             const forcaSenhaBar = document.getElementById('forcaSenhaBar');
@@ -137,24 +125,21 @@
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
-        // CORRIGIDO: Envio para o endpoint correto /api/auth/register
         document.getElementById('cadastroForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const nome = document.getElementById('nome').value.trim();
+            const username = document.getElementById('username').value.trim();
             const email = document.getElementById('email').value.trim();
             const senha = document.getElementById('senha').value;
             const confirmaSenha = document.getElementById('confirmaSenha').value;
-            const tipoConta = document.getElementById('tipoConta').value;
 
-            // Limpar mensagens de erro
             document.querySelectorAll('[id^="erro"]').forEach(el => el.classList.add('hidden'));
 
             let valido = true;
 
-            if (!nome) {
-                document.getElementById('erroNome').textContent = 'Nome é obrigatório';
-                document.getElementById('erroNome').classList.remove('hidden');
+            if (!username) {
+                document.getElementById('erroUsername').textContent = 'Nome de usuário é obrigatório';
+                document.getElementById('erroUsername').classList.remove('hidden');
                 valido = false;
             }
 
@@ -176,25 +161,18 @@
                 valido = false;
             }
 
-            if (!tipoConta) {
-                document.getElementById('erroTipoConta').textContent = 'Selecione um tipo de conta';
-                document.getElementById('erroTipoConta').classList.remove('hidden');
-                valido = false;
-            }
-
             if (!valido) return;
 
-            // CORRIGIDO: Payload com campos em inglês (name, email, password, account_type)
+            // CORRIGIDO: endpoint /api/admins, payload com username, email, password, role
             const payload = {
-                name: nome,
+                username: username,
                 email: email,
                 password: senha,
-                account_type: tipoConta   // "pessoal", "profissional", "empresa"
+                role: "admin"
             };
 
             try {
-                // CORRIGIDO: endpoint /api/auth/register
-                const res = await fetch(`${API_URL}/api/auth/register`, {
+                const res = await fetch(`${API_URL}/api/admins`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -202,8 +180,8 @@
 
                 const data = await res.json();
 
-                // O backend pode retornar { success: true, user: {...} } ou diretamente { id, ... }
-                if (res.ok && (data.success === true || data.id)) {
+                // Sucesso se retornar status 201 ou 200 e um objeto com 'id' ou 'success'
+                if (res.ok && (data.id || data.success === true)) {
                     alert('Cadastro realizado com sucesso! Redirecionando para login...');
                     window.location.href = 'login.html';
                 } else {
