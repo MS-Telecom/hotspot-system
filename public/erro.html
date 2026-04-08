@@ -1,37 +1,27 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Erro - MS TELECOM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>body{font-family:'Inter',sans-serif;} .gradient-bg{background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro - MS TELECOM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0a0c15 0%,#020617 100%);}</style>
 </head>
-<body class="gradient-bg min-h-screen text-white flex items-center justify-center">
-
-  <div class="max-w-md w-full px-4 text-center">
-    <div class="bg-white/10 backdrop-blur rounded-xl p-8">
-      <div class="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
-        <i data-lucide="x-circle" class="w-12 h-12 text-red-400"></i>
-      </div>
-      <h1 class="text-2xl font-bold mb-2">Ocorreu um Erro</h1>
-      <p id="errorMessage" class="text-gray-300 mb-6">Não foi possível processar sua solicitação. Tente novamente.</p>
-
-      <div class="flex flex-col gap-3">
-        <a href="portal.html" class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-lg font-semibold transition">Tentar Novamente</a>
-        <a href="index.html" class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold transition">Página Inicial</a>
-      </div>
+<body class="text-white min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full px-4 text-center">
+        <div class="bg-white/10 backdrop-blur rounded-2xl p-8">
+            <div class="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6"><i data-lucide="x-circle" class="w-12 h-12 text-red-400"></i></div>
+            <h1 class="text-2xl font-bold">Ocorreu um Erro</h1>
+            <p id="errorMessage" class="text-gray-300 mt-2">Não foi possível processar sua solicitação. Tente novamente.</p>
+            <div class="flex flex-col gap-3 mt-6"><a href="portal.html" class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-lg font-semibold transition">Tentar Novamente</a><a href="index.html" class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold transition">Página Inicial</a></div>
+        </div>
     </div>
-
-    <p class="mt-6 text-gray-500 text-sm">&copy; 2026 MS TELECOM</p>
-  </div>
-
-  <script>
-    lucide.createIcons();
-    const urlParams = new URLSearchParams(window.location.search);
-    const msg = urlParams.get('msg');
-    if (msg) document.getElementById('errorMessage').textContent = decodeURIComponent(msg);
-  </script>
+    <script>
+        lucide.createIcons();
+        const msg = new URLSearchParams(window.location.search).get('msg');
+        if(msg) document.getElementById('errorMessage').innerText = decodeURIComponent(msg);
+    </script>
 </body>
 </html>
