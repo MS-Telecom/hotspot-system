@@ -15,7 +15,6 @@
         .log-entry { transition: all 0.15s ease; }
         .log-entry:hover { background: rgba(59,130,246,0.05); }
         #sidebar { z-index: 100; transition: transform 0.3s ease; }
-        #sidebarOverlay { z-index: 99; }
         #menuToggle { z-index: 101; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
@@ -31,11 +30,9 @@
 <body class="text-gray-200">
 
 <script>
-    // 🔒 PROTEÇÃO DE ACESSO - VERIFICAÇÃO MÚLTIPLA
+    // 🔒 PROTEÇÃO DE ACESSO
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) {
-        window.location.href = 'login.html';
-    }
+    if (!token) window.location.href = 'login.html';
 </script>
 
 <!-- HAMBURGER MENU (Mobile) -->
@@ -46,7 +43,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR - Menu Lateral Completo -->
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all duration-300 border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -62,17 +59,17 @@
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
             <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
-            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
-            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots</a>
-            <a href="pops.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="radio-tower" class="w-5 h-5"></i> POPs</a>
-            <a href="cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes</a>
-            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
-            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
-            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
-            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
-            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs</a>
-            <a href="logs-auditoria.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
         </nav>
 
         <div class="p-4 border-t border-gray-800 bg-black/30">
@@ -162,51 +159,82 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Data Início</label>
-                        <input type="date" id="filtroDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-400">
+                        <input type="date" id="filtroDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Data Fim</label>
-                        <input type="date" id="filtroDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-400">
+                        <input type="date" id="filtroDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                     </div>
-                    <div class="flex items-end gap-2">
-                        <button id="aplicarFiltros" class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-medium">Filtrar</button>
-                        <button id="limparFiltros" class="w-full bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm font-medium">Limpar</button>
+                    <div class="flex gap-2">
+                        <button id="aplicarFiltros" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-xl text-sm font-medium transition flex-1">Filtrar</button>
+                        <button id="limparFiltros" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-xl text-sm font-medium transition">Limpar</button>
                     </div>
                 </div>
             </div>
 
+            <!-- Estatísticas Rápidas -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 stats-grid">
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center">
+                    <i data-lucide="log-in" class="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mx-auto mb-1 md:mb-2"></i>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Logins Hoje</p>
+                    <p id="statsLogins" class="text-lg md:text-xl font-bold text-white">0</p>
+                </div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 md:w-5 md:h-5 text-red-500 mx-auto mb-1 md:mb-2"></i>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Erros (24h)</p>
+                    <p id="statsErros" class="text-lg md:text-xl font-bold text-red-500">0</p>
+                </div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center">
+                    <i data-lucide="edit" class="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mx-auto mb-1 md:mb-2"></i>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Alterações</p>
+                    <p id="statsAlteracoes" class="text-lg md:text-xl font-bold text-white">0</p>
+                </div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center">
+                    <i data-lucide="users" class="w-4 h-4 md:w-5 md:h-5 text-blue-500 mx-auto mb-1 md:mb-2"></i>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Usuários Ativos</p>
+                    <p id="statsUsuarios" class="text-lg md:text-xl font-bold text-white">0</p>
+                </div>
+            </div>
+
             <!-- Tabela de Logs -->
-            <div class="glass-card rounded-2xl overflow-hidden">
-                <div class="table-responsive">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-gray-900/50 border-b border-gray-800">
-                                <th class="px-4 md:px-6 py-3 text-xs text-gray-400 uppercase font-bold tracking-wider">Usuário</th>
-                                <th class="px-4 md:px-6 py-3 text-xs text-gray-400 uppercase font-bold tracking-wider">Ação</th>
-                                <th class="px-4 md:px-6 py-3 text-xs text-gray-400 uppercase font-bold tracking-wider whitespace-nowrap">Data/Hora</th>
-                                <th class="px-4 md:px-6 py-3 text-xs text-gray-400 uppercase font-bold tracking-wider">Endereço IP</th>
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gray-900/30">
+                    <h3 class="font-bold text-white text-sm md:text-base">Histórico de Ações</h3>
+                    <div class="flex gap-3 md:gap-4 text-[9px] md:text-[10px] text-gray-500">
+                        <span>Total: <span id="totalRegistros">0</span> registros</span>
+                        <span>Últimas 24h: <span id="ultimas24h">0</span></span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto table-responsive">
+                    <table class="w-full min-w-[800px]">
+                        <thead class="bg-gray-900/50 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-4 md:px-6 py-3 text-left">Usuário</th>
+                                <th class="px-4 md:px-6 py-3 text-left">Objeto / Ação</th>
+                                <th class="px-4 md:px-6 py-3 text-left">Data/Hora</th>
+                                <th class="px-4 md:px-6 py-3 text-left">IP</th>
                             </tr>
                         </thead>
                         <tbody id="logsTable" class="divide-y divide-gray-800/50">
-                            <!-- Indicador de Carregamento -->
                             <tr>
-                                <td colspan="4" class="text-center py-10">
-                                    <div id="loadingIndicator" class="flex justify-center items-center">
-                                        <div class="loading-spinner w-6 h-6 border-2 border-transparent border-t-blue-500 border-r-blue-500 rounded-full"></div>
-                                        <span class="ml-3 text-gray-400">Carregando logs...</span>
+                                <td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <div class="loading-spinner mb-2"><i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i></div>
+                                        <p>Carregando logs de auditoria...</p>
                                     </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+
                 <!-- Paginação -->
-                <div class="p-4 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-400 bg-gray-900/50 border-t border-gray-800">
-                    <p>Mostrando <span id="mostrandoInicio" class="font-bold">0</span> a <span id="mostrandoFim" class="font-bold">0</span> de <span id="totalMostrando" class="font-bold">0</span> registros</p>
-                    <div class="flex items-center gap-2 mt-3 sm:mt-0">
-                        <button id="prevPageBtn" class="px-3 py-1 bg-gray-700 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                        <span id="pageInfo" class="text-xs font-mono">Página 1 de 1</span>
-                        <button id="nextPageBtn" class="px-3 py-1 bg-gray-700 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoInicio">0</span> - <span id="mostrandoFim">0</span> de <span id="totalMostrando">0</span> registros</p>
+                    <div class="flex gap-2">
+                        <button id="prevPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button>
+                        <span id="pageInfo" class="text-xs text-gray-400 px-2 py-1">Página 1</span>
+                        <button id="nextPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Próximo</button>
                     </div>
                 </div>
             </div>
@@ -214,385 +242,411 @@
     </main>
 </div>
 
-<!-- Modal de Perfil -->
-<div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[110]">
-    <div class="glass-card rounded-2xl p-6 md:p-8 w-full max-w-md m-4">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold">Meu Perfil</h3>
-            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-700 rounded-full transition">
-                <i data-lucide="x" class="w-5 h-5"></i>
+<!-- MODAL: MEU PERFIL -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
             </button>
         </div>
-        <div class="space-y-4">
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Usuário</label>
-                <input id="editUsername" type="text" disabled class="w-full bg-gray-900/80 border border-gray-700 rounded-xl px-4 py-2 text-sm text-gray-300">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">E-mail</label>
-                <input id="editEmail" type="email" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
             </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Senha Atual</label>
-                <input id="senhaAtual" type="password" placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nova Senha</label>
-                <input id="novaSenha" type="password" placeholder="Deixe em branco para não alterar" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Confirmar Nova Senha</label>
-                <input id="confirmarSenha" type="password" placeholder="Repita a nova senha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
+                        <input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
+                        <input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="flex gap-3 mt-8">
-            <button onclick="salvarPerfil()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-medium transition">Salvar Alterações</button>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-lg text-sm font-bold transition">Salvar Alterações</button>
         </div>
     </div>
 </div>
 
 <script>
-// ============================================
-// CONFIGURAÇÕES GLOBAIS E INICIAIS
-// ============================================
-const API_URL = 'https://mstelecom-api.duckdns.org';
+    // ============================================
+    // CONFIGURAÇÕES GLOBAIS E HELPER FUNCTIONS
+    // ============================================
+    const API_URL = 'https://mstelecom-api.duckdns.org';
 
-// Variáveis de estado da paginação e filtros
-let currentPage = 1;
-const itemsPerPage = 15;
-let logsData = [];
-let currentFilters = { usuario: '', tipo: '', data_inicio: '', data_fim: '', search: '' };
+    // Obter token de autenticação
+    function getAuthToken() {
+        return localStorage.getItem('token') || localStorage.getItem('ms_token');
+    }
 
-// ============================================
-// CONTROLE DO MENU MOBILE
-// ============================================
-function initMenuMobile() {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const menuOverlay = document.getElementById('menuOverlay');
+    // Headers padrão para requisições autenticadas
+    function authHeaders(contentTypeJson = true) {
+        const headers = { 'Authorization': `Bearer ${getAuthToken()}` };
+        if (contentTypeJson) headers['Content-Type'] = 'application/json';
+        return headers;
+    }
 
-    menuToggle?.addEventListener('click', () => {
-        sidebar?.classList.toggle('hidden');
-        menuOverlay?.classList.toggle('hidden');
-    });
-    menuOverlay?.addEventListener('click', () => {
-        sidebar?.classList.add('hidden');
-        menuOverlay?.classList.add('hidden');
-    });
-}
-
-// ============================================
-// CARREGAMENTO E RENDERIZAÇÃO DE LOGS
-// ============================================
-async function carregarLogs() {
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    if (loadingIndicator) loadingIndicator.parentElement.parentElement.classList.remove('hidden');
-
-    try {
-        const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-        if (!token) {
-            window.location.href = 'login.html';
-            return;
-        }
-
-        const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-        
-        const params = new URLSearchParams();
-        if (currentFilters.usuario) params.append('usuario', currentFilters.usuario);
-        if (currentFilters.tipo) params.append('tipo', currentFilters.tipo);
-        if (currentFilters.data_inicio) params.append('data_inicio', currentFilters.data_inicio);
-        if (currentFilters.data_fim) params.append('data_fim', currentFilters.data_fim);
-        if (currentFilters.search) params.append('search', currentFilters.search);
-
-        const res = await fetch(`${API_URL}/api/logs/audit?${params.toString()}`, { headers });
-        
+    // Processa resposta: se a resposta tiver a propriedade 'data', retorna data, senão retorna o corpo inteiro
+    async function handleResponse(res) {
         if (!res.ok) {
             if (res.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('ms_token');
                 window.location.href = 'login.html';
+                throw new Error('Não autorizado');
             }
-            throw new Error(`Erro na API: ${res.statusText}`);
+            throw new Error(`Erro HTTP ${res.status}`);
         }
-        
-        const data = await res.json();
-        logsData = data.logs || [];
-
-    } catch (error) {
-        console.error('Erro ao carregar logs de auditoria:', error);
-        logsData = [];
+        const json = await res.json();
+        // Padrão: { success: true, data: [...] } ou array diretamente
+        return json.data !== undefined ? json.data : json;
     }
-    
-    if (loadingIndicator) loadingIndicator.parentElement.parentElement.classList.add('hidden');
-    renderizarLogs();
-}
 
-function renderizarLogs() {
-    const start = (currentPage - 1) * itemsPerPage;
-    const paginados = logsData.slice(start, start + itemsPerPage);
-    const totalItems = logsData.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    
-    document.getElementById('mostrandoInicio').innerText = totalItems === 0 ? 0 : start + 1;
-    document.getElementById('mostrandoFim').innerText = Math.min(start + itemsPerPage, totalItems);
-    document.getElementById('totalMostrando').innerText = totalItems;
-    document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages || 1}`;
-    
-    document.getElementById('prevPageBtn').disabled = currentPage === 1;
-    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
-    
-    const tbody = document.getElementById('logsTable');
-    const loadingRow = document.getElementById('loadingIndicator')?.parentElement.parentElement;
+    // ============================================
+    // CONTROLE DO MENU MOBILE
+    // ============================================
+    function initMenuMobile() {
+        const menuToggle = document.getElementById('menuToggle');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sidebar = document.getElementById('sidebar');
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                menuOverlay.classList.toggle('hidden');
+                document.body.style.overflow = sidebar.classList.contains('hidden') ? '' : 'hidden';
+            });
+            menuOverlay.addEventListener('click', () => {
+                sidebar.classList.add('hidden');
+                menuOverlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
+        }
+    }
 
-    if (paginados.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500">
-                    <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i>
-                    <p>Nenhum log encontrado</p>
-                    <p class="text-xs mt-1">Tente ajustar os filtros de busca</p>
-                </td>
-            </tr>
-        `;
-    } else {
+    // ============================================
+    // LOGS DE AUDITORIA - CORRIGIDO: endpoint /api/audit-logs
+    // ============================================
+    let logsData = [];
+    let currentPage = 1;
+    let currentFilters = { usuario: '', tipo: '', data_inicio: '', data_fim: '', search: '' };
+    const itemsPerPage = 15;
+    let isLoading = false;
+
+    async function carregarLogs() {
+        if (isLoading) return;
+        isLoading = true;
+        mostrarLoading(true);
+
+        try {
+            // Construir query string com os filtros
+            const params = new URLSearchParams();
+            if (currentFilters.usuario) params.append('user', currentFilters.usuario);
+            if (currentFilters.tipo) params.append('action', currentFilters.tipo);
+            if (currentFilters.data_inicio) params.append('start_date', currentFilters.data_inicio);
+            if (currentFilters.data_fim) params.append('end_date', currentFilters.data_fim);
+            if (currentFilters.search) params.append('search', currentFilters.search);
+
+            const url = `${API_URL}/api/audit-logs${params.toString() ? '?' + params.toString() : ''}`;
+            // CORRIGIDO: endpoint antigo /api/logs/audit ou /api/logs-auditoria agora é /api/audit-logs
+            const data = await handleResponse(await fetch(url, { headers: authHeaders() }));
+            logsData = Array.isArray(data) ? data : (data.logs || []);
+            
+            aplicarBuscaLocal(); // reaplica busca textual (já feita pelo backend, mas redundante por segurança)
+            atualizarEstatisticas();
+            renderizarLogs();
+        } catch (error) {
+            console.error('Erro ao carregar logs:', error);
+            logsData = [];
+            atualizarEstatisticas();
+            renderizarLogs();
+        } finally {
+            isLoading = false;
+            mostrarLoading(false);
+        }
+    }
+
+    function mostrarLoading(show) {
+        const tbody = document.getElementById('logsTable');
+        if (show) {
+            tbody.innerHTML = `<tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500"><div class="flex flex-col items-center"><div class="loading-spinner mb-2"><i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i></div><p>Carregando logs...</p></div></td></tr>`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+
+    // Busca local (para complementar filtro de texto)
+    function aplicarBuscaLocal() {
+        if (!currentFilters.search) return;
+        const term = currentFilters.search.toLowerCase();
+        logsData = logsData.filter(log => 
+            (log.user || log.usuario || '').toLowerCase().includes(term) ||
+            (log.action || log.tipo || '').toLowerCase().includes(term) ||
+            (log.object || log.objeto || '').toLowerCase().includes(term) ||
+            (log.details || log.acao || log.mensagem || '').toLowerCase().includes(term) ||
+            (log.ip || '').toLowerCase().includes(term)
+        );
+    }
+
+    function atualizarEstatisticas() {
+        const hoje = new Date().toISOString().slice(0,10);
+        const loginsHoje = logsData.filter(l => (l.action === 'login' || l.tipo === 'login') && (l.created_at || '').slice(0,10) === hoje).length;
+        const erros = logsData.filter(l => (l.action === 'erro' || l.tipo === 'erro')).length;
+        const alteracoes = logsData.filter(l => ['alteracao','criacao','exclusao','update','create','delete'].includes(l.action || l.tipo)).length;
+        const usuariosAtivos = new Set(logsData.map(l => l.user || l.usuario)).size;
+
+        document.getElementById('statsLogins').innerText = loginsHoje;
+        document.getElementById('statsErros').innerText = erros;
+        document.getElementById('statsAlteracoes').innerText = alteracoes;
+        document.getElementById('statsUsuarios').innerText = usuariosAtivos;
+        document.getElementById('totalRegistros').innerText = logsData.length;
+        
+        const ultimas24h = logsData.filter(l => {
+            const data = l.created_at || l.timestamp;
+            return data && (new Date() - new Date(data) < 86400000);
+        }).length;
+        document.getElementById('ultimas24h').innerText = ultimas24h;
+    }
+
+    function renderizarLogs() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const paginados = logsData.slice(start, start + itemsPerPage);
+        const totalItems = logsData.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        document.getElementById('mostrandoInicio').innerText = totalItems === 0 ? 0 : start + 1;
+        document.getElementById('mostrandoFim').innerText = Math.min(start + itemsPerPage, totalItems);
+        document.getElementById('totalMostrando').innerText = totalItems;
+        document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages || 1}`;
+        document.getElementById('prevPageBtn').disabled = currentPage === 1;
+        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+        
+        const tbody = document.getElementById('logsTable');
+        if (paginados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500"><i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Nenhum log encontrado</p><p class="text-xs mt-1">Tente ajustar os filtros de busca</p></td></tr>`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            return;
+        }
+
         const tipoIcon = {
-            'login': 'log-in', 'logout': 'log-out', 'alteracao': 'edit',
-            'criacao': 'plus-circle', 'exclusao': 'trash-2', 'liberacao': 'unlock',
-            'bloqueio': 'lock', 'erro': 'alert-triangle'
+            'login': 'log-in', 'logout': 'log-out', 'alteracao': 'edit', 'criacao': 'plus-circle',
+            'exclusao': 'trash-2', 'liberacao': 'unlock', 'bloqueio': 'lock', 'erro': 'alert-triangle'
         };
         const tipoColor = {
-            'login': 'text-emerald-500 bg-emerald-500/10',
-            'logout': 'text-gray-500 bg-gray-500/10',
-            'alteracao': 'text-yellow-500 bg-yellow-500/10',
-            'criacao': 'text-green-500 bg-green-500/10',
-            'exclusao': 'text-red-500 bg-red-500/10',
-            'liberacao': 'text-blue-500 bg-blue-500/10',
-            'bloqueio': 'text-orange-500 bg-orange-500/10',
-            'erro': 'text-red-500 bg-red-500/10'
+            'login': 'text-emerald-500 bg-emerald-500/10', 'logout': 'text-gray-500 bg-gray-500/10',
+            'alteracao': 'text-yellow-500 bg-yellow-500/10', 'criacao': 'text-green-500 bg-green-500/10',
+            'exclusao': 'text-red-500 bg-red-500/10', 'liberacao': 'text-blue-500 bg-blue-500/10',
+            'bloqueio': 'text-orange-500 bg-orange-500/10', 'erro': 'text-red-500 bg-red-500/10'
         };
 
-        tbody.innerHTML = paginados.map(log => `
+        tbody.innerHTML = paginados.map(log => {
+            const tipo = log.action || log.tipo || 'evento';
+            const usuario = log.user || log.usuario || 'Sistema';
+            const objeto = log.object || log.objeto || '-';
+            const acao = log.details || log.acao || log.mensagem || '-';
+            const dataHora = log.created_at || log.timestamp;
+            const ip = log.ip || '-';
+            return `
             <tr class="hover:bg-gray-900/30 transition log-entry">
                 <td class="px-4 md:px-6 py-3 md:py-4">
                     <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 md:w-8 md:h-8 rounded-full ${tipoColor[log.tipo] || 'bg-gray-500/10'} flex items-center justify-center shrink-0">
-                            <i data-lucide="${tipoIcon[log.tipo] || 'bell'}" class="w-3.5 h-3.5 md:w-4 md:h-4 ${tipoColor[log.tipo]?.replace('bg', 'text') || 'text-gray-500'}"></i>
+                        <div class="w-7 h-7 md:w-8 md:h-8 rounded-full ${tipoColor[tipo] || 'bg-gray-500/10'} flex items-center justify-center shrink-0">
+                            <i data-lucide="${tipoIcon[tipo] || 'bell'}" class="w-3.5 h-3.5 md:w-4 md:h-4 ${tipoColor[tipo]?.replace('bg', 'text') || 'text-gray-500'}"></i>
                         </div>
-                        <span class="font-medium text-white text-sm">${escapeHtml(log.usuario || 'Sistema')}</span>
+                        <span class="font-medium text-white text-sm">${escapeHtml(usuario)}</span>
                     </div>
-                    <div class="mt-1 md:hidden">
-                        <span class="inline-block px-2 py-0.5 ${tipoColor[log.tipo] || 'bg-gray-500/10 text-gray-400'} text-[9px] font-bold rounded-full">${log.tipo?.toUpperCase() || 'EVENTO'}</span>
-                    </div>
+                    <div class="mt-1 md:hidden"><span class="inline-block px-2 py-0.5 ${tipoColor[tipo] || 'bg-gray-500/10 text-gray-400'} text-[9px] font-bold rounded-full">${tipo.toUpperCase()}</span></div>
                 </td>
                 <td class="px-4 md:px-6 py-3 md:py-4">
-                    <div class="hidden md:block mb-1">
-                        <span class="px-2 py-0.5 ${tipoColor[log.tipo] || 'bg-gray-500/10 text-gray-400'} text-[9px] md:text-[10px] font-bold rounded-full">${log.tipo?.toUpperCase() || 'EVENTO'}</span>
-                    </div>
-                    <p class="text-sm font-medium text-gray-200">${escapeHtml(log.objeto || '-')}</p>
-                    <p class="text-xs text-gray-400 mt-1 line-clamp-2">${escapeHtml((log.acao || log.mensagem || '-').substring(0, 100))}${(log.acao || '').length > 100 ? '...' : ''}</p>
+                    <div class="hidden md:block mb-1"><span class="px-2 py-0.5 ${tipoColor[tipo] || 'bg-gray-500/10 text-gray-400'} text-[9px] md:text-[10px] font-bold rounded-full">${tipo.toUpperCase()}</span></div>
+                    <p class="text-sm font-medium text-gray-200">${escapeHtml(objeto)}</p>
+                    <p class="text-xs text-gray-400 mt-1 line-clamp-2">${escapeHtml(acao.substring(0, 100))}${acao.length > 100 ? '...' : ''}</p>
                 </td>
-                <td class="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-400 whitespace-nowrap">
-                    ${log.created_at ? new Date(log.created_at).toLocaleString('pt-BR') : '-'}
-                </td>
-                <td class="px-4 md:px-6 py-3 md:py-4">
-                    <code class="text-[10px] md:text-xs font-mono text-gray-500">${escapeHtml(log.ip || '-')}</code>
-                </td>
-            </tr>
-        `).join('');
+                <td class="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-400 whitespace-nowrap">${dataHora ? new Date(dataHora).toLocaleString('pt-BR') : '-'}</td>
+                <td class="px-4 md:px-6 py-3 md:py-4"><code class="text-[10px] md:text-xs font-mono text-gray-500">${escapeHtml(ip)}</code></td>
+            </tr>`;
+        }).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-    if (loadingRow) tbody.prepend(loadingRow);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
 
-function escapeHtml(text) {
-    if (!text) return '';
-    return text.toString().replace(/[&<>'"/]/g, (match) => {
-        const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '/': '&#x2F;' };
-        return escape[match];
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Paginação
+    document.getElementById('prevPageBtn')?.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderizarLogs(); } });
+    document.getElementById('nextPageBtn')?.addEventListener('click', () => { const totalPages = Math.ceil(logsData.length / itemsPerPage); if (currentPage < totalPages) { currentPage++; renderizarLogs(); } });
+
+    // Filtros
+    function aplicarFiltros() {
+        currentFilters = {
+            usuario: document.getElementById('filtroUsuario').value,
+            tipo: document.getElementById('filtroTipo').value,
+            data_inicio: document.getElementById('filtroDataInicio').value,
+            data_fim: document.getElementById('filtroDataFim').value,
+            search: document.getElementById('searchInput').value
+        };
+        currentPage = 1;
+        carregarLogs();
+    }
+    function limparFiltros() {
+        document.getElementById('filtroUsuario').value = '';
+        document.getElementById('filtroTipo').value = '';
+        document.getElementById('filtroDataInicio').value = '';
+        document.getElementById('filtroDataFim').value = '';
+        document.getElementById('searchInput').value = '';
+        currentFilters = { usuario: '', tipo: '', data_inicio: '', data_fim: '', search: '' };
+        currentPage = 1;
+        carregarLogs();
+    }
+    document.getElementById('aplicarFiltros')?.addEventListener('click', aplicarFiltros);
+    document.getElementById('limparFiltros')?.addEventListener('click', limparFiltros);
+    document.getElementById('searchInput')?.addEventListener('input', (e) => { currentFilters.search = e.target.value; currentPage = 1; carregarLogs(); });
+    document.getElementById('refreshLogsBtn')?.addEventListener('click', carregarLogs);
+
+    // Exportar CSV
+    document.getElementById('exportLogsBtn')?.addEventListener('click', () => {
+        const headers = ['Data/Hora', 'Usuário', 'Tipo', 'Objeto', 'Ação/Detalhes', 'IP'];
+        const rows = logsData.map(log => [
+            (log.created_at || log.timestamp) ? new Date(log.created_at || log.timestamp).toLocaleString('pt-BR') : '',
+            log.user || log.usuario || 'Sistema',
+            log.action || log.tipo || 'evento',
+            log.object || log.objeto || '',
+            (log.details || log.acao || log.mensagem || '').replace(/\n/g, ' '),
+            log.ip || ''
+        ]);
+        const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `logs_auditoria_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
     });
-}
 
-// ============================================
-// CONTROLES DE PAGINAÇÃO E FILTROS
-// ============================================
-document.getElementById('prevPageBtn')?.addEventListener('click', () => {
-    if (currentPage > 1) {
-        currentPage--;
-        renderizarLogs();
+    // ============================================
+    // PERFIL E LOGOUT - CORRIGIDO: endpoint /api/profile
+    // ============================================
+    function carregarPerfil() {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
+                if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+                if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
+            } catch(e) {}
+        }
+        const sessionStart = localStorage.getItem('session_start');
+        if (sessionStart) document.getElementById('sessaoInicio').innerText = new Date(sessionStart).toLocaleTimeString('pt-BR');
+        document.getElementById('ultimoAcesso').innerText = new Date().toLocaleTimeString('pt-BR');
     }
-});
 
-document.getElementById('nextPageBtn')?.addEventListener('click', () => {
-    const totalPages = Math.ceil(logsData.length / itemsPerPage);
-    if (currentPage < totalPages) {
-        currentPage++;
-        renderizarLogs();
+    function openModalPerfil() {
+        carregarPerfil();
+        document.getElementById('modalPerfil').classList.remove('hidden');
+        document.getElementById('senhaAtual').value = '';
+        document.getElementById('novaSenha').value = '';
+        document.getElementById('confirmarSenha').value = '';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
-});
+    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
 
-function aplicarFiltros() {
-    currentFilters = {
-        usuario: document.getElementById('filtroUsuario').value,
-        tipo: document.getElementById('filtroTipo').value,
-        data_inicio: document.getElementById('filtroDataInicio').value,
-        data_fim: document.getElementById('filtroDataFim').value,
-        search: document.getElementById('searchInput').value
-    };
-    currentPage = 1;
-    carregarLogs();
-}
+    async function salvarPerfil() {
+        const token = getAuthToken();
+        const username = document.getElementById('editUsername').value;
+        const email = document.getElementById('editEmail').value;
+        const currentPassword = document.getElementById('senhaAtual').value;
+        const newPassword = document.getElementById('novaSenha').value;
+        const confirmPassword = document.getElementById('confirmarSenha').value;
 
-function limparFiltros() {
-    document.getElementById('filtroUsuario').value = '';
-    document.getElementById('filtroTipo').value = '';
-    document.getElementById('filtroDataInicio').value = '';
-    document.getElementById('filtroDataFim').value = '';
-    document.getElementById('searchInput').value = '';
-    currentFilters = { usuario: '', tipo: '', data_inicio: '', data_fim: '', search: '' };
-    currentPage = 1;
-    carregarLogs();
-}
+        if (newPassword && newPassword !== confirmPassword) { alert('As novas senhas não coincidem'); return; }
+        if (newPassword && !currentPassword) { alert('Digite a senha atual para alterar'); return; }
+        if (!token) { alert('Você precisa estar logado'); return; }
 
-document.getElementById('aplicarFiltros')?.addEventListener('click', aplicarFiltros);
-document.getElementById('limparFiltros')?.addEventListener('click', limparFiltros);
-document.getElementById('searchInput')?.addEventListener('input', aplicarFiltros);
-document.getElementById('refreshLogsBtn')?.addEventListener('click', carregarLogs);
-
-// ============================================
-// EXPORTAÇÃO DE CSV
-// ============================================
-document.getElementById('exportLogsBtn')?.addEventListener('click', () => {
-    const headers = ['Data/Hora', 'Usuário', 'Tipo', 'Objeto', 'Ação/Detalhes', 'IP'];
-    const rows = logsData.map(log => [
-        log.created_at ? new Date(log.created_at).toLocaleString('pt-BR') : '',
-        log.usuario || 'Sistema',
-        log.tipo || 'evento',
-        log.objeto || '',
-        (log.acao || log.mensagem || '').replace(/\n/g, ' '),
-        log.ip || ''
-    ]);
-    
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(';')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `logs_auditoria_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-});
-
-// ============================================
-// FUNÇÕES DE PERFIL E LOGOUT
-// ============================================
-function carregarPerfil() {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
         try {
-            const user = JSON.parse(userStr);
-            if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
-            if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
-            if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
-        } catch(e) { console.error('Erro ao carregar perfil:', e); }
-    }
-    
-    const sessionStart = localStorage.getItem('session_start');
-    if (sessionStart) {
-        document.getElementById('sessaoInicio').innerText = new Date(sessionStart).toLocaleTimeString('pt-BR');
-    }
-    document.getElementById('ultimoAcesso').innerText = new Date().toLocaleTimeString('pt-BR');
-}
-
-function openModalPerfil() {
-    carregarPerfil();
-    const modal = document.getElementById('modalPerfil');
-    if (modal) modal.classList.remove('hidden');
-    if (document.getElementById('senhaAtual')) document.getElementById('senhaAtual').value = '';
-    if (document.getElementById('novaSenha')) document.getElementById('novaSenha').value = '';
-    if (document.getElementById('confirmarSenha')) document.getElementById('confirmarSenha').value = '';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function closeModalPerfil() {
-    const modal = document.getElementById('modalPerfil');
-    if (modal) modal.classList.add('hidden');
-}
-
-async function salvarPerfil() {
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    const email = document.getElementById('editEmail')?.value;
-    const senhaAtual = document.getElementById('senhaAtual')?.value;
-    const novaSenha = document.getElementById('novaSenha')?.value;
-    const confirmarSenha = document.getElementById('confirmarSenha')?.value;
-    
-    if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas não coincidem'); return; }
-    if (novaSenha && !senhaAtual) { alert('Digite a senha atual para alterar'); return; }
-    if (!token) { alert('Você precisa estar logado para alterar o perfil'); return; }
-    
-    try {
-        const body = { email };
-        if (novaSenha) {
-            body.senha_atual = senhaAtual;
-            body.nova_senha = novaSenha;
-        }
-
-        const res = await fetch(`${API_URL}/api/update-profile`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(body)
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-            alert('Perfil atualizado com sucesso!');
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            user.email = email;
-            localStorage.setItem('user', JSON.stringify(user));
-            closeModalPerfil();
-        } else {
-            alert(data.error || 'Erro ao atualizar perfil');
-        }
-    } catch (error) {
-        console.error('Erro ao salvar perfil:', error);
-        alert('Erro ao conectar com o servidor para salvar o perfil.');
-    }
-}
-
-async function sair() {
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    try {
-        if (token) {
-            await fetch(`${API_URL}/api/logout`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
+            const payload = { username, email };
+            if (newPassword) {
+                payload.current_password = currentPassword;
+                payload.new_password = newPassword;
+            }
+            // CORRIGIDO: endpoint /api/update-profile -> /api/profile (PUT)
+            const res = await fetch(`${API_URL}/api/profile`, {
+                method: 'PUT',
+                headers: authHeaders(true),
+                body: JSON.stringify(payload)
             });
+            const data = await res.json();
+            if (res.ok && (data.success || data.id)) {
+                alert('Perfil atualizado com sucesso!');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                user.username = username;
+                user.email = email;
+                localStorage.setItem('user', JSON.stringify(user));
+                document.getElementById('userName').innerText = username;
+                closeModalPerfil();
+            } else {
+                alert(data.error || 'Erro ao atualizar perfil');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao conectar com o servidor.');
         }
-    } catch(e) { console.error('Erro ao fazer logout:', e); }
-    
-    localStorage.removeItem('token');
-    localStorage.removeItem('ms_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('session_start');
-    window.location.href = 'login.html';
-}
-
-// ============================================
-// INICIALIZAÇÃO DA PÁGINA
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    initMenuMobile();
-    carregarLogs();
-    carregarPerfil();
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    
-    if (!localStorage.getItem('session_start')) {
-        localStorage.setItem('session_start', new Date().toISOString());
     }
-});
 
-// Atualização automática a cada 30 segundos
-setInterval(carregarLogs, 30000);
+    async function sair() {
+        const token = getAuthToken();
+        const username = localStorage.getItem('ms_user');
+        try {
+            if (token) {
+                await fetch(`${API_URL}/api/auth/logout`, {  // CORRIGIDO: endpoint /api/logout -> /api/auth/logout
+                    method: 'POST',
+                    headers: authHeaders(true),
+                    body: JSON.stringify({ username })
+                });
+            }
+        } catch(e) {}
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        localStorage.removeItem('ms_user');
+        localStorage.removeItem('user');
+        localStorage.removeItem('session_start');
+        window.location.href = 'login.html';
+    }
+
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        initMenuMobile();
+        carregarLogs();
+        carregarPerfil();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (!localStorage.getItem('session_start')) localStorage.setItem('session_start', new Date().toISOString());
+    });
+
+    setInterval(carregarLogs, 30000);
 </script>
-
 </body>
 </html>
