@@ -1552,7 +1552,7 @@ app.post('/api/free-trial', async (req, res) => {
 });
 
 // ✅ NOVA ROTA AQUI 👇
-app.get('/api/pops/:id/script', async (req, res) => {
+app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 
