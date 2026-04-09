@@ -1492,7 +1492,7 @@ app.post('/api/free-trial', async (req, res) => {
     const { mac, pop_ip, api_user, api_pass, pop_id } = req.body;
     if (!mac) return res.status(400).json({ error: 'MAC address é obrigatório' });
 
-    // 1. Buscar configurações dinâmicas
+    // 1. Buscar configurações dinâmicas da system_settings
     const { data: settings, error: settingsError } = await supabase.from('system_settings').select('*').single();
     if (settingsError) throw settingsError;
 
@@ -1717,31 +1717,38 @@ app.post('/api/settings/fields', authMiddleware, async (req, res) => {
   }
 });
 
-// Configurações do sistema
+// Configurações do sistema (system_settings)
 app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('settings').select('*').eq('category', 'system');
+    const { data, error } = await supabase.from('system_settings').select('*').single();
     if (error) throw error;
-    const settings = {};
-    (data || []).forEach(item => { settings[item.key] = item.value; });
-    res.json(settings);
+    res.json(data || {});
   } catch (err) {
+    console.error('❌ Erro ao buscar configurações do sistema:', err.message);
     res.status(500).json({ error: 'Erro ao buscar configurações do sistema' });
   }
 });
 
 app.post('/api/settings/system', authMiddleware, async (req, res) => {
   try {
-    const entries = Object.entries(req.body);
-    for (const [key, value] of entries) {
-      await supabase.from('settings').upsert({
-        key, category: 'system',
-        value: typeof value === 'object' ? value : { value },
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'key' });
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    
+    // Buscar se já existe um registro (geralmente id=1)
+    const { data: existing } = await supabase.from('system_settings').select('id').maybeSingle();
+    
+    let result;
+    if (existing) {
+      result = await supabase.from('system_settings').update(updateData).eq('id', existing.id).select().single();
+    } else {
+      result = await supabase.from('system_settings').insert(updateData).select().single();
     }
-    res.json({ message: 'Configurações salvas com sucesso' });
+
+    if (result.error) throw result.error;
+    
+    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações do sistema atualizadas', req.ip, req.headers['user-agent']);
+    res.json({ message: 'Configurações salvas com sucesso', data: result.data });
   } catch (err) {
+    console.error('❌ Erro ao salvar configurações do sistema:', err.message);
     res.status(500).json({ error: 'Erro ao salvar configurações do sistema' });
   }
 });
