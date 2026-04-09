@@ -1489,72 +1489,65 @@ app.post('/api/gerar-script-mikrotik', authMiddleware, async (req, res) => {
 // Free trial (rota pública)
 app.post('/api/free-trial', async (req, res) => {
   try {
-    const { mac, pop_ip, api_user, api_pass, pop_id } = req.body;
-    if (!mac) return res.status(400).json({ error: 'MAC address é obrigatório' });
+    const { mac_address, pop_id } = req.body;
+    if (!mac_address) return res.status(400).json({ error: 'MAC address é obrigatório' });
 
-    // 1. Buscar configurações dinâmicas da system_settings
-    const { data: settings, error: settingsError } = await supabase.from('system_settings').select('*').single();
-    if (settingsError) throw settingsError;
+    // 1. Verificar se já existe uso anterior desse MAC
+    const { data: existingSession } = await supabase
+      .from('hotspot_sessions')
+      .select('id')
+      .eq('mac_address', mac_address)
+      .eq('is_trial', true)
+      .maybeSingle();
 
-    const isEnabled = settings.free_trial_enabled ?? false;
-    const durationMinutes = Number(settings.free_trial_duration_minutes) || 15;
-    const cooldownHours = Number(settings.free_trial_cooldown_hours) || 24;
-    const maxAttempts = Number(settings.free_trial_max_attempts) || 1;
-
-    // 2. Validar se o teste grátis está ativado
-    if (!isEnabled) {
-      return res.status(403).json({ error: 'O teste grátis está temporariamente desativado' });
+    if (existingSession) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Teste grátis já utilizado para este dispositivo' 
+      });
     }
 
-    const now = new Date();
-    const { data: trial } = await supabase.from('free_trials').select('*').eq('mac', mac).maybeSingle();
+    // 2. Definir tempo padrão (15 minutos)
+    const durationMinutes = 15;
+    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
 
-    if (trial) {
-      // 3. Validar limite de tentativas
-      if (trial.attempts >= maxAttempts) {
-        return res.status(403).json({ error: 'Você já atingiu o limite máximo de testes grátis para este dispositivo' });
-      }
+    // 3. Criar registro em hotspot_sessions
+    const { data: session, error: sessionError } = await supabase
+      .from('hotspot_sessions')
+      .insert({
+        mac_address,
+        pop_id: pop_id || null,
+        status: 'active',
+        is_trial: true,
+        duration_minutes: durationMinutes,
+        expires_at: expiresAt,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-      // 4. Validar cooldown
-      if (trial.last_used_at) {
-        const lastUsed = new Date(trial.last_used_at);
-        const cooldownMs = cooldownHours * 60 * 60 * 1000;
-        const timePassed = now - lastUsed;
+    if (sessionError) throw sessionError;
 
-        if (timePassed < cooldownMs) {
-          const hoursRemaining = Math.ceil((cooldownMs - timePassed) / (60 * 60 * 1000));
-          return res.status(429).json({ error: `Aguarde ${hoursRemaining} horas para realizar um novo teste` });
-        }
-      }
-    }
-
-    // 5. Atualizar ou inserir registro em free_trials
-    const trialData = {
-      mac,
-      attempts: (trial?.attempts || 0) + 1,
-      last_used_at: now.toISOString(),
-      updated_at: now.toISOString()
-    };
-
-    const { error: upsertError } = await supabase.from('free_trials').upsert(trialData, { onConflict: 'mac' });
-    if (upsertError) throw upsertError;
-
-    // 6. Liberar acesso com duração dinâmica
-    const result = await authorizeAccess(mac, pop_ip, api_user, api_pass, pop_id, durationMinutes);
+    // 4. Chamar função existente authorizeAccess
+    // Nota: authorizeAccess(macAddress, popIp, apiUser, apiPass, popId, durationMinutes, speedMbps, planName)
+    const result = await authorizeAccess(mac_address, undefined, undefined, undefined, pop_id, durationMinutes, null, 'free_trial');
+    
     if (!result.success) {
-      return res.status(500).json({ error: 'Falha ao autorizar teste grátis', details: result.errors });
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Falha ao autorizar acesso no roteador',
+        details: result.errors 
+      });
     }
 
-    await registerSystemLog('info', 'free-trial', `Teste grátis autorizado para ${mac}`, { mac, pop_id, duration: durationMinutes });
-    return res.json({ 
-      success: true, 
-      duration_minutes: durationMinutes, 
-      via_api: result.viaApi, 
-      via_radius: result.viaRadius 
+    return res.json({
+      success: true,
+      expires_at: expiresAt,
+      message: 'Acesso liberado'
     });
   } catch (err) {
     console.error('❌ Erro no teste grátis:', err.message);
-    res.status(500).json({ error: 'Erro ao autorizar teste grátis' });
+    res.status(500).json({ success: false, message: 'Erro ao processar teste grátis' });
   }
 });
 
