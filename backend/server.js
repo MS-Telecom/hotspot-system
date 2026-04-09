@@ -1255,6 +1255,36 @@ app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   }
 });
 
+// Atualizar webhook
+app.put('/api/webhooks/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updateData = {
+      ...req.body,
+      updated_at: new Date().toISOString()
+    };
+
+    delete updateData.id;
+    delete updateData.created_at;
+
+    const { data, error } = await supabase
+      .from('webhooks')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json(data);
+
+  } catch (err) {
+    console.error('❌ Erro ao atualizar webhook:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar webhook' });
+  }
+});
+
 // Deletar webhook
 app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
   try {
