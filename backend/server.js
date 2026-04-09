@@ -417,7 +417,7 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
 // Atualizar perfil do admin
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
-    const { email, current_password, new_password } = req.body;
+    const { username, email, current_password, new_password } = req.body;
     const updateData = { updated_at: new Date().toISOString() };
 
     // Validar senha atual se estiver tentando mudar a senha
@@ -438,6 +438,7 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     }
 
     if (email) updateData.email = email;
+    if (username) updateData.username = username;
 
     const { error } = await supabase.from('admins').update(updateData).eq('id', req.user.id);
     if (error) throw error;
@@ -535,83 +536,122 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
 
 // Renovar plano do usuário
 app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
-try {
-  const { id } = req.params;
-  const { plan_id, duration_days } = req.body;
+  try {
+    const { id } = req.params;
+    const { plan_id, duration_days } = req.body;
 
-  // Buscar plano pelo ID
-  const { data: plan, error: planError } = await supabase
-    .from('plans')
-    .select('*')
-    .eq('id', plan_id)
-    .single();
+    // Buscar plano
+    const { data: plan, error: planError } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('id', plan_id)
+      .single();
 
-  if (planError || !plan) {
-    return res.status(400).json({ error: 'Plano não encontrado' });
+    if (planError || !plan) {
+      return res.status(400).json({ error: 'Plano não encontrado' });
+    }
+
+    // Definir duração
+    const days = duration_days || plan.duration_days || 30;
+
+    const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        plan_id: plan_id,
+        plan_name: plan.name,
+        status: 'active',
+        expires_at: expiresAt,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await registerAuditLog(
+      req.user.username,
+      'update',
+      'user',
+      `Plano renovado: ${id}`,
+      req.ip,
+      req.headers['user-agent']
+    );
+
+    res.json(data);
+
+  } catch (err) {
+    console.error('❌ Erro ao renovar plano:', err.message);
+    res.status(500).json({ error: 'Erro ao renovar plano' });
   }
+});
 
-  // Definir duração
-  const days = duration_days || plan.duration_days || 30;
 
-  const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
-
-  const { data, error } = await supabase.from('users')
-    .update({ 
-      plan_id: plan_id,
-      plan_name: plan.name,
-      status: 'active',
-      expires_at: expiresAt,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  await registerAuditLog(
-    req.user.username,
-    'update',
-    'user',
-    `Plano renovado: ${id}`,
-    req.ip,
-    req.headers['user-agent']
-  );
-
-  res.json(data);
-
-} catch (err) {
-  console.error('❌ Erro ao renovar plano:', err.message);
-  res.status(500).json({ error: 'Erro ao renovar plano' });
-}
 // Bloquear usuário
 app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { data, error } = await supabase.from('users')
-      .update({ status: 'blocked', updated_at: new Date().toISOString() })
-      .eq('id', id).select().single();
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        status: 'blocked',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, req.ip, req.headers['user-agent']);
+
+    await registerAuditLog(
+      req.user.username,
+      'update',
+      'user',
+      `Usuário bloqueado: ${id}`,
+      req.ip,
+      req.headers['user-agent']
+    );
+
     res.json(data);
+
   } catch (err) {
     console.error('❌ Erro ao bloquear usuário:', err.message);
     res.status(500).json({ error: 'Erro ao bloquear usuário' });
   }
 });
 
+
 // Desbloquear usuário
 app.post('/api/users/:id/unblock', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { data, error } = await supabase.from('users')
-      .update({ status: 'active', updated_at: new Date().toISOString() })
-      .eq('id', id).select().single();
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        status: 'active',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário desbloqueado: ${id}`, req.ip, req.headers['user-agent']);
+
+    await registerAuditLog(
+      req.user.username,
+      'update',
+      'user',
+      `Usuário desbloqueado: ${id}`,
+      req.ip,
+      req.headers['user-agent']
+    );
+
     res.json(data);
+
   } catch (err) {
     console.error('❌ Erro ao desbloquear usuário:', err.message);
     res.status(500).json({ error: 'Erro ao desbloquear usuário' });
