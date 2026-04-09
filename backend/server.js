@@ -921,7 +921,7 @@ app.get('/api/check-payment-by-mac', async (req, res) => {
 // Gerar PIX via Mercado Pago
 app.post('/api/payments/generate-pix', async (req, res) => {
   try {
-    const { amount, description, email, cpf, name, plan_id, user_mac } = req.body;
+    const { payment_id, amount, description, email, cpf, name, plan_id, user_mac } = req.body;
     if (!amount || !description) return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
 
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
