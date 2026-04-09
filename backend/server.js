@@ -1975,19 +1975,120 @@ app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   }
 });
 
-app.post('/api/settings/payment', authMiddleware, async (req, res) => {
+// Configurações de integrações
+app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('category', 'integrations');
+
+    if (error) throw error;
+
+    const settings = {};
+    (data || []).forEach(item => {
+      settings[item.key] = item.value;
+    });
+
+    res.json(settings);
+
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar integrações' });
+  }
+});
+
+app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const entries = Object.entries(req.body);
+
     for (const [key, value] of entries) {
       await supabase.from('settings').upsert({
-        key, category: 'payment',
+        key,
+        category: 'integrations',
         value: typeof value === 'object' ? value : { value },
         updated_at: new Date().toISOString()
-      }, { onConflict: 'key' });
+}, { onConflict: 'key' });
     }
-    res.json({ message: 'Configurações de pagamento salvas com sucesso' });
+
+    res.json({ success: true });
+
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao salvar configurações de pagamento' });
+    res.status(500).json({ error: 'Erro ao salvar integrações' });
+  }
+});
+
+const fs = require('fs');
+const path = require('path');
+
+const BACKUP_DIR = path.join(__dirname, 'backups');
+
+app.get('/api/backup/list', authMiddleware, async (req, res) => {
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) {
+      fs.mkdirSync(BACKUP_DIR);
+    }
+
+    const files = fs.readdirSync(BACKUP_DIR);
+
+    const backups = files.map(file => ({
+      name: file,
+      size: fs.statSync(path.join(BACKUP_DIR, file)).size,
+      created_at: fs.statSync(path.join(BACKUP_DIR, file)).ctime
+    }));
+
+    res.json(backups);
+
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar backups' });
+  }
+});
+
+app.post('/api/backup/create', authMiddleware, async (req, res) => {
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) {
+      fs.mkdirSync(BACKUP_DIR);
+    }
+
+    const filename = `backup-${Date.now()}.json`;
+    const filepath = path.join(BACKUP_DIR, filename);
+
+    // 🔥 BACKUP REAL DO BANCO
+    const tables = [
+      'users',
+      'payments',
+      'plans',
+      'settings',
+      'webhooks',
+      'admins'
+    ];
+
+    const backupData = {
+      created_at: new Date().toISOString(),
+      tables: {}
+    };
+
+    for (const table of tables) {
+      const { data, error } = await supabase.from(table).select('*');
+
+      if (error) {
+        console.error(`Erro ao buscar tabela ${table}:`, error.message);
+        backupData.tables[table] = { error: error.message };
+      } else {
+        backupData.tables[table] = data;
+      }
+    }
+
+    fs.writeFileSync(filepath, JSON.stringify(backupData, null, 2));
+
+    res.json({
+      success: true,
+      filename,
+      message: 'Backup completo do sistema criado'
+    });
+
+  } catch (err) {
+    console.error('❌ Erro ao criar backup:', err.message);
+    res.status(500).json({ error: 'Erro ao criar backup' });
   }
 });
 
