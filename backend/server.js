@@ -1492,32 +1492,66 @@ app.post('/api/free-trial', async (req, res) => {
     const { mac, pop_ip, api_user, api_pass, pop_id } = req.body;
     if (!mac) return res.status(400).json({ error: 'MAC address é obrigatório' });
 
-    const now = new Date();
-    const oneHourMs = 60 * 60 * 1000;
+    // 1. Buscar configurações dinâmicas
+    const { data: settings, error: settingsError } = await supabase.from('system_settings').select('*').single();
+    if (settingsError) throw settingsError;
 
+    const isEnabled = settings.free_trial_enabled ?? false;
+    const durationMinutes = Number(settings.free_trial_duration_minutes) || 15;
+    const cooldownHours = Number(settings.free_trial_cooldown_hours) || 24;
+    const maxAttempts = Number(settings.free_trial_max_attempts) || 1;
+
+    // 2. Validar se o teste grátis está ativado
+    if (!isEnabled) {
+      return res.status(403).json({ error: 'O teste grátis está temporariamente desativado' });
+    }
+
+    const now = new Date();
     const { data: trial } = await supabase.from('free_trials').select('*').eq('mac', mac).maybeSingle();
 
-    if (trial?.last_trial) {
-      const lastTrial = new Date(trial.last_trial);
-      if (now - lastTrial < oneHourMs) {
-        const minutesRemaining = Math.ceil((oneHourMs - (now - lastTrial)) / 60000);
-        return res.status(429).json({ error: `Aguarde ${minutesRemaining} minutos para outro teste` });
+    if (trial) {
+      // 3. Validar limite de tentativas
+      if (trial.attempts >= maxAttempts) {
+        return res.status(403).json({ error: 'Você já atingiu o limite máximo de testes grátis para este dispositivo' });
+      }
+
+      // 4. Validar cooldown
+      if (trial.last_used_at) {
+        const lastUsed = new Date(trial.last_used_at);
+        const cooldownMs = cooldownHours * 60 * 60 * 1000;
+        const timePassed = now - lastUsed;
+
+        if (timePassed < cooldownMs) {
+          const hoursRemaining = Math.ceil((cooldownMs - timePassed) / (60 * 60 * 1000));
+          return res.status(429).json({ error: `Aguarde ${hoursRemaining} horas para realizar um novo teste` });
+        }
       }
     }
 
-    await supabase.from('free_trials').upsert({
-      mac, last_trial: now.toISOString(),
+    // 5. Atualizar ou inserir registro em free_trials
+    const trialData = {
+      mac,
       attempts: (trial?.attempts || 0) + 1,
+      last_used_at: now.toISOString(),
       updated_at: now.toISOString()
-    }, { onConflict: 'mac' });
+    };
 
-    const result = await authorizeAccess(mac, pop_ip, api_user, api_pass, pop_id, 15);
+    const { error: upsertError } = await supabase.from('free_trials').upsert(trialData, { onConflict: 'mac' });
+    if (upsertError) throw upsertError;
+
+    // 6. Liberar acesso com duração dinâmica
+    const result = await authorizeAccess(mac, pop_ip, api_user, api_pass, pop_id, durationMinutes);
     if (!result.success) {
       return res.status(500).json({ error: 'Falha ao autorizar teste grátis', details: result.errors });
     }
 
-    await registerSystemLog('info', 'free-trial', `Teste grátis autorizado para ${mac}`, { mac, pop_id });
-    return res.json({ success: true, duration_minutes: 15, via_api: result.viaApi, via_radius: result.viaRadius });
+    await registerSystemLog('info', 'free-trial', `Teste grátis autorizado para ${mac}`, { mac, pop_id, duration: durationMinutes });
+    return res.json({ 
+      success: true, 
+      duration_minutes: durationMinutes, 
+      via_api: result.viaApi, 
+      via_radius: result.viaRadius 
+    });
   } catch (err) {
     console.error('❌ Erro no teste grátis:', err.message);
     res.status(500).json({ error: 'Erro ao autorizar teste grátis' });
