@@ -1551,6 +1551,63 @@ app.post('/api/free-trial', async (req, res) => {
   }
 });
 
+// ✅ NOVA ROTA AQUI 👇
+app.get('/api/pops/:id/script', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar POP
+    const { data: pop, error } = await supabase
+      .from('pops')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !pop) {
+      return res.status(404).json({ error: 'POP não encontrado' });
+    }
+
+    // Gerar script básico (seguro)
+    let script = `# Script MikroTik - ${pop.name || 'POP'}\n`;
+
+    if (pop.ip) {
+      script += `# IP: ${pop.ip}\n`;
+    }
+
+    if (pop.wan_interface) {
+      script += `/interface set [find default-name=${pop.wan_interface}] name=WAN\n`;
+    }
+
+    if (pop.lan_interface) {
+      script += `/interface set [find default-name=${pop.lan_interface}] name=LAN\n`;
+    }
+
+    if (pop.vlan_id) {
+      script += `/interface vlan add name=vlan${pop.vlan_id} vlan-id=${pop.vlan_id}\n`;
+    }
+
+    if (pop.pppoe_username && pop.pppoe_password) {
+      script += `/interface pppoe-client add user=${pop.pppoe_username} password=${pop.pppoe_password}\n`;
+    }
+
+    if (pop.static_ip) {
+      script += `/ip address add address=${pop.static_ip}\n`;
+    }
+
+    return res.json({
+      success: true,
+      script
+    });
+
+  } catch (err) {
+    console.error('Erro ao gerar script:', err.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Erro ao gerar script'
+    });
+  }
+});
+
 // Validar acesso (rota pública)
 app.post('/api/validate-access', async (req, res) => {
   try {
