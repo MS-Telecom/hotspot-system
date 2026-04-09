@@ -535,24 +535,55 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
 
 // Renovar plano do usuário
 app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { plan_name, days = 30 } = req.body;
-    const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
+try {
+  const { id } = req.params;
+  const { plan_id, duration_days } = req.body;
 
-    const { data, error } = await supabase.from('users')
-      .update({ plan_name, status: 'active', expires_at: expiresAt, updated_at: new Date().toISOString() })
-      .eq('id', id).select().single();
+  // Buscar plano pelo ID
+  const { data: plan, error: planError } = await supabase
+    .from('plans')
+    .select('*')
+    .eq('id', plan_id)
+    .single();
 
-    if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, req.ip, req.headers['user-agent']);
-    res.json(data);
-  } catch (err) {
-    console.error('❌ Erro ao renovar plano:', err.message);
-    res.status(500).json({ error: 'Erro ao renovar plano' });
+  if (planError || !plan) {
+    return res.status(400).json({ error: 'Plano não encontrado' });
   }
-});
 
+  // Definir duração
+  const days = duration_days || plan.duration_days || 30;
+
+  const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase.from('users')
+    .update({ 
+      plan_id: plan_id,
+      plan_name: plan.name,
+      status: 'active',
+      expires_at: expiresAt,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  await registerAuditLog(
+    req.user.username,
+    'update',
+    'user',
+    `Plano renovado: ${id}`,
+    req.ip,
+    req.headers['user-agent']
+  );
+
+  res.json(data);
+
+} catch (err) {
+  console.error('❌ Erro ao renovar plano:', err.message);
+  res.status(500).json({ error: 'Erro ao renovar plano' });
+}
 // Bloquear usuário
 app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
   try {
