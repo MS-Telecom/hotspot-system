@@ -922,10 +922,15 @@ app.get('/api/check-payment-by-mac', async (req, res) => {
 app.post('/api/payments/generate-pix', async (req, res) => {
   try {
     const { payment_id, amount, description, email, cpf, name, plan_id, user_mac } = req.body;
-    if (!amount || !description) return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
+
+    if (!amount || !description) {
+      return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
+    }
 
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
-    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
+    if (!MP_TOKEN) {
+      return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
+    }
 
     const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
@@ -943,33 +948,86 @@ app.post('/api/payments/generate-pix', async (req, res) => {
         payer: {
           email: email || 'cliente@hotspot.com',
           first_name: name || 'Cliente',
-          identification: { type: 'CPF', number: cpf || '00000000000' }
+          identification: {
+            type: 'CPF',
+            number: cpf || '00000000000'
+          }
         },
         external_reference: externalReference
       })
     });
 
     const mpData = await mpResponse.json();
-    if (!mpResponse.ok) return res.status(400).json({ error: 'Erro ao gerar pagamento PIX', details: mpData });
+
+    if (!mpResponse.ok) {
+      return res.status(400).json({
+        error: 'Erro ao gerar pagamento PIX',
+        details: mpData
+      });
+    }
 
     const pixCopyPaste = mpData.point_of_interaction?.transaction_data?.qr_code || '';
     const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
 
-    const { data: payment, error } = await supabase.from('payments').insert({
-      user_mac: user_mac || null, plan_id: plan_id || null,
-      amount: parseFloat(amount), description, status: 'pending',
-      payment_method: 'pix', mercado_pago_id: String(mpData.id),
-      pix_copy_paste: pixCopyPaste, qr_code: qrCodeBase64,
-      external_reference: externalReference,
-      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
-    }).select().single();
+    let payment;
+    let error;
+
+    if (payment_id) {
+      const result = await supabase
+        .from('payments')
+        .update({
+          user_mac: user_mac || null,
+          plan_id: plan_id || null,
+          amount: parseFloat(amount),
+          description,
+          status: 'pending',
+          payment_method: 'pix',
+          mercado_pago_id: String(mpData.id),
+          pix_copy_paste: pixCopyPaste,
+          qr_code: qrCodeBase64,
+          external_reference: externalReference,
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', payment_id)
+        .select()
+        .single();
+
+      payment = result.data;
+      error = result.error;
+    } else {
+      const result = await supabase
+        .from('payments')
+        .insert({
+          user_mac: user_mac || null,
+          plan_id: plan_id || null,
+          amount: parseFloat(amount),
+          description,
+          status: 'pending',
+          payment_method: 'pix',
+          mercado_pago_id: String(mpData.id),
+          pix_copy_paste: pixCopyPaste,
+          qr_code: qrCodeBase64,
+          external_reference: externalReference,
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+        })
+        .select()
+        .single();
+
+      payment = result.data;
+      error = result.error;
+    }
 
     if (error) throw error;
 
     res.json({
-      id: payment.id, mercado_pago_id: mpData.id,
-      pix_copy_paste: pixCopyPaste, qr_code: qrCodeBase64,
-      external_reference: externalReference, status: 'pending', amount: parseFloat(amount)
+      id: payment.id,
+      mercado_pago_id: mpData.id,
+      pix_copy_paste: pixCopyPaste,
+      qr_code: qrCodeBase64,
+      external_reference: externalReference,
+      status: 'pending',
+      amount: parseFloat(amount)
     });
   } catch (err) {
     console.error('❌ Erro ao gerar PIX:', err.message);
