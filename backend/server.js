@@ -1002,87 +1002,8 @@ app.get('/api/health', (_req, res) => {
 // 📊 ESTATÍSTICAS E DASHBOARD
 // ============================================================
 
-app.get('/api/stats', authMiddleware, async (req, res) => {
-  try {
-    const { data: users } = await supabase.from('users').select('id', { count: 'exact' });
-    const { data: vouchers } = await supabase.from('vouchers').select('id', { count: 'exact' });
-    const { data: payments } = await supabase.from('payments').select('amount');
-    const { data: pops } = await supabase.from('pops').select('id', { count: 'exact' });
-
-    const totalRevenue = payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
-
-    res.json({
-      totalUsers: users?.length || 0,
-      totalVouchers: vouchers?.length || 0,
-      totalRevenue: totalRevenue,
-      activePops: pops?.length || 0,
-      onlineUsers: 0 // Placeholder para integração MikroTik futura
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
-  try {
-    // Mock para o gráfico do dashboard enquanto não há logs de sessão reais
-    const hours = Array.from({ length: 24 }, (_, i) => `${i}h`);
-    const data = Array.from({ length: 24 }, () => Math.floor(Math.random() * 50));
-    res.json({ labels: hours, data: data });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================================
-// 📡 POPS (PONTOS DE PRESENÇA)
-// ============================================================
-
-app.get('/api/pops', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabase.from('pops').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    res.json(data || []);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/pops', authMiddleware, async (req, res) => {
-  try {
-    const { name, location, mikrotik_host, mikrotik_user, mikrotik_pass } = req.body;
-    const { data, error } = await supabase.from('pops').insert([{
-      name, location, mikrotik_host, mikrotik_user, mikrotik_pass
-    }]).select();
-    if (error) throw error;
-    res.status(201).json(data[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.put('/api/pops/:id', authMiddleware, async (req, res) => {
-  try {
-    const { name, location, mikrotik_host, mikrotik_user, mikrotik_pass } = req.body;
-    const { data, error } = await supabase.from('pops').update({
-      name, location, mikrotik_host, mikrotik_user, mikrotik_pass
-    }).eq('id', req.params.id).select();
-    if (error) throw error;
-    res.json(data[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
-  try {
-    const { error } = await supabase.from('pops').delete().eq('id', req.params.id);
-    if (error) throw error;
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Nota: Rotas de estatísticas e POPs já definidas anteriormente no arquivo.
+// Removendo duplicações para evitar conflitos.
 
 // ============================================================
 // ⚙️ CONFIGURAÇÕES DE CAMPOS DE CADASTRO
@@ -1284,6 +1205,45 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
 // 💾 BACKUP
 // ============================================================
 
+// Listar backups
+app.get('/api/backups', authMiddleware, async (req, res) => {
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) return res.json([]);
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.endsWith('.json'))
+      .map(f => ({
+        filename: f,
+        size: fs.statSync(path.join(BACKUP_DIR, f)).size,
+        created_at: fs.statSync(path.join(BACKUP_DIR, f)).birthtime
+      }))
+      .sort((a, b) => b.created_at - a.created_at);
+    res.json(files);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Alias para listar backups (compatibilidade)
+app.get('/api/backup/list', authMiddleware, (req, res) => {
+  req.url = '/api/backups';
+  app._router.handle(req, res);
+});
+
+// Download de backup
+app.get('/api/backups/download/:filename', authMiddleware, (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
+  res.download(filePath);
+});
+
+// Alias para download de backup (compatibilidade)
+app.get('/api/backup/download/:filename', authMiddleware, (req, res) => {
+  const { filename } = req.params;
+  req.url = `/api/backups/download/${filename}`;
+  app._router.handle(req, res);
+});
+
 app.post('/api/backup/create', authMiddleware, async (req, res) => {
   try {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -1379,10 +1339,11 @@ app.post('/api/portal/voucher', async (req, res) => {
 
 app.get('/api/portal/status', async (req, res) => {
   try {
-    const { mac } = req.query;
-    if (!mac) return res.json({ connected: false });
+    const { mac, mac_address } = req.query;
+    const targetMac = mac || mac_address;
+    if (!targetMac) return res.json({ connected: false });
     
-    const { data: session } = await supabase.from('hotspot_sessions').select('*').eq('mac_address', mac).eq('status', 'active').maybeSingle();
+    const { data: session } = await supabase.from('hotspot_sessions').select('*').eq('mac_address', targetMac).eq('status', 'active').maybeSingle();
     if (session && new Date(session.expires_at) > new Date()) {
       return res.json({ connected: true, expires_at: session.expires_at });
     }
@@ -1390,6 +1351,41 @@ app.get('/api/portal/status', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao verificar status' });
   }
+});
+
+// Rota pública para verificar status de pagamento por MAC (usada pelo portal)
+app.get('/api/portal/payment-status', async (req, res) => {
+  try {
+    const { mac_address } = req.query;
+    if (!mac_address) return res.status(400).json({ error: 'MAC é obrigatório' });
+
+    const { data, error } = await supabase.from('payments')
+      .select('*')
+      .eq('user_mac', mac_address)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    res.json(data || { status: 'not_found' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao verificar status de pagamento' });
+  }
+});
+
+// Rota de compatibilidade para o portal público que chama /api/payments sem token
+app.get('/api/payments', async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const { mac_address } = req.query;
+
+  // Se NÃO tem token e tem mac_address, redireciona para a rota pública do portal
+  if (!authHeader && mac_address) {
+    req.url = '/api/portal/payment-status';
+    return app._router.handle(req, res);
+  }
+
+  // Caso contrário, segue para o middleware de autenticação e rota admin
+  next();
 });
 
 // Rota de Teste Grátis (chamada pelo frontend)
