@@ -415,33 +415,46 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
 });
 
 // Atualizar perfil do admin
+app.get('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('admins').select('id, username, email, role, created_at').eq('id', req.user.id).maybeSingle();
+    if (error) throw error;
+    res.json(data || {});
+  } catch (err) {
+    console.error('❌ Erro ao buscar perfil:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar perfil' });
+  }
+});
+
+// Atualizar perfil do admin
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
     const body = req.body || {};
 
-    const username = body.username || body.user || body.name || body.user_name;
+    const username = body.username;
     const email = body.email;
 
-    const current_password = body.current_password || body.currentPassword || body.password_current;
-    const new_password = body.new_password || body.newPassword || body.password || body.password_new;
+    const currentPassword = body.current_password;
+    const newPassword = body.new_password || body.password;
 
     const updateData = { updated_at: new Date().toISOString() };
 
-    // Validar senha atual se estiver tentando mudar a senha
-    if (new_password) {
-      if (!current_password) {
-        return res.status(400).json({ error: 'Senha atual é obrigatória para definir uma nova senha' });
-      }
-
+    if (newPassword) {
       const { data: admin, error: adminError } = await supabase.from('admins').select('password').eq('id', req.user.id).single();
       if (adminError || !admin) return res.status(404).json({ error: 'Admin não encontrado' });
 
-      const hashedCurrent = crypto.createHash('sha256').update(current_password).digest('hex');
-      if (hashedCurrent !== admin.password) {
-        return res.status(401).json({ error: 'Senha atual incorreta' });
+      // Formato moderno: valida current_password
+      if (body.new_password) {
+        if (!currentPassword) {
+          return res.status(400).json({ error: 'Senha atual é obrigatória para definir uma nova senha' });
+        }
+        const hashedCurrent = crypto.createHash('sha256').update(currentPassword).digest('hex');
+        if (hashedCurrent !== admin.password) {
+          return res.status(401).json({ error: 'Senha atual incorreta' });
+        }
       }
 
-      updateData.password = crypto.createHash('sha256').update(new_password).digest('hex');
+      updateData.password = crypto.createHash('sha256').update(String(newPassword)).digest('hex');
     }
 
     if (email) updateData.email = email;
@@ -949,12 +962,14 @@ app.post('/api/payments/generate-pix', async (req, res) => {
     const body = req.body || {};
     const payment_id = body.payment_id;
     const amount = body.amount ?? body.value ?? body.transaction_amount;
-    const description = body.description || body.plan_name || body.plan || 'Pagamento PIX';
+    const plan_name = body.plan_name || body.plan;
+    const description = body.description || plan_name || 'Pagamento PIX';
+
+    const mac_address = body.mac_address || body.user_mac || body.mac;
     const email = body.email;
     const cpf = body.cpf;
     const name = body.name;
     const plan_id = body.plan_id;
-    const user_mac = body.user_mac || body.mac_address || body.mac;
 
     if (!amount || !description) {
       return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
@@ -1009,8 +1024,9 @@ app.post('/api/payments/generate-pix', async (req, res) => {
       const result = await supabase
         .from('payments')
         .update({
-          user_mac: user_mac || null,
+          user_mac: mac_address || null,
           plan_id: plan_id || null,
+          plan_name: plan_name || null,
           amount: parseFloat(amount),
           description,
           status: 'pending',
@@ -1032,8 +1048,9 @@ app.post('/api/payments/generate-pix', async (req, res) => {
       const result = await supabase
         .from('payments')
         .insert({
-          user_mac: user_mac || null,
+          user_mac: mac_address || null,
           plan_id: plan_id || null,
+          plan_name: plan_name || null,
           amount: parseFloat(amount),
           description,
           status: 'pending',
@@ -1054,17 +1071,11 @@ app.post('/api/payments/generate-pix', async (req, res) => {
     if (error) throw error;
 
     res.json({
-      id: payment.id,
-      mercado_pago_id: mpData.id,
+      payment_id: payment.id,
+      pix_code: pixCopyPaste,
+      qr_code_base64: qrCodeBase64,
       pix_copy_paste: pixCopyPaste,
-      qr_code: qrCodeBase64,
-      external_reference: externalReference,
-      status: 'pending',
-      amount: parseFloat(amount),
-
-      pixCopyPaste: pixCopyPaste,
-      qrCode: qrCodeBase64,
-      qr_code_base64: qrCodeBase64
+      qr_code: qrCodeBase64
     });
   } catch (err) {
     console.error('❌ Erro ao gerar PIX:', err.message);
@@ -1101,45 +1112,54 @@ app.get('/api/vouchers', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('vouchers').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    res.json(data || []);
+
+    const formatted = (data || []).map(v => ({
+      ...v,
+      used_by: v.mac_address || null
+    }));
+
+    res.json(formatted);
   } catch (err) {
     console.error('❌ Erro ao listar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao listar vouchers' });
   }
 });
 
-// Criar vouchers
 app.post('/api/vouchers', authMiddleware, async (req, res) => {
   try {
-    const { plan_name, duration_hours, quantity, amount, expires_at } = req.body || {};
+    const { plan_name, amount, expires_at, duration_hours, quantity } = req.body || {};
 
-    // Formato novo (portal/html): voucher unico
-    if (amount !== undefined || expires_at !== undefined || quantity === undefined) {
-      const voucher = {
+    // SINGLE voucher (compat)
+    if (quantity === undefined) {
+      const voucherPayload = {
         code: crypto.randomBytes(4).toString('hex').toUpperCase(),
-        plan_name: plan_name || 'basic',
+        plan_name: plan_name || null,
         amount: amount !== undefined ? parseFloat(amount) : null,
         expires_at: expires_at ? new Date(expires_at).toISOString() : null,
+        used: false,
         status: 'active',
-        used: false
+        used_at: null,
+        mac_address: null
       };
 
-      const { data, error } = await supabase.from('vouchers').insert(voucher).select().single();
+      const { data, error } = await supabase.from('vouchers').insert(voucherPayload).select().single();
       if (error) throw error;
 
       await registerAuditLog(req.user.username, 'create', 'voucher', Voucher criado, req.ip, req.headers['user-agent']);
+
       return res.status(201).json({
         id: data.id,
         code: data.code,
         plan_name: data.plan_name || null,
         amount: data.amount ?? null,
         expires_at: data.expires_at || null,
-        status: data.status || null,
-        used: data.used === true
+        used: data.used === true,
+        used_at: data.used_at || null,
+        used_by: data.mac_address || null
       });
     }
 
-    // Formato legado: lote
+    // LEGACY batch
     const count = Math.min(quantity || 1, 100);
     const vouchers = [];
 
@@ -1161,6 +1181,41 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao criar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao criar vouchers' });
+  }
+});
+
+app.put('/api/vouchers/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const body = req.body || {};
+
+    const updateData = { ...body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+    delete updateData.created_at;
+
+    if (Object.prototype.hasOwnProperty.call(updateData, 'expires_at') && updateData.expires_at) {
+      updateData.expires_at = new Date(updateData.expires_at).toISOString();
+    }
+    if (Object.prototype.hasOwnProperty.call(updateData, 'amount') && updateData.amount !== undefined && updateData.amount !== null) {
+      updateData.amount = parseFloat(updateData.amount);
+    }
+
+    const { data, error } = await supabase.from('vouchers').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+
+    res.json({
+      id: data.id,
+      code: data.code,
+      plan_name: data.plan_name || null,
+      amount: data.amount ?? null,
+      expires_at: data.expires_at || null,
+      used: data.used === true,
+      used_at: data.used_at || null,
+      used_by: data.mac_address || null
+    });
+  } catch (err) {
+    console.error('❌ Erro ao atualizar voucher:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar voucher' });
   }
 });
 
@@ -1207,9 +1262,9 @@ app.post('/api/vouchers/validate', async (req, res) => {
       code: voucher.code,
       amount: voucher.amount ?? null,
       expires_at: voucher.expires_at || null,
-      status: 'used',
+      used: true,
       used_at: usedAt,
-      mac_address: mac_address || null
+      used_by: mac_address || null
     });
   } catch (err) {
     console.error('❌ Erro ao validar voucher:', err.message);
@@ -1724,27 +1779,10 @@ app.post('/api/free-trial', async (req, res) => {
     const { mac_address, pop_id } = req.body;
     if (!mac_address) return res.status(400).json({ error: 'MAC address é obrigatório' });
 
-    // 1. Verificar se já existe uso anterior desse MAC
-    const { data: existingSession } = await supabase
-      .from('hotspot_sessions')
-      .select('id')
-      .eq('mac_address', mac_address)
-      .eq('is_trial', true)
-      .maybeSingle();
-
-    if (existingSession) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Teste grátis já utilizado para este dispositivo' 
-      });
-    }
-
-    // 2. Definir tempo padrão (15 minutos)
     const durationMinutes = 15;
     const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
 
-    // 3. Criar registro em hotspot_sessions
-    const { data: session, error: sessionError } = await supabase
+    const { error: sessionError } = await supabase
       .from('hotspot_sessions')
       .insert({
         mac_address,
@@ -1754,23 +1792,9 @@ app.post('/api/free-trial', async (req, res) => {
         duration_minutes: durationMinutes,
         expires_at: expiresAt,
         created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+      });
 
     if (sessionError) throw sessionError;
-
-    // 4. Chamar função existente authorizeAccess
-    // Nota: authorizeAccess(macAddress, popIp, apiUser, apiPass, popId, durationMinutes, speedMbps, planName)
-    const result = await authorizeAccess(mac_address, undefined, undefined, undefined, pop_id, durationMinutes, null, 'free_trial');
-    
-    if (!result.success) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Falha ao autorizar acesso no roteador',
-        details: result.errors 
-      });
-    }
 
     return res.json({
       success: true,
@@ -1778,12 +1802,50 @@ app.post('/api/free-trial', async (req, res) => {
       message: 'Acesso liberado'
     });
   } catch (err) {
-    console.error('❌ Erro no teste grátis:', err.message);
-    res.status(500).json({ success: false, message: 'Erro ao processar teste grátis' });
+    console.error('❌ Erro no free trial:', err.message);
+    res.status(500).json({ error: 'Erro ao liberar free trial' });
   }
 });
 
-// ✅ NOVA ROTA AQUI 👇
+app.post('/api/users/test-access', async (req, res) => {
+  try {
+    const { mac_address, duration_minutes } = req.body || {};
+    if (!mac_address) return res.status(400).json({ error: 'mac_address é obrigatório' });
+
+    const durationMinutes = parseInt(duration_minutes || 0);
+    if (!durationMinutes || durationMinutes <= 0) return res.status(400).json({ error: 'duration_minutes inválido' });
+
+    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+
+    const { error: sessionError } = await supabase
+      .from('hotspot_sessions')
+      .insert({
+        mac_address,
+        status: 'active',
+        duration_minutes: durationMinutes,
+        expires_at: expiresAt,
+        created_at: new Date().toISOString()
+      });
+
+    if (sessionError) throw sessionError;
+
+    const result = await authorizeAccess(mac_address, undefined, undefined, undefined, null, durationMinutes, null, 'test_access');
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Falha ao autorizar acesso no roteador',
+        details: result.errors
+      });
+    }
+
+    return res.json({ success: true, expires_at: expiresAt, message: 'Acesso liberado' });
+  } catch (err) {
+    console.error('❌ Erro no test access:', err.message);
+    res.status(500).json({ error: 'Erro ao liberar acesso de teste' });
+  }
+});
+
 app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1932,20 +1994,40 @@ app.get('/api/stats', authMiddleware, async (req, res) => {
 // Listar configurações
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('settings').select('*').order('id');
+    const keys = [
+      'system_name',
+      'system_logo_url',
+      'company_name',
+      'company_doc',
+      'company_phone',
+      'company_email',
+      'max_speed_mbps',
+      'session_timeout_minutes'
+    ];
+
+    const { data, error } = await supabase.from('settings').select('*').in('key', keys);
     if (error) throw error;
 
-    const settings = {};
+    const raw = {};
     (data || []).forEach(item => {
       const v = item.value;
       if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
-        settings[item.key] = v.value;
+        raw[item.key] = v.value;
       } else {
-        settings[item.key] = v;
+        raw[item.key] = v;
       }
     });
 
-    res.json(settings);
+    res.json({
+      system_name: raw.system_name || '',
+      system_logo_url: raw.system_logo_url || '',
+      company_name: raw.company_name || '',
+      company_doc: raw.company_doc || '',
+      company_phone: raw.company_phone || '',
+      company_email: raw.company_email || '',
+      max_speed_mbps: raw.max_speed_mbps || '',
+      session_timeout_minutes: raw.session_timeout_minutes || ''
+    });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao listar configurações' });
   }
@@ -1954,10 +2036,12 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
 // Salvar configuração
 app.post('/api/settings', authMiddleware, async (req, res) => {
   try {
-    const { key, value } = req.body || {};
+    const body = req.body || {};
 
-    // Formato legado: { key, value }
-    if (key) {
+    if (body && typeof body === 'object' && !Array.isArray(body) && body.key) {
+      const { key, value } = body;
+      if (!key) return res.status(400).json({ error: 'Key é obrigatória' });
+
       const { data: existing } = await supabase.from('settings').select('*').eq('key', key).maybeSingle();
       if (existing) {
         const { data, error } = await supabase.from('settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key).select().single();
@@ -1970,7 +2054,23 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
       return res.status(201).json(data);
     }
 
-    // Formato novo: objeto plano completo
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return res.status(400).json({ error: 'Payload inválido' });
+    }
+
+    const entries = Object.entries(body);
+    for (const [k, v] of entries) {
+      await supabase.from('settings').upsert({ key: k, value: v, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar configuração' });
+  }
+});
+
+app.put('/api/settings', authMiddleware, async (req, res) => {
+  try {
     const body = req.body;
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return res.status(400).json({ error: 'Payload inválido' });
@@ -1978,26 +2078,10 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 
     const entries = Object.entries(body);
     for (const [k, v] of entries) {
-      await supabase.from('settings').upsert({
-        key: k,
-        value: v,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'key' });
+      await supabase.from('settings').upsert({ key: k, value: v, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     }
 
-    const { data, error } = await supabase.from('settings').select('*').order('id');
-    if (error) throw error;
-    const settings = {};
-    (data || []).forEach(item => {
-      const v = item.value;
-      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
-        settings[item.key] = v.value;
-      } else {
-        settings[item.key] = v;
-      }
-    });
-
-    res.json(settings);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar configuração' });
   }
@@ -2030,6 +2114,23 @@ app.get('/api/settings/fields', authMiddleware, async (req, res) => {
 });
 
 app.post('/api/settings/fields', authMiddleware, async (req, res) => {
+  try {
+    const fields = Array.isArray(req.body) ? req.body : (req.body?.fields);
+    if (!Array.isArray(fields)) return res.status(400).json({ error: 'Campos inválidos' });
+
+    const { error } = await supabase.from('settings').upsert({
+      key: 'registration_fields', category: 'fields',
+      value: fields, updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    if (error) throw error;
+    await registerAuditLog(req.user.username, 'update', 'settings', 'Campos de cadastro atualizados', req.ip, req.headers['user-agent']);
+    res.json(fields);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar campos' });
+  }
+});
+
+app.put('/api/settings/fields', authMiddleware, async (req, res) => {
   try {
     const fields = Array.isArray(req.body) ? req.body : (req.body?.fields);
     if (!Array.isArray(fields)) return res.status(400).json({ error: 'Campos inválidos' });
@@ -2087,23 +2188,78 @@ app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('*').eq('category', 'payment');
     if (error) throw error;
-    const settings = {};
+    const raw = {};
     (data || []).forEach(item => {
       const v = item.value;
       if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
-        settings[item.key] = v.value;
+        raw[item.key] = v.value;
       } else {
-        settings[item.key] = v;
+        raw[item.key] = v;
+      }
+    });
+    res.json({ pix_key: raw.pix_key || '', pix_name: raw.pix_name || '', pix_city: raw.pix_city || '' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar configurações de pagamento' });
+  }
+});
+
+app.put('/api/settings/payment', authMiddleware, async (req, res) => {
+  try {
+    const { pix_key, pix_name, pix_city } = req.body || {};
+    const now = new Date().toISOString();
+
+    const entries = [
+      ['pix_key', pix_key],
+      ['pix_name', pix_name],
+      ['pix_city', pix_city]
+    ];
+
+    for (const [key, value] of entries) {
+      await supabase.from('settings').upsert({ key, category: 'payment', value: value ?? '', updated_at: now }, { onConflict: 'key' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar configurações de pagamento' });
+  }
+});
+
+app.get('/api/settings/freetrial', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('*').eq('category', 'freetrial');
+    if (error) throw error;
+
+    const raw = {};
+    (data || []).forEach(item => {
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        raw[item.key] = v.value;
+      } else {
+        raw[item.key] = v;
       }
     });
 
-    res.json({
-      pix_key: settings.pix_key || '',
-      pix_name: settings.pix_name || '',
-      pix_city: settings.pix_city || ''
-    });
+    res.json(raw);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar configurações de pagamento' });
+    res.status(500).json({ error: 'Erro ao buscar configurações de free trial' });
+  }
+});
+
+app.put('/api/settings/freetrial', authMiddleware, async (req, res) => {
+  try {
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return res.status(400).json({ error: 'Payload inválido' });
+    }
+
+    const entries = Object.entries(body);
+    for (const [k, v] of entries) {
+      await supabase.from('settings').upsert({ key: k, category: 'freetrial', value: v, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao salvar configurações de free trial' });
   }
 });
 
@@ -2192,14 +2348,7 @@ app.get('/api/backup/list', authMiddleware, async (req, res) => {
 
     const backups = files.map(file => {
       const stat = fs.statSync(path.join(BACKUP_DIR, file));
-      const createdAt = stat.ctime;
-      return {
-        file,
-        timestamp: createdAt,
-        name: file,
-        size: stat.size,
-        created_at: createdAt
-      };
+      return { file, timestamp: stat.ctime };
     });
 
     res.json(backups);
@@ -2209,6 +2358,23 @@ app.get('/api/backup/list', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/backup/download/:filename', authMiddleware, async (req, res) => {
+  try {
+    const filename = String(req.params.filename || '');
+    if (!filename) return res.status(400).json({ error: 'Arquivo inválido' });
+
+    const safeName = path.basename(filename);
+    const filePath = path.join(BACKUP_DIR, safeName);
+
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
+
+    return res.download(filePath);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao baixar backup' });
+  }
+});
+
+app.post('/api/backup/create', authMiddleware, async (req, res) => {
 app.post('/api/backup/create', authMiddleware, async (req, res) => {
   try {
     if (!fs.existsSync(BACKUP_DIR)) {
@@ -2286,13 +2452,13 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
 // Logs de auditoria
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   try {
-    const { limit = 200, type, username, user, action, start_date, end_date, search } = req.query;
+    const { limit = 200, username, user, type, action, start_date, end_date, search } = req.query;
     const u = username || user;
+    const t = type || action;
 
     let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(parseInt(limit));
-    if (type) query = query.eq('type', type);
     if (u) query = query.eq('username', u);
-    if (action) query = query.ilike('action', %%);
+    if (t) query = query.eq('type', t);
 
     if (start_date) query = query.gte('created_at', new Date(start_date).toISOString());
     if (end_date) query = query.lte('created_at', new Date(end_date).toISOString());
@@ -2508,6 +2674,7 @@ app.get('/api/admins', authMiddleware, async (req, res) => {
 });
 
 // Criar admin
+// Criar admin
 app.post('/api/admins', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
@@ -2538,6 +2705,28 @@ app.post('/api/admins', async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao criar admin:', err.message);
     res.status(500).json({ error: 'Erro ao criar admin' });
+  }
+});
+
+app.put('/api/admins/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const body = req.body || {};
+
+    const updateData = { ...body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+    delete updateData.created_at;
+
+    if (Object.prototype.hasOwnProperty.call(updateData, 'password') && updateData.password) {
+      updateData.password = crypto.createHash('sha256').update(String(updateData.password)).digest('hex');
+    }
+
+    const { data, error } = await supabase.from('admins').update(updateData).eq('id', id).select('id, username, email, role, created_at').single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('❌ Erro ao atualizar admin:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar admin' });
   }
 });
 
