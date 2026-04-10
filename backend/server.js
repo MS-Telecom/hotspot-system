@@ -1,5 +1,5 @@
 // ============================================================
-// 🚀 HOTSPOT SYSTEM - MS TELECOM
+// 🚀 HOTSPOT SYSTEM - MS TELECOM FIBER CONNECTIONS
 // Backend principal (server.js) - VERSÃO DEFINITIVA
 // Código interno em inglês, comentários em português
 // ============================================================
