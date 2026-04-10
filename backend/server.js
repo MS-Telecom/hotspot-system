@@ -417,7 +417,14 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
 // Atualizar perfil do admin
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
-    const { username, email, current_password, new_password } = req.body;
+    const body = req.body || {};
+
+    const username = body.username || body.user || body.name || body.user_name;
+    const email = body.email;
+
+    const current_password = body.current_password || body.currentPassword || body.password_current;
+    const new_password = body.new_password || body.newPassword || body.password || body.password_new;
+
     const updateData = { updated_at: new Date().toISOString() };
 
     // Validar senha atual se estiver tentando mudar a senha
@@ -825,23 +832,41 @@ app.get('/api/plans/:id/details', authMiddleware, async (req, res) => {
 // ============================================================
 
 // Listar pagamentos
-app.get('/api/payments', authMiddleware, async (req, res) => {
+app.get('/api/payments', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const macAddress = req.query.mac_address;
+
+    if (!macAddress) {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+      if (!token) return res.status(401).json({ error: 'Token não fornecido' });
+      try {
+        req.user = jwt.verify(token, JWT_SECRET);
+      } catch (err) {
+        return res.status(401).json({ error: 'Token inválido ou expirado' });
+      }
+    }
+
+    let query = supabase
       .from('payments')
-      .select(`
+      .select(
         *,
         users:user_id (name, mac_address),
         pops:pop_id (name)
-      `)
+      )
       .order('created_at', { ascending: false });
 
+    if (macAddress) {
+      query = query.eq('user_mac', String(macAddress));
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
 
     const formattedData = (data || []).map(payment => ({
       ...payment,
       user_name: payment.users?.name || 'N/A',
-      mac_address: payment.users?.mac_address || 'N/A',
+      mac_address: payment.users?.mac_address || payment.user_mac || 'N/A',
       pop_name: payment.pops?.name || 'N/A'
     }));
 
@@ -921,7 +946,15 @@ app.get('/api/check-payment-by-mac', async (req, res) => {
 // Gerar PIX via Mercado Pago
 app.post('/api/payments/generate-pix', async (req, res) => {
   try {
-    const { payment_id, amount, description, email, cpf, name, plan_id, user_mac } = req.body;
+    const body = req.body || {};
+    const payment_id = body.payment_id;
+    const amount = body.amount ?? body.value ?? body.transaction_amount;
+    const description = body.description || body.plan_name || body.plan || 'Pagamento PIX';
+    const email = body.email;
+    const cpf = body.cpf;
+    const name = body.name;
+    const plan_id = body.plan_id;
+    const user_mac = body.user_mac || body.mac_address || body.mac;
 
     if (!amount || !description) {
       return res.status(400).json({ error: 'Valor e descrição são obrigatórios' });
@@ -932,13 +965,13 @@ app.post('/api/payments/generate-pix', async (req, res) => {
       return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
     }
 
-    const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    const externalReference = HS--;
 
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MP_TOKEN}`,
+        'Authorization': Bearer ,
         'X-Idempotency-Key': externalReference
       },
       body: JSON.stringify({
@@ -1027,7 +1060,11 @@ app.post('/api/payments/generate-pix', async (req, res) => {
       qr_code: qrCodeBase64,
       external_reference: externalReference,
       status: 'pending',
-      amount: parseFloat(amount)
+      amount: parseFloat(amount),
+
+      pixCopyPaste: pixCopyPaste,
+      qrCode: qrCodeBase64,
+      qr_code_base64: qrCodeBase64
     });
   } catch (err) {
     console.error('❌ Erro ao gerar PIX:', err.message);
@@ -1074,7 +1111,35 @@ app.get('/api/vouchers', authMiddleware, async (req, res) => {
 // Criar vouchers
 app.post('/api/vouchers', authMiddleware, async (req, res) => {
   try {
-    const { plan_name, duration_hours, quantity } = req.body;
+    const { plan_name, duration_hours, quantity, amount, expires_at } = req.body || {};
+
+    // Formato novo (portal/html): voucher unico
+    if (amount !== undefined || expires_at !== undefined || quantity === undefined) {
+      const voucher = {
+        code: crypto.randomBytes(4).toString('hex').toUpperCase(),
+        plan_name: plan_name || 'basic',
+        amount: amount !== undefined ? parseFloat(amount) : null,
+        expires_at: expires_at ? new Date(expires_at).toISOString() : null,
+        status: 'active',
+        used: false
+      };
+
+      const { data, error } = await supabase.from('vouchers').insert(voucher).select().single();
+      if (error) throw error;
+
+      await registerAuditLog(req.user.username, 'create', 'voucher', Voucher criado, req.ip, req.headers['user-agent']);
+      return res.status(201).json({
+        id: data.id,
+        code: data.code,
+        plan_name: data.plan_name || null,
+        amount: data.amount ?? null,
+        expires_at: data.expires_at || null,
+        status: data.status || null,
+        used: data.used === true
+      });
+    }
+
+    // Formato legado: lote
     const count = Math.min(quantity || 1, 100);
     const vouchers = [];
 
@@ -1091,7 +1156,7 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
     const { data, error } = await supabase.from('vouchers').insert(vouchers).select();
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'create', 'voucher', `${count} vouchers criados`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'voucher', ${count} vouchers criados, req.ip, req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar vouchers:', err.message);
@@ -1128,12 +1193,24 @@ app.post('/api/vouchers/validate', async (req, res) => {
     if (voucher.status === 'used' || voucher.used === true) return res.status(400).json({ valid: false, error: 'Voucher já utilizado' });
     if (voucher.status === 'expired') return res.status(400).json({ valid: false, error: 'Voucher expirado' });
 
+    const usedAt = new Date().toISOString();
+
     await supabase.from('vouchers').update({
-      status: 'used', used: true, used_at: new Date().toISOString(),
+      status: 'used', used: true, used_at: usedAt,
       mac_address: mac_address || null, updated_at: new Date().toISOString()
     }).eq('id', voucher.id);
 
-    return res.json({ valid: true, voucher_id: voucher.id, plan_name: voucher.plan_name || null });
+    return res.json({
+      valid: true,
+      voucher_id: voucher.id,
+      plan_name: voucher.plan_name || null,
+      code: voucher.code,
+      amount: voucher.amount ?? null,
+      expires_at: voucher.expires_at || null,
+      status: 'used',
+      used_at: usedAt,
+      mac_address: mac_address || null
+    });
   } catch (err) {
     console.error('❌ Erro ao validar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao validar voucher' });
@@ -1141,10 +1218,6 @@ app.post('/api/vouchers/validate', async (req, res) => {
 });
 
 // ============================================================
-// 📢 ROTAS DE CAMPANHAS
-// ============================================================
-
-// Listar campanhas
 app.get('/api/campaigns', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
@@ -1861,7 +1934,18 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('*').order('id');
     if (error) throw error;
-    res.json(data || []);
+
+    const settings = {};
+    (data || []).forEach(item => {
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        settings[item.key] = v.value;
+      } else {
+        settings[item.key] = v;
+      }
+    });
+
+    res.json(settings);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao listar configurações' });
   }
@@ -1870,19 +1954,50 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
 // Salvar configuração
 app.post('/api/settings', authMiddleware, async (req, res) => {
   try {
-    const { key, value } = req.body;
-    if (!key) return res.status(400).json({ error: 'Key é obrigatória' });
+    const { key, value } = req.body || {};
 
-    const { data: existing } = await supabase.from('settings').select('*').eq('key', key).maybeSingle();
-    if (existing) {
-      const { data, error } = await supabase.from('settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key).select().single();
+    // Formato legado: { key, value }
+    if (key) {
+      const { data: existing } = await supabase.from('settings').select('*').eq('key', key).maybeSingle();
+      if (existing) {
+        const { data, error } = await supabase.from('settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key).select().single();
+        if (error) throw error;
+        return res.json(data);
+      }
+
+      const { data, error } = await supabase.from('settings').insert({ key, value }).select().single();
       if (error) throw error;
-      return res.json(data);
+      return res.status(201).json(data);
     }
 
-    const { data, error } = await supabase.from('settings').insert({ key, value }).select().single();
+    // Formato novo: objeto plano completo
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return res.status(400).json({ error: 'Payload inválido' });
+    }
+
+    const entries = Object.entries(body);
+    for (const [k, v] of entries) {
+      await supabase.from('settings').upsert({
+        key: k,
+        value: v,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'key' });
+    }
+
+    const { data, error } = await supabase.from('settings').select('*').order('id');
     if (error) throw error;
-    res.status(201).json(data);
+    const settings = {};
+    (data || []).forEach(item => {
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        settings[item.key] = v.value;
+      } else {
+        settings[item.key] = v;
+      }
+    });
+
+    res.json(settings);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar configuração' });
   }
@@ -1903,9 +2018,12 @@ app.delete('/api/settings/:key', authMiddleware, async (req, res) => {
 // Campos de cadastro
 app.get('/api/settings/fields', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('settings').select('*').eq('category', 'fields');
+    const { data, error } = await supabase.from('settings').select('*').eq('key', 'registration_fields').maybeSingle();
     if (error) throw error;
-    res.json(data || []);
+    const v = data?.value;
+    if (Array.isArray(v)) return res.json(v);
+    if (v && typeof v === 'object' && Array.isArray(v.fields)) return res.json(v.fields);
+    res.json([]);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar campos' });
   }
@@ -1913,14 +2031,16 @@ app.get('/api/settings/fields', authMiddleware, async (req, res) => {
 
 app.post('/api/settings/fields', authMiddleware, async (req, res) => {
   try {
-    const { fields } = req.body;
+    const fields = Array.isArray(req.body) ? req.body : (req.body?.fields);
+    if (!Array.isArray(fields)) return res.status(400).json({ error: 'Campos inválidos' });
+
     const { error } = await supabase.from('settings').upsert({
       key: 'registration_fields', category: 'fields',
       value: fields, updated_at: new Date().toISOString()
     }, { onConflict: 'key' });
     if (error) throw error;
     await registerAuditLog(req.user.username, 'update', 'settings', 'Campos de cadastro atualizados', req.ip, req.headers['user-agent']);
-    res.json({ message: 'Campos salvos com sucesso' });
+    res.json(fields);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar campos' });
   }
@@ -1968,8 +2088,20 @@ app.get('/api/settings/payment', authMiddleware, async (req, res) => {
     const { data, error } = await supabase.from('settings').select('*').eq('category', 'payment');
     if (error) throw error;
     const settings = {};
-    (data || []).forEach(item => { settings[item.key] = item.value; });
-    res.json(settings);
+    (data || []).forEach(item => {
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        settings[item.key] = v.value;
+      } else {
+        settings[item.key] = v;
+      }
+    });
+
+    res.json({
+      pix_key: settings.pix_key || '',
+      pix_name: settings.pix_name || '',
+      pix_city: settings.pix_city || ''
+    });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar configurações de pagamento' });
   }
@@ -1985,12 +2117,24 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
 
     if (error) throw error;
 
-    const settings = {};
+    const raw = {};
     (data || []).forEach(item => {
-      settings[item.key] = item.value;
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        raw[item.key] = v.value;
+      } else {
+        raw[item.key] = v;
+      }
     });
 
-    res.json(settings);
+    res.json({
+      supabase_url: raw.supabase_url || '',
+      supabase_anon_key: raw.supabase_anon_key || '',
+      radius_server: raw.radius_server || '',
+      radius_secret: raw.radius_secret || '',
+      radius_auth_port: raw.radius_auth_port || '',
+      radius_acct_port: raw.radius_acct_port || ''
+    });
 
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar integrações' });
@@ -1999,18 +2143,38 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
 
 app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
-    const entries = Object.entries(req.body);
+    const entries = Object.entries(req.body || {});
 
     for (const [key, value] of entries) {
       await supabase.from('settings').upsert({
         key,
         category: 'integrations',
-        value: typeof value === 'object' ? value : { value },
+        value,
         updated_at: new Date().toISOString()
-}, { onConflict: 'key' });
+      }, { onConflict: 'key' });
     }
 
-    res.json({ success: true });
+    const { data, error } = await supabase.from('settings').select('*').eq('category', 'integrations');
+    if (error) throw error;
+
+    const raw = {};
+    (data || []).forEach(item => {
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        raw[item.key] = v.value;
+      } else {
+        raw[item.key] = v;
+      }
+    });
+
+    res.json({
+      supabase_url: raw.supabase_url || '',
+      supabase_anon_key: raw.supabase_anon_key || '',
+      radius_server: raw.radius_server || '',
+      radius_secret: raw.radius_secret || '',
+      radius_auth_port: raw.radius_auth_port || '',
+      radius_acct_port: raw.radius_acct_port || ''
+    });
 
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar integrações' });
@@ -2018,10 +2182,6 @@ app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
 });
 
 const fs = require('fs');
-const path = require('path');
-
-const BACKUP_DIR = path.join(__dirname, 'backups');
-
 app.get('/api/backup/list', authMiddleware, async (req, res) => {
   try {
     if (!fs.existsSync(BACKUP_DIR)) {
@@ -2030,11 +2190,17 @@ app.get('/api/backup/list', authMiddleware, async (req, res) => {
 
     const files = fs.readdirSync(BACKUP_DIR);
 
-    const backups = files.map(file => ({
-      name: file,
-      size: fs.statSync(path.join(BACKUP_DIR, file)).size,
-      created_at: fs.statSync(path.join(BACKUP_DIR, file)).ctime
-    }));
+    const backups = files.map(file => {
+      const stat = fs.statSync(path.join(BACKUP_DIR, file));
+      const createdAt = stat.ctime;
+      return {
+        file,
+        timestamp: createdAt,
+        name: file,
+        size: stat.size,
+        created_at: createdAt
+      };
+    });
 
     res.json(backups);
 
@@ -2099,10 +2265,15 @@ app.post('/api/backup/create', authMiddleware, async (req, res) => {
 // Logs do sistema
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
-    const { limit = 200, level, source } = req.query;
+    const { limit = 200, level, source, start_date, end_date, search } = req.query;
     let query = supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(parseInt(limit));
     if (level) query = query.eq('level', level);
     if (source) query = query.eq('source', source);
+
+    if (start_date) query = query.gte('created_at', new Date(start_date).toISOString());
+    if (end_date) query = query.lte('created_at', new Date(end_date).toISOString());
+    if (search) query = query.ilike('message', %%);
+
     const { data, error } = await query;
     if (error) throw error;
     res.json(data || []);
@@ -2115,10 +2286,18 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
 // Logs de auditoria
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   try {
-    const { limit = 200, type, username } = req.query;
+    const { limit = 200, type, username, user, action, start_date, end_date, search } = req.query;
+    const u = username || user;
+
     let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(parseInt(limit));
     if (type) query = query.eq('type', type);
-    if (username) query = query.eq('username', username);
+    if (u) query = query.eq('username', u);
+    if (action) query = query.ilike('action', %%);
+
+    if (start_date) query = query.gte('created_at', new Date(start_date).toISOString());
+    if (end_date) query = query.lte('created_at', new Date(end_date).toISOString());
+    if (search) query = query.ilike('action', %%);
+
     const { data, error } = await query;
     if (error) throw error;
     res.json(data || []);
@@ -2188,9 +2367,18 @@ app.get('/api/hotspots', authMiddleware, async (req, res) => {
 // Estatísticas - Usuários por hora (dados de exemplo)
 app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
     try {
-        // Retorna array com 24 zeros (placeholder)
-        const hours = Array.from({length: 24}, (_, i) => ({ hour: i, count: 0 }));
-        res.json({ data: hours });
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase.from('hotspot_sessions').select('created_at').gte('created_at', since);
+        if (error) throw error;
+
+        const counts = Array.from({ length: 24 }, (_, i) => ({ hour: i, count: 0 }));
+        (data || []).forEach(row => {
+          const d = row.created_at ? new Date(row.created_at) : null;
+          if (!d || isNaN(d.getTime())) return;
+          counts[d.getHours()].count += 1;
+        });
+
+        res.json({ data: counts });
     } catch (err) {
         console.error('❌ Erro em /api/stats/users-per-hour:', err.message);
         res.status(500).json({ error: 'Erro ao buscar dados' });
@@ -2200,7 +2388,23 @@ app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
 // Estatísticas - Tráfego total
 app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
     try {
-        res.json({ total_gb: 0, peak_mbps: 0 });
+        const { data, error } = await supabase.from('pops').select('*');
+        if (error) throw error;
+
+        let peakMbps = 0;
+        let totalGb = 0;
+
+        (data || []).forEach(p => {
+          const bw = String(p.bandwidth_used || '').toLowerCase();
+          const m = bw.match(/([0-9]+(\.[0-9]+)?)/);
+          const n = m ? parseFloat(m[1]) : 0;
+          if (!isNaN(n)) peakMbps = Math.max(peakMbps, n);
+
+          const gb = parseFloat(p.total_gb ?? p.traffic_gb ?? p.data_gb ?? 0);
+          if (!isNaN(gb)) totalGb += gb;
+        });
+
+        res.json({ total_gb: totalGb, peak_mbps: peakMbps });
     } catch (err) {
         console.error('❌ Erro em /api/stats/total-traffic:', err.message);
         res.status(500).json({ error: 'Erro ao buscar tráfego' });
@@ -2304,8 +2508,24 @@ app.get('/api/admins', authMiddleware, async (req, res) => {
 });
 
 // Criar admin
-app.post('/api/admins', authMiddleware, async (req, res) => {
+app.post('/api/admins', async (req, res) => {
   try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+    if (token) {
+      try {
+        req.user = jwt.verify(token, JWT_SECRET);
+      } catch (err) {
+        return res.status(401).json({ error: 'Token inválido ou expirado' });
+      }
+    } else {
+      const { count } = await supabase.from('admins').select('*', { count: 'exact', head: true });
+      if ((count || 0) > 0) {
+        return res.status(401).json({ error: 'Token não fornecido' });
+      }
+    }
+
     const { username, email, password, role } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
