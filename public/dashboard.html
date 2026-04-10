@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -27,7 +27,7 @@
         .chart-container { position: relative; height: 200px; width: 100%; }
     </style>
 </head>
-<body class="bg-[#0a0c15] text-gray-200">
+<body class="text-gray-200">
 
 <!-- 🔒 PROTEÇÃO DE ACESSO -->
 <script>
@@ -73,9 +73,6 @@
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="banknote" class="w-5 h-5"></i> Financeiro
             </a>
-            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
-            </a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas
             </a>
@@ -85,11 +82,17 @@
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="settings" class="w-5 h-5"></i> Configurações
             </a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
+            </a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs do Sistema
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
             </a>
             <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro
+                <i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro
             </a>
         </nav>
 
@@ -773,7 +776,7 @@ async function loadDashboard() {
                     </td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${pop.status === 'online' || pop.status === 'active' ? 'status-badge-online' : 'status-badge-offline'}">
-                            ${pop.status === 'online' || pop.status === 'active' ? 'â— Online' : 'â— Offline'}
+                            ${pop.status === 'online' || pop.status === 'active' ? '● Online' : '● Offline'}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-300">${pop.active_clients || 0}</td>
@@ -894,7 +897,7 @@ async function viewCustomerDetails(id, name) {
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'Não informado'}</p></div>
-                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? 'â— Ativo' : 'â— Bloqueado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? '● Ativo' : '● Bloqueado'}</p></div>
                 </div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
@@ -1065,4 +1068,3 @@ setInterval(loadDashboard, 30000);
 </script>
 </body>
 </html>
-
