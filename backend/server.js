@@ -862,11 +862,11 @@ app.get('/api/payments', async (req, res) => {
 
     let query = supabase
       .from('payments')
-      .select(`
+      .select(
         *,
         users:user_id (name, mac_address),
         pops:pop_id (name)
-      `)
+      )
       .order('created_at', { ascending: false });
 
     if (macAddress) {
@@ -1145,7 +1145,7 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
       const { data, error } = await supabase.from('vouchers').insert(voucherPayload).select().single();
       if (error) throw error;
 
-      await registerAuditLog(req.user.username, 'create', 'voucher', 'Voucher criado', req.ip, req.headers['user-agent']);
+      await registerAuditLog(req.user.username, 'create', 'voucher', Voucher criado, req.ip, req.headers['user-agent']);
 
       return res.status(201).json({
         id: data.id,
@@ -1176,7 +1176,7 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
     const { data, error } = await supabase.from('vouchers').insert(vouchers).select();
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'create', 'voucher', `${count} vouchers criados`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'voucher', ${count} vouchers criados, req.ip, req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar vouchers:', err.message);
@@ -2438,7 +2438,7 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
 
     if (start_date) query = query.gte('created_at', new Date(start_date).toISOString());
     if (end_date) query = query.lte('created_at', new Date(end_date).toISOString());
-    if (search) query = query.ilike('message', `%${search}%`);
+    if (search) query = query.ilike('message', %%);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -2462,7 +2462,7 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
 
     if (start_date) query = query.gte('created_at', new Date(start_date).toISOString());
     if (end_date) query = query.lte('created_at', new Date(end_date).toISOString());
-    if (search) query = query.ilike('action', `%${search}%`);
+    if (search) query = query.ilike('action', %%);
 
     const { data, error } = await query;
     if (error) throw error;
@@ -3026,5 +3026,4 @@ app.listen(PORT, '0.0.0.0', () => {
 ║  ✅ CRON: Remoção automática de acessos expirados            ║
 ╚══════════════════════════════════════════════════════════════╝
   `);
-});
 });
