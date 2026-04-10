@@ -1,15 +1,19 @@
 name: Deploy to VPS
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -17,8 +21,23 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /home/ubuntu/hotspot-system
-            git pull origin main
+            echo "📦 Limpando pasta antiga (exceto .env)"
+            find /home/ubuntu/hotspot-system -mindepth 1 ! -path "/home/ubuntu/hotspot-system/backend" ! -path "/home/ubuntu/hotspot-system/backend/.env" -exec rm -rf {} +
+
+            echo "⬇️ Clonando repositório"
+            git clone https://github.com/${{ github.repository }} /home/ubuntu/hotspot-system-temp
+
+            echo "📁 Movendo arquivos para a pasta oficial"
+            cp -r /home/ubuntu/hotspot-system-temp/* /home/ubuntu/hotspot-system/
+            rm -rf /home/ubuntu/hotspot-system-temp
+
+            echo "📦 Instalando dependências"
+            cd /home/ubuntu/hotspot-system/backend
             npm install --production
-            pm2 restart hotspot-system
+
+            echo "🚀 Reiniciando PM2"
+            pm2 delete hotspot || true
+            pm2 start server.js --name hotspot
+            pm2 save
+
             echo "✅ Deploy concluído em $(date )"
