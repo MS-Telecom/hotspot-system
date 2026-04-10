@@ -29,7 +29,7 @@
 </head>
 <body class="bg-[#0a0c15] text-gray-200">
 
-<!-- ðŸ”’ PROTEÇÃO DE ACESSO -->
+<!-- 🔒 PROTEÇÃO DE ACESSO -->
 <script>
     const authToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!authToken) {
@@ -140,7 +140,7 @@
         <!-- CONTEÚDO DO DASHBOARD -->
         <div class="p-8 space-y-8">
 
-            <!-- Header da PÃ¡gina -->
+            <!-- Header da Página -->
             <div>
                 <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
                 <p class="text-gray-500 text-sm mt-1">Visão geral da rede e métricas em tempo real</p>
@@ -157,7 +157,7 @@
                     </div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Receita Total</p>
                     <span id="totalRevenue" class="text-3xl font-black mt-1">R$ 0,00</span>
-                    <p class="text-[10px] text-gray-600 mt-2">MÃªs atual</p>
+                    <p class="text-[10px] text-gray-600 mt-2">Mês atual</p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -165,11 +165,11 @@
                         <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
                             <i data-lucide="check-circle" class="text-blue-500 w-6 h-6"></i>
                         </div>
-                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">ConcluÃ­dos</span>
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">Concluídos</span>
                     </div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos ConcluÃ­dos</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Concluídos</p>
                     <span id="completedPayments" class="text-3xl font-black mt-1">0</span>
-                    <p class="text-[10px] text-gray-600 mt-2">TransaÃ§Ãµes confirmadas</p>
+                    <p class="text-[10px] text-gray-600 mt-2">Transações confirmadas</p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -193,7 +193,7 @@
                     </div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Cancelados</p>
                     <span id="canceledPayments" class="text-3xl font-black mt-1">0</span>
-                    <p class="text-[10px] text-gray-600 mt-2">TransaÃ§Ãµes canceladas</p>
+                    <p class="text-[10px] text-gray-600 mt-2">Transações canceladas</p>
                 </div>
             </div>
 
@@ -229,7 +229,7 @@
                             <i data-lucide="activity" class="text-orange-500 w-6 h-6"></i>
                         </div>
                     </div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">TrÃ¡fego Total</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Tráfego Total</p>
                     <span id="totalTraffic" class="text-3xl font-black mt-1">0 GB</span>
                     <p class="text-[10px] text-gray-600 mt-2">Pico: <span id="peakBandwidth">0</span> Mbps</p>
                 </div>
@@ -246,12 +246,12 @@
                 </div>
             </div>
 
-            <!-- GrÃ¡fico + Faturamento por Plano (2 colunas) -->
+            <!-- Gráfico + Faturamento por Plano (2 colunas) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- GrÃ¡fico de Usuários Online -->
+                <!-- Gráfico de Usuários Online -->
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-white">Usuários Online (Ãºltimas 24h)</h3>
+                        <h3 class="font-bold text-white">Usuários Online (últimas 24h)</h3>
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                             <span class="text-[10px] text-gray-500">Tempo real</span>
@@ -265,7 +265,7 @@
                 <!-- Cards de Resumo por Plano -->
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-white">Faturamento por Plano (Ãºltimos 30 dias)</h3>
+                        <h3 class="font-bold text-white">Faturamento por Plano (últimos 30 dias)</h3>
                         <button onclick="openPlanDetailsModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver detalhes</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -281,15 +281,15 @@
                             <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
                             </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">DiÃ¡rio</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Diário</p>
                             <p id="dailyRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p class="text-[9px] text-gray-600 mt-1">acessos diÃ¡rios</p>
+                            <p class="text-[9px] text-gray-600 mt-1">acessos diários</p>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
                             <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
                             </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste GrÃ¡tis</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
                             <p id="trialRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
                             <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
                         </div>
@@ -297,10 +297,10 @@
                 </div>
             </div>
 
-            <!-- Ãšltimas LiberaÃ§Ãµes -->
+            <!-- Últimas Liberações -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                 <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                    <h3 class="font-bold text-white">Ãšltimas LiberaÃ§Ãµes (PIX)</h3>
+                    <h3 class="font-bold text-white">Últimas Liberações (PIX)</h3>
                     <button onclick="openAllReleasesModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
                 </div>
                 <div class="overflow-x-auto">
@@ -312,11 +312,11 @@
                                 <th class="px-6 py-3 text-left">Plano</th>
                                 <th class="px-6 py-3 text-left">Valor</th>
                                 <th class="px-6 py-3 text-left">Data/Hora</th>
-                                <th class="px-6 py-3 text-center">AÃ§Ãµes</th>
+                                <th class="px-6 py-3 text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="releasesTable" class="divide-y divide-gray-800/50">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberaÃ§Ãµes...</td></tr>
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberações...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -338,7 +338,7 @@
                                 <th class="px-6 py-3 text-left">Nome do POP</th>
                                 <th class="px-6 py-3 text-left">Status</th>
                                 <th class="px-6 py-3 text-left">Clientes Ativos</th>
-                                <th class="px-6 py-3 text-left">Ãšltima Atividade</th>
+                                <th class="px-6 py-3 text-left">Última Atividade</th>
                                 <th class="px-6 py-3 text-center">Ação</th>
                             </tr>
                         </thead>
@@ -354,7 +354,7 @@
 
 <!-- ==================== MODAIS ==================== -->
 
-<!-- MODAL: NOVO VOUCHER (redireciona para pÃ¡gina de vouchers) -->
+<!-- MODAL: NOVO VOUCHER (redireciona para página de vouchers) -->
 <div id="newVoucherModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
@@ -370,7 +370,7 @@
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
                 <select id="voucherPlan" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                    <option value="diario">DiÃ¡rio (24h - R$ 5,00)</option>
+                    <option value="diario">Diário (24h - R$ 5,00)</option>
                     <option value="premium">Premium 24h (R$ 15,00)</option>
                     <option value="semanal">Premium Semanal (R$ 50,00)</option>
                 </select>
@@ -380,13 +380,13 @@
                 <input type="number" id="voucherQuantity" value="1" min="1" max="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido até</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label>
                 <input type="date" id="voucherExpiration" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div id="voucherResult" class="hidden bg-gray-900/50 rounded-xl p-4">
                 <p class="text-[10px] text-gray-500 uppercase mb-1">Voucher Gerado</p>
                 <code id="voucherCode" class="text-lg font-mono text-emerald-400 break-all"></code>
-                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar cÃ³digo</button>
+                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar código</button>
             </div>
         </div>
         <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
@@ -396,13 +396,13 @@
     </div>
 </div>
 
-<!-- MODAL: TODAS AS LIBERAÃ‡Ã•ES -->
+<!-- MODAL: TODAS AS LIBERAÇÕES -->
 <div id="allReleasesModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
         <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
             <h2 class="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
-                Todas as LiberaÃ§Ãµes
+                Todas as Liberações
             </h2>
             <button onclick="closeAllReleasesModal()" class="p-1 sm:p-2 hover:bg-gray-800 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
@@ -516,25 +516,25 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeProfileModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
+            <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
         </div>
     </div>
 </div>
 
 <script>
 // ============================================
-// CONFIGURAÃ‡Ã•ES GLOBAIS
+// CONFIGURAÇÕES GLOBAIS
 // ============================================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let usersPerHourChart = null;
 let currentCustomerId = null;
 
-// FunÃ§Ã£o para obter o token de autenticaÃ§Ã£o
+// Função para obter o token de autenticação
 function getAuthToken() {
     return localStorage.getItem('token') || localStorage.getItem('ms_token');
 }
 
-// FunÃ§Ã£o para construir headers com autenticaÃ§Ã£o
+// Função para construir headers com autenticação
 function buildAuthHeaders(includeJson = true) {
     const headers = {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -546,7 +546,7 @@ function buildAuthHeaders(includeJson = true) {
 }
 
 // ============================================
-// FUNÃ‡Ã•ES AUXILIARES
+// FUNÇÕES AUXILIARES
 // ============================================
 function updateSessionInfo() {
     const rawUser = localStorage.getItem('user');
@@ -578,7 +578,7 @@ function loadUserProfile() {
 }
 
 // ============================================
-// INICIALIZAÇÃO DO GRÃFICO
+// INICIALIZAÇÃO DO GRÁFICO
 // ============================================
 function initUsersPerHourChart(dataPoints = []) {
     const canvas = document.getElementById('usersPerHourChart');
@@ -626,7 +626,7 @@ async function loadDashboard() {
     }
 
     try {
-        // CORRIGIDO: Endpoints em inglÃªs conforme tabela de mapeamento
+        // CORRIGIDO: Endpoints em inglês conforme tabela de mapeamento
         const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes] = await Promise.all([
             fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) }),
@@ -687,8 +687,8 @@ async function loadDashboard() {
         const offlinePops = pops.filter(p => p.status !== 'online' && p.status !== 'active').length;
         const peakUsers = usersPerHourData.length ? Math.max(...usersPerHourData) : onlineUsers;
 
-        // TrÃ¡fego (mockado porque endpoint não especificado)
-        const totalTraffic = 0; // Seria substituÃ­do por chamada real
+        // Tráfego (mockado porque endpoint não especificado)
+        const totalTraffic = 0; // Seria substituído por chamada real
         const peakBandwidth = 0;
 
         // Atualizar DOM
@@ -712,7 +712,7 @@ async function loadDashboard() {
 
         initUsersPerHourChart(usersPerHourData);
 
-        // Tabela de Ãºltimas liberaÃ§Ãµes
+        // Tabela de últimas liberações
         const latestReleases = payments
             .filter(p => p.status === 'confirmed')
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -794,7 +794,7 @@ async function loadDashboard() {
 }
 
 // ============================================
-// FUNÃ‡Ã•ES DOS MODAIS
+// FUNÇÕES DOS MODAIS
 // ============================================
 async function openAllReleasesModal() {
     const modal = document.getElementById('allReleasesModal');
@@ -825,7 +825,7 @@ async function openAllReleasesModal() {
         }
     } catch (error) {
         console.error('Erro:', error);
-        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberaÃ§Ãµes</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberações</td></tr>';
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -855,7 +855,7 @@ async function openPlanDetailsModal() {
                         <span class="text-emerald-400 font-bold">R$ ${plan.price}</span>
                     </div>
                     <p class="text-xs text-gray-500">Velocidade: ${plan.speed_mbps} Mbps</p>
-                    <p class="text-xs text-gray-500">DuraÃ§Ã£o: ${plan.duration_days} dias</p>
+                    <p class="text-xs text-gray-500">Duração: ${plan.duration_days} dias</p>
                     <p class="text-xs text-gray-400 mt-2">${plan.description || ''}</p>
                 </div>
             `).join('');
@@ -893,12 +893,12 @@ async function viewCustomerDetails(id, name) {
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'NÃ£o informado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'Não informado'}</p></div>
                     <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? 'â— Ativo' : 'â— Bloqueado'}</p></div>
                 </div>
-                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'NÃ£o informado'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
-                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Ãšltimo acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Último acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
             </div>
         `;
         if (customer.status !== 'blocked') blockBtn.classList.remove('hidden');
@@ -919,16 +919,16 @@ async function blockCustomer(id) {
             headers: buildAuthHeaders(true)
         });
         if (response.ok) {
-            alert('âœ… Cliente bloqueado com sucesso!');
+            alert('✅ Cliente bloqueado com sucesso!');
             closeCustomerDetailsModal();
             loadDashboard();
         } else {
             const data = await response.json();
-            alert(data.error || 'âŒ Erro ao bloquear cliente');
+            alert(data.error || '❌ Erro ao bloquear cliente');
         }
     } catch (error) {
         console.error(error);
-        alert('âŒ Erro ao bloquear cliente');
+        alert('❌ Erro ao bloquear cliente');
     }
 }
 
@@ -941,14 +941,14 @@ async function markAsVip(id) {
             headers: buildAuthHeaders(true)
         });
         if (response.ok) {
-            alert('âœ… Cliente marcado como VIP com sucesso!');
+            alert('✅ Cliente marcado como VIP com sucesso!');
             loadDashboard();
         } else {
             const data = await response.json();
-            alert(data.error || 'âŒ Erro ao marcar cliente como VIP');
+            alert(data.error || '❌ Erro ao marcar cliente como VIP');
         }
     } catch (error) {
-        alert('âŒ Erro ao marcar cliente como VIP');
+        alert('❌ Erro ao marcar cliente como VIP');
     }
 }
 
@@ -1017,8 +1017,8 @@ async function logout() {
 // ============================================
 function openNewVoucherModal() { window.location.href = 'vouchers.html'; }
 function closeNewVoucherModal() { document.getElementById('newVoucherModal').classList.add('hidden'); }
-function generateVoucher() { alert('A geraÃ§Ã£o de vouchers foi movida para o mÃ³dulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
-function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('CÃ³digo copiado!'); }
+function generateVoucher() { alert('A geração de vouchers foi movida para o módulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
+function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('Código copiado!'); }
 
 // ============================================
 // BUSCA
