@@ -93,8 +93,8 @@
 
                     <form id="cadastroForm" class="space-y-4 md:space-y-5">
                         <div>
-                            <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Nome de UsuÃ¡rio</label>
-                            <input type="text" id="username" placeholder="Seu nome de usuÃ¡rio"
+                            <label class="block text-xs md:text-sm font-bold text-gray-400 uppercase mb-2">Nome de Usuário</label>
+                            <input type="text" id="username" placeholder="Seu nome de usuário"
                                    class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition" required>
                             <p id="erroUsername" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
@@ -134,8 +134,8 @@
                     </form>
 
                     <div class="text-center mt-6">
-                        <p class="text-gray-400 text-sm">JÃ¡ tem uma conta?
-                            <a href="login.html" class="text-blue-500 hover:underline font-bold">FaÃ§a login</a>
+                        <p class="text-gray-400 text-sm">Já tem uma conta?
+                            <a href="login.html" class="text-blue-500 hover:underline font-bold">Faça login</a>
                         </p>
                     </div>
                 </div>
@@ -143,7 +143,7 @@
                 <div class="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                     <p class="text-xs md:text-sm text-blue-400 flex items-start gap-2">
                         <i data-lucide="info" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
-                        <span>Esta conta terÃ¡ privilÃ©gios de administrador para gerenciar hotspots, clientes e configuraÃ§Ãµes.</span>
+                        <span>Esta conta terá privilégios de administrador para gerenciar hotspots, clientes e configurações.</span>
                     </p>
                 </div>
             </div>
@@ -222,25 +222,25 @@
                 let valido = true;
 
                 if (!username) {
-                    document.getElementById('erroUsername').textContent = 'Nome de usuÃ¡rio Ã© obrigatÃ³rio';
+                    document.getElementById('erroUsername').textContent = 'Nome de usuário é obrigatório';
                     document.getElementById('erroUsername').classList.remove('hidden');
                     valido = false;
                 }
 
                 if (!validarEmail(email)) {
-                    document.getElementById('erroEmail').textContent = 'Email invÃ¡lido';
+                    document.getElementById('erroEmail').textContent = 'Email inválido';
                     document.getElementById('erroEmail').classList.remove('hidden');
                     valido = false;
                 }
 
                 if (senha.length < 8) {
-                    document.getElementById('erroSenha').textContent = 'Senha deve ter no mÃ­nimo 8 caracteres';
+                    document.getElementById('erroSenha').textContent = 'Senha deve ter no mínimo 8 caracteres';
                     document.getElementById('erroSenha').classList.remove('hidden');
                     valido = false;
                 }
 
                 if (senha !== confirmaSenha) {
-                    document.getElementById('erroConfirmaSenha').textContent = 'Senhas nÃ£o conferem';
+                    document.getElementById('erroConfirmaSenha').textContent = 'Senhas não conferem';
                     document.getElementById('erroConfirmaSenha').classList.remove('hidden');
                     valido = false;
                 }
@@ -272,7 +272,7 @@
                     }
                 } catch (error) {
                     console.error('Erro:', error);
-                    alert('Erro ao conectar com o servidor. Verifique sua conexÃ£o.');
+                    alert('Erro ao conectar com o servidor. Verifique sua conexão.');
                 }
             });
 
@@ -287,3 +287,4 @@
 </div>
 </body>
 </html>
+

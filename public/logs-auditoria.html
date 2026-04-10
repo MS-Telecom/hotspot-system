@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -33,7 +33,7 @@
 <body class="bg-[#0a0c15] text-gray-200">
 
 <script>
-    // 🔒 PROTEÇÃO DE ACESSO
+    // ðŸ”’ PROTEÇÃO DE ACESSO
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) window.location.href = 'login.html';
 </script>
@@ -43,7 +43,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (padrão MS Telecom) -->
+    <!-- SIDEBAR (padrÃ£o MS Telecom) -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -114,7 +114,7 @@
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Buscar por usuário, ação, IP ou detalhes..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Buscar por usuário, aÃ§Ã£o, IP ou detalhes..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="text-right hidden sm:block"><p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div>
@@ -126,39 +126,39 @@
 
         <div class="p-4 md:p-8 space-y-6 md:space-y-8">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Logs de Auditoria</h1><p class="text-gray-500 text-xs md:text-sm mt-1">Histórico completo de ações, acessos e alterações no sistema</p></div>
+                <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Logs de Auditoria</h1><p class="text-gray-500 text-xs md:text-sm mt-1">HistÃ³rico completo de aÃ§Ãµes, acessos e alteraÃ§Ãµes no sistema</p></div>
                 <div class="flex gap-2"><button id="exportLogsBtn" class="bg-gray-800 hover:bg-gray-700 px-3 md:px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition"><i data-lucide="download" class="w-4 h-4"></i> <span class="hidden sm:inline">Exportar CSV</span></button><button id="refreshLogsBtn" class="bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 px-3 md:px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition"><i data-lucide="refresh-cw" class="w-4 h-4"></i> <span class="hidden sm:inline">Atualizar</span></button></div>
             </div>
 
-            <!-- Filtros Avançados -->
+            <!-- Filtros AvanÃ§ados -->
             <div class="glass-card rounded-2xl p-4 md:p-5 border border-gray-800">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
                     <div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Usuário</label><input type="text" id="filtroUsuario" placeholder="Usuário..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-                    <div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo</label><select id="filtroTipo" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="">Todos</option><option value="login">Login</option><option value="logout">Logout</option><option value="alteracao">Alteração</option><option value="criacao">Criação</option><option value="exclusao">Exclusão</option><option value="liberacao">Liberação</option><option value="bloqueio">Bloqueio</option><option value="erro">Erro</option></select></div>
+                    <div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo</label><select id="filtroTipo" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="">Todos</option><option value="login">Login</option><option value="logout">Logout</option><option value="alteracao">AlteraÃ§Ã£o</option><option value="criacao">CriaÃ§Ã£o</option><option value="exclusao">ExclusÃ£o</option><option value="liberacao">Liberação</option><option value="bloqueio">Bloqueio</option><option value="erro">Erro</option></select></div>
                     <div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Data Início</label><input type="date" id="filtroDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
                     <div><label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Data Fim</label><input type="date" id="filtroDataFim" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
                     <div class="flex gap-2"><button id="aplicarFiltros" class="bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 px-3 py-2 rounded-xl text-sm font-medium transition flex-1">Filtrar</button><button id="limparFiltros" class="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-xl text-sm font-medium transition">Limpar</button></div>
                 </div>
             </div>
 
-            <!-- Estatísticas Rápidas -->
+            <!-- EstatÃ­sticas RÃ¡pidas -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 stats-grid">
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="log-in" class="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Logins Hoje</p><p id="statsLogins" class="text-lg md:text-xl font-bold text-white">0</p></div>
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="alert-triangle" class="w-4 h-4 md:w-5 md:h-5 text-red-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Erros (24h)</p><p id="statsErros" class="text-lg md:text-xl font-bold text-red-500">0</p></div>
-                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="edit" class="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Alterações</p><p id="statsAlteracoes" class="text-lg md:text-xl font-bold text-white">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="edit" class="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">AlteraÃ§Ãµes</p><p id="statsAlteracoes" class="text-lg md:text-xl font-bold text-white">0</p></div>
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="users" class="w-4 h-4 md:w-5 md:h-5 text-blue-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Usuários Ativos</p><p id="statsUsuarios" class="text-lg md:text-xl font-bold text-white">0</p></div>
             </div>
 
             <!-- Tabela de Logs -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
-                <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gray-900/30"><h3 class="font-bold text-white text-sm md:text-base">Histórico de Ações</h3><div class="flex gap-3 md:gap-4 text-[9px] md:text-[10px] text-gray-500"><span>Total: <span id="totalRegistros">0</span> registros</span><span>Últimas 24h: <span id="ultimas24h">0</span></span></div></div>
+                <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gray-900/30"><h3 class="font-bold text-white text-sm md:text-base">HistÃ³rico de AÃ§Ãµes</h3><div class="flex gap-3 md:gap-4 text-[9px] md:text-[10px] text-gray-500"><span>Total: <span id="totalRegistros">0</span> registros</span><span>Ãšltimas 24h: <span id="ultimas24h">0</span></span></div></div>
                 <div class="overflow-x-auto table-responsive">
                     <table class="w-full min-w-[800px]">
                         <thead class="bg-gray-900/50 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider"><tr><th class="px-4 md:px-6 py-3 text-left">Usuário</th><th class="px-4 md:px-6 py-3 text-left">Objeto / Ação</th><th class="px-4 md:px-6 py-3 text-left">Data/Hora</th><th class="px-4 md:px-6 py-3 text-left">IP</th></tr></thead>
                         <tbody id="logsTable" class="divide-y divide-gray-800/50"><tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500"><div class="flex flex-col items-center"><div class="loading-spinner mb-2"><i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i></div><p>Carregando logs de auditoria...</p></div></td></tr></tbody>
                     </table>
                 </div>
-                <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3"><p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoInicio">0</span> - <span id="mostrandoFim">0</span> de <span id="totalMostrando">0</span> registros</p><div class="flex gap-2"><button id="prevPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button><span id="pageInfo" class="text-xs text-gray-400 px-2 py-1">Página 1</span><button id="nextPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Próximo</button></div></div>
+                <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3"><p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoInicio">0</span> - <span id="mostrandoFim">0</span> de <span id="totalMostrando">0</span> registros</p><div class="flex gap-2"><button id="prevPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button><span id="pageInfo" class="text-xs text-gray-400 px-2 py-1">PÃ¡gina 1</span><button id="nextPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">PrÃ³ximo</button></div></div>
             </div>
         </div>
     </main>
@@ -169,12 +169,12 @@
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i> Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button></div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button></div>
     </div>
 </div>
 
 <script>
-// ==================== CONFIGURAÇÕES GLOBAIS ====================
+// ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let logsData = [];
 let currentPage = 1;
@@ -254,7 +254,7 @@ function renderizarLogs() {
     document.getElementById('mostrandoInicio').innerText = totalItems === 0 ? 0 : start + 1;
     document.getElementById('mostrandoFim').innerText = Math.min(start + itemsPerPage, totalItems);
     document.getElementById('totalMostrando').innerText = totalItems;
-    document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages || 1}`;
+    document.getElementById('pageInfo').innerText = `PÃ¡gina ${currentPage} de ${totalPages || 1}`;
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
     document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
     const tbody = document.getElementById('logsTable');
@@ -274,7 +274,7 @@ function renderizarLogs() {
 }
 function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-// Paginação
+// PaginaÃ§Ã£o
 document.getElementById('prevPageBtn')?.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderizarLogs(); } });
 document.getElementById('nextPageBtn')?.addEventListener('click', () => { const totalPages = Math.ceil(logsData.length / itemsPerPage); if (currentPage < totalPages) { currentPage++; renderizarLogs(); } });
 
@@ -335,7 +335,7 @@ async function salvarPerfil() {
     const payload = {};
     if (email) payload.email = email;
     if (novaSenha) { payload.current_password = senhaAtual; payload.new_password = novaSenha; }
-    if (Object.keys(payload).length === 0) { alert('Nenhuma alteração informada'); return; }
+    if (Object.keys(payload).length === 0) { alert('Nenhuma alteraÃ§Ã£o informada'); return; }
     try {
         const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
         if (res.ok) {
@@ -365,3 +365,4 @@ setInterval(carregarLogs, 30000);
 </script>
 </body>
 </html>
+

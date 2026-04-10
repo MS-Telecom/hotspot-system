@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -134,10 +134,10 @@
         <!-- CONTEÚDO -->
         <div class="p-4 sm:p-8 space-y-6 sm:space-y-8">
 
-            <!-- Header da Página -->
+            <!-- Header da PÃ¡gina -->
             <div>
                 <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Perfil de Cadastro</h1>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">Configure quais campos serão exibidos no formulário de cadastro de clientes</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">Configure quais campos serÃ£o exibidos no formulÃ¡rio de cadastro de clientes</p>
             </div>
 
             <!-- Loading State -->
@@ -151,7 +151,7 @@
                 <!-- Carregado via JavaScript -->
             </div>
 
-            <!-- Botões -->
+            <!-- BotÃµes -->
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
                 <button id="salvarBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2">
                     <i data-lucide="check" class="w-5 h-5"></i> Salvar Configurações
@@ -167,7 +167,7 @@
 
 <script>
     // ============================================
-    // CONFIGURAÇÕES GLOBAIS
+    // CONFIGURAÃ‡Ã•ES GLOBAIS
     // ============================================
     const API_URL = 'https://mstelecom-api.duckdns.org';  // URL base do backend oficial
     let allCampos = []; // Armazena todos os campos carregados
@@ -194,7 +194,7 @@
     }
 
     // ============================================
-    // FUNÇÕES AUXILIARES
+    // FUNÃ‡Ã•ES AUXILIARES
     // ============================================
     function escapeHtml(str) {
         if (!str) return '';
@@ -207,7 +207,7 @@
     }
 
     // ============================================
-    // CARREGAR CONFIGURAÇÕES DE CAMPOS (GET /api/settings/fields)
+    // CARREGAR CONFIGURAÃ‡Ã•ES DE CAMPOS (GET /api/settings/fields)
     // CORRIGIDO: endpoint antigo /api/configuracoes/campos -> /api/settings/fields
     // Resposta esperada: array de objetos com { field, label, enabled, required }
     // ============================================
@@ -232,14 +232,14 @@
             // O novo backend retorna o array diretamente (ou pode estar dentro de { data })
             const data = await res.json();
             allCampos = Array.isArray(data) ? data : (data.data || []);
-            console.log('✅ Campos carregados:', allCampos);
+            console.log('âœ… Campos carregados:', allCampos);
             
             loadingState.classList.add('hidden');
             container.classList.remove('hidden');
             
             renderizarCampos(allCampos);
         } catch (error) {
-            console.error('❌ Erro ao carregar campos:', error);
+            console.error('âŒ Erro ao carregar campos:', error);
             document.getElementById('loadingState').innerHTML = `
                 <div class="text-center py-12">
                     <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500"></i>
@@ -280,7 +280,7 @@
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition group">
                         <input type="checkbox" class="obrigatorio-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.field}" ${campo.required ? 'checked' : ''}>
-                        <span class="text-xs sm:text-sm text-gray-400 group-hover:text-blue-400 transition">Obrigatório</span>
+                        <span class="text-xs sm:text-sm text-gray-400 group-hover:text-blue-400 transition">ObrigatÃ³rio</span>
                     </label>
                 </div>
             </div>
@@ -290,7 +290,7 @@
     }
 
     // ============================================
-    // FUNÇÃO DE BUSCA (filtro local)
+    // FUNÃ‡ÃƒO DE BUSCA (filtro local)
     // ============================================
     function buscarCampos(termo) {
         if (!termo || termo.trim() === '') {
@@ -321,7 +321,7 @@
     }
 
     // ============================================
-    // SALVAR CONFIGURAÇÕES (PUT /api/settings/fields)
+    // SALVAR CONFIGURAÃ‡Ã•ES (PUT /api/settings/fields)
     // CORRIGIDO: método POST antigo -> PUT, payload adaptado para { field, label, enabled, required }
     // ============================================
     async function salvarConfiguracoes() {
@@ -334,7 +334,7 @@
             salvarBtn.disabled = true;
             lucide.createIcons();
             
-            // Monta o array de campos conforme o padrão do novo backend
+            // Monta o array de campos conforme o padrÃ£o do novo backend
             const fieldsToSave = [];
             document.querySelectorAll('.habilitado-toggle').forEach(toggle => {
                 const fieldName = toggle.dataset.campo;
@@ -342,7 +342,7 @@
                 const requiredToggle = document.querySelector(`.obrigatorio-toggle[data-campo="${fieldName}"]`);
                 const required = requiredToggle ? requiredToggle.checked : false;
                 
-                // Recupera o label original do allCampos (preserva o nome de exibição)
+                // Recupera o label original do allCampos (preserva o nome de exibiÃ§Ã£o)
                 const originalField = allCampos.find(f => f.field === fieldName);
                 const label = originalField ? originalField.label : fieldName;
                 
@@ -354,10 +354,10 @@
                 });
             });
             
-            console.log('📤 Salvando configurações (padrão novo):', fieldsToSave);
+            console.log('ðŸ“¤ Salvando configurações (padrÃ£o novo):', fieldsToSave);
             
             const res = await fetch(`${API_URL}/api/settings/fields`, {
-                method: 'PUT',   // CORRIGIDO: usar PUT para atualização completa (ou POST conforme backend, mas PUT é mais RESTful)
+                method: 'PUT',   // CORRIGIDO: usar PUT para atualizaÃ§Ã£o completa (ou POST conforme backend, mas PUT é mais RESTful)
                 headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -366,17 +366,17 @@
             });
             
             if (res.ok) {
-                alert('✅ Configurações salvas com sucesso!');
-                console.log('✅ Configurações salvas');
-                await carregarCampos(); // Recarregar para garantir consistência
+                alert('âœ… Configurações salvas com sucesso!');
+                console.log('âœ… Configurações salvas');
+                await carregarCampos(); // Recarregar para garantir consistÃªncia
             } else {
                 const errorText = await res.text();
-                console.error('❌ Erro:', errorText);
-                alert(`❌ Erro ao salvar configurações: ${res.status} - ${errorText}`);
+                console.error('âŒ Erro:', errorText);
+                alert(`âŒ Erro ao salvar configurações: ${res.status} - ${errorText}`);
             }
         } catch (error) {
-            console.error('❌ Erro ao salvar:', error);
-            alert('❌ Erro ao salvar configurações. Verifique sua conexão.');
+            console.error('âŒ Erro ao salvar:', error);
+            alert('âŒ Erro ao salvar configurações. Verifique sua conexão.');
         } finally {
             salvarBtn.innerHTML = originalText;
             salvarBtn.disabled = false;
@@ -385,7 +385,7 @@
     }
 
     // ============================================
-    // FUNÇÕES DE PERFIL (MEU PERFIL)
+    // FUNÃ‡Ã•ES DE PERFIL (MEU PERFIL)
     // CORRIGIDO: endpoint antigo /api/atualizar-perfil -> /api/profile (PUT)
     // ============================================
     function carregarPerfil() {
@@ -442,7 +442,7 @@
         }
         
         if (!tokenAtual) {
-            alert('Você precisa estar logado para alterar o perfil');
+            alert('VocÃª precisa estar logado para alterar o perfil');
             return;
         }
         
@@ -457,7 +457,7 @@
                 body: JSON.stringify({ 
                     username, 
                     email, 
-                    current_password: senhaAtual || null,  // campo em inglês conforme padrão
+                    current_password: senhaAtual || null,  // campo em inglÃªs conforme padrÃ£o
                     new_password: novaSenha || null 
                 })
             });
@@ -481,7 +481,7 @@
     }
     
     // ============================================
-    // FUNÇÃO DE LOGOUT
+    // FUNÃ‡ÃƒO DE LOGOUT
     // CORRIGIDO: endpoint /api/auth/logout (antes /api/logout)
     // ============================================
     async function sair() {
@@ -574,10 +574,11 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/50 rounded-lg text-sm font-bold transition">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/50 rounded-lg text-sm font-bold transition">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
 
 </body>
 </html>
+
