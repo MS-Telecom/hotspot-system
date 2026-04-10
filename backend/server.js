@@ -999,6 +999,317 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ============================================================
+// 📊 ESTATÍSTICAS E DASHBOARD
+// ============================================================
+
+app.get('/api/stats', authMiddleware, async (req, res) => {
+  try {
+    const { data: users } = await supabase.from('users').select('id', { count: 'exact' });
+    const { data: vouchers } = await supabase.from('vouchers').select('id', { count: 'exact' });
+    const { data: payments } = await supabase.from('payments').select('amount');
+    const { data: pops } = await supabase.from('pops').select('id', { count: 'exact' });
+
+    const totalRevenue = payments?.reduce((acc, p) => acc + (p.amount || 0), 0) || 0;
+
+    res.json({
+      totalUsers: users?.length || 0,
+      totalVouchers: vouchers?.length || 0,
+      totalRevenue: totalRevenue,
+      activePops: pops?.length || 0,
+      onlineUsers: 0 // Placeholder para integração MikroTik futura
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
+  try {
+    // Mock para o gráfico do dashboard enquanto não há logs de sessão reais
+    const hours = Array.from({ length: 24 }, (_, i) => `${i}h`);
+    const data = Array.from({ length: 24 }, () => Math.floor(Math.random() * 50));
+    res.json({ labels: hours, data: data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// 📡 POPS (PONTOS DE PRESENÇA)
+// ============================================================
+
+app.get('/api/pops', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('pops').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/pops', authMiddleware, async (req, res) => {
+  try {
+    const { name, location, mikrotik_host, mikrotik_user, mikrotik_pass } = req.body;
+    const { data, error } = await supabase.from('pops').insert([{
+      name, location, mikrotik_host, mikrotik_user, mikrotik_pass
+    }]).select();
+    if (error) throw error;
+    res.status(201).json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/pops/:id', authMiddleware, async (req, res) => {
+  try {
+    const { name, location, mikrotik_host, mikrotik_user, mikrotik_pass } = req.body;
+    const { data, error } = await supabase.from('pops').update({
+      name, location, mikrotik_host, mikrotik_user, mikrotik_pass
+    }).eq('id', req.params.id).select();
+    if (error) throw error;
+    res.json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('pops').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// ⚙️ CONFIGURAÇÕES DE CAMPOS DE CADASTRO
+// ============================================================
+
+app.get('/api/settings/fields', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'registration_fields').single();
+    if (error && error.code !== 'PGRST116') throw error;
+    
+    const defaultFields = [
+      { field: 'name', label: 'Nome Completo', enabled: true, required: true },
+      { field: 'email', label: 'E-mail', enabled: true, required: true },
+      { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true },
+      { field: 'cpf', label: 'CPF', enabled: false, required: false },
+      { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
+      { field: 'gender', label: 'Gênero', enabled: false, required: false }
+    ];
+
+    res.json(data ? data.value : defaultFields);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/settings/fields', authMiddleware, async (req, res) => {
+  try {
+    const fields = req.body;
+    const { error } = await supabase.from('settings').upsert({
+      key: 'registration_fields',
+      value: fields,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// 👤 ADMINS
+// ============================================================
+
+app.post('/api/admins', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    const { data, error } = await supabase.from('admins').insert([{
+      username, email, password: hashedPassword, role: 'admin'
+    }]).select();
+    if (error) throw error;
+    res.status(201).json({ id: data[0].id, success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// 🪝 WEBHOOKS
+// ============================================================
+
+app.get('/api/webhooks', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('webhooks').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/webhooks', authMiddleware, async (req, res) => {
+  try {
+    const { name, event, url, method, target, active } = req.body;
+    const { data, error } = await supabase.from('webhooks').insert([{
+      name, event, url, method, target, active
+    }]).select();
+    if (error) throw error;
+    res.status(201).json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota de edição via POST (conforme frontend webhooks.html)
+app.post('/api/webhooks/:id', authMiddleware, async (req, res) => {
+  try {
+    const { name, event, url, method, target, active } = req.body;
+    const { data, error } = await supabase.from('webhooks').update({
+      name, event, url, method, target, active
+    }).eq('id', req.params.id).select();
+    if (error) throw error;
+    res.json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('webhooks').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
+  try {
+    const { data: webhook } = await supabase.from('webhooks').select('*').eq('id', req.params.id).single();
+    if (!webhook) return res.status(404).json({ error: 'Webhook não encontrado' });
+    
+    // Simulação de disparo
+    console.log(`[TEST] Disparando webhook ${webhook.name} para ${webhook.url}`);
+    res.json({ success: true, message: 'Teste disparado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// 📣 CAMPANHAS
+// ============================================================
+
+app.get('/api/campaigns', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/campaigns', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at } = req.body;
+    const { data, error } = await supabase.from('campaigns').insert([{
+      name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at
+    }]).select();
+    if (error) throw error;
+    res.status(201).json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/campaigns/:id', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at } = req.body;
+    const { data, error } = await supabase.from('campaigns').update({
+      name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at
+    }).eq('id', req.params.id).select();
+    if (error) throw error;
+    res.json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('campaigns').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// 📜 LOGS DE AUDITORIA
+// ============================================================
+
+app.get('/api/audit-logs', authMiddleware, async (req, res) => {
+  try {
+    const { user, action, start_date, end_date, search } = req.query;
+    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
+
+    if (user) query = query.ilike('username', `%${user}%`);
+    if (action) query = query.eq('type', action);
+    if (start_date) query = query.gte('created_at', start_date);
+    if (end_date) query = query.lte('created_at', end_date);
+    if (search) {
+      query = query.or(`username.ilike.%${search}%,type.ilike.%${search}%,object.ilike.%${search}%,action.ilike.%${search}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// 💾 BACKUP
+// ============================================================
+
+app.post('/api/backup/create', authMiddleware, async (req, res) => {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `backup-${timestamp}.json`;
+    const filePath = path.join(BACKUP_DIR, filename);
+
+    // Backup simples das tabelas principais
+    const tables = ['users', 'vouchers', 'payments', 'pops', 'plans', 'settings', 'admins', 'webhooks', 'campaigns'];
+    const backupData = {};
+
+    for (const table of tables) {
+      const { data } = await supabase.from(table).select('*');
+      backupData[table] = data || [];
+    }
+
+    fs.writeFileSync(filePath, JSON.stringify(backupData, null, 2));
+    
+    await registerAuditLog(req.user.username, 'backup', 'sistema', `Backup criado: ${filename}`);
+    
+    res.json({ success: true, filename });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
 // 🔄 ALIAS E ROTAS DE COMPATIBILIDADE
 // ============================================================
 
