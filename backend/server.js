@@ -2310,7 +2310,27 @@ app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
       }, { onConflict: 'key' });
     }
 
-    res.json({ success: true });
+    const { data, error } = await supabase.from('settings').select('*').eq('category', 'integrations');
+    if (error) throw error;
+
+    const raw = {};
+    (data || []).forEach(item => {
+      const v = item.value;
+      if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, 'value') && Object.keys(v).length === 1) {
+        raw[item.key] = v.value;
+      } else {
+        raw[item.key] = v;
+      }
+    });
+
+    res.json({
+      supabase_url: raw.supabase_url || '',
+      supabase_anon_key: raw.supabase_anon_key || '',
+      radius_server: raw.radius_server || '',
+      radius_secret: raw.radius_secret || '',
+      radius_auth_port: raw.radius_auth_port || '',
+      radius_acct_port: raw.radius_acct_port || ''
+    });
 
   } catch (err) {
     res.status(500).json({ error: 'Erro ao salvar integrações' });
