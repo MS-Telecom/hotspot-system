@@ -67,7 +67,7 @@
                     <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
                 </button>
                 <button id="testeGratisBtn" class="px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
-                    <i data-lucide="flask" class="w-4 h-4"></i> Teste Grátis 15min
+                    <i data-lucide="flask-conical" class="w-4 h-4"></i> Teste Grátis 15min
                 </button>
                 <button id="jaPagueiBtn" class="px-5 py-2 bg-blue-600/20 border border-blue-500/50 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition flex items-center gap-2">
                     <i data-lucide="check-circle" class="w-4 h-4"></i> Já paguei
@@ -133,7 +133,7 @@
                     <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o código para pagar</p>
                     <div class="bg-gray-900/80 rounded-2xl p-4 inline-block">
                         <div id="qrCodeContainer" class="bg-white rounded-2xl flex items-center justify-center w-48 h-48">
-                            <i data-lucide="qrcode" class="w-24 h-24 text-gray-800"></i>
+                            <i data-lucide="qr-code" class="w-24 h-24 text-gray-800"></i>
                         </div>
                     </div>
                     <p class="text-xs text-gray-500 mt-3">QR Code válido por 15 minutos</p>
@@ -152,7 +152,6 @@
             </div>
         </div>
 
-        <!-- Toast de mensagem -->
         <div id="statusMessage" class="hidden fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm">
             <div class="flex items-center gap-3">
                 <i data-lucide="check-circle" class="text-emerald-500 w-6 h-6"></i>
@@ -173,11 +172,12 @@
     const MIKROTIK_LOGIN_URL = 'http://192.168.32.1/login';
     let selectedPlan = null;
     let currentPaymentId = null;
+    let macAddress = null;
 
     // ==================== FUNÇÕES AUXILIARES ====================
     function getMacFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        const mac = params.get('mac');
+        const mac = params.get('mac') || params.get('mac_address');
         const ip = params.get('ip');
         const pop = params.get('pop');
         if (mac) return mac.toUpperCase();
@@ -225,31 +225,36 @@
         form.submit();
     }
 
-    // ==================== API (padrão backend) ====================
+    // ==================== API (padrão backend oficial) ====================
     const API = {
-        async generatePix(macAddress, planName, amount) {
-            const res = await fetch(`${API_BASE}/api/payments/generate-pix`, {
+        async generatePix(mac, planName, amount) {
+            const res = await fetch(`${API_BASE}/api/portal/create-pix`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mac_address: macAddress, plan_name: planName, amount: parseFloat(amount) })
+                body: JSON.stringify({ mac_address: mac, plan_name: planName, amount: parseFloat(amount) })
             });
-            if (!res.ok) throw new Error('Erro ao gerar PIX');
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Erro ao gerar PIX');
+            }
             return await res.json();
         },
-        async checkPayment(macAddress) {
-            const res = await fetch(`${API_BASE}/api/payments?mac_address=${macAddress}`);
+        async checkPayment(mac) {
+            const res = await fetch(`${API_BASE}/api/portal/status?mac_address=${mac}`);
             if (!res.ok) return { paid: false };
-            const payments = await res.json();
-            const approved = payments.find(p => p.status === 'approved' || p.status === 'paid');
-            return { paid: !!approved };
+            const data = await res.json();
+            return { paid: data.connected || data.status === 'active' };
         },
-        async requestTestAccess(macAddress, durationMinutes) {
+        async requestTestAccess(mac, durationMinutes) {
             const res = await fetch(`${API_BASE}/api/users/test-access`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mac_address: macAddress, duration_minutes: durationMinutes })
+                body: JSON.stringify({ mac_address: mac, duration_minutes: durationMinutes })
             });
-            if (!res.ok) throw new Error('Falha ao liberar teste');
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Falha ao liberar teste');
+            }
             return await res.json();
         }
     };
@@ -270,7 +275,7 @@
     // ==================== PLANOS ====================
     async function loadPlans() {
         try {
-            const res = await fetch(`${API_BASE}/api/plans`);
+            const res = await fetch(`${API_BASE}/api/portal/plans`);
             if (!res.ok) throw new Error();
             let plans = await res.json();
             if (plans && typeof plans === 'object' && !Array.isArray(plans) && plans.data) plans = plans.data;
@@ -326,7 +331,7 @@
                     const pixData = await API.generatePix(macAddress, planName, price);
                     if (pixData.qr_code_base64) qrContainer.innerHTML = `<img src="data:image/png;base64,${pixData.qr_code_base64}" class="w-48 h-48">`;
                     else if (pixData.qr_code_url) qrContainer.innerHTML = `<img src="${pixData.qr_code_url}" class="w-48 h-48">`;
-                    else qrContainer.innerHTML = '<i data-lucide="qrcode" class="w-24 h-24 text-gray-800"></i>';
+                    else qrContainer.innerHTML = '<i data-lucide="qr-code" class="w-24 h-24 text-gray-800"></i>';
                     pixCodeSpan.innerText = pixData.pix_code || 'Código PIX não disponível';
                     currentPaymentId = pixData.payment_id || null;
                     lucide.createIcons();
@@ -452,12 +457,11 @@
     });
 
     // ==================== INICIALIZAÇÃO ====================
-    const macAddress = getMacFromUrl();
+    macAddress = getMacFromUrl();
     document.getElementById('dispositivoMac').innerText = macAddress || 'MAC não detectado';
     if (!macAddress) showStatusMessage('MAC não detectado. Conecte-se novamente ao Wi-Fi.', 'error');
 
     lucide.createIcons();
-    setInterval(() => lucide.createIcons(), 2000);
     loadPlans();
 </script>
 </body>
