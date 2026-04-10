@@ -864,6 +864,63 @@ app.post('/api/vouchers/validate', async (req, res) => {
 // 📊 ROTAS DE ESTATÍSTICAS E DASHBOARD
 // ============================================================
 
+// Listar POPs (Hotspots)
+app.get('/api/pops', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('pops').select('*').order('name', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('❌ Erro ao listar POPs:', err.message);
+    res.status(500).json({ error: 'Erro ao listar POPs' });
+  }
+});
+
+// Criar POP
+app.post('/api/pops', authMiddleware, async (req, res) => {
+  try {
+    const { name, ip, api_user, api_pass, location, status } = req.body;
+    const { data, error } = await supabase.from('pops').insert({
+      name, ip, api_user, api_pass, location,
+      status: status || 'online',
+      created_at: new Date().toISOString()
+    }).select().single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('❌ Erro ao criar POP:', err.message);
+    res.status(500).json({ error: 'Erro ao criar POP' });
+  }
+});
+
+// Atualizar POP
+app.put('/api/pops/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
+    const { data, error } = await supabase.from('pops').update(updateData).eq('id', id).select().single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('❌ Erro ao atualizar POP:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar POP' });
+  }
+});
+
+// Deletar POP
+app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('pops').delete().eq('id', id);
+    if (error) throw error;
+    res.json({ message: 'POP removido com sucesso' });
+  } catch (err) {
+    console.error('❌ Erro ao deletar POP:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar POP' });
+  }
+});
+
 app.get('/api/stats/summary', authMiddleware, async (req, res) => {
   try {
     const { data: users } = await supabase.from('users').select('id', { count: 'exact' });
@@ -881,6 +938,17 @@ app.get('/api/stats/summary', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao buscar sumário:', err.message);
     res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// Estatísticas de usuários por hora (Dashboard)
+app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
+  try {
+    // Mock de dados para o gráfico (24 horas)
+    const mockData = Array.from({ length: 24 }, () => Math.floor(Math.random() * 10));
+    res.json({ data: mockData });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar estatísticas por hora' });
   }
 });
 
