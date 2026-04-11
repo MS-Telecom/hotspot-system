@@ -1,0 +1,46 @@
+
+    async function deleteSetting(key) {
+      if (!confirm('Excluir configuração?')) return;
+      try { await fetch(`${API_URL}/api/settings/${key}`, { method: 'DELETE', headers }); loadSettings(); } catch (err) { alert('Erro'); }
+    }
+
+    // === ADMINS ===
+    async function loadAdmins() {
+      try {
+        const res = await fetch(`${API_URL}/api/admins`, { headers });
+        const data = await res.json();
+        const tbody = document.getElementById('tableAdmins');
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-500">Nenhum admin</td></tr>'; return; }
+        data.forEach(a => {
+          tbody.innerHTML += `<tr class="border-b border-gray-700"><td class="py-3">${a.username}</td><td class="py-3">${a.email||'-'}</td>
+            <td class="py-3"><button onclick="deleteAdmin(${a.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button></td></tr>`;
+        });
+      } catch (err) { console.error(err); }
+    }
+
+    function openModalAdmin() { document.getElementById('modalAdmin').classList.remove('hidden'); }
+    function closeModalAdmin() { document.getElementById('modalAdmin').classList.add('hidden'); }
+
+    async function createAdmin() {
+      try {
+        const body = { username: document.getElementById('adminUsername').value, password: document.getElementById('adminPassword').value, email: document.getElementById('adminEmail').value };
+        const res = await fetch(`${API_URL}/api/admins`, { method: 'POST', headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Erro');
+        closeModalAdmin(); loadAdmins();
+      } catch (err) { alert(err.message); }
+    }
+
+    async function deleteAdmin(id) { if (!confirm('Excluir admin?')) return; try { await fetch(`${API_URL}/api/admins/${id}`, { method: 'DELETE', headers }); loadAdmins(); } catch (err) { alert('Erro'); } }
+
+    function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user') || '{}'); document.getElementById('profileUsername').value = user.username || ''; document.getElementById('profileEmail').value = user.email || ''; }
+    function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
+    function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
+    async function salvarPerfil() { try { const body = {}; const e = document.getElementById('profileEmail').value; const p = document.getElementById('profilePassword').value; if(e) body.email=e; if(p) body.password=p; const res = await fetch(`${API_URL}/api/update-profile`,{method:'PUT',headers,body:JSON.stringify(body)}); if(!res.ok) throw new Error('Erro'); alert('Perfil atualizado!'); closeModalPerfil(); } catch(err){ alert(err.message); } }
+    function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
+    function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
+
+    loadPlans(); loadSettings(); loadAdmins();
+  </script>
+</body>
+</html>

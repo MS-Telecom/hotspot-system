@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Hotspots / POPs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        #sidebar { z-index: 100; }
+        #sidebarOverlay { z-index: 99; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-gray-200">
+<script>
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+</script>
+
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
+
+<div class="flex h-screen overflow-hidden">
+
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+            </a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro
+            </a>
+        </nav>
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+            <div class="relative w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar hotspot por nome ou ID..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 space-y-8">
+            <div class="flex justify-between items-end">
+                <div><h1 class="text-3xl font-black tracking-tight">Hotspots / POPs</h1><p class="text-gray-500 text-sm mt-1">Gestão de concentradores MikroTik</p></div>
+                <button onclick="openModalNovoHotspot()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Hotspot</button>
+            </div>
+            <div id="popsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center text-gray-500 py-8 col-span-3"><i data-lucide="router" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Carregando POPs...</p></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL: NOVO HOTSPOT COMPLETO -->
+<div id="modalNovoHotspot" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] md:max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="router" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Configurar Novo Hotspot
+            </h2>
+            <button onclick="closeModalNovoHotspot()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Hotspot *</label>
+                <input type="text" id="hotspotNome" placeholder="MS-WiFI-POP-01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Localização</label>
+                <input type="text" id="hotspotLocalizacao" placeholder="Bairro, Cidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">IP do POP</label>
+                <input type="text" id="hotspotIp" placeholder="192.168.1.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Instalação</label>
+                <select id="tipoInstalacao" onchange="toggleConfigWan()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="novo">Novo / Resetado</option>
+                    <option value="existente">Em Produção</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Interface WAN</label>
+                <select id="wanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
+                    <optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup>
+                    <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option><option value="vlan">vlan</option></optgroup>
+                </select>
+            </div>
+            <div id="configWan" class="hidden">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Configuração WAN</label>
+                <select id="wanTipo" onchange="toggleWanCampos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="dhcp">DHCP</option>
+                    <option value="pppoe">PPPoE</option>
+                    <option value="static">Estático</option>
+                </select>
+                <div id="pppoeCampos" class="hidden space-y-3 mt-3">
+                    <input type="text" id="pppoeUser" placeholder="Usuário PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3">
+                    <input type="password" id="pppoePass" placeholder="Senha PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3">
+                </div>
+                <div id="staticCampos" class="hidden space-y-3 mt-3">
+                    <input type="text" id="staticIp" placeholder="IP" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3">
+                    <input type="text" id="staticMask" placeholder="Máscara" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3">
+                    <input type="text" id="staticGw" placeholder="Gateway" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Interface LAN (clientes)</label>
+                <select id="lanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <optgroup label="Portas Ethernet"><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4" selected>ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
+                    <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option></optgroup>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">VLAN ID (opcional)</label>
+                <input type="text" id="vlanId" placeholder="Deixe em branco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Saída</label>
+                <select id="hotspotTipo" onchange="toggleHotspotCampos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="vlan">Nova VLAN</option>
+                    <option value="vlan_existente">VLAN existente</option>
+                    <option value="porta_fisica">Porta física</option>
+                </select>
+                <div id="configVlanExistente" class="hidden mt-3">
+                    <input type="text" id="vlanExistente" placeholder="Nome da VLAN existente" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                </div>
+                <div id="configPortaFisica" class="hidden mt-3">
+                    <select id="portaFisica" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                        <option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option>
+                    </select>
+                </div>
+            </div>
+            <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                <p class="text-xs text-blue-400"><i data-lucide="info" class="w-4 h-4 inline"></i> Após criar, um script será gerado e copiado.</p>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalNovoHotspot()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
+            <button onclick="salvarNovoHotspot()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Criar Hotspot</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO POP -->
+<div id="modalDetalhesPop" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do POP
+            </h2>
+            <button onclick="closeModalDetalhesPop()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="detalhesPopContent" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end">
+            <button onclick="closeModalDetalhesPop()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: MEU PERFIL -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = 'https://mstelecom-api.duckdns.org';
+
+function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            menuOverlay.classList.toggle('hidden');
+        });
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
+            menuOverlay.classList.add('hidden');
+        });
+    }
+}
+
+async function carregarPOPs() {
+    try {
+        const res = await fetch(`${API_URL}/api/hotspots`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const pops = await res.json();
+        
+        const container = document.getElementById('popsGrid');
+        
+        if (!pops || pops.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8 col-span-3">Nenhum POP cadastrado. Clique em "Novo Hotspot" para adicionar.</div>';
+            return;
+        }
+        
+        container.innerHTML = pops.map(pop => {
+            const isOnline = pop.status === 'online' && (pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000));
+            const statusClass = isOnline ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500';
+            const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
+            
+            return `
+                <div class="glass-card rounded-2xl p-6 border border-gray-800 cursor-pointer hover:border-blue-500/50 transition-all" onclick="verDetalhesPop(${pop.id})">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">${escapeHtml(pop.name) || 'POP sem nome'}</h3>
+                            <p class="text-xs text-gray-500">ID: ${escapeHtml(pop.unique_id || pop.id || 'N/A')}</p>
+                        </div>
+                        <span class="px-3 py-1 ${statusClass} text-[10px] font-bold rounded-full">${statusText}</span>
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        <p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p>
+                        <p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-800 flex justify-end gap-2">
+                        <button onclick="event.stopPropagation(); gerarScript('${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs">📋 Script</button>
+                        <button onclick="event.stopPropagation(); deletarPOP('${pop.id}', '${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-red-600/30 rounded-lg text-xs text-red-400">🗑️ Deletar</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('popsGrid').innerHTML = '<p class="text-red-500 text-center py-8">Erro ao carregar POPs</p>';
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+async function verDetalhesPop(id) {
+    const modal = document.getElementById('modalDetalhesPop');
+    const content = document.getElementById('detalhesPopContent');
+    
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+    
+    try {
+        const res = await fetch(`${API_URL}/api/hotspots`);
+        const pops = await res.json();
+        const pop = pops.find(p => p.id == id);
+        
+        if (pop) {
+            const isOnline = pop.status === 'online' && (pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000));
+            content.innerHTML = `
+                <div class="space-y-2">
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">Nome</p>
+                        <p class="font-medium">${escapeHtml(pop.name) || '-'}</p>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">ID Único</p>
+                        <p class="font-mono text-blue-400 text-xs">${escapeHtml(pop.unique_id || pop.id) || '-'}</p>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">Status</p>
+                        <p><span class="px-2 py-1 ${isOnline ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'} rounded-lg text-xs">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">Localização</p>
+                        <p>${escapeHtml(pop.location) || 'Não definida'}</p>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">IP</p>
+                        <p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">Último Heartbeat</p>
+                        <p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-xl p-3">
+                        <p class="text-[10px] text-gray-500">Data Criação</p>
+                        <p>${pop.created_at ? new Date(pop.created_at).toLocaleString('pt-BR') : '-'}</p>
+                    </div>
+                </div>
+            `;
+        } else {
+            content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>';
+    }
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeModalDetalhesPop() {
+    document.getElementById('modalDetalhesPop').classList.add('hidden');
+}
+
+async function gerarScript(popName) {
+    try {
+        const res = await fetch(`${API_URL}/api/hotspots/${encodeURIComponent(popName)}/script`);
+        if (!res.ok) throw new Error('Erro ao gerar script');
+        const data = await res.json();
+        if (data.script) {
+            navigator.clipboard.writeText(data.script);
+            alert(`✅ Script para ${popName} copiado!`);
+        }
+    } catch (error) {
+        const script = `# Script para ${popName}\n/system identity set name="${popName}"\n/system scheduler add name="heartbeat-${popName}" interval=1m on-event="/tool fetch http-method=post url=\\"http://mstelecom-api.duckdns.org/api/ping\\" http-data=\\"{\\\\\\"pop_id\\\\\\":\\\\\\"${popName}\\\\\\"}\\" keep-result=no" start-time=startup\n/radius add service=hotspot address=40.233.118.238 secret=testing123 authentication-port=1812 accounting-port=1813 comment="MS-TELECOM"`;
+        navigator.clipboard.writeText(script);
+        alert(`✅ Script manual para ${popName} copiado!`);
+    }
+}
+
+async function deletarPOP(id, nome) {
+    if (!confirm(`Deletar POP "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+        const res = await fetch(`${API_URL}/api/hotspots/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            alert(`✅ POP "${nome}" deletado!`);
+            carregarPOPs();
+        } else {
+            alert('❌ Erro ao deletar POP');
+        }
+    } catch (error) {
+        alert('❌ Erro ao deletar POP');
+    }
+}
+
+function openModalNovoHotspot() {
+    document.getElementById('modalNovoHotspot').classList.remove('hidden');
+}
+
+function closeModalNovoHotspot() {
+    const modal = document.getElementById('modalNovoHotspot');
+    if (modal) modal.classList.add('hidden');
+}
+
+function toggleConfigWan() {
+    const tipoInstalacao = document.getElementById('tipoInstalacao');
+    const configWan = document.getElementById('configWan');
+    if (tipoInstalacao && configWan) {
+        configWan.classList.toggle('hidden', tipoInstalacao.value !== 'novo');
+    }
+}
+
+function toggleHotspotCampos() {
+    const hotspotTipo = document.getElementById('hotspotTipo');
+    if (!hotspotTipo) return;
+    const vlanExistente = document.getElementById('configVlanExistente');
+    const portaFisica = document.getElementById('configPortaFisica');
+    vlanExistente?.classList.toggle('hidden', hotspotTipo.value !== 'vlan_existente');
+    portaFisica?.classList.toggle('hidden', hotspotTipo.value !== 'porta_fisica');
+}
+
+function toggleWanCampos() {
+    const wanTipo = document.getElementById('wanTipo');
+    if (!wanTipo) return;
+    const pppoeCampos = document.getElementById('pppoeCampos');
+    const staticCampos = document.getElementById('staticCampos');
+    pppoeCampos?.classList.toggle('hidden', wanTipo.value !== 'pppoe');
+    staticCampos?.classList.toggle('hidden', wanTipo.value !== 'static');
+}
+
+async function salvarNovoHotspot() {
+    const nome = document.getElementById('hotspotNome').value;
+    if (!nome) { alert('Informe o nome do hotspot'); return; }
+    
+    try {
+        const res = await fetch(`${API_URL}/api/hotspots`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                name: nome,
+                location: document.getElementById('hotspotLocalizacao').value || 'Localização não definida',
+                ip: document.getElementById('hotspotIp').value || '0.0.0.0',
+                tipo_instalacao: document.getElementById('tipoInstalacao').value,
+                wan_interface: document.getElementById('wanInterface').value,
+                lan_interface: document.getElementById('lanInterface').value,
+                vlan_id: document.getElementById('vlanId').value,
+                hotspot_tipo: document.getElementById('hotspotTipo').value,
+                vlan_existente: document.getElementById('vlanExistente').value,
+                porta_fisica: document.getElementById('portaFisica').value,
+                wan_tipo: document.getElementById('wanTipo')?.value,
+                pppoe_user: document.getElementById('pppoeUser')?.value,
+                pppoe_pass: document.getElementById('pppoePass')?.value,
+                static_ip: document.getElementById('staticIp')?.value,
+                static_mask: document.getElementById('staticMask')?.value,
+                static_gw: document.getElementById('staticGw')?.value
+            })
+        });
+        
+        const data = await res.json();
+        if (data.success || data.id) {
+            alert(`✅ Hotspot "${nome}" criado! ID: ${data.id || data.unique_id}\n\n📋 Script copiado!`);
+            if (data.script) navigator.clipboard.writeText(data.script);
+            closeModalNovoHotspot();
+            carregarPOPs();
+        } else {
+            alert('❌ Erro ao criar hotspot: ' + (data.error || 'Tente novamente'));
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao criar hotspot');
+    }
+}
+
+// ============================================
+// FUNÇÕES DE PERFIL E LOGOUT
+// ============================================
+function carregarPerfil() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
+            if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
+        } catch(e) {}
+    }
+}
+
+function openModalPerfil() {
+    carregarPerfil();
+    const modal = document.getElementById('modalPerfil');
+    if (modal) modal.classList.remove('hidden');
+    if (document.getElementById('senhaAtual')) document.getElementById('senhaAtual').value = '';
+    if (document.getElementById('novaSenha')) document.getElementById('novaSenha').value = '';
+    if (document.getElementById('confirmarSenha')) document.getElementById('confirmarSenha').value = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeModalPerfil() {
+    const modal = document.getElementById('modalPerfil');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function salvarPerfil() {
+    const token = localStorage.getItem('token');
+    const username = document.getElementById('editUsername')?.value;
+    const email = document.getElementById('editEmail')?.value;
+    const senhaAtual = document.getElementById('senhaAtual')?.value;
+    const novaSenha = document.getElementById('novaSenha')?.value;
+    const confirmarSenha = document.getElementById('confirmarSenha')?.value;
+    
+    if (novaSenha && novaSenha !== confirmarSenha) {
+        alert('As novas senhas não coincidem');
+        return;
+    }
+    if (novaSenha && !senhaAtual) {
+        alert('Digite a senha atual para alterar');
+        return;
+    }
+    if (!token) {
+        alert('Você precisa estar logado para alterar o perfil');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_URL}/api/atualizar-perfil`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ username, email, senha_atual: senhaAtual || null, nova_senha: novaSenha || null })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Perfil atualizado com sucesso!');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.username = username;
+            user.email = email;
+            localStorage.setItem('user', JSON.stringify(user));
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
+            closeModalPerfil();
+        } else {
+            alert(data.error || '❌ Erro ao atualizar perfil');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao atualizar perfil. O endpoint ainda não está implementado no backend.');
+    }
+}
+
+async function sair() {
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('ms_user');
+    try {
+        if (token) {
+            await fetch(`${API_URL}/api/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ username })
+            });
+        }
+    } catch(e) {}
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('ms_user');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// Busca na tabela
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('#popsGrid > div');
+    cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(term) ? '' : 'none';
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    carregarPOPs();
+    carregarPerfil();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+setInterval(carregarPOPs, 30000);
+</script>
+
+</body>
+</html>
