@@ -276,7 +276,7 @@ function initMenuMobile() {
 
 async function carregarPOPs() {
     try {
-        const res = await fetch(`${API_URL}/api/hotspots`);
+        const res = await fetch(`${API_URL}/api/pops`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const pops = await res.json();
         
@@ -306,7 +306,7 @@ async function carregarPOPs() {
                         <p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
                     </div>
                     <div class="mt-4 pt-4 border-t border-gray-800 flex justify-end gap-2">
-                        <button onclick="event.stopPropagation(); gerarScript('${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs">📋 Script</button>
+                        <button onclick="event.stopPropagation(); gerarScript('${escapeHtml(pop.name)}', '${pop.id}')" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs">📋 Script</button>
                         <button onclick="event.stopPropagation(); deletarPOP('${pop.id}', '${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-red-600/30 rounded-lg text-xs text-red-400">🗑️ Deletar</button>
                     </div>
                 </div>
@@ -339,7 +339,7 @@ async function verDetalhesPop(id) {
     content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
     
     try {
-        const res = await fetch(`${API_URL}/api/hotspots`);
+        const res = await fetch(`${API_URL}/api/pops`);
         const pops = await res.json();
         const pop = pops.find(p => p.id == id);
         
@@ -392,9 +392,10 @@ function closeModalDetalhesPop() {
     document.getElementById('modalDetalhesPop').classList.add('hidden');
 }
 
-async function gerarScript(popName) {
+async function gerarScript(popName, popId) {
     try {
-        const res = await fetch(`${API_URL}/api/hotspots/${encodeURIComponent(popName)}/script`);
+        const targetId = popId || popName;
+        const res = await fetch(`${API_URL}/api/pops/${targetId}/script`);
         if (!res.ok) throw new Error('Erro ao gerar script');
         const data = await res.json();
         if (data.script) {
@@ -411,7 +412,7 @@ async function gerarScript(popName) {
 async function deletarPOP(id, nome) {
     if (!confirm(`Deletar POP "${nome}"? Esta ação não pode ser desfeita.`)) return;
     try {
-        const res = await fetch(`${API_URL}/api/hotspots/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_URL}/api/pops/${id}`, { method: 'DELETE' });
         if (res.ok) {
             alert(`✅ POP "${nome}" deletado!`);
             carregarPOPs();
@@ -460,29 +461,26 @@ function toggleWanCampos() {
 
 async function salvarNovoHotspot() {
     const nome = document.getElementById('hotspotNome').value;
+    const ip = document.getElementById('hotspotIp').value;
+    const user = document.getElementById('apiUser')?.value || 'admin';
+    const pass = document.getElementById('apiPass')?.value || '';
+    
     if (!nome) { alert('Informe o nome do hotspot'); return; }
     
     try {
-        const res = await fetch(`${API_URL}/api/hotspots`, {
+        const res = await fetch(`${API_URL}/api/pops`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ 
                 name: nome,
                 location: document.getElementById('hotspotLocalizacao').value || 'Localização não definida',
-                ip: document.getElementById('hotspotIp').value || '0.0.0.0',
-                tipo_instalacao: document.getElementById('tipoInstalacao').value,
-                wan_interface: document.getElementById('wanInterface').value,
-                lan_interface: document.getElementById('lanInterface').value,
-                vlan_id: document.getElementById('vlanId').value,
-                hotspot_tipo: document.getElementById('hotspotTipo').value,
-                vlan_existente: document.getElementById('vlanExistente').value,
-                porta_fisica: document.getElementById('portaFisica').value,
-                wan_tipo: document.getElementById('wanTipo')?.value,
-                pppoe_user: document.getElementById('pppoeUser')?.value,
-                pppoe_pass: document.getElementById('pppoePass')?.value,
-                static_ip: document.getElementById('staticIp')?.value,
-                static_mask: document.getElementById('staticMask')?.value,
-                static_gw: document.getElementById('staticGw')?.value
+                ip: ip || '0.0.0.0',
+                api_user: user,
+                api_pass: pass,
+                status: 'offline'
             })
         });
         
@@ -553,7 +551,7 @@ async function salvarPerfil() {
     }
     
     try {
-        const res = await fetch(`${API_URL}/api/atualizar-perfil`, {
+        const res = await fetch(`${API_URL}/api/profile`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -584,7 +582,7 @@ async function sair() {
     const username = localStorage.getItem('ms_user');
     try {
         if (token) {
-            await fetch(`${API_URL}/api/logout`, {
+            await fetch(`${API_URL}/api/auth/logout`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

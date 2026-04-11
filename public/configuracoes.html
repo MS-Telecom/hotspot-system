@@ -552,6 +552,69 @@
         }
     }
 
+    // ==================== CONFIGURAÇÕES (SETTINGS) ====================
+    async function carregarConfig(key) {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/${key}`, { headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            const value = data.value || data;
+
+            if (key === 'system') {
+                if (document.getElementById('sistemaNome')) document.getElementById('sistemaNome').value = value.system_name || '';
+                if (document.getElementById('sistemaLogo')) document.getElementById('sistemaLogo').value = value.logo_url || '';
+                if (document.getElementById('razaoSocial')) document.getElementById('razaoSocial').value = value.company_name || '';
+                if (document.getElementById('cnpj')) document.getElementById('cnpj').value = value.cnpj || '';
+                if (document.getElementById('telefone')) document.getElementById('telefone').value = value.phone || '';
+                if (document.getElementById('email')) document.getElementById('email').value = value.email || '';
+            } else if (key === 'free_trial') {
+                if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_minutes || 15;
+                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.limit_hours || 24;
+            } else if (key === 'payment') {
+                if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
+                if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
+            }
+        } catch (e) {
+            console.error(`Erro ao carregar config ${key}:`, e);
+        }
+    }
+
+    async function salvarConfig(key) {
+        let value = {};
+        if (key === 'system') {
+            value = {
+                system_name: document.getElementById('sistemaNome').value,
+                logo_url: document.getElementById('sistemaLogo').value,
+                company_name: document.getElementById('razaoSocial').value,
+                cnpj: document.getElementById('cnpj').value,
+                phone: document.getElementById('telefone').value,
+                email: document.getElementById('email').value
+            };
+        } else if (key === 'free_trial') {
+            value = {
+                duration_minutes: parseInt(document.getElementById('teste_tempo').value, 10),
+                limit_hours: parseInt(document.getElementById('teste_limite').value, 10)
+            };
+        } else if (key === 'payment') {
+            value = {
+                pix_key: document.getElementById('pixChave').value,
+                pix_name: document.getElementById('pixNome').value
+            };
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/api/settings/${key}`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ value })
+            });
+            if (!res.ok) throw new Error();
+            alert('✅ Configuração salva com sucesso!');
+        } catch (e) {
+            alert('❌ Erro ao salvar configuração');
+        }
+    }
+
     function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
@@ -576,11 +639,21 @@
         initMenuMobile();
         carregarPlanos();
         carregarBackups();
+        
+        // Carregar configurações iniciais
+        carregarConfig('system');
+        carregarConfig('free_trial');
+        carregarConfig('payment');
 
         document.getElementById('criarPlanoBtn')?.addEventListener('click', openNovoPlanoModal);
         document.getElementById('salvarNovoPlanoBtn')?.addEventListener('click', criarPlano);
         document.getElementById('salvarEditarPlanoBtn')?.addEventListener('click', salvarEdicaoPlano);
         document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
+        
+        // Listeners para salvar configurações
+        document.getElementById('salvarGeralBtn')?.addEventListener('click', () => salvarConfig('system'));
+        document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', () => salvarConfig('free_trial'));
+        document.getElementById('salvarPagamentoBtn')?.addEventListener('click', () => salvarConfig('payment'));
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     });

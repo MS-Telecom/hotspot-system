@@ -1696,6 +1696,112 @@ app.post('/api/users/test-access', async (req, res) => {
 });
 
 // ============================================================
+// 👤 GESTÃO DE ADMINISTRADORES (ADMINS)
+// ============================================================
+
+// Listar todos os administradores
+app.get('/api/admins', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('admins')
+      .select('id, username, email, role, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar administradores' });
+  }
+});
+
+// Criar novo administrador
+app.post('/api/admins', authMiddleware, async (req, res) => {
+  try {
+    const { username, email, password, role = 'admin' } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+    }
+
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    
+    const { data, error } = await supabase
+      .from('admins')
+      .insert([{ 
+        username, 
+        email, 
+        password: hashedPassword, 
+        role,
+        created_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'create', 'admin', `Criou administrador: ${username}`, req.ip, req.headers['user-agent']);
+    
+    res.status(201).json({ success: true, id: data.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar administrador' });
+  }
+});
+
+// Atualizar administrador
+app.put('/api/admins/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, email, password, role } = req.body;
+    
+    const updateData = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+    if (password) {
+      updateData.password = crypto.createHash('sha256').update(password).digest('hex');
+    }
+
+    const { error } = await supabase
+      .from('admins')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'update', 'admin', `Atualizou administrador ID: ${id}`, req.ip, req.headers['user-agent']);
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar administrador' });
+  }
+});
+
+// Deletar administrador
+app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Impedir que o admin delete a si mesmo
+    if (id == req.user.id) {
+      return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
+    }
+
+    const { error } = await supabase
+      .from('admins')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await registerAuditLog(req.user.username, 'delete', 'admin', `Excluiu administrador ID: ${id}`, req.ip, req.headers['user-agent']);
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao deletar administrador' });
+  }
+});
+
+// ============================================================
 // 🚀 INICIAR SERVIDOR
 // ============================================================
 
