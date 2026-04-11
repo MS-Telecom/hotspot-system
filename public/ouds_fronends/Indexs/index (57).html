@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotspot Payment</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
+        .container { text-align: center; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        .plans { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .plan { padding: 10px 20px; background: #007bff; color: #fff; border-radius: 4px; cursor: pointer; }
+        .plan:hover { background: #0056b3; }
+        .qr-code { display: none; margin-top: 20px; }
+        .qr-code img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Escolha um Plano</h1>
+        <div class="plans">
+            <div class="plan" onclick="selectPlan(5)">15 Minutos - R$ 1,00</div>
+            <div class="plan" onclick="selectPlan(5)">30 Minutos - R$ 2,00</div>
+            <div class="plan" onclick="selectPlan(5)">45 Minutos - R$ 3,00</div>
+            <div class="plan" onclick="selectPlan(5)">1 Hora - R$ 4,00</div>
+            <div class="plan" onclick="selectPlan(10)">6 Horas - R$ 10,00</div>
+            <div class="plan" onclick="selectPlan(24)">24 Horas - R$ 20,00</div>
+        </div>
+        <div class="qr-code" id="qrCode">
+            <h2>Escaneie o QR Code para pagar</h2>
+            <img id="qrImage" src="" alt="QR Code">
+        </div>
+    </div>
+
+    <script>
+        function selectPlan(hours) {
+            const amount = hours == 5 ? 5 : hours == 10 ? 10 : 20;
+            fetch('/generate-pix', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: amount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('qrImage').src = data.qr_code;
+                document.getElementById('qrCode').style.display = 'block';
+                checkPayment(data.txid);
+            });
+        }
+
+        function checkPayment(txid) {
+            setInterval(() => {
+                fetch(`/check-payment?txid=${txid}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.access_granted) {
+                        alert('Pagamento confirmado! Acesso liberado.');
+                        document.getElementById('qrCode').style.display = 'none';
+                        // Aqui você pode adicionar lógica para redirecionar ou liberar o acesso
+                    }
+                });
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

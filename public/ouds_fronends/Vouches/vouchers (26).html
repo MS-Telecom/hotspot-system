@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Vouchers - MS TELECOM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0c15;
+    }
+
+    .glass-card {
+      background: rgba(15, 25, 35, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .sidebar-link.active {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent);
+      border-left: 3px solid #3b82f6;
+      color: #3b82f6;
+    }
+
+    .stat-card {
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: #3b82f6;
+    }
+
+    #sidebar {
+      z-index: 100;
+    }
+
+    #sidebarOverlay {
+      z-index: 99;
+    }
+
+    #menuToggle {
+      z-index: 101;
+    }
+
+    #menuOverlay {
+      z-index: 99;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1e293b;
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex">
+  <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+    <div class="p-6 border-b border-gray-800">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+          <i data-lucide="zap" class="text-white w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+          <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+      </a>
+      <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="router" class="w-5 h-5"></i> Hotspots
+      </a>
+      <a href="pops.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="radio-tower" class="w-5 h-5"></i> POPs
+      </a>
+      <a href="cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="users" class="w-5 h-5"></i> Clientes
+      </a>
+      <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="banknote" class="w-5 h-5"></i> Financeiro
+      </a>
+      <a href="vouchers.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
+        <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+      </a>
+      <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas
+      </a>
+      <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks
+      </a>
+      <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+      </a>
+      <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="file-text" class="w-5 h-5"></i> Logs
+      </a>
+      <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+        <i data-lucide="shield" class="w-5 h-5"></i> Logs Auditoria
+      </a>
+    </nav>
+  </aside>
+
+  <main class="flex-1 p-4 md:p-6 overflow-auto">
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        <h1 class="text-2xl font-bold">Vouchers</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium"><i data-lucide="plus" class="w-4 h-4"></i>Gerar Vouchers</button>
+        <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
+        <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
+      </div>
+    </header>
+
+    <div class="bg-gray-800 rounded-xl p-4">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-gray-400 border-b border-gray-700">
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Código</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Plano</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Valor</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Validade</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Usado Por</th>
+              <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Data Uso</th>
+              <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="vouchersTable" class="divide-y divide-gray-800">
+            <!-- Carregado via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Gerar -->
+  <div id="modalVoucher" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Gerar Vouchers</h3><button onclick="closeModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div><label class="block text-sm text-gray-400 mb-1">Plano</label><input id="inputPlanName" type="text" placeholder="Nome do plano" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Valor (R$)</label><input id="inputAmount" type="number" step="0.01" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Quantidade</label><input id="inputQuantity" type="number" value="1" min="1" max="100" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Validade</label><input id="inputExpires" type="date" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none"></div>
+      </div>
+      <button onclick="generateVouchers()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Gerar</button>
+    </div>
+  </div>
+
+  <!-- Modal Perfil -->
+  <div id="modalPerfil" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+      </div>
+      <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Cancelar</button></div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://mstelecom-api.duckdns.org';
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) window.location.href = 'login.html';
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+    lucide.createIcons();
+    initMenuMobile();
+
+    async function loadVouchers() {
+      try {
+        const res = await fetch(`${API_URL}/api/vouchers`, {
+          headers
+        });
+        const vouchers = await res.json();
+        const tbody = document.getElementById('vouchersTable');
+        tbody.innerHTML = '';
+        if (!vouchers || vouchers.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-gray-500">Nenhum voucher gerado</td></tr>';
+          return;
+        }
+        vouchers.forEach(v => {
+          const usedColor = v.used ? 'text-red-400' : 'text-green-400';
+          const expires = v.expires_at ? new Date(v.expires_at).toLocaleDateString('pt-BR') : '-';
+          tbody.innerHTML += `
+            <tr class="border-b border-gray-700">
+              <td class="py-3 font-mono">${v.code}</td>
+              <td class="py-3">${v.plan_name || '-'}</td>
+              <td class="py-3">R$ ${parseFloat(v.amount||0).toFixed(2).replace('.',',')}</td>
+              <td class="py-3">${expires}</td>
+              <td class="py-3 ${usedColor}">${v.used ? 'Sim' : 'Não'}</td>
+              <td class="py-3">${v.used_by || '-'}</td>
+              <td class="py-3">${v.used_at ? new Date(v.used_at).toLocaleString('pt-BR') : '-'}</td>
+              <td class="py-3 text-center">
+                <button onclick="deleteVoucher(${v.id})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">Excluir</button>
+              </td>
+            </tr>`;
+        });
+      } catch (err) {
+        console.error('Erro:', err);
+      }
+    }
+
+    function openModal() {
+      document.getElementById('modalVoucher').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modalVoucher').classList.add('hidden');
+    }
+
+    async function generateVouchers() {
+      try {
+        const body = {
+          plan_name: document.getElementById('inputPlanName').value,
+          amount: document.getElementById('inputAmount').value,
+          quantity: document.getElementById('inputQuantity').value,
+          expires_at: document.getElementById('inputExpires').value || null
+        };
+        const res = await fetch(`${API_URL}/api/vouchers`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error('Erro ao gerar');
+        closeModal();
+        loadVouchers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteVoucher(id) {
+      if (!confirm('Excluir este voucher?')) return;
+      try {
+        await fetch(`${API_URL}/api/vouchers/${id}`, {
+          method: 'DELETE',
+          headers
+        });
+        loadVouchers();
+      } catch (err) {
+        alert('Erro');
+      }
+    }
+
+    function carregarPerfil() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      document.getElementById('profileUsername').value = user.username || '';
+      document.getElementById('profileEmail').value = user.email || '';
+    }
+
+    function openModalPerfil() {
+      carregarPerfil();
+      document.getElementById('modalPerfil').classList.remove('hidden');
+    }
+
+    function closeModalPerfil() {
+      document.getElementById('modalPerfil').classList.add('hidden');
+    }
+
+    async function salvarPerfil() {
+      try {
+        const body = {};
+        const email = document.getElementById('profileEmail').value;
+        const password = document.getElementById('profilePassword').value;
+        if (email) body.email = email;
+        if (password) body.password = password;
+        const res = await fetch(`${API_URL}/api/update-profile`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error('Erro');
+        alert('Perfil atualizado!');
+        closeModalPerfil();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function sair() {
+      fetch(`${API_URL}/api/logout`, {
+        method: 'POST',
+        headers
+      }).catch(() => {});
+      localStorage.removeItem('token');
+      localStorage.removeItem('ms_token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    function initMenuMobile() {
+      const btn = document.getElementById('btnMenuMobile');
+      const sb = document.getElementById('sidebar');
+      if (btn) btn.addEventListener('click', () => sb.classList.toggle('open'));
+    }
+
+    loadVouchers();
+  </script>
+</body>
+</html>

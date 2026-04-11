@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - MS TELECOM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}}</style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar bg-gray-800 flex flex-col p-4 min-h-screen">
+    <div class="flex items-center gap-2 mb-8">
+      <i data-lucide="wifi" class="w-7 h-7 text-cyan-400"></i>
+      <span class="text-lg font-bold">MS TELECOM</span>
+    </div>
+    <nav class="flex flex-col gap-1 flex-1">
+      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</a>
+      <a href="hotspots.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="router" class="w-5 h-5"></i>Hotspots</a>
+      <a href="pops.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="radio-tower" class="w-5 h-5"></i>POPs</a>
+      <a href="cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="users" class="w-5 h-5"></i>Clientes</a>
+      <a href="financeiro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="banknote" class="w-5 h-5"></i>Financeiro</a>
+      <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
+      <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
+      <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
+      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
+      <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
+      <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
+    </nav>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <main class="flex-1 p-4 md:p-6 overflow-auto">
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        <div class="relative w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar cliente por CPF, Nome, MAC ou IP..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
+        <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
+      </div>
+    </header>
+
+    
+    <!-- Header da Página -->
+            <div>
+                <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
+                <p class="text-gray-500 text-sm mt-1">Visão geral da rede e métricas em tempo real</p>
+            </div>
+    <!-- Cards de Métricas Financeiras -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="text-emerald-500 w-6 h-6"></i>
+                        </div>
+                        <span id="receitaVariacao" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">+12%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Receita Total</p>
+                    <span id="receitaTotal" class="text-3xl font-black mt-1">R$ 0,00</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Mês atual</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="check-circle" class="text-blue-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">Concluídos</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Concluídos</p>
+                    <span id="pagamentosConcluidos" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Transações confirmadas</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="clock" class="text-yellow-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-full">Pendentes</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Pendentes</p>
+                    <span id="pagamentosPendentes" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Aguardando confirmação</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-full">Cancelados</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Cancelados</p>
+                    <span id="pagamentosCancelados" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Transações canceladas</p>
+                </div>
+            </div>
+
+            <!-- Cards de Métricas de Rede (NOVOS) -->
+    <!-- Cards de Métricas de Rede (NOVOS) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="router" class="text-purple-500 w-6 h-6"></i>
+                        </div>
+                        <span id="hotspotsVariacao" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">+0%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Hotspots Online</p>
+                    <span id="hotspotsOnline" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2"><span id="hotspotsOffline">0</span> offline</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="users" class="text-cyan-500 w-6 h-6"></i>
+                        </div>
+                        <span id="usuariosVariacao" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">+0%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Usuários Online</p>
+                    <span id="usuariosOnline" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Pico hoje: <span id="picoUsuarios">0</span></p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="activity" class="text-orange-500 w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Tráfego Total</p>
+                    <span id="bandaUtilizada" class="text-3xl font-black mt-1">0 Mbps</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Pico: <span id="picoBanda">0</span> Mbps</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="users-round" class="text-pink-500 w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Total Clientes</p>
+                    <span id="totalClientes" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Cadastrados na plataforma</p>
+                </div>
+            </div>
+
+            <!-- Gráfico + Faturamento por Plano (2 colunas) -->
+    <!-- Gráfico + Faturamento por Plano (2 colunas) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfico de Usuários Online (NOVO) -->
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-white">Usuários Online (últimas 24h)</h3>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span class="text-[10px] text-gray-500">Tempo real</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="usuariosOnlineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Cards de Resumo por Plano (EXISTENTE) -->
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-white">Faturamento por Plano (últimos 30 dias)</h3>
+                        <button onclick="verDetalhesPlano()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver detalhes</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-blue-600/20 to-blue-600/5 rounded-xl p-5 text-center border border-blue-500/20">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="crown" class="w-6 h-6 text-blue-500"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Premium</p>
+                            <p id="premiumTotal" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                            <p class="text-[9px] text-gray-600 mt-1">assinantes premium</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-cyan-600/20 to-cyan-600/5 rounded-xl p-5 text-center border border-cyan-500/20">
+                            <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Diário</p>
+                            <p id="diarioTotal" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                            <p class="text-[9px] text-gray-600 mt-1">acessos diários</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
+                            <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
+                            <p id="testeTotal" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                            <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Últimas Liberações (MELHORADA com mais ações) -->
+    <!-- Últimas Liberações (MELHORADA com mais ações) -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white">Últimas Liberações (PIX)</h3>
+                    <button onclick="verTodasLiberacoes()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Cliente / MAC</th>
+                                <th class="px-6 py-3 text-left">POP</th>
+                                <th class="px-6 py-3 text-left">Plano</th>
+                                <th class="px-6 py-3 text-left">Valor</th>
+                                <th class="px-6 py-3 text-left">Data/Hora</th>
+                                <th class="px-6 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaLiberacoes" class="divide-y divide-gray-800/50">
+                            客户<td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberações...客户</tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hotspots / POPs (NOVO) -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i data-lucide="router" class="w-4 h-4 text-purple-500"></i>
+                        Hotspots / POPs
+                    </h3>
+                    <a href="hotspots.html" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver todos</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Nome do Hotspot</th>
+                                <th class="px-6 py-3 text-left">Status</th>
+                                <th class="px-6 py-3 text-left">Clientes Ativos</th>
+                                <th class="px-6 py-3 text-left">Última Atividade</th>
+                                <th class="px-6 py-3 text-center">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaHotspots" class="divide-y divide-gray-800/50">
+                            客户<td colspan="5" class="px-6 py-8 text-center text-gray-500">Carregando hotspots...客户</tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    
+
+<!-- MODAL: NOVO VOUCHER (EXISTENTE) -->
+    </main>
+
+  <!-- MODAL: NOVO VOUCHER (EXISTENTE) -->
+<div id="modalNovoVoucher" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="ticket" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Gerar Novo Voucher
+            </h2>
+            <button onclick="closeModalNovoVoucher()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
+                <select id="voucherPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="diario">Diário (24h - R$ 5,00)</option>
+                    <option value="premium">Premium 24h (R$ 15,00)</option>
+                    <option value="semanal">Premium Semanal (R$ 50,00)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Quantidade</label>
+                <input type="number" id="voucherQuantidade" value="1" min="1" max="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label>
+                <input type="date" id="voucherValidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div id="voucherResultado" class="hidden bg-gray-900/50 rounded-xl p-4">
+                <p class="text-[10px] text-gray-500 uppercase mb-1">Voucher Gerado</p>
+                <code id="voucherCodigo" class="text-lg font-mono text-emerald-400 break-all"></code>
+                <button onclick="copiarVoucher()" class="mt-2 text-xs text-blue-500">Copiar código</button>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
+            <button onclick="closeModalNovoVoucher()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Cancelar</button>
+            <button onclick="gerarVoucher()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-lg text-xs sm:text-sm font-bold text-white">Gerar Voucher</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: TODAS AS LIBERAÇÕES (EXISTENTE) -->
+<div id="modalTodasLiberacoes" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
+        <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Todas as Liberações
+            </h2>
+            <button onclick="closeModalTodasLiberacoes()" class="p-1 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs sm:text-sm">
+                    <thead class="bg-gray-900/50 sticky top-0">
+                        <tr class="text-left text-[10px] sm:text-xs font-bold text-gray-500 uppercase">
+                            <th class="px-1 sm:px-2 py-2">Cliente</th>
+                            <th class="px-1 sm:px-2 py-2">Plano</th>
+                            <th class="px-1 sm:px-2 py-2">Valor</th>
+                            <th class="px-1 sm:px-2 py-2">Data</th>
+                         </tr>
+                    </thead>
+                    <tbody id="tabelaTodasLiberacoes" class="divide-y divide-gray-800">
+                        <tr><td colspan="4" class="px-2 py-8 text-center text-gray-500 text-xs">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closeModalTodasLiberacoes()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO PLANO (EXISTENTE) -->
+<div id="modalDetalhesPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="crown" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do Plano
+            </h2>
+            <button onclick="closeModalDetalhesPlano()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="detalhesPlanoContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closeModalDetalhesPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO CLIENTE (NOVO) -->
+<div id="modalDetalhesCliente" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="user" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do Cliente
+            </h2>
+            <button onclick="closeModalDetalhesCliente()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="detalhesClienteContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalDetalhesCliente()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+            <button id="btnBloquearClienteModal" onclick="bloquearClienteFromModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-bold hidden">Bloquear Cliente</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: MEU PERFIL (EXISTENTE) -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
+                        <input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
+                        <input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+
+</script>
+</body>
+</html>
