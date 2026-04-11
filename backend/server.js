@@ -371,6 +371,48 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
+// Atualizar perfil do administrador logado
+app.put('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const { username, email, current_password, new_password } = req.body;
+    const adminId = req.user.id;
+
+    const { data: admin, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('id', adminId)
+      .single();
+    if (error || !admin) return res.status(404).json({ error: 'Admin não encontrado' });
+
+    if (new_password) {
+      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatória' });
+      const hashedCurrent = crypto.createHash('sha256').update(current_password).digest('hex');
+      if (admin.password !== hashedCurrent && admin.password !== current_password) {
+        return res.status(401).json({ error: 'Senha atual incorreta' });
+      }
+    }
+
+    const updateData = { updated_at: new Date().toISOString() };
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (new_password) updateData.password = crypto.createHash('sha256').update(new_password).digest('hex');
+
+    const { data, error: updateError } = await supabase
+      .from('admins')
+      .update(updateData)
+      .eq('id', adminId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+    await registerAuditLog(admin.username, 'update', 'admin', 'Perfil atualizado', req.ip, req.headers['user-agent']);
+    res.json({ success: true, user: { id: data.id, username: data.username, email: data.email } });
+  } catch (err) {
+    console.error('❌ Erro ao atualizar perfil:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
 // ============================================================
 // 👥 ROTAS DE USUÁRIOS (CLIENTES)
 // ============================================================
@@ -918,6 +960,49 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao deletar POP:', err.message);
     res.status(500).json({ error: 'Erro ao deletar POP' });
+  }
+});
+
+// Gerar script de configuraÃ§Ã£o para um POP
+app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+
+    const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
+    const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
+
+    const script = `/system identity set name="${pop.name}"\n` +
+      `/radius add address=${radiusServer} secret=testing123 service=hotspot authentication-port=1812 accounting-port=1813\n` +
+      `/ip hotspot profile set [find] use-radius=yes\n` +
+      `/tool fetch url="${apiUrl}/api/pops/${id}/heartbeat" mode=http keep-result=no\n` +
+      `/system scheduler add name="heartbeat-${pop.name}" interval=1m on-event="/tool fetch url=\\"${apiUrl}/api/pops/${id}/heartbeat\\" keep-result=no" start-time=startup\n` +
+      `/ip hotspot set [find] address-pool=dhcp_pool1\n`;
+
+    res.json({ script });
+  } catch (err) {
+    console.error('âŒ Erro ao gerar script:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar script' });
+  }
+});
+
+// Receber heartbeat do MikroTik (atualiza status e Ãºltima atividade)
+app.post('/api/pops/:id/heartbeat', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await supabase
+      .from('pops')
+      .update({
+        status: 'online',
+        last_heartbeat: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('âŒ Erro no heartbeat:', err.message);
+    res.sendStatus(500);
   }
 });
 
