@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Financeiro</title>
@@ -50,7 +51,7 @@
             </div>
 
             <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-                <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+                <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
                 <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                 </a>
@@ -70,7 +71,7 @@
                     <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
                 </a>
                 <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                    <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                    <i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes
                 </a>
                 <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                     <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
@@ -89,13 +90,14 @@
             </div>
         </aside>
 
-        <!-- CONTEÚDO PRINCIPAL -->
+        <!-- CONTEÃšDO PRINCIPAL -->
         <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
             <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
                 <div class="relative w-96">
                     <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                    <input type="text" placeholder="Buscar transação por cliente, ID ou valor..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                    <input type="text" placeholder="Buscar transaÃ§Ã£o por cliente, ID ou valor..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="text-right">
@@ -114,19 +116,19 @@
                 <div class="flex justify-between items-end">
                     <div>
                         <h1 class="text-3xl font-black tracking-tight">Financeiro</h1>
-                        <p class="text-gray-500 text-sm mt-1">Relatórios de faturamento, transações e receita por POP</p>
+                        <p class="text-gray-500 text-sm mt-1">RelatÃ³rios de faturamento, transaÃ§Ãµes e receita por POP</p>
                     </div>
                     <div class="flex gap-3">
                         <button class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition">
                             <i data-lucide="download" class="w-4 h-4"></i> Exportar
                         </button>
                         <button class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg hover:shadow-blue-500/20 transition">
-                            <i data-lucide="calendar" class="w-4 h-4"></i> Março 2026
+                            <i data-lucide="calendar" class="w-4 h-4"></i> MarÃ§o 2026
                         </button>
                     </div>
                 </div>
 
-                <!-- Cards de Métricas Financeiras -->
+                <!-- Cards de MÃ©tricas Financeiras -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                         <div class="flex justify-between items-start mb-3">
@@ -151,9 +153,9 @@
                         <div class="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3">
                             <i data-lucide="credit-card" class="text-purple-500 w-5 h-5"></i>
                         </div>
-                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Ticket Médio</p>
+                        <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Ticket MÃ©dio</p>
                         <p class="text-2xl font-black mt-1">R$ 12,50</p>
-                        <p class="text-[10px] text-gray-600 mt-2">+ R$ 2,30 vs mês passado</p>
+                        <p class="text-[10px] text-gray-600 mt-2">+ R$ 2,30 vs mÃªs passado</p>
                     </div>
                     <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                         <div class="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3">
@@ -161,15 +163,15 @@
                         </div>
                         <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Clientes Ativos</p>
                         <p class="text-2xl font-black mt-1">342</p>
-                        <p class="text-[10px] text-gray-600 mt-2">+28 este mês</p>
+                        <p class="text-[10px] text-gray-600 mt-2">+28 este mÃªs</p>
                     </div>
                 </div>
 
-                <!-- Gráficos de Faturamento -->
+                <!-- GrÃ¡ficos de Faturamento -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                     <div class="glass-card rounded-2xl p-6 border border-gray-800">
                         <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-white">Evolução Mensal</h3>
+                            <h3 class="font-bold text-white">EvoluÃ§Ã£o Mensal</h3>
                             <div class="flex gap-2">
                                 <button class="text-[10px] font-bold text-blue-500 border-b border-blue-500 pb-0.5">2026</button>
                                 <button class="text-[10px] font-bold text-gray-500 hover:text-white transition">2025</button>
@@ -189,7 +191,7 @@
                                 <p class="text-sm font-bold text-white">R$ 8.450</p>
                             </div>
                             <div class="bg-gray-900/50 rounded-xl p-3">
-                                <p class="text-[9px] text-gray-500 uppercase">Diário</p>
+                                <p class="text-[9px] text-gray-500 uppercase">DiÃ¡rio</p>
                                 <p class="text-sm font-bold text-white">R$ 3.890</p>
                             </div>
                             <div class="bg-gray-900/50 rounded-xl p-3">
@@ -205,7 +207,7 @@
                     <h3 class="font-bold text-white mb-6">Receita por POP / Localidade</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="bg-gray-900/50 p-4 rounded-xl flex justify-between items-center">
-                            <div><p class="text-sm font-medium text-white">Vila Icuí</p><p class="text-[10px] text-gray-500">34% do faturamento</p></div>
+                            <div><p class="text-sm font-medium text-white">Vila IcuÃ­</p><p class="text-[10px] text-gray-500">34% do faturamento</p></div>
                             <p class="text-lg font-bold text-emerald-400">R$ 4.950</p>
                         </div>
                         <div class="bg-gray-900/50 p-4 rounded-xl flex justify-between items-center">
@@ -219,20 +221,20 @@
                     </div>
                 </div>
 
-                <!-- Tabela de Transações Recentes -->
+                <!-- Tabela de TransaÃ§Ãµes Recentes -->
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                        <h3 class="font-bold text-white">Transações Recentes</h3>
+                        <h3 class="font-bold text-white">TransaÃ§Ãµes Recentes</h3>
                         <button class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
                     </div>
                     <div class="overflow-x-auto">
                         <div class="overflow-x-auto"><table class="w-full">
                             <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                <tr><th class="px-6 py-3 text-left">Data/Hora</th><th class="px-6 py-3 text-left">Cliente</th><th class="px-6 py-3 text-left">Plano</th><th class="px-6 py-3 text-left">Valor</th><th class="px-6 py-3 text-left">Método</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-center">Ação</th></tr>
+                                <tr><th class="px-6 py-3 text-left">Data/Hora</th><th class="px-6 py-3 text-left">Cliente</th><th class="px-6 py-3 text-left">Plano</th><th class="px-6 py-3 text-left">Valor</th><th class="px-6 py-3 text-left">MÃ©todo</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-center">AÃ§Ã£o</th></tr>
                             </thead>
                             <tbody class="divide-y divide-gray-800/50">
-                                <tr class="hover:bg-gray-900/30 transition"><td class="px-6 py-4 text-sm">22/03 14:05</td><td class="px-6 py-4 font-medium">João Silva</td><td class="px-6 py-4">Premium 24h</td><td class="px-6 py-4 font-bold text-emerald-400">R$ 15,00</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg">PIX</span></td><td class="px-6 py-4"><span class="text-emerald-500">Confirmado</span></td><td class="px-6 py-4 text-center"><button class="p-1 hover:bg-gray-800 rounded"><i data-lucide="receipt" class="w-4 h-4 text-gray-500"></i></button></td></tr>
-                                <tr class="hover:bg-gray-900/30 transition"><td class="px-6 py-4 text-sm">22/03 13:58</td><td class="px-6 py-4 font-medium">Maria Costa</td><td class="px-6 py-4">Diário 24h</td><td class="px-6 py-4 font-bold text-emerald-400">R$ 5,00</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg">PIX</span></td><td class="px-6 py-4"><span class="text-emerald-500">Confirmado</span></td><td class="px-6 py-4 text-center"><button class="p-1 hover:bg-gray-800 rounded"><i data-lucide="receipt" class="w-4 h-4 text-gray-500"></i></button></td></tr>
+                                <tr class="hover:bg-gray-900/30 transition"><td class="px-6 py-4 text-sm">22/03 14:05</td><td class="px-6 py-4 font-medium">JoÃ£o Silva</td><td class="px-6 py-4">Premium 24h</td><td class="px-6 py-4 font-bold text-emerald-400">R$ 15,00</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg">PIX</span></td><td class="px-6 py-4"><span class="text-emerald-500">Confirmado</span></td><td class="px-6 py-4 text-center"><button class="p-1 hover:bg-gray-800 rounded"><i data-lucide="receipt" class="w-4 h-4 text-gray-500"></i></button></td></tr>
+                                <tr class="hover:bg-gray-900/30 transition"><td class="px-6 py-4 text-sm">22/03 13:58</td><td class="px-6 py-4 font-medium">Maria Costa</td><td class="px-6 py-4">DiÃ¡rio 24h</td><td class="px-6 py-4 font-bold text-emerald-400">R$ 5,00</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg">PIX</span></td><td class="px-6 py-4"><span class="text-emerald-500">Confirmado</span></td><td class="px-6 py-4 text-center"><button class="p-1 hover:bg-gray-800 rounded"><i data-lucide="receipt" class="w-4 h-4 text-gray-500"></i></button></td></tr>
                                 <tr class="hover:bg-gray-900/30 transition"><td class="px-6 py-4 text-sm">22/03 12:30</td><td class="px-6 py-4 font-medium">Paulo Ribeiro</td><td class="px-6 py-4">Teste 15min</td><td class="px-6 py-4 font-bold text-gray-400">R$ 0,00</td><td class="px-6 py-4"><span class="px-2 py-1 bg-gray-500/20 text-gray-400 text-[10px] font-bold rounded-lg">Teste</span></td><td class="px-6 py-4"><span class="text-yellow-500">Ativo</span></td><td class="px-6 py-4 text-center"><button class="p-1 hover:bg-gray-800 rounded"><i data-lucide="receipt" class="w-4 h-4 text-gray-500"></i></button></td></tr>
                                 <tr class="hover:bg-gray-900/30 transition"><td class="px-6 py-4 text-sm">21/03 20:15</td><td class="px-6 py-4 font-medium">Ana Beatriz</td><td class="px-6 py-4">Premium 24h</td><td class="px-6 py-4 font-bold text-emerald-400">R$ 15,00</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg">PIX</span></td><td class="px-6 py-4"><span class="text-emerald-500">Confirmado</span></td><td class="px-6 py-4 text-center"><button class="p-1 hover:bg-gray-800 rounded"><i data-lucide="receipt" class="w-4 h-4 text-gray-500"></i></button></td></tr>
                             </tbody>
@@ -316,3 +318,4 @@ document.addEventListener('DOMContentLoaded', initMenuMobile);
 
 </body>
 </html>
+

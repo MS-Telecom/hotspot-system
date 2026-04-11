@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Wi-Fi Portal</title>
@@ -33,6 +34,7 @@
         
         <!-- Header com status da rede -->
         <header class="border-b border-gray-800 bg-black/30 backdrop-blur-sm sticky top-0 z-20">
+  <base href="/">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -46,11 +48,11 @@
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-full">
                         <span class="status-dot bg-emerald-500"></span>
-                        <span class="text-[10px] font-medium text-emerald-500">Rede disponível</span>
+                        <span class="text-[10px] font-medium text-emerald-500">Rede disponÃ­vel</span>
                     </div>
                     <div class="text-right hidden sm:block">
-                        <p class="text-[10px] text-gray-500">Vila Icuí, Belém/PA</p>
-                        <p class="text-[9px] text-gray-600">32°C • Parc ensolarado</p>
+                        <p class="text-[10px] text-gray-500">Vila IcuÃ­, BelÃ©m/PA</p>
+                        <p class="text-[9px] text-gray-600">32Â°C â€¢ Parc ensolarado</p>
                     </div>
                 </div>
             </div>
@@ -76,19 +78,19 @@
                         <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
                     </button>
                     <button id="testeGratisBtn" class="px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
-                        <i data-lucide="flask" class="w-4 h-4"></i> Teste Grátis 15min
+                        <i data-lucide="flask" class="w-4 h-4"></i> Teste GrÃ¡tis 15min
                     </button>
                     <button id="jaPagueiBtn" class="px-5 py-2 bg-blue-600/20 border border-blue-500/50 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> Já paguei
+                        <i data-lucide="check-circle" class="w-4 h-4"></i> JÃ¡ paguei
                     </button>
                 </div>
             </div>
 
-            <!-- Planos disponíveis -->
+            <!-- Planos disponÃ­veis -->
             <h3 class="text-2xl font-bold mb-6 flex items-center gap-2"><i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <!-- Plano Diário -->
+                <!-- Plano DiÃ¡rio -->
                 <div class="plan-card glass-card rounded-2xl p-6 border border-gray-800 cursor-pointer hover:border-blue-500 transition-all" data-plano="diario" data-preco="5.00" data-tempo="24h">
                     <div class="flex justify-between items-start mb-4">
                         <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -96,7 +98,7 @@
                         </div>
                         <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full">Popular</span>
                     </div>
-                    <h4 class="text-xl font-bold text-white">Diário</h4>
+                    <h4 class="text-xl font-bold text-white">DiÃ¡rio</h4>
                     <p class="text-gray-400 text-sm mt-1">24 horas de acesso</p>
                     <div class="mt-4">
                         <span class="text-3xl font-black text-white">R$ 5,00</span>
@@ -118,15 +120,15 @@
                         </div>
                     </div>
                     <h4 class="text-xl font-bold text-white">Premium 24h</h4>
-                    <p class="text-gray-400 text-sm mt-1">Máxima velocidade + prioridade</p>
+                    <p class="text-gray-400 text-sm mt-1">MÃ¡xima velocidade + prioridade</p>
                     <div class="mt-4">
                         <span class="text-3xl font-black text-white">R$ 15,00</span>
                         <span class="text-gray-500 text-sm">/24h</span>
                     </div>
                     <ul class="mt-4 space-y-2 text-sm text-gray-400">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 50 Mbps de velocidade</li>
-                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Prioridade de tráfego</li>
-                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Suporte prioritário</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Prioridade de trÃ¡fego</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Suporte prioritÃ¡rio</li>
                     </ul>
                     <button class="btn-plano w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition">Escolher plano</button>
                 </div>
@@ -154,29 +156,29 @@
                 </div>
             </div>
 
-            <!-- Seção de pagamento (escondida inicialmente) -->
+            <!-- SeÃ§Ã£o de pagamento (escondida inicialmente) -->
             <div id="paymentSection" class="hidden glass-card rounded-3xl p-8 border border-blue-500/30 mb-8">
                 <div class="flex flex-col md:flex-row gap-8 items-center">
                     <div class="flex-1 text-center md:text-left">
                         <h3 class="text-2xl font-bold text-white mb-2">Pagamento via PIX</h3>
-                        <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o código para pagar</p>
+                        <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o cÃ³digo para pagar</p>
                         <div class="bg-gray-900/80 rounded-2xl p-4 inline-block">
                             <div id="qrCodePlaceholder" class="qr-code w-48 h-48 bg-white rounded-2xl flex items-center justify-center">
                                 <i data-lucide="qrcode" class="w-24 h-24 text-gray-800"></i>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-3">QR Code válido por 15 minutos</p>
+                        <p class="text-xs text-gray-500 mt-3">QR Code vÃ¡lido por 15 minutos</p>
                     </div>
                     <div class="flex-1 space-y-4">
                         <div class="bg-gray-900/50 rounded-2xl p-4">
-                            <p class="text-[10px] text-gray-500 uppercase mb-1">Código PIX Copia e Cola</p>
-                            <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">PIX real pendente de configuração final do Mercado Pago neste ambiente.</code>
-                            <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar código</button>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">CÃ³digo PIX Copia e Cola</p>
+                            <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">PIX real pendente de configuraÃ§Ã£o final do Mercado Pago neste ambiente.</code>
+                            <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar cÃ³digo</button>
                         </div>
                         <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4">
-                            <p class="text-xs text-yellow-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Após o pagamento, clique em "Já paguei" para liberar seu acesso</p>
+                            <p class="text-xs text-yellow-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> ApÃ³s o pagamento, clique em "JÃ¡ paguei" para liberar seu acesso</p>
                         </div>
-                        <button id="confirmarPagamentoBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold transition">⏳ Aguardar confirmação real do pagamento</button>
+                        <button id="confirmarPagamentoBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold transition">â³ Aguardar confirmaÃ§Ã£o real do pagamento</button>
                         <button id="cancelarPagamentoBtn" class="w-full bg-gray-800 hover:bg-gray-700 py-2 rounded-xl text-sm transition">Cancelar</button>
                     </div>
                 </div>
@@ -188,46 +190,46 @@
                     <i data-lucide="check-circle" class="text-emerald-500 w-6 h-6"></i>
                     <div>
                         <p id="statusMessageText" class="text-sm font-medium text-white">Acesso liberado!</p>
-                        <p class="text-[10px] text-gray-500">Você será redirecionado em instantes</p>
+                        <p class="text-[10px] text-gray-500">VocÃª serÃ¡ redirecionado em instantes</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Informações adicionais -->
+            <!-- InformaÃ§Ãµes adicionais -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-800">
                 <div class="text-center">
                     <i data-lucide="zap" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
                     <h4 class="font-bold text-white">Alta Velocidade</h4>
-                    <p class="text-xs text-gray-500">Conexão de até 100 Mbps</p>
+                    <p class="text-xs text-gray-500">ConexÃ£o de atÃ© 100 Mbps</p>
                 </div>
                 <div class="text-center">
                     <i data-lucide="shield" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
-                    <h4 class="font-bold text-white">Conexão Segura</h4>
-                    <p class="text-xs text-gray-500">Rede protegida e estável</p>
+                    <h4 class="font-bold text-white">ConexÃ£o Segura</h4>
+                    <p class="text-xs text-gray-500">Rede protegida e estÃ¡vel</p>
                 </div>
                 <div class="text-center">
                     <i data-lucide="headphones" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
                     <h4 class="font-bold text-white">Suporte 24h</h4>
-                    <p class="text-xs text-gray-500">Atendimento para dúvidas</p>
+                    <p class="text-xs text-gray-500">Atendimento para dÃºvidas</p>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
         <footer class="border-t border-gray-800 py-6 text-center text-[10px] text-gray-600">
-            <p>MS TELECOM - Internet de qualidade para sua conexão | Conformidade com Marco Civil da Internet</p>
-            <p class="mt-1">© 2026 - Todos os direitos reservados</p>
+            <p>MS TELECOM - Internet de qualidade para sua conexÃ£o | Conformidade com Marco Civil da Internet</p>
+            <p class="mt-1">Â© 2026 - Todos os direitos reservados</p>
         </footer>
     </div>
 
     <script>
-        // ==================== CONFIGURAÇÕES GLOBAIS ====================
+        // ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
         const API_URL = 'https://mstelecom-api.duckdns.org';
         const MIKROTIK_LOGIN_URL = 'http://192.168.32.1/login';
         
-        // ==================== FUNÇÕES AUXILIARES ====================
+        // ==================== FUNÃ‡Ã•ES AUXILIARES ====================
         
-        // Função para obter MAC da URL
+        // FunÃ§Ã£o para obter MAC da URL
         function getMacFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const mac = urlParams.get('mac');
@@ -241,7 +243,7 @@
             return null;
         }
         
-        // Função para mostrar mensagens de status
+        // FunÃ§Ã£o para mostrar mensagens de status
         function showStatusMessage(message, type = 'success') {
             const msgDiv = document.getElementById('statusMessage');
             const msgText = document.getElementById('statusMessageText');
@@ -253,7 +255,7 @@
             msgDiv.className = `hidden fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm border-l-4 toast-${type}`;
             msgDiv.classList.remove('hidden');
             
-            // Mudar ícone conforme o tipo
+            // Mudar Ã­cone conforme o tipo
             if (icon) {
                 if (type === 'success') icon.setAttribute('data-lucide', 'check-circle');
                 else if (type === 'error') icon.setAttribute('data-lucide', 'alert-circle');
@@ -267,7 +269,7 @@
             }, 5000);
         }
         
-        // Função para redirecionar para o MikroTik
+        // FunÃ§Ã£o para redirecionar para o MikroTik
 function redirectToMikrotik(mac) {
     var form = document.createElement('form');
     form.method = 'POST';
@@ -297,9 +299,9 @@ function redirectToMikrotik(mac) {
     form.submit();
 }
         
-        // ==================== INICIALIZAÇÃO ====================
+        // ==================== INICIALIZAÃ‡ÃƒO ====================
         
-        // Inicializar ícones
+        // Inicializar Ã­cones
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
         }
@@ -311,10 +313,10 @@ function redirectToMikrotik(mac) {
         if (macAddress) {
             macDisplayElement.innerText = macAddress;
         } else {
-            macDisplayElement.innerText = 'MAC não detectado';
+            macDisplayElement.innerText = 'MAC nÃ£o detectado';
         }
         
-        // ==================== VARIÁVEIS DE ESTADO ====================
+        // ==================== VARIÃVEIS DE ESTADO ====================
         let selectedPlano = null;
         let selectedPreco = null;
         let selectedTempo = null;
@@ -329,20 +331,20 @@ function redirectToMikrotik(mac) {
                 selectedPreco = card.getAttribute('data-preco');
                 selectedTempo = card.getAttribute('data-tempo');
                 
-                // Abrir seção de pagamento
+                // Abrir seÃ§Ã£o de pagamento
                 document.getElementById('paymentSection').classList.remove('hidden');
                 
-                // Scroll suave até o pagamento
+                // Scroll suave atÃ© o pagamento
                 document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth' });
             });
         });
         
-        // ==================== BOTÃO: LIBERAR 5 MINUTOS ====================
+        // ==================== BOTÃƒO: LIBERAR 5 MINUTOS ====================
         document.getElementById('liberar5minBtn')?.addEventListener('click', async function() {
             const mac = getMacFromUrl();
             
             if (!mac) {
-                showStatusMessage('MAC não detectado. Conecte-se novamente ao Wi-Fi.', 'error');
+                showStatusMessage('MAC nÃ£o detectado. Conecte-se novamente ao Wi-Fi.', 'error');
                 return;
             }
             
@@ -352,7 +354,7 @@ function redirectToMikrotik(mac) {
             // Verificar limite de 1 hora entre testes
             if (ultimoTeste5min && (agora - ultimoTeste5min) < umaHora) {
                 const minutosRestantes = Math.ceil((umaHora - (agora - ultimoTeste5min)) / 60000);
-                showStatusMessage(`Você já usou o teste grátis. Aguarde ${minutosRestantes} minutos para tentar novamente.`, 'warning');
+                showStatusMessage(`VocÃª jÃ¡ usou o teste grÃ¡tis. Aguarde ${minutosRestantes} minutos para tentar novamente.`, 'warning');
                 return;
             }
             
@@ -376,16 +378,16 @@ function redirectToMikrotik(mac) {
                     showStatusMessage(error.error || 'Erro ao liberar teste. Tente novamente.', 'error');
                 }
             } catch (error) {
-                showStatusMessage('Erro de conexão: ' + error.message, 'error');
+                showStatusMessage('Erro de conexÃ£o: ' + error.message, 'error');
             }
         });
         
-        // ==================== BOTÃO: TESTE GRÁTIS 15 MINUTOS ====================
+        // ==================== BOTÃƒO: TESTE GRÃTIS 15 MINUTOS ====================
         document.getElementById('testeGratisBtn').addEventListener('click', async function() {
             const mac = getMacFromUrl();
             
             if (!mac) {
-                showStatusMessage('MAC não detectado. Conecte-se novamente ao Wi-Fi.', 'error');
+                showStatusMessage('MAC nÃ£o detectado. Conecte-se novamente ao Wi-Fi.', 'error');
                 return;
             }
             
@@ -397,7 +399,7 @@ function redirectToMikrotik(mac) {
                 });
                 
                 if (res.ok) {
-                    showStatusMessage('Teste grátis de 15 minutos liberado! Autenticando no MikroTik...', 'success');
+                    showStatusMessage('Teste grÃ¡tis de 15 minutos liberado! Autenticando no MikroTik...', 'success');
                     
                     setTimeout(() => {
                         redirectToMikrotik(mac);
@@ -407,16 +409,16 @@ function redirectToMikrotik(mac) {
                     showStatusMessage(error.error || 'Erro ao liberar teste. Tente novamente.', 'error');
                 }
             } catch (error) {
-                showStatusMessage('Erro de conexão: ' + error.message, 'error');
+                showStatusMessage('Erro de conexÃ£o: ' + error.message, 'error');
             }
         });
         
-        // ==================== BOTÃO: JÁ PAGUEI (VERIFICAR PAGAMENTO) ====================
+        // ==================== BOTÃƒO: JÃ PAGUEI (VERIFICAR PAGAMENTO) ====================
         document.getElementById('jaPagueiBtn').addEventListener('click', async function() {
             const mac = getMacFromUrl();
             
             if (!mac) {
-                showStatusMessage('MAC não detectado.', 'error');
+                showStatusMessage('MAC nÃ£o detectado.', 'error');
                 return;
             }
             
@@ -430,7 +432,7 @@ function redirectToMikrotik(mac) {
                         redirectToMikrotik(mac);
                     }, 1500);
                 } else {
-                    showStatusMessage('Pagamento não encontrado. Escolha um plano e pague via PIX.', 'warning');
+                    showStatusMessage('Pagamento nÃ£o encontrado. Escolha um plano e pague via PIX.', 'warning');
                     document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth' });
                 }
             } catch (error) {
@@ -443,7 +445,7 @@ function redirectToMikrotik(mac) {
             if (!selectedPlano) {
                 showStatusMessage('Selecione um plano antes de pagar.', 'error');
             } else {
-                showStatusMessage('A liberação manual foi desativada. Após pagar, use "Já paguei" para consultar a confirmação real no backend.', 'warning');
+                showStatusMessage('A liberaÃ§Ã£o manual foi desativada. ApÃ³s pagar, use "JÃ¡ paguei" para consultar a confirmaÃ§Ã£o real no backend.', 'warning');
             }
         });
         
@@ -455,17 +457,17 @@ function redirectToMikrotik(mac) {
             selectedTempo = null;
         });
         
-        // ==================== COPIAR CÓDIGO PIX ====================
+        // ==================== COPIAR CÃ“DIGO PIX ====================
         document.getElementById('copyPixBtn').addEventListener('click', function() {
             const pixCode = document.getElementById('pixCode').innerText;
             if (!pixCode || !pixCode.includes('br.gov.bcb.pix')) {
-                showStatusMessage('O PIX real ainda não foi configurado neste ambiente.', 'warning');
+                showStatusMessage('O PIX real ainda nÃ£o foi configurado neste ambiente.', 'warning');
                 return;
             }
             navigator.clipboard.writeText(pixCode).then(() => {
-                showStatusMessage('Código PIX copiado!', 'info');
+                showStatusMessage('CÃ³digo PIX copiado!', 'info');
             }).catch(() => {
-                showStatusMessage('Erro ao copiar código.', 'error');
+                showStatusMessage('Erro ao copiar cÃ³digo.', 'error');
             });
         });
         
@@ -475,7 +477,7 @@ function redirectToMikrotik(mac) {
             const menuOverlay = document.getElementById('menuOverlay');
             
             if (menuToggle) {
-                // Nota: O sidebar não existe nesta versão, então criamos uma funcionalidade simplificada
+                // Nota: O sidebar nÃ£o existe nesta versÃ£o, entÃ£o criamos uma funcionalidade simplificada
                 menuToggle.addEventListener('click', () => {
                     // Funcionalidade de menu pode ser expandida conforme necessidade
                     showStatusMessage('Menu em desenvolvimento', 'info');
@@ -492,7 +494,7 @@ function redirectToMikrotik(mac) {
         // Inicializar menu ao carregar
         document.addEventListener('DOMContentLoaded', initMenuMobile);
         
-        // Atualizar ícones após qualquer mudança dinâmica
+        // Atualizar Ã­cones apÃ³s qualquer mudanÃ§a dinÃ¢mica
         setInterval(() => {
             if (typeof lucide !== 'undefined' && lucide.createIcons) {
                 lucide.createIcons();
@@ -501,3 +503,4 @@ function redirectToMikrotik(mac) {
     </script>
 </body>
 </html>
+

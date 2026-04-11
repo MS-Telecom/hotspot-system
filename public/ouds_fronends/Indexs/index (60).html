@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Cliente</title>
@@ -91,9 +92,9 @@
         <input type="text" id="whatsapp" name="whatsapp" required><br>
         <label for="cep">CEP:</label>
         <input type="text" id="cep" name="cep" required><br>
-        <label for="endereco">Endereço:</label>
+        <label for="endereco">EndereÃ§o:</label>
         <input type="text" id="endereco" name="endereco" required><br>
-        <label for="numero">Número:</label>
+        <label for="numero">NÃºmero:</label>
         <input type="text" id="numero" name="numero" required><br>
         <label for="bairro">Bairro:</label>
         <input type="text" id="bairro" name="bairro" required><br>
@@ -131,13 +132,13 @@
         </select><br>
         <label for="complemento">Complemento:</label>
         <input type="text" id="complemento" name="complemento"><br>
-        <label for="referencia">Ponto de Referência:</label>
+        <label for="referencia">Ponto de ReferÃªncia:</label>
         <input type="text" id="referencia" name="referencia"><br>
         <label for="latitude">Latitude:</label>
         <input type="text" id="latitude" name="latitude" readonly><br>
         <label for="longitude">Longitude:</label>
         <input type="text" id="longitude" name="longitude" readonly><br>
-        <button type="button" id="get-location">Obter Localização</button><br>
+        <button type="button" id="get-location">Obter LocalizaÃ§Ã£o</button><br>
         <input type="submit" value="Enviar">
     </form>
 
@@ -208,7 +209,7 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(showPosition);
             } else {
-                alert("Geolocalização não é suportada por este navegador.");
+                alert("GeolocalizaÃ§Ã£o nÃ£o Ã© suportada por este navegador.");
             }
         });
 
@@ -219,3 +220,4 @@
     </script>
 </body>
 </html>
+

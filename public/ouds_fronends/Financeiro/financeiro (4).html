@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Financeiro</title>
@@ -47,14 +48,14 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
             <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
@@ -68,14 +69,15 @@
 
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
-            <div class="relative w-96"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i><input type="text" id="searchInput" placeholder="Buscar transação..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition"></div>
+  <base href="/">
+            <div class="relative w-96"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i><input type="text" id="searchInput" placeholder="Buscar transaÃ§Ã£o..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition"></div>
             <div class="flex items-center gap-6"><div class="text-right"><p class="text-xs font-bold text-white">Bem-vindo, Administrador</p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div><div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg"><span class="text-white font-bold text-sm">AD</span></div></div>
         </header>
 
         <div class="p-8 space-y-8">
 
             <div class="flex justify-between items-end">
-                <div><h1 class="text-3xl font-black tracking-tight">Financeiro</h1><p class="text-gray-500 text-sm mt-1">Relatórios de faturamento e transações</p></div>
+                <div><h1 class="text-3xl font-black tracking-tight">Financeiro</h1><p class="text-gray-500 text-sm mt-1">RelatÃ³rios de faturamento e transaÃ§Ãµes</p></div>
                 <div class="flex gap-3">
                     <button onclick="exportarFinanceiro()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition">
                         <i data-lucide="download" class="w-4 h-4"></i> Exportar
@@ -83,7 +85,7 @@
                 </div>
             </div>
 
-            <!-- Cards de Métricas -->
+            <!-- Cards de MÃ©tricas -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="flex justify-between items-start mb-3">
@@ -101,7 +103,7 @@
                 </div>
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3"><i data-lucide="credit-card" class="text-purple-500 w-5 h-5"></i></div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Ticket Médio</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Ticket MÃ©dio</p>
                     <p id="ticketMedio" class="text-2xl font-black mt-1">R$ 0,00</p>
                 </div>
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -111,10 +113,10 @@
                 </div>
             </div>
 
-            <!-- Gráficos -->
+            <!-- GrÃ¡ficos -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">Evolução Mensal</h3>
+                    <h3 class="font-bold text-white mb-4">EvoluÃ§Ã£o Mensal</h3>
                     <div style="position: relative; height: 250px;">
                         <canvas id="monthlyChart"></canvas>
                     </div>
@@ -126,22 +128,22 @@
                     </div>
                     <div id="plansSummary" class="grid grid-cols-3 gap-3 mt-6 text-center">
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Premium</p><p id="premiumTotal" class="text-sm font-bold text-white">R$ 0</p></div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Diário</p><p id="diarioTotal" class="text-sm font-bold text-white">R$ 0</p></div>
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">DiÃ¡rio</p><p id="diarioTotal" class="text-sm font-bold text-white">R$ 0</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Teste</p><p id="testeTotal" class="text-sm font-bold text-white">R$ 0</p></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabela de Transações -->
+            <!-- Tabela de TransaÃ§Ãµes -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                 <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                    <h3 class="font-bold text-white">Transações Recentes</h3>
+                    <h3 class="font-bold text-white">TransaÃ§Ãµes Recentes</h3>
                     <button onclick="verTodasTransacoes()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                            <tr><th class="px-6 py-3 text-left">Data/Hora</th><th class="px-6 py-3 text-left">Cliente</th><th class="px-6 py-3 text-left">Plano</th><th class="px-6 py-3 text-left">Valor</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-center">Ação</th> </tr>
+                            <tr><th class="px-6 py-3 text-left">Data/Hora</th><th class="px-6 py-3 text-left">Cliente</th><th class="px-6 py-3 text-left">Plano</th><th class="px-6 py-3 text-left">Valor</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-center">AÃ§Ã£o</th> </tr>
                         </thead>
                         <tbody id="tabelaPagamentos" class="divide-y divide-gray-800/50"> <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando...</td></tr> </tbody>
                     </table>
@@ -151,13 +153,13 @@
     </main>
 </div>
 
-<!-- MODAL: TODAS AS TRANSAÇÕES (ESTREITO COM SCROLL) -->
+<!-- MODAL: TODAS AS TRANSAÃ‡Ã•ES (ESTREITO COM SCROLL) -->
 <div id="modalTodasTransacoes" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[85vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
             <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
                 <i data-lucide="list" class="w-4 h-4 text-blue-500"></i>
-                Todas as Transações
+                Todas as TransaÃ§Ãµes
             </h2>
             <button onclick="closeModalTodasTransacoes()" class="p-1.5 hover:bg-gray-800 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
@@ -188,10 +190,10 @@
     </div>
 </div>
 
-<!-- MODAL: DETALHES TRANSAÇÃO -->
+<!-- MODAL: DETALHES TRANSAÃ‡ÃƒO -->
 <div id="modalDetalhesTransacao" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Detalhes da Transação</h2><button onclick="closeModalDetalhesTransacao()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
+        <div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Detalhes da TransaÃ§Ã£o</h2><button onclick="closeModalDetalhesTransacao()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div id="detalhesTransacaoContent" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
         <div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="closeModalDetalhesTransacao()" class="px-4 py-2 bg-gray-800 rounded-lg">Fechar</button></div>
     </div>
@@ -201,7 +203,7 @@
 <div id="modalPix" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Pagamento via PIX</h2><button onclick="fecharModalPix()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-4"><div id="qrCodeContainer" class="flex justify-center"></div><code id="pixCopiaCola" class="text-xs font-mono break-all bg-gray-900 p-3 rounded-lg block"></code><button onclick="copiarPix()" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-medium">Copiar código PIX</button></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4"><div id="qrCodeContainer" class="flex justify-center"></div><code id="pixCopiaCola" class="text-xs font-mono break-all bg-gray-900 p-3 rounded-lg block"></code><button onclick="copiarPix()" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-medium">Copiar cÃ³digo PIX</button></div>
         <div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="fecharModalPix()" class="px-4 py-2 bg-gray-800 rounded-lg">Fechar</button></div>
     </div>
 </div>
@@ -275,7 +277,7 @@ function atualizarGraficos(pagamentos) {
     });
     
     let premium=0, diario=0, teste=0;
-    pagamentos.forEach(p => { const v = p.valor||0; const plano = (p.plano||'').toLowerCase(); if(plano.includes('premium')) premium+=v; else if(plano.includes('diario')||plano.includes('diário')) diario+=v; else if(plano.includes('teste')) teste+=v; });
+    pagamentos.forEach(p => { const v = p.valor||0; const plano = (p.plano||'').toLowerCase(); if(plano.includes('premium')) premium+=v; else if(plano.includes('diario')||plano.includes('diÃ¡rio')) diario+=v; else if(plano.includes('teste')) teste+=v; });
     document.getElementById('premiumTotal').innerHTML = `R$ ${premium.toFixed(0)}`;
     document.getElementById('diarioTotal').innerHTML = `R$ ${diario.toFixed(0)}`;
     document.getElementById('testeTotal').innerHTML = `R$ ${teste.toFixed(0)}`;
@@ -284,7 +286,7 @@ function atualizarGraficos(pagamentos) {
     if (plansChart) plansChart.destroy();
     plansChart = new Chart(ctxPlans, {
         type: 'doughnut',
-        data: { labels: ['Premium', 'Diário', 'Teste'], datasets: [{ data: [premium, diario, teste], backgroundColor: ['#3b82f6', '#06b6d4', '#10b981'], borderWidth: 0 }] },
+        data: { labels: ['Premium', 'DiÃ¡rio', 'Teste'], datasets: [{ data: [premium, diario, teste], backgroundColor: ['#3b82f6', '#06b6d4', '#10b981'], borderWidth: 0 }] },
         options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } }, cutout: '60%' }
     });
 }
@@ -292,7 +294,7 @@ function atualizarGraficos(pagamentos) {
 function atualizarTabela(pagamentos) {
     const tbody = document.getElementById('tabelaPagamentos');
     const recentes = pagamentos.slice(0, 5);
-    if(recentes.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma transação</td></tr>'; return; }
+    if(recentes.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma transaÃ§Ã£o</td></tr>'; return; }
     tbody.innerHTML = recentes.map(p => `
         <tr class="hover:bg-gray-900/30 cursor-pointer" onclick="verDetalhesTransacao('${p.id}')">
             <td class="px-6 py-4 text-sm text-gray-400">${new Date(p.criado_em).toLocaleString('pt-BR')}</td>
@@ -340,7 +342,7 @@ async function abrirModalPix(pagamentoId, valor) {
     } catch(e) { qrContainer.innerHTML = '<div class="text-center text-red-500">Erro ao gerar PIX</div>'; }
 }
 function fecharModalPix() { document.getElementById('modalPix').classList.add('hidden'); }
-function copiarPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(() => alert('Código PIX copiado!')); }
+function copiarPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(() => alert('CÃ³digo PIX copiado!')); }
 function exportarFinanceiro() { window.location.href = `${API_URL}/api/usuarios/export`; }
 
 document.getElementById('searchInput')?.addEventListener('input', function(e) {
@@ -353,3 +355,4 @@ setInterval(carregarFinanceiro, 30000);
 </script>
 </body>
 </html>
+

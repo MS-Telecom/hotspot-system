@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>MS TELECOM | Wi-Fi Portal</title>
@@ -26,6 +27,7 @@
     <div class="min-h-screen flex flex-col">
         <!-- Header -->
         <header class="border-b border-gray-800 bg-black/30 backdrop-blur-sm sticky top-0 z-20">
+  <base href="/">
             <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -39,11 +41,11 @@
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-full">
                         <span class="status-dot bg-emerald-500"></span>
-                        <span class="text-[10px] font-medium text-emerald-500">Rede disponível</span>
+                        <span class="text-[10px] font-medium text-emerald-500">Rede disponÃ­vel</span>
                     </div>
                     <div class="text-right hidden sm:block">
-                        <p class="text-[10px] text-gray-500">Vila Icuí, Belém/PA</p>
-                        <p class="text-[9px] text-gray-600">32°C • Parc ensolarado</p>
+                        <p class="text-[10px] text-gray-500">Vila IcuÃ­, BelÃ©m/PA</p>
+                        <p class="text-[9px] text-gray-600">32Â°C â€¢ Parc ensolarado</p>
                     </div>
                 </div>
             </div>
@@ -68,10 +70,10 @@
                         <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
                     </button>
                     <button id="testeGratisBtn" class="px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
-                        <i data-lucide="flask" class="w-4 h-4"></i> Teste Grátis 15min
+                        <i data-lucide="flask" class="w-4 h-4"></i> Teste GrÃ¡tis 15min
                     </button>
                     <button id="jaPagueiBtn" class="px-5 py-2 bg-blue-600/20 border border-blue-500/50 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> Já paguei
+                        <i data-lucide="check-circle" class="w-4 h-4"></i> JÃ¡ paguei
                     </button>
                 </div>
             </div>
@@ -79,15 +81,15 @@
             <!-- Planos -->
             <h3 class="text-2xl font-bold mb-6 flex items-center gap-2"><i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <!-- Plano Diário -->
-                <div class="plan-card glass-card rounded-2xl p-6 border border-gray-800" data-plan-name="Diário" data-price="5.00" data-duration="24h">
+                <!-- Plano DiÃ¡rio -->
+                <div class="plan-card glass-card rounded-2xl p-6 border border-gray-800" data-plan-name="DiÃ¡rio" data-price="5.00" data-duration="24h">
                     <div class="flex justify-between items-start mb-4">
                         <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
                             <i data-lucide="clock" class="text-blue-500 w-6 h-6"></i>
                         </div>
                         <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full">Popular</span>
                     </div>
-                    <h4 class="text-xl font-bold text-white">Diário</h4>
+                    <h4 class="text-xl font-bold text-white">DiÃ¡rio</h4>
                     <p class="text-gray-400 text-sm mt-1">24 horas de acesso</p>
                     <div class="mt-4">
                         <span class="text-3xl font-black text-white">R$ 5,00</span>
@@ -109,15 +111,15 @@
                         </div>
                     </div>
                     <h4 class="text-xl font-bold text-white">Premium 24h</h4>
-                    <p class="text-gray-400 text-sm mt-1">Máxima velocidade + prioridade</p>
+                    <p class="text-gray-400 text-sm mt-1">MÃ¡xima velocidade + prioridade</p>
                     <div class="mt-4">
                         <span class="text-3xl font-black text-white">R$ 15,00</span>
                         <span class="text-gray-500 text-sm">/24h</span>
                     </div>
                     <ul class="mt-4 space-y-2 text-sm text-gray-400">
                         <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 50 Mbps de velocidade</li>
-                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Prioridade de tráfego</li>
-                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Suporte prioritário</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Prioridade de trÃ¡fego</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Suporte prioritÃ¡rio</li>
                     </ul>
                     <button class="btn-plano w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition">Escolher plano</button>
                 </div>
@@ -145,12 +147,12 @@
                 </div>
             </div>
 
-            <!-- Seção de pagamento (inicialmente escondida) -->
+            <!-- SeÃ§Ã£o de pagamento (inicialmente escondida) -->
             <div id="paymentSection" class="hidden glass-card rounded-3xl p-8 border border-blue-500/30 mb-8">
                 <div class="flex flex-col md:flex-row gap-8 items-center">
                     <div class="flex-1 text-center md:text-left">
                         <h3 class="text-2xl font-bold text-white mb-2">Pagamento via PIX</h3>
-                        <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o código para pagar</p>
+                        <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o cÃ³digo para pagar</p>
                         <div class="bg-gray-900/80 rounded-2xl p-4 inline-block">
                             <div id="qrCodeContainer" class="qr-code bg-white rounded-2xl flex items-center justify-center">
                                 <div id="qrCodeInner" class="w-48 h-48 flex items-center justify-center">
@@ -158,16 +160,16 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-3">QR Code válido por 15 minutos</p>
+                        <p class="text-xs text-gray-500 mt-3">QR Code vÃ¡lido por 15 minutos</p>
                     </div>
                     <div class="flex-1 space-y-4">
                         <div class="bg-gray-900/50 rounded-2xl p-4">
-                            <p class="text-[10px] text-gray-500 uppercase mb-1">Código PIX Copia e Cola</p>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">CÃ³digo PIX Copia e Cola</p>
                             <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">Gerando PIX...</code>
-                            <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar código</button>
+                            <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar cÃ³digo</button>
                         </div>
                         <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4">
-                            <p class="text-xs text-yellow-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Após o pagamento, clique em "Já paguei" para liberar seu acesso</p>
+                            <p class="text-xs text-yellow-500 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> ApÃ³s o pagamento, clique em "JÃ¡ paguei" para liberar seu acesso</p>
                         </div>
                         <button id="cancelarPagamentoBtn" class="w-full bg-gray-800 hover:bg-gray-700 py-2 rounded-xl text-sm transition">Cancelar</button>
                     </div>
@@ -180,43 +182,43 @@
                     <i data-lucide="check-circle" class="text-emerald-500 w-6 h-6"></i>
                     <div>
                         <p id="statusMessageText" class="text-sm font-medium text-white">Acesso liberado!</p>
-                        <p class="text-[10px] text-gray-500">Você será redirecionado em instantes</p>
+                        <p class="text-[10px] text-gray-500">VocÃª serÃ¡ redirecionado em instantes</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Informações adicionais -->
+            <!-- InformaÃ§Ãµes adicionais -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-gray-800">
                 <div class="text-center">
                     <i data-lucide="zap" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
                     <h4 class="font-bold text-white">Alta Velocidade</h4>
-                    <p class="text-xs text-gray-500">Conexão de até 100 Mbps</p>
+                    <p class="text-xs text-gray-500">ConexÃ£o de atÃ© 100 Mbps</p>
                 </div>
                 <div class="text-center">
                     <i data-lucide="shield" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
-                    <h4 class="font-bold text-white">Conexão Segura</h4>
-                    <p class="text-xs text-gray-500">Rede protegida e estável</p>
+                    <h4 class="font-bold text-white">ConexÃ£o Segura</h4>
+                    <p class="text-xs text-gray-500">Rede protegida e estÃ¡vel</p>
                 </div>
                 <div class="text-center">
                     <i data-lucide="headphones" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
                     <h4 class="font-bold text-white">Suporte 24h</h4>
-                    <p class="text-xs text-gray-500">Atendimento para dúvidas</p>
+                    <p class="text-xs text-gray-500">Atendimento para dÃºvidas</p>
                 </div>
             </div>
         </main>
 
         <footer class="border-t border-gray-800 py-6 text-center text-[10px] text-gray-600">
-            <p>MS TELECOM - Internet de qualidade para sua conexão | Conformidade com Marco Civil da Internet</p>
-            <p class="mt-1">© 2026 - Todos os direitos reservados</p>
+            <p>MS TELECOM - Internet de qualidade para sua conexÃ£o | Conformidade com Marco Civil da Internet</p>
+            <p class="mt-1">Â© 2026 - Todos os direitos reservados</p>
         </footer>
     </div>
 
     <script>
-        // ==================== CONFIGURAÇÕES ====================
+        // ==================== CONFIGURAÃ‡Ã•ES ====================
         const API_BASE = 'https://mstelecom-api.duckdns.org';   // URL base do novo backend
         const MIKROTIK_LOGIN_URL = 'http://192.168.32.1/login';
 
-        // ==================== FUNÇÕES AUXILIARES ====================
+        // ==================== FUNÃ‡Ã•ES AUXILIARES ====================
         function getMacFromUrl() {
             const params = new URLSearchParams(window.location.search);
             const mac = params.get('mac');
@@ -268,7 +270,7 @@
             form.submit();
         }
 
-        // ==================== API (padrão novo backend) ====================
+        // ==================== API (padrÃ£o novo backend) ====================
         const API = {
             // Gera PIX para um plano (endpoint: POST /api/payments/generate-pix)
             async generatePix(macAddress, planName, amount) {
@@ -320,22 +322,22 @@
 
         // ==================== ESTADO GLOBAL ====================
         let selectedPlan = null;       // { name, price }
-        let currentPaymentId = null;   // ID do pagamento gerado (se necessário)
+        let currentPaymentId = null;   // ID do pagamento gerado (se necessÃ¡rio)
 
-        // ==================== INICIALIZAÇÃO ====================
+        // ==================== INICIALIZAÃ‡ÃƒO ====================
         const macAddress = getMacFromUrl();
         const macDisplay = document.getElementById('dispositivoMac');
-        macDisplay.innerText = macAddress || 'MAC não detectado';
+        macDisplay.innerText = macAddress || 'MAC nÃ£o detectado';
 
         if (!macAddress) {
-            showStatusMessage('MAC não detectado. Conecte-se novamente ao Wi-Fi.', 'error');
+            showStatusMessage('MAC nÃ£o detectado. Conecte-se novamente ao Wi-Fi.', 'error');
         }
 
-        // Atualiza ícones Lucide
+        // Atualiza Ã­cones Lucide
         lucide.createIcons();
         setInterval(() => lucide.createIcons(), 2000);
 
-        // ==================== EVENTOS DOS PLANOS (gerar PIX dinâmico) ====================
+        // ==================== EVENTOS DOS PLANOS (gerar PIX dinÃ¢mico) ====================
         document.querySelectorAll('.btn-plano').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -343,11 +345,11 @@
                 const planName = card.getAttribute('data-plan-name');
                 const price = card.getAttribute('data-price');
                 if (!macAddress) {
-                    showStatusMessage('MAC não detectado. Reconecte-se ao Wi-Fi.', 'error');
+                    showStatusMessage('MAC nÃ£o detectado. Reconecte-se ao Wi-Fi.', 'error');
                     return;
                 }
                 selectedPlan = { name: planName, price: price };
-                // Exibe loading na seção de pagamento
+                // Exibe loading na seÃ§Ã£o de pagamento
                 const paymentSection = document.getElementById('paymentSection');
                 const qrInner = document.getElementById('qrCodeInner');
                 const pixCodeSpan = document.getElementById('pixCode');
@@ -366,7 +368,7 @@
                     } else {
                         qrInner.innerHTML = '<i data-lucide="qrcode" class="w-24 h-24 text-gray-800"></i>';
                     }
-                    pixCodeSpan.innerText = pixData.pix_code || 'Código PIX não disponível';
+                    pixCodeSpan.innerText = pixData.pix_code || 'CÃ³digo PIX nÃ£o disponÃ­vel';
                     currentPaymentId = pixData.payment_id || null;
                     lucide.createIcons();
                 } catch (error) {
@@ -378,15 +380,15 @@
             });
         });
 
-        // ==================== TESTE GRÁTIS 15 MINUTOS ====================
+        // ==================== TESTE GRÃTIS 15 MINUTOS ====================
         document.getElementById('testeGratisBtn')?.addEventListener('click', async () => {
             if (!macAddress) {
-                showStatusMessage('MAC não detectado.', 'error');
+                showStatusMessage('MAC nÃ£o detectado.', 'error');
                 return;
             }
             try {
                 await API.requestTestAccess(macAddress, 15);
-                showStatusMessage('Teste grátis de 15 minutos liberado! Autenticando...', 'success');
+                showStatusMessage('Teste grÃ¡tis de 15 minutos liberado! Autenticando...', 'success');
                 setTimeout(() => redirectToMikrotik(macAddress), 1500);
             } catch (error) {
                 showStatusMessage(error.message, 'error');
@@ -397,7 +399,7 @@
         let lastFreeTest = localStorage.getItem('last_free_test') || 0;
         document.getElementById('liberar5minBtn')?.addEventListener('click', async () => {
             if (!macAddress) {
-                showStatusMessage('MAC não detectado.', 'error');
+                showStatusMessage('MAC nÃ£o detectado.', 'error');
                 return;
             }
             const now = Date.now();
@@ -418,10 +420,10 @@
             }
         });
 
-        // ==================== JÁ PAGUEI (verificar pagamento no backend) ====================
+        // ==================== JÃ PAGUEI (verificar pagamento no backend) ====================
         document.getElementById('jaPagueiBtn')?.addEventListener('click', async () => {
             if (!macAddress) {
-                showStatusMessage('MAC não detectado.', 'error');
+                showStatusMessage('MAC nÃ£o detectado.', 'error');
                 return;
             }
             try {
@@ -431,7 +433,7 @@
                     setTimeout(() => redirectToMikrotik(macAddress), 1500);
                 } else {
                     showStatusMessage('Nenhum pagamento aprovado encontrado. Efetue o pagamento via PIX e tente novamente.', 'warning');
-                    // Se houver plano selecionado, reexibe a seção de pagamento
+                    // Se houver plano selecionado, reexibe a seÃ§Ã£o de pagamento
                     if (selectedPlan) {
                         document.getElementById('paymentSection').classList.remove('hidden');
                         document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth' });
@@ -449,18 +451,19 @@
             currentPaymentId = null;
         });
 
-        // ==================== COPIAR CÓDIGO PIX ====================
+        // ==================== COPIAR CÃ“DIGO PIX ====================
         document.getElementById('copyPixBtn')?.addEventListener('click', () => {
             const pixCodeElem = document.getElementById('pixCode');
             const code = pixCodeElem.innerText;
-            if (!code || code === 'Gerando PIX...' || code === 'Código PIX não disponível') {
-                showStatusMessage('Aguarde o código PIX ser gerado.', 'warning');
+            if (!code || code === 'Gerando PIX...' || code === 'CÃ³digo PIX nÃ£o disponÃ­vel') {
+                showStatusMessage('Aguarde o cÃ³digo PIX ser gerado.', 'warning');
                 return;
             }
             navigator.clipboard.writeText(code).then(() => {
-                showStatusMessage('Código PIX copiado!', 'info');
-            }).catch(() => showStatusMessage('Erro ao copiar código.', 'error'));
+                showStatusMessage('CÃ³digo PIX copiado!', 'info');
+            }).catch(() => showStatusMessage('Erro ao copiar cÃ³digo.', 'error'));
         });
     </script>
 </body>
 </html>
+

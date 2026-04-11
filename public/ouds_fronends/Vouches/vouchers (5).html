@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Vouchers</title>
@@ -24,7 +25,7 @@
 <body class="text-gray-200">
 
 <script>
-    // 🔒 PROTEÇÃO DE ACESSO
+    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) window.location.href = 'login.html';
 </script>
@@ -34,7 +35,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (padrão MS Telecom) -->
+    <!-- SIDEBAR (padrÃ£o MS Telecom) -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -48,14 +49,14 @@
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
             <a href="vouchers.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
@@ -70,12 +71,13 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
+  <base href="/">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Buscar voucher por código..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Buscar voucher por cÃ³digo..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="text-right hidden sm:block"><p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div>
@@ -96,7 +98,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-800">
-                            <tr><th class="px-6 py-4 text-left">Código</th><th class="px-6 py-4 text-left">Plano</th><th class="px-6 py-4 text-left">Valor</th><th class="px-6 py-4 text-left">Validade</th><th class="px-6 py-4 text-left">Status</th><th class="px-6 py-4 text-left">Usado Por</th><th class="px-6 py-4 text-left">Data Uso</th><th class="px-6 py-4 text-center">Ações</th></tr>
+                            <tr><th class="px-6 py-4 text-left">CÃ³digo</th><th class="px-6 py-4 text-left">Plano</th><th class="px-6 py-4 text-left">Valor</th><th class="px-6 py-4 text-left">Validade</th><th class="px-6 py-4 text-left">Status</th><th class="px-6 py-4 text-left">Usado Por</th><th class="px-6 py-4 text-left">Data Uso</th><th class="px-6 py-4 text-center">AÃ§Ãµes</th></tr>
                         </thead>
                         <tbody id="vouchersTable" class="divide-y divide-gray-800"><tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Carregando vouchers...</td></tr></tbody>
                     </table>
@@ -111,9 +113,9 @@
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="ticket" class="w-5 h-5 text-blue-500"></i> Gerar Novo Voucher</h2><button onclick="closeModalNovoVoucher()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="planoSelect" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="">Selecione um plano</option><option value="diario">Diário (24h - R$ 5,00)</option><option value="premium">Premium 24h (R$ 15,00)</option><option value="semanal">Premium Semanal (R$ 50,00)</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="planoSelect" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="">Selecione um plano</option><option value="diario">DiÃ¡rio (24h - R$ 5,00)</option><option value="premium">Premium 24h (R$ 15,00)</option><option value="semanal">Premium Semanal (R$ 50,00)</option></select></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Valor (R$)</label><input type="number" id="valorInput" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label><input type="date" id="validadeInput" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label><input type="date" id="validadeInput" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalNovoVoucher()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button id="gerarVoucherBtn" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white">Gerar Voucher</button></div>
     </div>
@@ -125,11 +127,11 @@
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> Editar Voucher</h2><button onclick="closeModalEditarVoucher()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             <input type="hidden" id="editarVoucherId">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Código</label><input type="text" id="editarVoucherCodigo" readonly class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono text-blue-400"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="editarVoucherPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="diario">Diário (24h - R$ 5,00)</option><option value="premium">Premium 24h (R$ 15,00)</option><option value="semanal">Premium Semanal (R$ 50,00)</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">CÃ³digo</label><input type="text" id="editarVoucherCodigo" readonly class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono text-blue-400"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="editarVoucherPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="diario">DiÃ¡rio (24h - R$ 5,00)</option><option value="premium">Premium 24h (R$ 15,00)</option><option value="semanal">Premium Semanal (R$ 50,00)</option></select></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Valor (R$)</label><input type="number" id="editarVoucherValor" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label><input type="date" id="editarVoucherValidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Status</label><select id="editarVoucherStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="false">Disponível</option><option value="true">Usado</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label><input type="date" id="editarVoucherValidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Status</label><select id="editarVoucherStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="false">DisponÃ­vel</option><option value="true">Usado</option></select></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalEditarVoucher()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button id="salvarEdicaoVoucherBtn" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button></div>
     </div>
@@ -141,8 +143,8 @@
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i> Validar Voucher</h2><button onclick="closeModalValidarVoucher()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             <input type="hidden" id="validarVoucherId">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Código</label><input type="text" id="validarVoucherCodigo" readonly class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono text-blue-400"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">MAC do Cliente</label><input type="text" id="validarVoucherMac" placeholder="AA:BB:CC:DD:EE:FF" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono"><p class="text-[10px] text-gray-500 mt-1">Digite o MAC address do dispositivo que usará o voucher</p></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">CÃ³digo</label><input type="text" id="validarVoucherCodigo" readonly class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono text-blue-400"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">MAC do Cliente</label><input type="text" id="validarVoucherMac" placeholder="AA:BB:CC:DD:EE:FF" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono"><p class="text-[10px] text-gray-500 mt-1">Digite o MAC address do dispositivo que usarÃ¡ o voucher</p></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalValidarVoucher()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button id="confirmarValidacaoBtn" class="px-4 py-2 bg-emerald-600 rounded-lg text-sm font-bold">Validar Voucher</button></div>
     </div>
@@ -152,13 +154,13 @@
 <div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i> Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button></div>
     </div>
 </div>
 
 <script>
-// ==================== CONFIGURAÇÕES GLOBAIS ====================
+// ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let autoUpdateInterval = null;
 
@@ -203,7 +205,7 @@ function renderizarVouchers(vouchers) {
             <td class="px-6 py-4 text-sm text-gray-300">${v.plan_name || '-'}</td>
             <td class="px-6 py-4 text-sm text-gray-300">R$ ${parseFloat(v.amount || 0).toFixed(2)}</td>
             <td class="px-6 py-4 text-sm text-gray-300">${v.expires_at ? new Date(v.expires_at).toLocaleDateString('pt-BR') : 'Sem limite'}</td>
-            <td class="px-6 py-4 text-sm"><span class="px-3 py-1 rounded-full text-xs font-medium ${v.used ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${v.used ? 'Usado' : 'Disponível'}</span></td>
+            <td class="px-6 py-4 text-sm"><span class="px-3 py-1 rounded-full text-xs font-medium ${v.used ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${v.used ? 'Usado' : 'DisponÃ­vel'}</span></td>
             <td class="px-6 py-4 text-sm text-gray-300">${v.used_by || '-'}</td>
             <td class="px-6 py-4 text-sm text-gray-300">${v.used_at ? new Date(v.used_at).toLocaleString('pt-BR') : '-'}</td>
             <td class="px-6 py-4 text-sm text-center"><div class="flex justify-center gap-2"><button onclick="editarVoucher('${v.id}')" class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button><button onclick="validarVoucher('${v.id}')" class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Validar"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i></button><button onclick="deletarVoucher('${v.id}')" class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Deletar"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button></div></td>
@@ -221,11 +223,11 @@ document.getElementById('gerarVoucherBtn').addEventListener('click', async () =>
         const plan_name = document.getElementById('planoSelect').value;
         const amount = parseFloat(document.getElementById('valorInput').value) || 0;
         const expires_at = document.getElementById('validadeInput').value || null;
-        if (!plan_name) { alert('❌ Selecione um plano'); return; }
+        if (!plan_name) { alert('âŒ Selecione um plano'); return; }
         const res = await fetch(`${API_URL}/api/vouchers`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ plan_name, amount, expires_at }) });
-        if (res.ok) { const data = await res.json(); alert(`✅ Voucher gerado: ${data.code}`); closeModalNovoVoucher(); carregarVouchers(); }
-        else alert('❌ Erro ao gerar voucher');
-    } catch (error) { alert('❌ Erro ao gerar voucher'); }
+        if (res.ok) { const data = await res.json(); alert(`âœ… Voucher gerado: ${data.code}`); closeModalNovoVoucher(); carregarVouchers(); }
+        else alert('âŒ Erro ao gerar voucher');
+    } catch (error) { alert('âŒ Erro ao gerar voucher'); }
 });
 
 // EDITAR VOUCHER
@@ -251,9 +253,9 @@ document.getElementById('salvarEdicaoVoucherBtn').addEventListener('click', asyn
     const dados = { plan_name: document.getElementById('editarVoucherPlano').value, amount: parseFloat(document.getElementById('editarVoucherValor').value), expires_at: document.getElementById('editarVoucherValidade').value || null, used: document.getElementById('editarVoucherStatus').value === 'true' };
     try {
         const res = await fetch(`${API_URL}/api/vouchers/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
-        if (res.ok) { alert('✅ Voucher atualizado!'); closeModalEditarVoucher(); carregarVouchers(); }
-        else alert('❌ Erro ao atualizar voucher');
-    } catch (error) { alert('❌ Erro ao atualizar voucher'); }
+        if (res.ok) { alert('âœ… Voucher atualizado!'); closeModalEditarVoucher(); carregarVouchers(); }
+        else alert('âŒ Erro ao atualizar voucher');
+    } catch (error) { alert('âŒ Erro ao atualizar voucher'); }
 });
 
 // VALIDAR VOUCHER
@@ -274,12 +276,12 @@ function closeModalValidarVoucher() { document.getElementById('modalValidarVouch
 document.getElementById('confirmarValidacaoBtn').addEventListener('click', async () => {
     const code = document.getElementById('validarVoucherCodigo').value;
     const mac_address = document.getElementById('validarVoucherMac').value;
-    if (!mac_address) { alert('❌ Digite o MAC do cliente'); return; }
+    if (!mac_address) { alert('âŒ Digite o MAC do cliente'); return; }
     try {
         const res = await fetch(`${API_URL}/api/vouchers/validate`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ code, mac_address }) });
-        if (res.ok) { alert('✅ Voucher validado! Acesso liberado.'); closeModalValidarVoucher(); carregarVouchers(); }
-        else alert('❌ Erro ao validar voucher');
-    } catch (error) { alert('❌ Erro ao validar voucher'); }
+        if (res.ok) { alert('âœ… Voucher validado! Acesso liberado.'); closeModalValidarVoucher(); carregarVouchers(); }
+        else alert('âŒ Erro ao validar voucher');
+    } catch (error) { alert('âŒ Erro ao validar voucher'); }
 });
 
 // DELETAR VOUCHER
@@ -287,9 +289,9 @@ async function deletarVoucher(id) {
     if (!confirm('Tem certeza que deseja deletar este voucher?')) return;
     try {
         const res = await fetch(`${API_URL}/api/vouchers/${id}`, { method: 'DELETE', headers: authHeaders(false) });
-        if (res.ok) { alert('✅ Voucher deletado'); carregarVouchers(); }
-        else alert('❌ Erro ao deletar voucher');
-    } catch (error) { alert('❌ Erro ao deletar voucher'); }
+        if (res.ok) { alert('âœ… Voucher deletado'); carregarVouchers(); }
+        else alert('âŒ Erro ao deletar voucher');
+    } catch (error) { alert('âŒ Erro ao deletar voucher'); }
 }
 
 // ==================== BUSCA ====================
@@ -317,12 +319,12 @@ async function salvarPerfil() {
     const currentPassword = document.getElementById('senhaAtual').value;
     const newPassword = document.getElementById('novaSenha').value;
     const confirmPassword = document.getElementById('confirmarSenha').value;
-    if (newPassword && newPassword !== confirmPassword) { alert('As novas senhas não coincidem'); return; }
+    if (newPassword && newPassword !== confirmPassword) { alert('As novas senhas nÃ£o coincidem'); return; }
     if (newPassword && !currentPassword) { alert('Digite a senha atual para alterar'); return; }
     const payload = {};
     if (email) payload.email = email;
     if (newPassword) { payload.current_password = currentPassword; payload.new_password = newPassword; }
-    if (Object.keys(payload).length === 0) { alert('Nenhuma alteração informada'); return; }
+    if (Object.keys(payload).length === 0) { alert('Nenhuma alteraÃ§Ã£o informada'); return; }
     try {
         const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
         if (res.ok) {
@@ -347,7 +349,7 @@ function iniciarAtualizacaoAutomatica() {
 }
 function pararAtualizacaoAutomatica() { if (autoUpdateInterval) { clearInterval(autoUpdateInterval); autoUpdateInterval = null; } }
 
-// ==================== INICIALIZAÇÃO ====================
+// ==================== INICIALIZAÃ‡ÃƒO ====================
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
     carregarVouchers();
@@ -358,3 +360,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+

@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Campanhas</title>
@@ -24,7 +25,7 @@
 <body class="text-gray-200">
 
 <script>
-    // PROTEÇÃO DE ACESSO (CORRIGIDO: verifica token)
+    // PROTEÃ‡ÃƒO DE ACESSO (CORRIGIDO: verifica token)
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
@@ -39,7 +40,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (PADRÃO DO SISTEMA) -->
+    <!-- SIDEBAR (PADRÃƒO DO SISTEMA) -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -54,14 +55,14 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
@@ -80,9 +81,10 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
+  <base href="/">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
                 <input type="text" id="searchInput" placeholder="Buscar campanha por nome, cupom..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
@@ -122,7 +124,7 @@
     </main>
 </div>
 
-<!-- MODAL: NOVA CAMPANHA (COM SEGMENTAÇÃO) -->
+<!-- MODAL: NOVA CAMPANHA (COM SEGMENTAÃ‡ÃƒO) -->
 <div id="campaignModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[90vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
@@ -140,11 +142,11 @@
                 <input type="text" id="campaignNome" placeholder="Black Friday 2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
-                <textarea id="campaignDescricao" rows="2" placeholder="Descrição da campanha..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">DescriÃ§Ã£o</label>
+                <textarea id="campaignDescricao" rows="2" placeholder="DescriÃ§Ã£o da campanha..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / Código</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / CÃ³digo</label>
                 <input type="text" id="campaignCupom" placeholder="BLACK2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
             </div>
             <div>
@@ -155,9 +157,9 @@
                 </select>
             </div>
             
-            <!-- Segmentação -->
+            <!-- SegmentaÃ§Ã£o -->
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">GÃªnero</label>
                 <select id="campaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                     <option value="todos">Todos</option>
                     <option value="masculino">Masculino</option>
@@ -168,18 +170,18 @@
             
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade MÃ­nima</label>
                     <input type="number" id="campaignIdadeMin" placeholder="18" min="0" max="120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade MÃ¡xima</label>
                     <input type="number" id="campaignIdadeMax" placeholder="65" min="0" max="120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                 </div>
             </div>
             
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data InÃ­cio</label>
                     <input type="date" id="campaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                 </div>
                 <div>
@@ -218,7 +220,7 @@
     </div>
 </div>
 
-<!-- MODAL: EDITAR CAMPANHA (COM SEGMENTAÇÃO) -->
+<!-- MODAL: EDITAR CAMPANHA (COM SEGMENTAÃ‡ÃƒO) -->
 <div id="editCampaignModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md lg:max-w-lg max-h-[90vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
@@ -237,7 +239,7 @@
                 <input type="text" id="editCampaignNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">DescriÃ§Ã£o</label>
                 <textarea id="editCampaignDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea>
             </div>
             <div>
@@ -251,9 +253,9 @@
                     <option value="inactive">Inativa</option>
                 </select>
             </div>
-            <!-- Segmentação no edit -->
+            <!-- SegmentaÃ§Ã£o no edit -->
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">GÃªnero</label>
                 <select id="editCampaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                     <option value="todos">Todos</option>
                     <option value="masculino">Masculino</option>
@@ -263,17 +265,17 @@
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade MÃ­nima</label>
                     <input type="number" id="editCampaignIdadeMin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade MÃ¡xima</label>
                     <input type="number" id="editCampaignIdadeMax" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data Início</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data InÃ­cio</label>
                     <input type="date" id="editCampaignDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                 </div>
                 <div>
@@ -303,7 +305,7 @@
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label>
                 <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
             </div>
             <div>
@@ -326,18 +328,18 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ==================== CONFIGURAÇÕES GLOBAIS ====================
+    // ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
     const API_URL = 'https://mstelecom-api.duckdns.org';
     let campanhasData = [];
     let campanhaAtualId = null;
 
-    // Helper para obter headers com autenticação (CORRIGIDO)
+    // Helper para obter headers com autenticaÃ§Ã£o (CORRIGIDO)
     function getAuthHeaders() {
         const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
         return {
@@ -407,7 +409,7 @@
                         </div>
                         <span class="px-2 md:px-3 py-1 ${statusClass[camp.status] || 'bg-gray-500/20 text-gray-400'} text-[10px] font-bold rounded-full">${statusText}</span>
                     </div>
-                    <p class="text-gray-400 text-xs md:text-sm mb-3 line-clamp-2">${escapeHtml(camp.description) || 'Sem descrição'}</p>
+                    <p class="text-gray-400 text-xs md:text-sm mb-3 line-clamp-2">${escapeHtml(camp.description) || 'Sem descriÃ§Ã£o'}</p>
                     <div class="flex justify-between items-center pt-3 border-t border-gray-800">
                         <span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3"></i> ${camp.coupon_code || 'Sem cupom'}</span>
                         <button class="text-blue-500 text-xs font-medium hover:text-blue-400" onclick="event.stopPropagation(); openCampaignDetail(${camp.id})">Detalhes</button>
@@ -449,7 +451,7 @@
         const nome = document.getElementById('campaignNome').value;
         if (!nome) { alert('Informe o nome da campanha'); return; }
         
-        // CORRIGIDO: campos mapeados para inglês
+        // CORRIGIDO: campos mapeados para inglÃªs
         const dados = {
             name: nome,
             description: document.getElementById('campaignDescricao').value,
@@ -469,15 +471,15 @@
                 body: JSON.stringify(dados)
             });
             if (res.ok) {
-                alert(`✅ Campanha "${nome}" criada!`);
+                alert(`âœ… Campanha "${nome}" criada!`);
                 closeCampaignModal();
                 carregarCampanhas();
             } else {
-                throw new Error('Erro na requisição');
+                throw new Error('Erro na requisiÃ§Ã£o');
             }
         } catch (error) {
             console.error(error);
-            alert(`⚠️ Erro ao criar campanha. Tente novamente.`);
+            alert(`âš ï¸ Erro ao criar campanha. Tente novamente.`);
         }
     }
 
@@ -495,11 +497,11 @@
         content.innerHTML = `
             <div class="space-y-2">
                 <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(campanha.name)}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Período</p><p>${startDate} - ${endDate}</p></div>
+                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">PerÃ­odo</p><p>${startDate} - ${endDate}</p></div>
                 <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p class="${statusClass} font-bold">${statusText}</p></div>
                 <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Cupom</p><p class="font-mono text-blue-400">${campanha.coupon_code || 'N/A'}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Descrição</p><p class="text-gray-300">${escapeHtml(campanha.description) || 'Sem descrição'}</p></div>
-                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Segmentação</p><p>Gênero: ${campanha.gender || 'todos'} | Idade: ${campanha.min_age || '0'} - ${campanha.max_age || '+'}</p></div>
+                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">DescriÃ§Ã£o</p><p class="text-gray-300">${escapeHtml(campanha.description) || 'Sem descriÃ§Ã£o'}</p></div>
+                <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">SegmentaÃ§Ã£o</p><p>GÃªnero: ${campanha.gender || 'todos'} | Idade: ${campanha.min_age || '0'} - ${campanha.max_age || '+'}</p></div>
             </div>
         `;
         
@@ -560,14 +562,14 @@
                 body: JSON.stringify(dados)
             });
             if (res.ok) {
-                alert(`✅ Campanha "${nome}" atualizada!`);
+                alert(`âœ… Campanha "${nome}" atualizada!`);
                 closeEditCampaignModal();
                 carregarCampanhas();
             } else {
                 throw new Error();
             }
         } catch (error) {
-            alert(`⚠️ Erro ao atualizar campanha.`);
+            alert(`âš ï¸ Erro ao atualizar campanha.`);
         }
     }
 
@@ -582,14 +584,14 @@
                 headers: getAuthHeaders()
             });
             if (res.ok) {
-                alert(`✅ Campanha "${campanha.name}" excluída!`);
+                alert(`âœ… Campanha "${campanha.name}" excluÃ­da!`);
                 closeCampaignDetailModal();
                 carregarCampanhas();
             } else {
                 throw new Error();
             }
         } catch (error) {
-            alert(`✅ Campanha "${campanha.name}" excluída localmente.`);
+            alert(`âœ… Campanha "${campanha.name}" excluÃ­da localmente.`);
             closeCampaignDetailModal();
             carregarCampanhas();
         }
@@ -644,12 +646,12 @@
         const confirmarSenha = document.getElementById('confirmarSenha')?.value;
         
         if (novaSenha && novaSenha !== confirmarSenha) {
-            alert('As novas senhas não coincidem');
+            alert('As novas senhas nÃ£o coincidem');
             return;
         }
         
         if (!token) {
-            alert('Você precisa estar logado para alterar o perfil');
+            alert('VocÃª precisa estar logado para alterar o perfil');
             return;
         }
         
@@ -700,7 +702,7 @@
         window.location.href = 'login.html';
     }
 
-    // ==================== INICIALIZAÇÃO ====================
+    // ==================== INICIALIZAÃ‡ÃƒO ====================
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
         carregarCampanhas();
@@ -712,3 +714,4 @@
 </script>
 </body>
 </html>
+

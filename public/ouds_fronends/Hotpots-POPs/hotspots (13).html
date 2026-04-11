@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Hotspots / POPs</title>
@@ -24,7 +25,7 @@
 <body class="text-gray-200">
 
 <script>
-    // 🔒 PROTEÇÃO DE ACESSO
+    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
@@ -39,7 +40,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (padrão MS Telecom) -->
+    <!-- SIDEBAR (padrÃ£o MS Telecom) -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -54,14 +55,14 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
             <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
@@ -77,13 +78,14 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
+  <base href="/">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Buscar hotspot por nome, localização..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Buscar hotspot por nome, localizaÃ§Ã£o..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="text-right hidden sm:block">
@@ -103,11 +105,11 @@
         </header>
 
         <div class="p-4 md:p-8 space-y-6 md:space-y-8">
-            <!-- Header da página -->
+            <!-- Header da pÃ¡gina -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-black tracking-tight">Hotspots / POPs</h1>
-                    <p class="text-gray-500 text-xs md:text-sm mt-1">Gerencie seus Pontos de Presença e hotspots Wi-Fi</p>
+                    <p class="text-gray-500 text-xs md:text-sm mt-1">Gerencie seus Pontos de PresenÃ§a e hotspots Wi-Fi</p>
                 </div>
                 <button onclick="openNewPopModal()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2">
                     <i data-lucide="plus" class="w-4 h-4"></i> Novo Hotspot
@@ -122,7 +124,7 @@
     </main>
 </div>
 
-<!-- MODAL: NOVO HOTSPOT / EDITAR (com todas as opções originais) -->
+<!-- MODAL: NOVO HOTSPOT / EDITAR (com todas as opÃ§Ãµes originais) -->
 <div id="modalNewPop" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
@@ -137,32 +139,32 @@
         <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
             <input type="hidden" id="editPopId" value="">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome do Hotspot *</label><input type="text" id="popName" placeholder="MS-WIFI-POP-01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Localização</label><input type="text" id="popLocation" placeholder="Bairro, Cidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">LocalizaÃ§Ã£o</label><input type="text" id="popLocation" placeholder="Bairro, Cidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">IP do POP</label><input type="text" id="popIp" placeholder="192.168.1.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Instalação</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de InstalaÃ§Ã£o</label>
                 <select id="installationType" onchange="toggleWanConfig()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-                    <option value="new">🆕 Novo / Resetado (configurar WAN)</option>
-                    <option value="existing">✅ Em Produção (apenas cadastrar)</option>
+                    <option value="new">ðŸ†• Novo / Resetado (configurar WAN)</option>
+                    <option value="existing">âœ… Em ProduÃ§Ã£o (apenas cadastrar)</option>
                 </select>
-                <p id="installationTypeHelp" class="text-[10px] text-cyan-400 mt-1">Novo: configuração completa da WAN será solicitada</p>
+                <p id="installationTypeHelp" class="text-[10px] text-cyan-400 mt-1">Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada</p>
             </div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface WAN</label><select id="wanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup><optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup><optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option><option value="vlan">vlan</option></optgroup></select></div>
             <div id="wanConfig">
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Configuração WAN</label>
-                <select id="wanTipo" onchange="toggleWanFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="dhcp">DHCP (Automático)</option><option value="pppoe">PPPoE (Provedor)</option><option value="static">Estático (IP Manual)</option></select>
-                <div id="pppoeFields" class="hidden space-y-2 mt-2"><input type="text" id="pppoeUsername" placeholder="Usuário PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><input type="password" id="pppoePassword" placeholder="Senha PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-                <div id="staticFields" class="hidden space-y-2 mt-2"><input type="text" id="staticIp" placeholder="IP" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><input type="text" id="staticMask" placeholder="Máscara" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><input type="text" id="staticGateway" placeholder="Gateway" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">ConfiguraÃ§Ã£o WAN</label>
+                <select id="wanTipo" onchange="toggleWanFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="dhcp">DHCP (AutomÃ¡tico)</option><option value="pppoe">PPPoE (Provedor)</option><option value="static">EstÃ¡tico (IP Manual)</option></select>
+                <div id="pppoeFields" class="hidden space-y-2 mt-2"><input type="text" id="pppoeUsername" placeholder="UsuÃ¡rio PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><input type="password" id="pppoePassword" placeholder="Senha PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+                <div id="staticFields" class="hidden space-y-2 mt-2"><input type="text" id="staticIp" placeholder="IP" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><input type="text" id="staticMask" placeholder="MÃ¡scara" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><input type="text" id="staticGateway" placeholder="Gateway" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
             </div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface LAN (clientes)</label><select id="lanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4" selected>ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup><optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup><optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option></optgroup></select></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN ID (opcional)</label><input type="text" id="vlanId" placeholder="Deixe em branco se não usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><p class="text-[9px] text-gray-500 mt-1">Se preenchido, o hotspot será criado dentro da VLAN</p></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN ID (opcional)</label><input type="text" id="vlanId" placeholder="Deixe em branco se nÃ£o usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><p class="text-[9px] text-gray-500 mt-1">Se preenchido, o hotspot serÃ¡ criado dentro da VLAN</p></div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Saída do Hotspot</label>
-                <select id="popType" onchange="togglePopTypeFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="new_vlan">🆕 Nova VLAN (usando VLAN ID acima)</option><option value="existing_vlan">📁 VLAN existente</option><option value="physical_port">🔌 Porta física dedicada</option></select>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de SaÃ­da do Hotspot</label>
+                <select id="popType" onchange="togglePopTypeFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="new_vlan">ðŸ†• Nova VLAN (usando VLAN ID acima)</option><option value="existing_vlan">ðŸ“ VLAN existente</option><option value="physical_port">ðŸ”Œ Porta fÃ­sica dedicada</option></select>
                 <div id="existingVlanConfig" class="hidden mt-2"><input type="text" id="existingVlan" placeholder="Nome da VLAN existente (ex: vlan555)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
                 <div id="physicalPortConfig" class="hidden mt-2"><select id="physicalPort" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></select></div>
             </div>
-            <div class="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-2"><p id="infoMessage" class="text-[10px] text-cyan-400">Após criar, um script será gerado e copiado automaticamente.</p></div>
+            <div class="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-2"><p id="infoMessage" class="text-[10px] text-cyan-400">ApÃ³s criar, um script serÃ¡ gerado e copiado automaticamente.</p></div>
         </div>
         <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeNewPopModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
@@ -194,7 +196,7 @@
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input id="profileUsername" type="text" disabled class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-gray-300"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input id="profileUsername" type="text" disabled class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-gray-300"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input id="profileEmail" type="email" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
         </div>
@@ -203,7 +205,7 @@
 </div>
 
 <script>
-// ==================== CONFIGURAÇÕES GLOBAIS ====================
+// ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 
 function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
@@ -246,7 +248,7 @@ async function loadPops() {
                         <div><h3 class="text-base font-bold text-white">${escapeHtml(pop.name) || 'POP sem nome'}</h3><p class="text-[10px] text-gray-500">ID: ${escapeHtml(String(pop.unique_id || pop.id || 'N/A'))}</p></div>
                         <span class="px-2 py-1 ${statusBg} text-[10px] font-bold rounded-full">${statusText}</span>
                     </div>
-                    <div class="text-xs text-gray-400 space-y-1"><p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p><p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
+                    <div class="text-xs text-gray-400 space-y-1"><p>ðŸ“ ${escapeHtml(pop.location) || 'LocalizaÃ§Ã£o nÃ£o definida'}</p><p>ðŸ“¡ Ãšltimo heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
                     <div class="mt-3 pt-3 border-t border-gray-700 flex justify-end gap-2">
                         <button onclick="event.stopPropagation(); generateScript(${pop.id}, '${escapeHtml(pop.name)}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-[10px] font-medium">Script</button>
                         <button onclick="event.stopPropagation(); deletePop(${pop.id}, '${escapeHtml(pop.name)}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-[10px] font-medium">Excluir</button>
@@ -271,8 +273,8 @@ async function viewPopDetails(id) {
         const pop = pops.find(p => p.id == id);
         if (pop) {
             const isOnline = pop.status === 'online' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
-            content.innerHTML = `<div class="space-y-2"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(pop.name)}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${isOnline ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'} rounded-lg text-[10px]">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Localização</p><p>${escapeHtml(pop.location) || '-'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div></div>`;
-        } else content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';
+            content.innerHTML = `<div class="space-y-2"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(pop.name)}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${isOnline ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'} rounded-lg text-[10px]">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">LocalizaÃ§Ã£o</p><p>${escapeHtml(pop.location) || '-'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Ãšltimo Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div></div>`;
+        } else content.innerHTML = '<div class="text-center text-red-500">POP nÃ£o encontrado</div>';
     } catch (error) { content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>'; }
 }
 function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
@@ -288,8 +290,8 @@ async function generateScript(popId, popName) {
             document.getElementById('scriptContent').textContent = script;
             document.getElementById('modalScript').classList.remove('hidden');
             navigator.clipboard.writeText(script);
-        } else alert('Script não disponível');
-    } catch (error) { alert('Não foi possível obter o script deste hotspot'); }
+        } else alert('Script nÃ£o disponÃ­vel');
+    } catch (error) { alert('NÃ£o foi possÃ­vel obter o script deste hotspot'); }
 }
 function closeModalScript() { document.getElementById('modalScript').classList.add('hidden'); }
 function copyScript() { navigator.clipboard.writeText(document.getElementById('scriptContent').textContent).then(()=>alert('Script copiado!')); }
@@ -299,7 +301,7 @@ async function deletePop(id, nome) {
     if (!confirm(`Deseja excluir o POP "${nome}"?`)) return;
     try {
         const res = await fetch(`${API_URL}/api/pops/${id}`, { method: 'DELETE', headers: authHeaders(false) });
-        if (res.ok) { alert(`POP "${nome}" excluído!`); loadPops(); }
+        if (res.ok) { alert(`POP "${nome}" excluÃ­do!`); loadPops(); }
         else alert('Erro ao excluir');
     } catch (error) { alert('Erro ao excluir'); }
 }
@@ -341,8 +343,8 @@ function closeNewPopModal() { document.getElementById('modalNewPop').classList.a
 function toggleWanConfig() {
     const isNew = document.getElementById('installationType').value === 'new';
     document.getElementById('wanConfig').classList.toggle('hidden', !isNew);
-    document.getElementById('installationTypeHelp').innerHTML = isNew ? '🔧 Novo: configuração completa da WAN será solicitada' : '✅ Em Produção: apenas cadastro do POP existente';
-    document.getElementById('infoMessage').innerHTML = isNew ? 'Após criar, um script COMPLETO com configuração WAN será gerado.' : 'Após criar, um script BÁSICO (heartbeat + RADIUS) será gerado.';
+    document.getElementById('installationTypeHelp').innerHTML = isNew ? 'ðŸ”§ Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada' : 'âœ… Em ProduÃ§Ã£o: apenas cadastro do POP existente';
+    document.getElementById('infoMessage').innerHTML = isNew ? 'ApÃ³s criar, um script COMPLETO com configuraÃ§Ã£o WAN serÃ¡ gerado.' : 'ApÃ³s criar, um script BÃSICO (heartbeat + RADIUS) serÃ¡ gerado.';
 }
 function togglePopTypeFields() {
     const type = document.getElementById('popType').value;
@@ -362,7 +364,7 @@ async function saveNewPop() {
     const isNew = document.getElementById('installationType').value === 'new';
     const payload = {
         name: nome,
-        location: document.getElementById('popLocation').value.trim() || 'Localização não definida',
+        location: document.getElementById('popLocation').value.trim() || 'LocalizaÃ§Ã£o nÃ£o definida',
         ip: document.getElementById('popIp').value.trim() || '0.0.0.0',
         installation_type: isNew ? 'new' : 'existing',
         wan_interface: document.getElementById('wanInterface').value,
@@ -390,12 +392,12 @@ async function saveNewPop() {
         const data = await res.json();
         const createdPop = data.data || data;
         if (res.ok && (createdPop.id || createdPop.unique_id)) {
-            alert(`✅ Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!`);
+            alert(`âœ… Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!`);
             if (createdPop.script) navigator.clipboard.writeText(createdPop.script);
             closeNewPopModal();
             loadPops();
-        } else { alert('❌ Erro: ' + (data.error || 'Tente novamente')); }
-    } catch (error) { alert('❌ Erro ao salvar hotspot'); }
+        } else { alert('âŒ Erro: ' + (data.error || 'Tente novamente')); }
+    } catch (error) { alert('âŒ Erro ao salvar hotspot'); }
 }
 
 // ==================== PERFIL E LOGOUT ====================
@@ -413,12 +415,12 @@ async function salvarPerfil() {
     const payload = {};
     if (email) payload.email = email;
     if (password) payload.password = password;
-    if (Object.keys(payload).length === 0) { alert('Nenhuma alteração.'); return; }
+    if (Object.keys(payload).length === 0) { alert('Nenhuma alteraÃ§Ã£o.'); return; }
     try {
         const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
         const data = await res.json();
         if (res.ok) {
-            alert('✅ Perfil atualizado!');
+            alert('âœ… Perfil atualizado!');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             if (email) user.email = email;
             localStorage.setItem('user', JSON.stringify(user));
@@ -441,7 +443,7 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
     });
 });
 
-// ==================== INICIALIZAÇÃO ====================
+// ==================== INICIALIZAÃ‡ÃƒO ====================
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m)); }
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile(); loadPops(); carregarPerfil(); if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -450,3 +452,4 @@ setInterval(loadPops, 30000);
 </script>
 </body>
 </html>
+

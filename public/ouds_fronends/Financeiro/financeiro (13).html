@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Financeiro</title>
@@ -28,7 +29,7 @@
 <body class="text-gray-200">
 
 <script>
-    // 🔒 PROTEÇÃO DE ACESSO (padrão)
+    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO (padrÃ£o)
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
@@ -43,7 +44,7 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    <!-- SIDEBAR (padrão MS Telecom) -->
+    <!-- SIDEBAR (padrÃ£o MS Telecom) -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -57,34 +58,35 @@
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
             <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
             <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
         </nav>
         <div class="p-4 border-t border-gray-800 bg-black/30">
-            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Sessão Atual</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">SessÃ£o Atual</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
             <div class="space-y-2 text-[10px] font-mono">
-                <div class="flex justify-between text-gray-500"><span>Usuário</span><span id="sessionUser" class="text-cyan-400">-</span></div>
-                <div class="flex justify-between text-gray-500"><span>Início</span><span id="sessionStart" class="text-gray-400">-</span></div>
+                <div class="flex justify-between text-gray-500"><span>UsuÃ¡rio</span><span id="sessionUser" class="text-cyan-400">-</span></div>
+                <div class="flex justify-between text-gray-500"><span>InÃ­cio</span><span id="sessionStart" class="text-gray-400">-</span></div>
             </div>
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
+  <base href="/">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Buscar transação por cliente, ID ou valor..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Buscar transaÃ§Ã£o por cliente, ID ou valor..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-3 md:gap-4">
                 <div class="text-right hidden sm:block">
@@ -104,18 +106,18 @@
         </header>
 
         <div class="p-4 md:p-8 space-y-6 md:space-y-8">
-            <!-- Header com seletor de período -->
+            <!-- Header com seletor de perÃ­odo -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Financeiro</h1><p class="text-gray-500 text-sm mt-1">Relatórios de faturamento, transações e receita por POP</p></div>
+                <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Financeiro</h1><p class="text-gray-500 text-sm mt-1">RelatÃ³rios de faturamento, transaÃ§Ãµes e receita por POP</p></div>
                 <div class="flex gap-3">
                     <button onclick="exportarFinanceiro()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition"><i data-lucide="download" class="w-4 h-4"></i> Exportar CSV</button>
                     <select id="periodoSelect" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg hover:shadow-blue-500/20 transition cursor-pointer">
-                        <option value="hoje">Hoje</option><option value="ontem">Ontem</option><option value="7dias">Últimos 7 dias</option><option value="30dias">Últimos 30 dias</option><option value="mes" selected>Este Mês</option><option value="mesPassado">Mês Passado</option><option value="ano">Este Ano</option>
+                        <option value="hoje">Hoje</option><option value="ontem">Ontem</option><option value="7dias">Ãšltimos 7 dias</option><option value="30dias">Ãšltimos 30 dias</option><option value="mes" selected>Este MÃªs</option><option value="mesPassado">MÃªs Passado</option><option value="ano">Este Ano</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Cards de Métricas Financeiras (grid) -->
+            <!-- Cards de MÃ©tricas Financeiras (grid) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="flex justify-between items-start mb-3"><div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center"><i data-lucide="trending-up" class="text-emerald-500 w-5 h-5"></i></div><span id="faturamentoHojeVariacao" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">+0%</span></div>
@@ -131,41 +133,41 @@
                 </div>
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3"><i data-lucide="credit-card" class="text-purple-500 w-5 h-5"></i></div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Ticket Médio</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Ticket MÃ©dio</p>
                     <p id="ticketMedio" class="text-2xl font-black mt-1">R$ 0,00</p>
-                    <p class="text-[10px] text-gray-600 mt-2">vs mês passado: <span id="ticketVariacao">R$ 0,00</span></p>
+                    <p class="text-[10px] text-gray-600 mt-2">vs mÃªs passado: <span id="ticketVariacao">R$ 0,00</span></p>
                 </div>
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3"><i data-lucide="users" class="text-orange-500 w-5 h-5"></i></div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Clientes Ativos</p>
                     <p id="clientesAtivos" class="text-2xl font-black mt-1">0</p>
-                    <p class="text-[10px] text-gray-600 mt-2">+<span id="clientesNovos">0</span> este mês</p>
+                    <p class="text-[10px] text-gray-600 mt-2">+<span id="clientesNovos">0</span> este mÃªs</p>
                 </div>
             </div>
 
-            <!-- Gráficos (2 colunas) -->
+            <!-- GrÃ¡ficos (2 colunas) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-white">Evolução Mensal</h3><div class="flex gap-2"><button class="periodo-chart-btn text-[10px] font-bold text-blue-500 border-b border-blue-500 pb-0.5" data-periodo="ano">2026</button><button class="periodo-chart-btn text-[10px] font-bold text-gray-500 hover:text-white transition" data-periodo="mes">Este Mês</button></div></div>
+                    <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-white">EvoluÃ§Ã£o Mensal</h3><div class="flex gap-2"><button class="periodo-chart-btn text-[10px] font-bold text-blue-500 border-b border-blue-500 pb-0.5" data-periodo="ano">2026</button><button class="periodo-chart-btn text-[10px] font-bold text-gray-500 hover:text-white transition" data-periodo="mes">Este MÃªs</button></div></div>
                     <div style="position: relative; height: 250px;"><canvas id="monthlyChart"></canvas></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-white">Receita por Plano</h3><button onclick="alert('Detalhes de receita por plano em desenvolvimento')" class="text-[10px] font-bold text-blue-500">Detalhes</button></div>
                     <div style="position: relative; height: 200px;"><canvas id="plansRevenueChart"></canvas></div>
-                    <div id="plansSummary" class="grid grid-cols-3 gap-3 mt-6 text-center"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Premium</p><p id="premiumTotal" class="text-sm font-bold text-white">R$ 0</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Diário</p><p id="diarioTotal" class="text-sm font-bold text-white">R$ 0</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Teste</p><p id="testeTotal" class="text-sm font-bold text-white">R$ 0</p></div></div>
+                    <div id="plansSummary" class="grid grid-cols-3 gap-3 mt-6 text-center"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Premium</p><p id="premiumTotal" class="text-sm font-bold text-white">R$ 0</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">DiÃ¡rio</p><p id="diarioTotal" class="text-sm font-bold text-white">R$ 0</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[9px] text-gray-500 uppercase">Teste</p><p id="testeTotal" class="text-sm font-bold text-white">R$ 0</p></div></div>
                 </div>
             </div>
 
             <!-- Receita por POP -->
             <div class="glass-card rounded-2xl p-6 border border-gray-800"><h3 class="font-bold text-white mb-6">Receita por POP / Localidade</h3><div id="receitaPorPop" class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="text-center text-gray-500 py-4 col-span-3">Carregando dados...</div></div></div>
 
-            <!-- Tabela de Transações Recentes -->
+            <!-- Tabela de TransaÃ§Ãµes Recentes -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
-                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center"><h3 class="font-bold text-white">Transações Recentes</h3><button onclick="verTodasTransacoes()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button></div>
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center"><h3 class="font-bold text-white">TransaÃ§Ãµes Recentes</h3><button onclick="verTodasTransacoes()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button></div>
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider"><tr><th class="px-6 py-3 text-left">Data/Hora</th><th class="px-6 py-3 text-left">Cliente</th><th class="px-6 py-3 text-left">Plano</th><th class="px-6 py-3 text-left">Valor</th><th class="px-6 py-3 text-left">Método</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-center">Ação</th></tr></thead>
-                        <tbody id="tabelaPagamentos" class="divide-y divide-gray-800/50"><tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Carregando transações...</td></tr></tbody>
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider"><tr><th class="px-6 py-3 text-left">Data/Hora</th><th class="px-6 py-3 text-left">Cliente</th><th class="px-6 py-3 text-left">Plano</th><th class="px-6 py-3 text-left">Valor</th><th class="px-6 py-3 text-left">MÃ©todo</th><th class="px-6 py-3 text-left">Status</th><th class="px-6 py-3 text-center">AÃ§Ã£o</th></tr></thead>
+                        <tbody id="tabelaPagamentos" class="divide-y divide-gray-800/50"><tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Carregando transaÃ§Ãµes...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -173,7 +175,7 @@
             <!-- Resumo de Pagamentos Pendentes -->
             <div class="glass-card rounded-2xl overflow-hidden border border-yellow-500/30 bg-yellow-500/5">
                 <div class="px-6 py-4 border-b border-yellow-500/20 flex justify-between items-center"><div class="flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500"></i><h3 class="font-bold text-white">Pagamentos Pendentes</h3></div><button onclick="cobrarTodosPendentes()" class="text-[10px] font-bold text-yellow-500 hover:text-yellow-400">Cobrar todos</button></div>
-                <div id="pendentesContainer" class="p-4"><div class="text-center text-gray-500 py-4">Carregando pendências...</div></div>
+                <div id="pendentesContainer" class="p-4"><div class="text-center text-gray-500 py-4">Carregando pendÃªncias...</div></div>
             </div>
         </div>
     </main>
@@ -181,23 +183,23 @@
 
 <!-- MODAIS (padronizados com glass) -->
 <div id="modalTodasTransacoes" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="list" class="w-5 h-5 text-blue-500"></i>Todas as Transações</h2><button onclick="closeModalTodasTransacoes()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto p-4 custom-scrollbar"><div class="overflow-x-auto"><table class="min-w-[800px] w-full text-sm"><thead class="bg-gray-900/50 sticky top-0"><tr class="text-left text-[10px] font-bold text-gray-500 uppercase"><th class="px-4 py-2">Data/Hora</th><th class="px-4 py-2">Cliente</th><th class="px-4 py-2">Plano</th><th class="px-4 py-2">Valor</th><th class="px-4 py-2">Método</th><th class="px-4 py-2">Status</th><th class="px-4 py-2">Ação</th></tr></thead><tbody id="tabelaTodasTransacoes"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Carregando...</td></tr></tbody></table></div><div id="paginacaoContainer" class="flex justify-center gap-2 mt-4"></div></div><div class="p-4 border-t border-gray-800 flex justify-end shrink-0"><button onclick="closeModalTodasTransacoes()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button></div></div>
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="list" class="w-5 h-5 text-blue-500"></i>Todas as TransaÃ§Ãµes</h2><button onclick="closeModalTodasTransacoes()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto p-4 custom-scrollbar"><div class="overflow-x-auto"><table class="min-w-[800px] w-full text-sm"><thead class="bg-gray-900/50 sticky top-0"><tr class="text-left text-[10px] font-bold text-gray-500 uppercase"><th class="px-4 py-2">Data/Hora</th><th class="px-4 py-2">Cliente</th><th class="px-4 py-2">Plano</th><th class="px-4 py-2">Valor</th><th class="px-4 py-2">MÃ©todo</th><th class="px-4 py-2">Status</th><th class="px-4 py-2">AÃ§Ã£o</th></tr></thead><tbody id="tabelaTodasTransacoes"><tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Carregando...</td></tr></tbody></table></div><div id="paginacaoContainer" class="flex justify-center gap-2 mt-4"></div></div><div class="p-4 border-t border-gray-800 flex justify-end shrink-0"><button onclick="closeModalTodasTransacoes()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button></div></div>
 </div>
 
 <div id="modalDetalhesTransacao" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Detalhes da Transação</h2><button onclick="closeModalDetalhesTransacao()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div id="detalhesTransacaoContent" class="flex-1 overflow-y-auto p-4 space-y-3"></div><div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="closeModalDetalhesTransacao()" class="px-4 py-2 bg-gray-800 rounded-lg">Fechar</button></div></div>
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Detalhes da TransaÃ§Ã£o</h2><button onclick="closeModalDetalhesTransacao()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div id="detalhesTransacaoContent" class="flex-1 overflow-y-auto p-4 space-y-3"></div><div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="closeModalDetalhesTransacao()" class="px-4 py-2 bg-gray-800 rounded-lg">Fechar</button></div></div>
 </div>
 
 <div id="modalPix" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Pagamento via PIX</h2><button onclick="fecharModalPix()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto p-4 space-y-4"><div id="qrCodeContainer" class="flex justify-center"></div><code id="pixCopiaCola" class="text-xs font-mono break-all bg-gray-900 p-3 rounded-lg block"></code><button onclick="copiarPix()" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Copiar código PIX</button></div><div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="fecharModalPix()" class="px-4 py-2 bg-gray-800 rounded-lg">Fechar</button></div></div>
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800"><h2 class="text-lg font-bold text-white">Pagamento via PIX</h2><button onclick="fecharModalPix()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto p-4 space-y-4"><div id="qrCodeContainer" class="flex justify-center"></div><code id="pixCopiaCola" class="text-xs font-mono break-all bg-gray-900 p-3 rounded-lg block"></code><button onclick="copiarPix()" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Copiar cÃ³digo PIX</button></div><div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="fecharModalPix()" class="px-4 py-2 bg-gray-800 rounded-lg">Fechar</button></div></div>
 </div>
 
 <div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto p-4 space-y-4"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div><div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button></div></div>
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700"><div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto p-4 space-y-4"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div><div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button></div></div>
 </div>
 
 <script>
-// ==================== CONFIGURAÇÕES GLOBAIS (mantidas originais, apenas ajustes de token) ====================
+// ==================== CONFIGURAÃ‡Ã•ES GLOBAIS (mantidas originais, apenas ajustes de token) ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let pagamentosData = [];
 let monthlyChart = null;
@@ -212,13 +214,13 @@ function authHeaders(includeJson = true) {
     return headers;
 }
 
-// ==================== FUNÇÕES DE EXTRAÇÃO (mesmas originais) ====================
+// ==================== FUNÃ‡Ã•ES DE EXTRAÃ‡ÃƒO (mesmas originais) ====================
 function getPaymentDate(p) { return p.created_at || p.createdAt || p.criado_em || p.data || null; }
 function getPaymentAmount(p) { return parseFloat(p.amount ?? p.valor) || 0; }
 function getPaymentCustomer(p) { return p.user_name || p.usuario_nome || p.cliente || p.description || 'Cliente'; }
 function getPaymentPlan(p) { return p.plan_name || p.plano_nome || p.plano || 'N/A'; }
 function getPaymentMethod(p) { return p.payment_method || p.metodo || 'PIX'; }
-function getPaymentHotspot(p) { return p.hotspot_name || p.pop || p.localidade || p.hotspot || 'Não informado'; }
+function getPaymentHotspot(p) { return p.hotspot_name || p.pop || p.localidade || p.hotspot || 'NÃ£o informado'; }
 function isConfirmedPayment(p) { return p.status === 'approved' || p.status === 'confirmed' || p.status === 'pago'; }
 
 function sumValues(arr) { return arr?.reduce((s, p) => s + getPaymentAmount(p), 0) || 0; }
@@ -277,9 +279,9 @@ function mostrarDadosVazios() {
     document.getElementById('metaMensal').innerHTML = 'R$ 0,00';
     document.getElementById('ticketVariacao').innerHTML = 'R$ 0,00';
     document.getElementById('clientesNovos').innerHTML = '0';
-    document.getElementById('tabelaPagamentos').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhuma transação encontrada</td></tr>';
+    document.getElementById('tabelaPagamentos').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhuma transaÃ§Ã£o encontrada</td></tr>';
     document.getElementById('pendentesContainer').innerHTML = '<div class="text-center text-gray-500 py-4">Nenhum pagamento pendente</div>';
-    document.getElementById('receitaPorPop').innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponível</div>';
+    document.getElementById('receitaPorPop').innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponÃ­vel</div>';
 }
 
 function atualizarCards(pagamentos) {
@@ -314,20 +316,20 @@ function atualizarGraficos(pagamentos) {
     if (monthlyChart) monthlyChart.destroy();
     monthlyChart = new Chart(ctxM, { type:'bar', data:{ labels:meses, datasets:[{ label:'Faturamento (R$)', data:dadosMensais, backgroundColor:'rgba(59,130,246,0.6)', borderRadius:8 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{ y:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')}} } } });
     let premiumTotal=0, diarioTotal=0, testeTotal=0;
-    pagamentos.forEach(p => { const v=getPaymentAmount(p); const pl=getPaymentPlan(p).toLowerCase(); if(pl.includes('premium')) premiumTotal+=v; else if(pl.includes('diario')||pl.includes('diário')) diarioTotal+=v; else if(pl.includes('teste')) testeTotal+=v; });
+    pagamentos.forEach(p => { const v=getPaymentAmount(p); const pl=getPaymentPlan(p).toLowerCase(); if(pl.includes('premium')) premiumTotal+=v; else if(pl.includes('diario')||pl.includes('diÃ¡rio')) diarioTotal+=v; else if(pl.includes('teste')) testeTotal+=v; });
     document.getElementById('premiumTotal').innerHTML = `R$ ${premiumTotal.toFixed(0)}`;
     document.getElementById('diarioTotal').innerHTML = `R$ ${diarioTotal.toFixed(0)}`;
     document.getElementById('testeTotal').innerHTML = `R$ ${testeTotal.toFixed(0)}`;
     const ctxP = document.getElementById('plansRevenueChart').getContext('2d');
     if (plansChart) plansChart.destroy();
-    plansChart = new Chart(ctxP, { type:'doughnut', data:{ labels:['Premium','Diário','Teste'], datasets:[{ data:[premiumTotal,diarioTotal,testeTotal], backgroundColor:['#3b82f6','#06b6d4','#10b981'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10}}}}, cutout:'60%' } });
+    plansChart = new Chart(ctxP, { type:'doughnut', data:{ labels:['Premium','DiÃ¡rio','Teste'], datasets:[{ data:[premiumTotal,diarioTotal,testeTotal], backgroundColor:['#3b82f6','#06b6d4','#10b981'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10}}}}, cutout:'60%' } });
 }
 
 function atualizarReceitaPorPop(pagamentos) {
     const popMap = new Map();
     pagamentos.forEach(p => { const pop=getPaymentHotspot(p); popMap.set(pop, (popMap.get(pop)||0)+getPaymentAmount(p)); });
     const container = document.getElementById('receitaPorPop');
-    if (popMap.size===0) { container.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponível</div>'; return; }
+    if (popMap.size===0) { container.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponÃ­vel</div>'; return; }
     const maxVal = Math.max(...Array.from(popMap.values()));
     container.innerHTML = Array.from(popMap.entries()).sort((a,b)=>b[1]-a[1]).map(([pop,valor]) => `<div class="bg-gray-900/30 rounded-xl p-4"><div class="flex justify-between items-start mb-2"><span class="text-sm font-medium text-white">${pop}</span><span class="text-emerald-400 font-bold">R$ ${valor.toFixed(2)}</span></div><div class="w-full bg-gray-800 rounded-full h-1.5"><div class="bg-blue-500 h-1.5 rounded-full" style="width:${Math.min(100,(valor/maxVal*100))}%"></div></div></div>`).join('');
 }
@@ -335,7 +337,7 @@ function atualizarReceitaPorPop(pagamentos) {
 function atualizarTabela(pagamentos) {
     const tbody = document.getElementById('tabelaPagamentos');
     const recentes = [...pagamentos].sort((a,b)=>new Date(getPaymentDate(b))-new Date(getPaymentDate(a))).slice(0,5);
-    if(recentes.length===0) { tbody.innerHTML='<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhuma transação</td></tr>'; return; }
+    if(recentes.length===0) { tbody.innerHTML='<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhuma transaÃ§Ã£o</td></tr>'; return; }
     tbody.innerHTML = recentes.map(p => `<tr class="hover:bg-gray-900/30 cursor-pointer" onclick="verDetalhesTransacao('${p.id}')"><td class="px-6 py-4 text-sm text-gray-400">${new Date(getPaymentDate(p)).toLocaleString('pt-BR')}</td><td class="px-6 py-4 text-sm text-white">${getPaymentCustomer(p)}</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] rounded-lg">${getPaymentPlan(p)}</span></td><td class="px-6 py-4 font-bold text-emerald-400">R$ ${getPaymentAmount(p).toFixed(2)}</td><td class="px-6 py-4 text-sm text-gray-400">${getPaymentMethod(p)}</td><td class="px-6 py-4"><span class="px-2 py-1 ${isConfirmedPayment(p)?'bg-emerald-500/20 text-emerald-500':'bg-yellow-500/20 text-yellow-500'} text-[10px] rounded-lg">${isConfirmedPayment(p)?'Confirmado':'Pendente'}</span></td><td class="px-6 py-4 text-center"><button onclick="event.stopPropagation(); abrirModalPix('${p.id}', ${getPaymentAmount(p)})" class="p-1.5 hover:bg-gray-800 rounded-lg"><i data-lucide="qrcode" class="w-4 h-4 text-blue-500"></i></button></td></tr>`).join('');
     if(typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -344,7 +346,7 @@ function atualizarPendentes(pagamentos) {
     const pendentes = pagamentos.filter(p => !isConfirmedPayment(p));
     const container = document.getElementById('pendentesContainer');
     if(pendentes.length===0) { container.innerHTML='<div class="text-center text-gray-500 py-4">Nenhum pagamento pendente</div>'; return; }
-    container.innerHTML = pendentes.slice(0,5).map(p => `<div class="flex justify-between items-center p-3 bg-gray-900/30 rounded-xl mb-2"><div><p class="font-medium text-white text-sm">${getPaymentCustomer(p)}</p><p class="text-[10px] text-gray-500">${getPaymentPlan(p)} • Vencimento: ${new Date(getPaymentDate(p)).toLocaleDateString('pt-BR')}</p></div><div class="flex items-center gap-3"><span class="text-emerald-400 font-bold text-sm">R$ ${getPaymentAmount(p).toFixed(2)}</span><button onclick="event.stopPropagation(); cobrarCliente('${p.id}')" class="bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-500 px-3 py-1 rounded-lg text-xs transition">Cobrar</button></div></div>`).join('');
+    container.innerHTML = pendentes.slice(0,5).map(p => `<div class="flex justify-between items-center p-3 bg-gray-900/30 rounded-xl mb-2"><div><p class="font-medium text-white text-sm">${getPaymentCustomer(p)}</p><p class="text-[10px] text-gray-500">${getPaymentPlan(p)} â€¢ Vencimento: ${new Date(getPaymentDate(p)).toLocaleDateString('pt-BR')}</p></div><div class="flex items-center gap-3"><span class="text-emerald-400 font-bold text-sm">R$ ${getPaymentAmount(p).toFixed(2)}</span><button onclick="event.stopPropagation(); cobrarCliente('${p.id}')" class="bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-500 px-3 py-1 rounded-lg text-xs transition">Cobrar</button></div></div>`).join('');
 }
 
 let todasTransacoesLista = [];
@@ -383,19 +385,19 @@ async function abrirModalPix(pagamentoId, valor) {
         const res = await fetch(`${API_URL}/api/payments/generate-pix`, { method:'POST', headers:authHeaders(true), body:JSON.stringify({ payment_id:pagamentoId, amount:valor, description:'Plano WiFi' }) });
         const data = await res.json();
         if(!res.ok) throw new Error(data.error||'Erro ao gerar PIX');
-        pixCode.textContent = data.pix_copy_paste || 'Código PIX não disponível';
-        qrContainer.innerHTML = data.qr_code ? `<img src="${data.qr_code}" alt="QR Code" class="w-48 h-48 mx-auto">` : '<div class="text-center text-yellow-500">QR Code não disponível</div>';
+        pixCode.textContent = data.pix_copy_paste || 'CÃ³digo PIX nÃ£o disponÃ­vel';
+        qrContainer.innerHTML = data.qr_code ? `<img src="${data.qr_code}" alt="QR Code" class="w-48 h-48 mx-auto">` : '<div class="text-center text-yellow-500">QR Code nÃ£o disponÃ­vel</div>';
     } catch(e) { console.error('Erro PIX:', e); qrContainer.innerHTML='<div class="text-center text-red-500">Erro ao gerar PIX</div>'; pixCode.textContent='Erro'; }
 }
 function fecharModalPix() { document.getElementById('modalPix').classList.add('hidden'); }
-function copiarPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(()=>alert('Código PIX copiado!')).catch(()=>alert('Erro ao copiar')); }
+function copiarPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(()=>alert('CÃ³digo PIX copiado!')).catch(()=>alert('Erro ao copiar')); }
 
 function cobrarCliente(pagamentoId) { const p = pagamentosData.find(i=>i.id==pagamentoId); if(p) abrirModalPix(p.id, getPaymentAmount(p)); }
-function cobrarTodosPendentes() { const pend = pagamentosData.filter(p=>!isConfirmedPayment(p)); if(pend.length===0){alert('Não há pagamentos pendentes');return;} if(pend.length>1) alert(`${pend.length} pagamentos pendentes. Abrindo o primeiro.`); abrirModalPix(pend[0].id, getPaymentAmount(pend[0])); }
+function cobrarTodosPendentes() { const pend = pagamentosData.filter(p=>!isConfirmedPayment(p)); if(pend.length===0){alert('NÃ£o hÃ¡ pagamentos pendentes');return;} if(pend.length>1) alert(`${pend.length} pagamentos pendentes. Abrindo o primeiro.`); abrirModalPix(pend[0].id, getPaymentAmount(pend[0])); }
 
 function exportarFinanceiro() {
-    if(pagamentosData.length===0){alert('Não há dados para exportar');return;}
-    const headers = ['ID','Data','Cliente','Plano','Valor','Método','Status'];
+    if(pagamentosData.length===0){alert('NÃ£o hÃ¡ dados para exportar');return;}
+    const headers = ['ID','Data','Cliente','Plano','Valor','MÃ©todo','Status'];
     const rows = pagamentosData.map(p=>[p.id,new Date(getPaymentDate(p)).toLocaleString('pt-BR'),getPaymentCustomer(p),getPaymentPlan(p),getPaymentAmount(p).toFixed(2),getPaymentMethod(p),isConfirmedPayment(p)?'Confirmado':'Pendente']);
     const csv = [headers,...rows].map(r=>r.join(';')).join('\n');
     const blob = new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8;'});
@@ -423,7 +425,7 @@ async function salvarPerfil() {
     const senhaAtual = document.getElementById('senhaAtual')?.value;
     const novaSenha = document.getElementById('novaSenha')?.value;
     const confirmar = document.getElementById('confirmarSenha')?.value;
-    if(novaSenha && novaSenha !== confirmar) { alert('As novas senhas não coincidem'); return; }
+    if(novaSenha && novaSenha !== confirmar) { alert('As novas senhas nÃ£o coincidem'); return; }
     if(novaSenha && !senhaAtual) { alert('Digite a senha atual para alterar'); return; }
     try {
         const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(true), body: JSON.stringify({ username, email, current_password: senhaAtual || undefined, new_password: novaSenha || undefined }) });
@@ -474,3 +476,4 @@ setInterval(carregarFinanceiro, 30000);
 </script>
 </body>
 </html>
+

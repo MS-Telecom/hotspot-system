@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoramento de Ações</title>
+    <title>Monitoramento de AÃ§Ãµes</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -69,7 +70,7 @@
     </style>
 </head>
 <body>
-    <h1>Monitoramento de Ações para Day Trade</h1>
+    <h1>Monitoramento de AÃ§Ãµes para Day Trade</h1>
 
     <div class="tradingview-widget-container">
         <div id="tradingview_12345"></div>
@@ -95,27 +96,27 @@
     <table>
         <thead>
             <tr>
-                <th>Ação</th>
-                <th>Preço Atual</th>
+                <th>AÃ§Ã£o</th>
+                <th>PreÃ§o Atual</th>
                 <th>Alta</th>
                 <th>Baixa</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody id="stocks-table">
-            <!-- Linhas das ações serão inseridas aqui pelo JavaScript -->
+            <!-- Linhas das aÃ§Ãµes serÃ£o inseridas aqui pelo JavaScript -->
         </tbody>
     </table>
 
     <div id="highlight-container">Carregando...</div>
 
     <div id="highlighted-stocks">
-        <h2>Ações em Alta</h2>
+        <h2>AÃ§Ãµes em Alta</h2>
         <ul id="high-stocks-list"></ul>
     </div>
 
     <div id="falling-stocks">
-        <h2>Ações em Queda</h2>
+        <h2>AÃ§Ãµes em Queda</h2>
         <ul id="low-stocks-list"></ul>
     </div>
 
@@ -124,7 +125,7 @@
         const stockPrices = {};
         let stocksData = [];
 
-        // Função para obter os dados de uma ação da Alpha Vantage
+        // FunÃ§Ã£o para obter os dados de uma aÃ§Ã£o da Alpha Vantage
         async function getStockData(stockSymbol) {
             const response = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=5min&apikey=${API_KEY}`);
             const data = await response.json();
@@ -136,7 +137,7 @@
             return { latestPrice, highPrice, lowPrice };
         }
 
-        // Função para atualizar a tabela com dados das ações
+        // FunÃ§Ã£o para atualizar a tabela com dados das aÃ§Ãµes
         function updateTable() {
             const tableBody = document.getElementById('stocks-table');
             tableBody.innerHTML = ''; // Limpa a tabela
@@ -164,7 +165,7 @@
             });
         }
 
-        // Função para determinar se uma ação deve ser comprada ou vendida
+        // FunÃ§Ã£o para determinar se uma aÃ§Ã£o deve ser comprada ou vendida
         function determineStatus(stock) {
             const { name, latestPrice } = stock;
 
@@ -175,7 +176,7 @@
             stockPrices[name].push(latestPrice);
 
             if (stockPrices[name].length > 10) {
-                stockPrices[name].shift(); // Mantém apenas os últimos 10 preços
+                stockPrices[name].shift(); // MantÃ©m apenas os Ãºltimos 10 preÃ§os
             }
 
             const initialPrice = stockPrices[name][0];
@@ -190,7 +191,7 @@
             }
         }
 
-        // Função para atualizar os dados das ações
+        // FunÃ§Ã£o para atualizar os dados das aÃ§Ãµes
         async function updateStocks() {
             const stockSymbols = ['AAPL', 'GOOGL', 'AMZN'];
             stocksData = [];
@@ -205,7 +206,7 @@
             updateHighlights();
         }
 
-        // Função para atualizar as ações em alta e em queda
+        // FunÃ§Ã£o para atualizar as aÃ§Ãµes em alta e em queda
         function updateHighlights() {
             const highStocks = stocksData.filter(stock => stock.status === 'Vender');
             const lowStocks = stocksData.filter(stock => stock.status === 'Comprar');
@@ -234,8 +235,9 @@
         // Atualiza a tabela com os dados em tempo real
         updateStocks();
 
-        // Intervalo para atualizar os dados das ações a cada 5 minutos (300000 ms)
+        // Intervalo para atualizar os dados das aÃ§Ãµes a cada 5 minutos (300000 ms)
         setInterval(updateStocks, 300000);
     </script>
 </body>
 </html>
+

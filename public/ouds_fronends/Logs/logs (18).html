@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Logs do Sistema</title>
@@ -27,14 +28,14 @@
 <body class="text-gray-200">
 
 <script>
-    // Proteção de acesso - verificar token
+    // ProteÃ§Ã£o de acesso - verificar token
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
     }
 </script>
 
-<!-- Botão Menu Mobile -->
+<!-- BotÃ£o Menu Mobile -->
 <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
     <i data-lucide="menu" class="w-5 h-5"></i>
 </button>
@@ -51,14 +52,14 @@
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
@@ -72,12 +73,13 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center flex-wrap gap-4">
+  <base href="/">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchLogs" placeholder="Buscar logs por usuário, IP, evento..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchLogs" placeholder="Buscar logs por usuÃ¡rio, IP, evento..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex gap-2">
@@ -113,10 +115,10 @@
                 </div>
             </div>
 
-            <!-- Filtros Rápidos -->
+            <!-- Filtros RÃ¡pidos -->
             <div class="flex gap-2 md:gap-3 flex-wrap">
                 <button class="filter-log-btn active px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-blue-600 text-white" data-filter="all">Todos</button>
-                <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="auth">Autenticação</button>
+                <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="auth">AutenticaÃ§Ã£o</button>
                 <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="payment">Pagamentos</button>
                 <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="network">Rede / POPs</button>
                 <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="system">Sistema</button>
@@ -128,14 +130,14 @@
                 <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="acessos">Acessos ao Painel</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="eventos">Eventos do Sistema</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="api">API / Webhooks</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="radius">RADIUS / Autenticação</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="radius">RADIUS / AutenticaÃ§Ã£o</button>
             </div>
 
             <!-- Aba: Acessos ao Painel -->
             <div id="acessos" class="tab-content space-y-4">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-4 md:px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/30 flex-wrap gap-2">
-                        <h3 class="font-bold text-white">Histórico de Acessos</h3>
+                        <h3 class="font-bold text-white">HistÃ³rico de Acessos</h3>
                         <div class="flex gap-4 text-[10px] text-gray-500"><span id="totalAcessos">Total: 0 registros</span></div>
                     </div>
                     <div id="acessosList" class="divide-y divide-gray-800 min-h-[400px]">
@@ -145,7 +147,7 @@
                         <p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoCount">0</span> registros</p>
                         <div class="flex gap-2">
                             <button id="prevPageBtn" class="px-3 py-1 bg-gray-800 rounded-lg text-xs disabled:opacity-50" disabled>Anterior</button>
-                            <button id="nextPageBtn" class="px-3 py-1 bg-gray-800 rounded-lg text-xs disabled:opacity-50" disabled>Próximo</button>
+                            <button id="nextPageBtn" class="px-3 py-1 bg-gray-800 rounded-lg text-xs disabled:opacity-50" disabled>PrÃ³ximo</button>
                         </div>
                     </div>
                 </div>
@@ -164,29 +166,29 @@
             <!-- Aba: API / Webhooks -->
             <div id="api" class="tab-content hidden space-y-4">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
-                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">Requisições de API e Webhooks</h3></div>
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">RequisiÃ§Ãµes de API e Webhooks</h3></div>
                     <div id="apiList" class="divide-y divide-gray-800 min-h-[400px]">
                         <div class="p-6 text-center text-gray-500">Carregando logs...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Aba: RADIUS / Autenticação -->
+            <!-- Aba: RADIUS / AutenticaÃ§Ã£o -->
             <div id="radius" class="tab-content hidden space-y-4">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
-                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">Autenticações RADIUS</h3></div>
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">AutenticaÃ§Ãµes RADIUS</h3></div>
                     <div id="radiusList" class="divide-y divide-gray-800 min-h-[400px]">
                         <div class="p-6 text-center text-gray-500">Carregando logs...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Estatísticas de Logs -->
+            <!-- EstatÃ­sticas de Logs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Total Eventos</p><p id="totalEventos" class="text-xl md:text-2xl font-bold text-white">0</p></div>
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Erros (24h)</p><p id="totalErros" class="text-xl md:text-2xl font-bold text-red-500">0</p></div>
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Acessos Hoje</p><p id="totalAcessosHoje" class="text-xl md:text-2xl font-bold text-emerald-500">0</p></div>
-                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Autenticações</p><p id="totalAutenticacoes" class="text-xl md:text-2xl font-bold text-blue-500">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">AutenticaÃ§Ãµes</p><p id="totalAutenticacoes" class="text-xl md:text-2xl font-bold text-blue-500">0</p></div>
             </div>
         </div>
     </main>
@@ -199,7 +201,7 @@
             <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500"></i>Limpar Logs</h2>
             <button onclick="closeModalLimparLogs()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
         </div>
-        <div class="p-4 space-y-3"><p class="text-gray-300 text-sm">Tem certeza que deseja limpar todos os logs do sistema? Esta ação não pode ser desfeita.</p></div>
+        <div class="p-4 space-y-3"><p class="text-gray-300 text-sm">Tem certeza que deseja limpar todos os logs do sistema? Esta aÃ§Ã£o nÃ£o pode ser desfeita.</p></div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2">
             <button onclick="closeModalLimparLogs()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
             <button onclick="confirmarLimparLogs()" class="px-4 py-2 bg-red-600 rounded-lg text-sm font-bold">Limpar Logs</button>
@@ -221,7 +223,7 @@
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label>
                 <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
             </div>
             <div>
@@ -248,7 +250,7 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
@@ -263,7 +265,7 @@ let currentSearchTerm = '';
 const itemsPerPage = 10;
 
 // ============================================
-// FUNÇÕES DE MENU MOBILE
+// FUNÃ‡Ã•ES DE MENU MOBILE
 // ============================================
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
@@ -276,7 +278,7 @@ function initMenuMobile() {
 }
 
 // ============================================
-// FUNÇÕES DE PERFIL
+// FUNÃ‡Ã•ES DE PERFIL
 // ============================================
 function carregarPerfil() {
     const userStr = localStorage.getItem('user');
@@ -314,7 +316,7 @@ async function salvarPerfil() {
     const confirmarSenha = document.getElementById('confirmarSenha')?.value;
     
     if (novaSenha && novaSenha !== confirmarSenha) {
-        alert('As novas senhas não coincidem');
+        alert('As novas senhas nÃ£o coincidem');
         return;
     }
     
@@ -324,7 +326,7 @@ async function salvarPerfil() {
     }
     
     if (!token) {
-        alert('Você precisa estar logado para alterar o perfil');
+        alert('VocÃª precisa estar logado para alterar o perfil');
         return;
     }
     
@@ -353,12 +355,12 @@ async function salvarPerfil() {
         }
     } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao atualizar perfil. O endpoint ainda não está implementado no backend.');
+        alert('Erro ao atualizar perfil. O endpoint ainda nÃ£o estÃ¡ implementado no backend.');
     }
 }
 
 // ============================================
-// FUNÇÕES DE LOGOUT
+// FUNÃ‡Ã•ES DE LOGOUT
 // ============================================
 async function sair() {
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
@@ -385,7 +387,7 @@ async function sair() {
 }
 
 // ============================================
-// FUNÇÕES DE LOGS
+// FUNÃ‡Ã•ES DE LOGS
 // ============================================
 async function carregarLogs() {
     try {
@@ -505,7 +507,7 @@ function escapeHtml(str) {
 
 function exportarCSV() {
     const filtrados = aplicarFiltros();
-    const headers = ['Data', 'Usuário', 'IP', 'Evento', 'Status', 'Tipo'];
+    const headers = ['Data', 'UsuÃ¡rio', 'IP', 'Evento', 'Status', 'Tipo'];
     const rows = filtrados.map(log => [
         log.data ? new Date(log.data).toLocaleString('pt-BR') : '',
         log.usuario || 'Sistema',
@@ -522,7 +524,7 @@ function exportarCSV() {
     link.download = `logs_${new Date().toISOString().slice(0,19)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    alert('✅ Logs exportados com sucesso!');
+    alert('âœ… Logs exportados com sucesso!');
 }
 
 function openModalLimparLogs() { document.getElementById('modalLimparLogs').classList.remove('hidden'); }
@@ -532,7 +534,7 @@ function confirmarLimparLogs() {
     atualizarEstatisticas();
     renderizarLogs();
     closeModalLimparLogs();
-    alert('✅ Logs limpos com sucesso!');
+    alert('âœ… Logs limpos com sucesso!');
 }
 
 // ============================================
@@ -581,7 +583,7 @@ document.getElementById('exportLogsBtn')?.addEventListener('click', exportarCSV)
 document.getElementById('clearLogsBtn')?.addEventListener('click', openModalLimparLogs);
 
 // ============================================
-// INICIALIZAÇÃO
+// INICIALIZAÃ‡ÃƒO
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
@@ -595,3 +597,4 @@ setInterval(carregarLogs, 30000);
 
 </body>
 </html>
+

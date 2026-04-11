@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Configurações - MS TELECOM</title>
+  <title>ConfiguraÃ§Ãµes - MS TELECOM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>body{font-family:'Inter',sans-serif;} .sidebar{width:250px;} @media(max-width:768px){.sidebar{display:none;}.sidebar.open{display:flex;position:fixed;z-index:50;top:0;left:0;height:100vh;}} .tab-btn.active { color: #38bdf8; border-bottom: 2px solid #38bdf8; }</style>
@@ -28,7 +29,7 @@
       <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
       <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
       <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
+      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="settings" class="w-5 h-5"></i>ConfiguraÃ§Ãµes</a>
       <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
       <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
     </nav>
@@ -36,7 +37,8 @@
 
   <main class="flex-1 p-4 md:p-6 overflow-auto">
     <header class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3"><button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="text-2xl font-bold">Configurações</h1></div>
+  <base href="/">
+      <div class="flex items-center gap-3"><button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button><h1 class="text-2xl font-bold">ConfiguraÃ§Ãµes</h1></div>
       <div class="flex items-center gap-3">
         <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
         <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
@@ -46,14 +48,14 @@
     <div class="flex border-b border-gray-700 gap-6 overflow-x-auto mb-6">
         <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
         <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
-        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste Grátis</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste GrÃ¡tis</button>
         <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
-        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">IntegraÃ§Ãµes</button>
         <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
-        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
+        <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">UsuÃ¡rios Admin</button>
     </div>
 
-    <!-- Conteúdo das Abas -->
+    <!-- ConteÃºdo das Abas -->
     <div id="tab-content-container" class="space-y-6">
         <!-- Aba Geral -->
         <div id="geral" class="tab-content space-y-6">
@@ -65,15 +67,15 @@
                 </div>
             </div>
             <div class="bg-gray-800 rounded-xl p-6">
-                <h3 class="font-semibold text-white mb-4">Informações da Empresa</h3>
+                <h3 class="font-semibold text-white mb-4">InformaÃ§Ãµes da Empresa</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label class="text-sm text-gray-400 block mb-2">Razão Social</label><input type="text" id="razaoSocial" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">RazÃ£o Social</label><input type="text" id="razaoSocial" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                     <div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
-                    <div><label class="text-sm text-gray-400 block mb-2">Endereço</label><input type="text" id="endereco" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">EndereÃ§o</label><input type="text" id="endereco" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                     <div><label class="text-sm text-gray-400 block mb-2">Contato (Telefone/Email)</label><input type="text" id="contato" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                 </div>
             </div>
-            <div class="flex justify-end"><button onclick="saveGlobalSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Configurações Gerais</button></div>
+            <div class="flex justify-end"><button onclick="saveGlobalSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar ConfiguraÃ§Ãµes Gerais</button></div>
         </div>
 
         <!-- Aba Planos -->
@@ -87,20 +89,20 @@
             </div>
         </div>
 
-        <!-- Aba Teste Grátis -->
+        <!-- Aba Teste GrÃ¡tis -->
         <div id="teste_gratis" class="tab-content hidden space-y-6">
             <div class="bg-gray-800 rounded-xl p-6">
-                <h3 class="font-semibold text-white mb-4">Configuração do Teste Grátis</h3>
+                <h3 class="font-semibold text-white mb-4">ConfiguraÃ§Ã£o do Teste GrÃ¡tis</h3>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                        <label for="testeGratisAtivo" class="text-sm text-gray-300">Ativar Teste Grátis</label>
+                        <label for="testeGratisAtivo" class="text-sm text-gray-300">Ativar Teste GrÃ¡tis</label>
                         <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="testeGratisAtivo" class="sr-only peer"><div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div></label>
                     </div>
-                    <div><label class="text-sm text-gray-400 block mb-2">Duração do Teste (minutos)</label><input type="number" id="testeGratisDuracao" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">DuraÃ§Ã£o do Teste (minutos)</label><input type="number" id="testeGratisDuracao" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                     <div><label class="text-sm text-gray-400 block mb-2">Velocidade de Upload (Kbps)</label><input type="number" id="testeGratisVelocidadeUp" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                     <div><label class="text-sm text-gray-400 block mb-2">Velocidade de Download (Kbps)</label><input type="number" id="testeGratisVelocidadeDown" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                 </div>
-                <div class="flex justify-end mt-6"><button onclick="saveFreeTrialSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Teste Grátis</button></div>
+                <div class="flex justify-end mt-6"><button onclick="saveFreeTrialSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Teste GrÃ¡tis</button></div>
             </div>
         </div>
 
@@ -110,17 +112,17 @@
                 <h3 class="font-semibold text-white mb-4">Gateway de Pagamento (PIX)</h3>
                 <div class="space-y-4">
                     <div><label class="text-sm text-gray-400 block mb-2">Chave PIX</label><input type="text" id="pixChave" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
-                    <div><label class="text-sm text-gray-400 block mb-2">Nome do Beneficiário</label><input type="text" id="pixNome" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
-                    <div><label class="text-sm text-gray-400 block mb-2">Cidade do Beneficiário</label><input type="text" id="pixCidade" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Nome do BeneficiÃ¡rio</label><input type="text" id="pixNome" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
+                    <div><label class="text-sm text-gray-400 block mb-2">Cidade do BeneficiÃ¡rio</label><input type="text" id="pixCidade" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm"></div>
                 </div>
                 <div class="flex justify-end mt-6"><button onclick="savePaymentSettings()" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Salvar Pagamento</button></div>
             </div>
         </div>
 
-        <!-- Aba Integração -->
+        <!-- Aba IntegraÃ§Ã£o -->
         <div id="integracao" class="tab-content hidden space-y-6">
             <div class="bg-gray-800 rounded-xl p-6">
-                <h3 class="font-semibold text-white mb-4">Integração API</h3>
+                <h3 class="font-semibold text-white mb-4">IntegraÃ§Ã£o API</h3>
                 <div class="space-y-2">
                     <label class="text-sm text-gray-400 block mb-1">Sua Chave de API</label>
                     <div class="flex items-center gap-2">
@@ -130,7 +132,7 @@
                     </div>
                 </div>
                  <div class="mt-6">
-                    <button onclick="testConnection()" class="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Testar Conexão com a API</button>
+                    <button onclick="testConnection()" class="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Testar ConexÃ£o com a API</button>
                 </div>
             </div>
         </div>
@@ -138,18 +140,18 @@
         <!-- Aba Backup -->
         <div id="backup" class="tab-content hidden space-y-6">
             <div class="bg-gray-800 rounded-xl p-6">
-                <h3 class="font-semibold text-white mb-4">Backup e Restauração</h3>
+                <h3 class="font-semibold text-white mb-4">Backup e RestauraÃ§Ã£o</h3>
                 <div class="flex gap-4 mb-6">
                     <button onclick="createBackup()" class="flex-1 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium">Criar Novo Backup</button>
                     <button onclick="document.getElementById('restoreFile').click()" class="flex-1 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">Restaurar de Arquivo</button>
                     <input type="file" id="restoreFile" class="hidden" onchange="restoreBackup()">
                 </div>
-                <h4 class="font-medium text-white mb-3">Backups Disponíveis</h4>
+                <h4 class="font-medium text-white mb-3">Backups DisponÃ­veis</h4>
                 <div id="listaBackups" class="space-y-2"></div>
             </div>
         </div>
 
-        <!-- Aba Usuários Admin -->
+        <!-- Aba UsuÃ¡rios Admin -->
         <div id="usuarios" class="tab-content hidden">
             <div class="bg-gray-800 rounded-xl p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -170,10 +172,10 @@
       <input type="hidden" id="planEditId">
       <div class="space-y-3">
         <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input id="planName" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Preço (R$)</label><input id="planPrice" type="number" step="0.01" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Duração (dias)</label><input id="planDuration" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">PreÃ§o (R$)</label><input id="planPrice" type="number" step="0.01" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">DuraÃ§Ã£o (dias)</label><input id="planDuration" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Velocidade (Mbps)</label><input id="planSpeed" type="number" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Descrição</label><textarea id="planDescription" rows="2" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></textarea></div>
+        <div><label class="block text-sm text-gray-400 mb-1">DescriÃ§Ã£o</label><textarea id="planDescription" rows="2" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></textarea></div>
       </div>
       <button onclick="savePlan()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2.5 rounded-lg font-medium">Salvar</button>
     </div>
@@ -185,9 +187,9 @@
       <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold" id="adminModalTitle">Novo Administrador</h3><button onclick="closeModalAdmin()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <input type="hidden" id="adminEditId">
       <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="adminUsername" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">UsuÃ¡rio</label><input id="adminUsername" type="text" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="adminEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Senha</label><input id="adminPassword" type="password" placeholder="Deixe em branco para não alterar" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Senha</label><input id="adminPassword" type="password" placeholder="Deixe em branco para nÃ£o alterar" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Role</label><select id="adminRole" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"><option value="operador">Operador</option><option value="master">Master</option></select></div>
       </div>
       <button onclick="saveAdmin()" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 py-2.5 rounded-lg font-medium">Salvar</button>
@@ -199,9 +201,9 @@
     <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700/50 rounded-lg text-gray-400 cursor-not-allowed"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">UsuÃ¡rio</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700/50 rounded-lg text-gray-400 cursor-not-allowed"></div>
         <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
-        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe em branco para não alterar" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe em branco para nÃ£o alterar" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
       </div>
       <div class="flex gap-3 mt-6"><button onclick="salvarPerfil()" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2.5 rounded-lg font-medium">Salvar</button><button onclick="closeModalPerfil()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-2.5 rounded-lg font-medium">Cancelar</button></div>
     </div>
@@ -212,7 +214,7 @@
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
     lucide.createIcons();
 
-    // --- INICIALIZAÇÃO E NAVEGAÇÃO --- 
+    // --- INICIALIZAÃ‡ÃƒO E NAVEGAÃ‡ÃƒO --- 
     document.addEventListener('DOMContentLoaded', () => {
         initTabs();
         initMenuMobile();
@@ -251,12 +253,12 @@
         carregarPerfil();
     }
 
-    // --- PERFIL E AUTENTICAÇÃO ---
+    // --- PERFIL E AUTENTICAÃ‡ÃƒO ---
     function openModalPerfil() { document.getElementById('modalPerfil').classList.remove('hidden'); }
     function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
 
     async function carregarPerfil() {
-        // Esta função pode buscar os dados do usuário da API se necessário
+        // Esta funÃ§Ã£o pode buscar os dados do usuÃ¡rio da API se necessÃ¡rio
         const username = localStorage.getItem('username') || "Admin";
         document.getElementById('profileUsername').value = username;
     }
@@ -269,7 +271,7 @@
         if (password) body.password = password;
 
         if (Object.keys(body).length === 0) {
-            alert("Nenhuma alteração para salvar.");
+            alert("Nenhuma alteraÃ§Ã£o para salvar.");
             return;
         }
 
@@ -282,7 +284,7 @@
                 const error = await res.json();
                 alert(`Erro ao atualizar perfil: ${error.message}`);
             }
-        } catch (err) { console.error(err); alert('Erro de conexão ao atualizar perfil.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao atualizar perfil.'); }
     }
 
     async function sair() {
@@ -295,7 +297,7 @@
         window.location.href = 'login.html';
     }
 
-    // --- CONFIGURAÇÕES GERAIS ---
+    // --- CONFIGURAÃ‡Ã•ES GERAIS ---
     async function loadGlobalSettings() {
         try {
             const res = await fetch(`${API_URL}/api/settings/global`, { headers });
@@ -322,9 +324,9 @@
         };
         try {
             const res = await fetch(`${API_URL}/api/settings/global`, { method: 'PUT', headers, body: JSON.stringify(settings) });
-            if (res.ok) alert('Configurações globais salvas com sucesso!');
-            else alert('Erro ao salvar configurações globais.');
-        } catch (err) { console.error(err); alert('Erro de conexão ao salvar configs.'); }
+            if (res.ok) alert('ConfiguraÃ§Ãµes globais salvas com sucesso!');
+            else alert('Erro ao salvar configuraÃ§Ãµes globais.');
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao salvar configs.'); }
     }
 
     // --- PLANOS ---
@@ -341,10 +343,10 @@
                 <div class="flex-1 mb-4">
                     <h4 class="font-bold text-white">${p.name}</h4>
                     <p class="text-cyan-400 text-xl font-bold">R$ ${parseFloat(p.price).toFixed(2).replace('.',',')}</p>
-                    <p class="text-xs text-gray-400 mt-2">${p.description || 'Sem descrição'}</p>
+                    <p class="text-xs text-gray-400 mt-2">${p.description || 'Sem descriÃ§Ã£o'}</p>
                 </div>
                 <div class="text-xs text-gray-300 border-t border-gray-600 pt-3 space-y-1">
-                    <p><strong>Duração:</strong> ${p.duration_days} dias</p>
+                    <p><strong>DuraÃ§Ã£o:</strong> ${p.duration_days} dias</p>
                     <p><strong>Velocidade:</strong> ${p.speed_mbps} Mbps</p>
                 </div>
                 <div class="flex gap-2 mt-4">
@@ -397,19 +399,19 @@
             closeModalPlan();
             loadPlans();
         } else { alert('Erro ao salvar plano.'); }
-      } catch (err) { console.error(err); alert('Erro de conexão ao salvar plano.'); }
+      } catch (err) { console.error(err); alert('Erro de conexÃ£o ao salvar plano.'); }
     }
 
     async function deletePlan(id) {
         if (!confirm('Tem certeza que deseja excluir este plano?')) return;
         try {
             const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers });
-            if (res.ok) { alert('Plano excluído com sucesso!'); loadPlans(); }
+            if (res.ok) { alert('Plano excluÃ­do com sucesso!'); loadPlans(); }
             else { alert('Erro ao excluir plano.'); }
-        } catch (err) { console.error(err); alert('Erro de conexão ao excluir plano.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao excluir plano.'); }
     }
 
-    // --- TESTE GRÁTIS ---
+    // --- TESTE GRÃTIS ---
     async function loadFreeTrialSettings() {
         try {
             const res = await fetch(`${API_URL}/api/settings/freetrial`, { headers });
@@ -420,7 +422,7 @@
                 document.getElementById('testeGratisVelocidadeUp').value = data.data.upload_kbps || '';
                 document.getElementById('testeGratisVelocidadeDown').value = data.data.download_kbps || '';
             }
-        } catch (err) { console.error('Erro ao carregar config de teste grátis:', err); }
+        } catch (err) { console.error('Erro ao carregar config de teste grÃ¡tis:', err); }
     }
 
     async function saveFreeTrialSettings() {
@@ -432,9 +434,9 @@
         };
         try {
             const res = await fetch(`${API_URL}/api/settings/freetrial`, { method: 'PUT', headers, body: JSON.stringify(settings) });
-            if (res.ok) alert('Configurações de teste grátis salvas!');
-            else alert('Erro ao salvar configurações.');
-        } catch (err) { console.error(err); alert('Erro de conexão ao salvar.'); }
+            if (res.ok) alert('ConfiguraÃ§Ãµes de teste grÃ¡tis salvas!');
+            else alert('Erro ao salvar configuraÃ§Ãµes.');
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao salvar.'); }
     }
 
     // --- PAGAMENTO ---
@@ -458,12 +460,12 @@
         };
         try {
             const res = await fetch(`${API_URL}/api/settings/payment`, { method: 'PUT', headers, body: JSON.stringify(settings) });
-            if (res.ok) alert('Configurações de pagamento salvas!');
-            else alert('Erro ao salvar configurações.');
-        } catch (err) { console.error(err); alert('Erro de conexão ao salvar.'); }
+            if (res.ok) alert('ConfiguraÃ§Ãµes de pagamento salvas!');
+            else alert('Erro ao salvar configuraÃ§Ãµes.');
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao salvar.'); }
     }
 
-    // --- INTEGRAÇÃO API ---
+    // --- INTEGRAÃ‡ÃƒO API ---
     async function loadApiKey() {
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations`, { headers });
@@ -480,20 +482,20 @@
     }
 
     async function generateNewApiKey() {
-        if (!confirm('Isso invalidará a chave atual. Deseja continuar?')) return;
+        if (!confirm('Isso invalidarÃ¡ a chave atual. Deseja continuar?')) return;
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations/generate-key`, { method: 'POST', headers });
             if (res.ok) { alert('Nova chave API gerada!'); loadApiKey(); }
             else { alert('Erro ao gerar nova chave.'); }
-        } catch (err) { console.error(err); alert('Erro de conexão ao gerar chave.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao gerar chave.'); }
     }
 
     async function testConnection() {
         try {
             const res = await fetch(`${API_URL}/api/health`, { headers });
-            if (res.ok) alert('Conexão com a API está OK!');
-            else alert('Falha na conexão com a API.');
-        } catch (err) { console.error(err); alert('Erro de conexão.'); }
+            if (res.ok) alert('ConexÃ£o com a API estÃ¡ OK!');
+            else alert('Falha na conexÃ£o com a API.');
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o.'); }
     }
 
     // --- BACKUP ---
@@ -520,23 +522,23 @@
             const res = await fetch(`${API_URL}/api/backup/create`, { method: 'POST', headers });
             if (res.ok) { alert('Backup criado com sucesso!'); loadBackups(); }
             else { alert('Erro ao criar backup.'); }
-        } catch (err) { console.error(err); alert('Erro de conexão ao criar backup.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao criar backup.'); }
     }
 
     async function restoreBackup() {
         const fileInput = document.getElementById('restoreFile');
         if (fileInput.files.length === 0) return;
-        if (!confirm('Restaurar um backup substituirá todos os dados atuais. Deseja continuar?')) return;
+        if (!confirm('Restaurar um backup substituirÃ¡ todos os dados atuais. Deseja continuar?')) return;
         const formData = new FormData();
         formData.append('backup_file', fileInput.files[0]);
         try {
             const res = await fetch(`${API_URL}/api/backup/restore`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
             if (res.ok) { alert('Sistema restaurado com sucesso!'); window.location.reload(); }
             else { alert('Erro ao restaurar backup.'); }
-        } catch (err) { console.error(err); alert('Erro de conexão ao restaurar.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao restaurar.'); }
     }
 
-    // --- USUÁRIOS ADMIN ---
+    // --- USUÃRIOS ADMIN ---
     async function loadAdmins() {
         try {
             const res = await fetch(`${API_URL}/api/admins`, { headers });
@@ -591,7 +593,7 @@
             password: document.getElementById('adminPassword').value,
             role: document.getElementById('adminRole').value
         };
-        if (!body.password) delete body.password; // Não envia senha se estiver vazia
+        if (!body.password) delete body.password; // NÃ£o envia senha se estiver vazia
 
         const method = id ? 'PUT' : 'POST';
         const url = id ? `${API_URL}/api/admins/${id}` : `${API_URL}/api/admins`;
@@ -603,18 +605,19 @@
                 closeModalAdmin();
                 loadAdmins();
             } else { alert('Erro ao salvar admin.'); }
-        } catch (err) { console.error(err); alert('Erro de conexão ao salvar admin.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao salvar admin.'); }
     }
 
     async function deleteAdmin(id) {
         if (!confirm('Tem certeza que deseja excluir este administrador?')) return;
         try {
             const res = await fetch(`${API_URL}/api/admins/${id}`, { method: 'DELETE', headers });
-            if (res.ok) { alert('Admin excluído com sucesso!'); loadAdmins(); }
+            if (res.ok) { alert('Admin excluÃ­do com sucesso!'); loadAdmins(); }
             else { alert('Erro ao excluir admin.'); }
-        } catch (err) { console.error(err); alert('Erro de conexão ao excluir admin.'); }
+        } catch (err) { console.error(err); alert('Erro de conexÃ£o ao excluir admin.'); }
     }
 
   </script>
 </body>
 </html>
+

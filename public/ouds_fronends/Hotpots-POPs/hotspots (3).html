@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Hotspots / POPs</title>
@@ -47,14 +48,14 @@
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
@@ -67,16 +68,17 @@
             </a>
         </nav>
         <div class="p-4 border-t border-gray-800 bg-black/30">
-            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Sessão Atual</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">SessÃ£o Atual</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
             <div class="space-y-2 text-[10px] font-mono">
-                <div class="flex justify-between text-gray-500"><span>Usuário</span><span id="sessionUser" class="text-cyan-400">-</span></div>
-                <div class="flex justify-between text-gray-500"><span>Início</span><span id="sessionStart" class="text-gray-600">-</span></div>
+                <div class="flex justify-between text-gray-500"><span>UsuÃ¡rio</span><span id="sessionUser" class="text-cyan-400">-</span></div>
+                <div class="flex justify-between text-gray-500"><span>InÃ­cio</span><span id="sessionStart" class="text-gray-600">-</span></div>
             </div>
         </div>
     </aside>
 
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
             <div class="relative w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
                 <input type="text" id="searchInput" placeholder="Buscar hotspot por nome ou ID..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
@@ -100,7 +102,7 @@
 
         <div class="p-8 space-y-8">
             <div class="flex justify-between items-end">
-                <div><h1 class="text-3xl font-black tracking-tight">Hotspots / POPs</h1><p class="text-gray-500 text-sm mt-1">Gestão de concentradores MikroTik</p></div>
+                <div><h1 class="text-3xl font-black tracking-tight">Hotspots / POPs</h1><p class="text-gray-500 text-sm mt-1">GestÃ£o de concentradores MikroTik</p></div>
                 <button onclick="openModalNovoHotspot()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Hotspot</button>
             </div>
             <div id="popsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -129,9 +131,9 @@
                 <input type="text" id="hotspotNome" placeholder="MS-WIFI-POP-01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             
-            <!-- Localização -->
+            <!-- LocalizaÃ§Ã£o -->
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Localização</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">LocalizaÃ§Ã£o</label>
                 <input type="text" id="hotspotLocalizacao" placeholder="Bairro, Cidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             
@@ -141,15 +143,15 @@
                 <input type="text" id="hotspotIp" placeholder="192.168.1.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             
-            <!-- Tipo de Instalação (controla exibição da config WAN) -->
+            <!-- Tipo de InstalaÃ§Ã£o (controla exibiÃ§Ã£o da config WAN) -->
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Instalação</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de InstalaÃ§Ã£o</label>
                 <select id="tipoInstalacao" onchange="toggleConfigWan()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                    <option value="novo">🆕 Novo / Resetado (configurar WAN)</option>
-                    <option value="existente">✅ Em Produção (apenas cadastrar)</option>
+                    <option value="novo">ðŸ†• Novo / Resetado (configurar WAN)</option>
+                    <option value="existente">âœ… Em ProduÃ§Ã£o (apenas cadastrar)</option>
                 </select>
                 <p class="text-[10px] text-gray-500 mt-1">
-                    <span id="tipoInstalacaoHelp" class="text-blue-400">🔧 Novo: configuração completa da WAN será solicitada</span>
+                    <span id="tipoInstalacaoHelp" class="text-blue-400">ðŸ”§ Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada</span>
                 </p>
             </div>
             
@@ -172,21 +174,21 @@
                 </select>
             </div>
             
-            <!-- Configuração WAN (visível apenas se Novo/Resetado) -->
+            <!-- ConfiguraÃ§Ã£o WAN (visÃ­vel apenas se Novo/Resetado) -->
             <div id="configWan" class="hidden">
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Configuração WAN</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">ConfiguraÃ§Ã£o WAN</label>
                 <select id="wanTipo" onchange="toggleWanCampos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                    <option value="dhcp">📡 DHCP (Automático)</option>
-                    <option value="pppoe">🔌 PPPoE (Provedor)</option>
-                    <option value="static">⚙️ Estático (IP Manual)</option>
+                    <option value="dhcp">ðŸ“¡ DHCP (AutomÃ¡tico)</option>
+                    <option value="pppoe">ðŸ”Œ PPPoE (Provedor)</option>
+                    <option value="static">âš™ï¸ EstÃ¡tico (IP Manual)</option>
                 </select>
                 <div id="pppoeCampos" class="hidden space-y-3 mt-3">
-                    <input type="text" id="pppoeUser" placeholder="Usuário PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <input type="text" id="pppoeUser" placeholder="UsuÃ¡rio PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
                     <input type="password" id="pppoePass" placeholder="Senha PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
                 </div>
                 <div id="staticCampos" class="hidden space-y-3 mt-3">
                     <input type="text" id="staticIp" placeholder="IP" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                    <input type="text" id="staticMask" placeholder="Máscara" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <input type="text" id="staticMask" placeholder="MÃ¡scara" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
                     <input type="text" id="staticGw" placeholder="Gateway" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
                 </div>
             </div>
@@ -217,17 +219,17 @@
             <!-- VLAN ID -->
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">VLAN ID (opcional)</label>
-                <input type="text" id="vlanId" placeholder="Deixe em branco se não usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                <p class="text-[10px] text-gray-500 mt-1">Se preenchido, o hotspot será criado dentro da VLAN</p>
+                <input type="text" id="vlanId" placeholder="Deixe em branco se nÃ£o usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                <p class="text-[10px] text-gray-500 mt-1">Se preenchido, o hotspot serÃ¡ criado dentro da VLAN</p>
             </div>
             
-            <!-- Tipo de Saída -->
+            <!-- Tipo de SaÃ­da -->
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Saída do Hotspot</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de SaÃ­da do Hotspot</label>
                 <select id="hotspotTipo" onchange="toggleHotspotCampos()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                    <option value="vlan">🆕 Nova VLAN (usando VLAN ID acima)</option>
-                    <option value="vlan_existente">📁 VLAN existente</option>
-                    <option value="porta_fisica">🔌 Porta física dedicada</option>
+                    <option value="vlan">ðŸ†• Nova VLAN (usando VLAN ID acima)</option>
+                    <option value="vlan_existente">ðŸ“ VLAN existente</option>
+                    <option value="porta_fisica">ðŸ”Œ Porta fÃ­sica dedicada</option>
                 </select>
                 <div id="configVlanExistente" class="hidden mt-3">
                     <input type="text" id="vlanExistente" placeholder="Nome da VLAN existente (ex: vlan555)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
@@ -247,7 +249,7 @@
             <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                 <p class="text-xs text-blue-400 flex items-center gap-2">
                     <i data-lucide="info" class="w-4 h-4"></i> 
-                    <span id="infoMensagem">Após criar, um script será gerado e copiado automaticamente.</span>
+                    <span id="infoMensagem">ApÃ³s criar, um script serÃ¡ gerado e copiado automaticamente.</span>
                 </p>
             </div>
         </div>
@@ -292,7 +294,7 @@
             </button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div class="border-t border-gray-800 pt-4 mt-2">
                 <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
@@ -305,7 +307,7 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
@@ -353,7 +355,7 @@ function updateSessionInfo() {
 }
 
 // ============================================
-// INICIALIZAÇÃO E MENU MOBILE
+// INICIALIZAÃ‡ÃƒO E MENU MOBILE
 // ============================================
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
@@ -404,12 +406,12 @@ async function carregarPOPs() {
                         <span class="px-3 py-1 ${statusClass} text-[10px] font-bold rounded-full">${statusText}</span>
                     </div>
                     <div class="text-xs text-gray-400">
-                        <p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p>
-                        <p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
+                        <p>ðŸ“ ${escapeHtml(pop.location) || 'LocalizaÃ§Ã£o nÃ£o definida'}</p>
+                        <p>ðŸ“¡ Ãšltimo heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
                     </div>
                     <div class="mt-4 pt-4 border-t border-gray-800 flex justify-end gap-2">
-                        <button onclick="event.stopPropagation(); gerarScript('${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs">📋 Script</button>
-                        <button onclick="event.stopPropagation(); deletarPOP('${pop.id}', '${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-red-600/30 rounded-lg text-xs text-red-400">🗑️ Deletar</button>
+                        <button onclick="event.stopPropagation(); gerarScript('${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-gray-700 rounded-lg text-xs">ðŸ“‹ Script</button>
+                        <button onclick="event.stopPropagation(); deletarPOP('${pop.id}', '${escapeHtml(pop.name)}')" class="px-3 py-1.5 bg-red-600/30 rounded-lg text-xs text-red-400">ðŸ—‘ï¸ Deletar</button>
                     </div>
                 </div>
             `;
@@ -459,7 +461,7 @@ async function verDetalhesPop(id) {
                         <p class="font-medium">${escapeHtml(pop.name) || '-'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
-                        <p class="text-[10px] text-gray-500">ID Único</p>
+                        <p class="text-[10px] text-gray-500">ID Ãšnico</p>
                         <p class="font-mono text-blue-400 text-xs">${escapeHtml(pop.unique_id || pop.id) || '-'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
@@ -467,16 +469,16 @@ async function verDetalhesPop(id) {
                         <p><span class="px-2 py-1 ${isOnline ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'} rounded-lg text-xs">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
-                        <p class="text-[10px] text-gray-500">Localização</p>
-                        <p>${escapeHtml(pop.location) || 'Não definida'}</p>
+                        <p class="text-[10px] text-gray-500">LocalizaÃ§Ã£o</p>
+                        <p>${escapeHtml(pop.location) || 'NÃ£o definida'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
                         <p class="text-[10px] text-gray-500">IP</p>
                         <p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
-                        <p class="text-[10px] text-gray-500">Tipo de Instalação</p>
-                        <p>${pop.tipo_instalacao === 'novo' ? '🆕 Novo / Resetado' : '✅ Em Produção'}</p>
+                        <p class="text-[10px] text-gray-500">Tipo de InstalaÃ§Ã£o</p>
+                        <p>${pop.tipo_instalacao === 'novo' ? 'ðŸ†• Novo / Resetado' : 'âœ… Em ProduÃ§Ã£o'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
                         <p class="text-[10px] text-gray-500">Interface WAN</p>
@@ -487,17 +489,17 @@ async function verDetalhesPop(id) {
                         <p class="font-mono">${escapeHtml(pop.lan_interface) || '-'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
-                        <p class="text-[10px] text-gray-500">Último Heartbeat</p>
+                        <p class="text-[10px] text-gray-500">Ãšltimo Heartbeat</p>
                         <p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
                     </div>
                     <div class="bg-gray-900/50 rounded-xl p-3">
-                        <p class="text-[10px] text-gray-500">Data Criação</p>
+                        <p class="text-[10px] text-gray-500">Data CriaÃ§Ã£o</p>
                         <p>${pop.created_at ? new Date(pop.created_at).toLocaleString('pt-BR') : '-'}</p>
                     </div>
                 </div>
             `;
         } else {
-            content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';
+            content.innerHTML = '<div class="text-center text-red-500">POP nÃ£o encontrado</div>';
         }
     } catch (error) {
         console.error('Erro:', error);
@@ -523,29 +525,29 @@ async function gerarScript(popName) {
         const data = await res.json();
         if (data.script) {
             navigator.clipboard.writeText(data.script);
-            alert(`✅ Script para ${popName} copiado!`);
+            alert(`âœ… Script para ${popName} copiado!`);
         }
     } catch (error) {
         console.error('Erro ao gerar script:', error);
-        alert('❌ Não foi possível obter o script real deste hotspot');
+        alert('âŒ NÃ£o foi possÃ­vel obter o script real deste hotspot');
     }
 }
 
 async function deletarPOP(id, nome) {
-    if (!confirm(`⚠️ ATENÇÃO: Deletar POP "${nome}"?\n\nEsta ação não pode ser desfeita e removerá todas as configurações associadas.`)) return;
+    if (!confirm(`âš ï¸ ATENÃ‡ÃƒO: Deletar POP "${nome}"?\n\nEsta aÃ§Ã£o nÃ£o pode ser desfeita e removerÃ¡ todas as configuraÃ§Ãµes associadas.`)) return;
     try {
         const res = await fetch(`${API_URL}/api/hotspots/${id}`, {
             method: 'DELETE',
             headers: buildAuthHeaders()
         });
         if (res.ok) {
-            alert(`✅ POP "${nome}" deletado com sucesso!`);
+            alert(`âœ… POP "${nome}" deletado com sucesso!`);
             carregarPOPs();
         } else {
-            alert('❌ Erro ao deletar POP');
+            alert('âŒ Erro ao deletar POP');
         }
     } catch (error) {
-        alert('❌ Erro ao deletar POP');
+        alert('âŒ Erro ao deletar POP');
     }
 }
 
@@ -582,7 +584,7 @@ function openModalNovoHotspot() {
     
     // Atualizar mensagem de ajuda
     const helpSpan = document.getElementById('tipoInstalacaoHelp');
-    if (helpSpan) helpSpan.innerHTML = '🔧 Novo: configuração completa da WAN será solicitada';
+    if (helpSpan) helpSpan.innerHTML = 'ðŸ”§ Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada';
 }
 
 function closeModalNovoHotspot() {
@@ -590,7 +592,7 @@ function closeModalNovoHotspot() {
     if (modal) modal.classList.add('hidden');
 }
 
-// Controle de exibição da configuração WAN baseado no Tipo de Instalação
+// Controle de exibiÃ§Ã£o da configuraÃ§Ã£o WAN baseado no Tipo de InstalaÃ§Ã£o
 function toggleConfigWan() {
     const tipoInstalacao = document.getElementById('tipoInstalacao');
     const configWan = document.getElementById('configWan');
@@ -603,19 +605,19 @@ function toggleConfigWan() {
         
         if (helpSpan) {
             helpSpan.innerHTML = isNovo 
-                ? '🔧 Novo: configuração completa da WAN será solicitada' 
-                : '✅ Em Produção: apenas cadastro do POP existente (sem config WAN)';
+                ? 'ðŸ”§ Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada' 
+                : 'âœ… Em ProduÃ§Ã£o: apenas cadastro do POP existente (sem config WAN)';
         }
         
         if (infoMsg) {
             infoMsg.innerHTML = isNovo 
-                ? 'Após criar, um script COMPLETO com configuração WAN será gerado e copiado.' 
-                : 'Após criar, um script BÁSICO (apenas heartbeat e RADIUS) será gerado e copiado.';
+                ? 'ApÃ³s criar, um script COMPLETO com configuraÃ§Ã£o WAN serÃ¡ gerado e copiado.' 
+                : 'ApÃ³s criar, um script BÃSICO (apenas heartbeat e RADIUS) serÃ¡ gerado e copiado.';
         }
     }
 }
 
-// Controle dos campos de Tipo de Saída
+// Controle dos campos de Tipo de SaÃ­da
 function toggleHotspotCampos() {
     const hotspotTipo = document.getElementById('hotspotTipo');
     if (!hotspotTipo) return;
@@ -625,7 +627,7 @@ function toggleHotspotCampos() {
     portaFisica?.classList.toggle('hidden', hotspotTipo.value !== 'porta_fisica');
 }
 
-// Controle dos campos de Configuração WAN (PPPoE vs Estático)
+// Controle dos campos de ConfiguraÃ§Ã£o WAN (PPPoE vs EstÃ¡tico)
 function toggleWanCampos() {
     const wanTipo = document.getElementById('wanTipo');
     if (!wanTipo) return;
@@ -641,7 +643,7 @@ function toggleWanCampos() {
 async function salvarNovoHotspot() {
     const nome = document.getElementById('hotspotNome').value;
     if (!nome) { 
-        alert('⚠️ Informe o nome do hotspot'); 
+        alert('âš ï¸ Informe o nome do hotspot'); 
         return; 
     }
     
@@ -651,7 +653,7 @@ async function salvarNovoHotspot() {
     // Monta o payload base
     const payload = { 
         name: nome,
-        location: document.getElementById('hotspotLocalizacao').value || 'Localização não definida',
+        location: document.getElementById('hotspotLocalizacao').value || 'LocalizaÃ§Ã£o nÃ£o definida',
         ip: document.getElementById('hotspotIp').value || '0.0.0.0',
         tipo_instalacao: tipoInstalacao,
         wan_interface: document.getElementById('wanInterface').value,
@@ -662,7 +664,7 @@ async function salvarNovoHotspot() {
         porta_fisica: document.getElementById('portaFisica').value
     };
     
-    // Se for instalação NOVA, envia dados de configuração WAN
+    // Se for instalaÃ§Ã£o NOVA, envia dados de configuraÃ§Ã£o WAN
     if (isNovo) {
         payload.wan_tipo = document.getElementById('wanTipo')?.value;
         payload.pppoe_user = document.getElementById('pppoeUser')?.value;
@@ -681,26 +683,26 @@ async function salvarNovoHotspot() {
         
         const data = await res.json();
         if (data.success || data.id) {
-            let mensagem = `✅ Hotspot "${nome}" criado com sucesso!\n\n`;
-            mensagem += `📋 Tipo de Instalação: ${isNovo ? '🆕 Novo / Resetado (com configuração WAN)' : '✅ Em Produção (apenas cadastro)'}\n`;
-            mensagem += `🆔 ID: ${data.id || data.unique_id}\n\n`;
-            mensagem += `📋 Script foi copiado para a área de transferência!`;
+            let mensagem = `âœ… Hotspot "${nome}" criado com sucesso!\n\n`;
+            mensagem += `ðŸ“‹ Tipo de InstalaÃ§Ã£o: ${isNovo ? 'ðŸ†• Novo / Resetado (com configuraÃ§Ã£o WAN)' : 'âœ… Em ProduÃ§Ã£o (apenas cadastro)'}\n`;
+            mensagem += `ðŸ†” ID: ${data.id || data.unique_id}\n\n`;
+            mensagem += `ðŸ“‹ Script foi copiado para a Ã¡rea de transferÃªncia!`;
             
             alert(mensagem);
             if (data.script) navigator.clipboard.writeText(data.script);
             closeModalNovoHotspot();
             carregarPOPs();
         } else {
-            alert('❌ Erro ao criar hotspot: ' + (data.error || 'Tente novamente'));
+            alert('âŒ Erro ao criar hotspot: ' + (data.error || 'Tente novamente'));
         }
     } catch (error) {
         console.error('Erro:', error);
-        alert('❌ Erro ao criar hotspot. Verifique sua conexão com a API.');
+        alert('âŒ Erro ao criar hotspot. Verifique sua conexÃ£o com a API.');
     }
 }
 
 // ============================================
-// FUNÇÕES DE PERFIL E LOGOUT
+// FUNÃ‡Ã•ES DE PERFIL E LOGOUT
 // ============================================
 function carregarPerfil() {
     const userStr = localStorage.getItem('user');
@@ -738,15 +740,15 @@ async function salvarPerfil() {
     const confirmarSenha = document.getElementById('confirmarSenha')?.value;
     
     if (novaSenha && novaSenha !== confirmarSenha) {
-        alert('❌ As novas senhas não coincidem');
+        alert('âŒ As novas senhas nÃ£o coincidem');
         return;
     }
     if (novaSenha && !senhaAtual) {
-        alert('❌ Digite a senha atual para alterar');
+        alert('âŒ Digite a senha atual para alterar');
         return;
     }
     if (!token) {
-        alert('❌ Você precisa estar logado para alterar o perfil');
+        alert('âŒ VocÃª precisa estar logado para alterar o perfil');
         return;
     }
     
@@ -758,7 +760,7 @@ async function salvarPerfil() {
         });
         const data = await res.json();
         if (data.success) {
-            alert('✅ Perfil atualizado com sucesso!');
+            alert('âœ… Perfil atualizado com sucesso!');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             user.username = username;
             user.email = email;
@@ -766,11 +768,11 @@ async function salvarPerfil() {
             if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
             closeModalPerfil();
         } else {
-            alert(data.error || '❌ Erro ao atualizar perfil');
+            alert(data.error || 'âŒ Erro ao atualizar perfil');
         }
     } catch (error) {
         console.error('Erro:', error);
-        alert('❌ Erro ao atualizar perfil');
+        alert('âŒ Erro ao atualizar perfil');
     }
 }
 
@@ -794,7 +796,7 @@ async function sair() {
 }
 
 // ============================================
-// BUSCA E ATUALIZAÇÃO AUTOMÁTICA
+// BUSCA E ATUALIZAÃ‡ÃƒO AUTOMÃTICA
 // ============================================
 document.getElementById('searchInput')?.addEventListener('input', function(e) {
     const term = e.target.value.toLowerCase();
@@ -813,9 +815,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 
-// Atualização automática a cada 30 segundos
+// AtualizaÃ§Ã£o automÃ¡tica a cada 30 segundos
 setInterval(carregarPOPs, 30000);
 </script>
 
 </body>
 </html>
+

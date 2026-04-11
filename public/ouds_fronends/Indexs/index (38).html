@@ -1,11 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDV Autônomo</title>
+    <title>PDV AutÃ´nomo</title>
     <style>
-        /* Estilização básica */
+        /* EstilizaÃ§Ã£o bÃ¡sica */
         body {
             font-family: Arial, sans-serif;
         }
@@ -31,7 +32,7 @@
 <body>
     <div class="container">
         <h1>MS PDV</h1>
-        <label for="codigoBarras">QR code Código de Barras:</label>
+        <label for="codigoBarras">QR code CÃ³digo de Barras:</label>
         <input type="text" id="codigoBarras">
         <button onclick="addProduct()">Adicionar</button>
 
@@ -39,7 +40,7 @@
             <h2>Carrinho</h2>
             <ul id="cartItems"></ul>
             <div class="total">Total: R$ <span id="total">0.00</span></div>
-            <button onclick="processPayment('cartao')">Pagar com Cartão</button>
+            <button onclick="processPayment('cartao')">Pagar com CartÃ£o</button>
             <button onclick="processPayment('pix')">Pagar com PIX</button>
         </div>
     </div>
@@ -59,7 +60,7 @@
                 document.getElementById('cartItems').innerHTML += `<li>${product.nome} - R$ ${product.preco}</li>`;
                 document.getElementById('total').innerText = total.toFixed(2);
             } else {
-                alert('Produto não encontrado!');
+                alert('Produto nÃ£o encontrado!');
             }
 
             document.getElementById('codigoBarras').value = '';
@@ -92,3 +93,4 @@
     </script>
 </body>
 </html>
+

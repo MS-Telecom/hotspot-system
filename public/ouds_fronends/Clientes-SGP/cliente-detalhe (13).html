@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Clientes / SGP</title>
@@ -26,7 +27,7 @@
 </head>
 <body class="text-gray-200">
 
-<!-- PROTEÇÃO DE ACESSO -->
+<!-- PROTEÃ‡ÃƒO DE ACESSO -->
 <script>
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
@@ -57,14 +58,14 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
@@ -80,10 +81,11 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
             <div class="relative w-96"><i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i><input type="text" id="searchInput" placeholder="Buscar cliente por CPF, Nome, MAC ou Telefone..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition"></div>
             <div class="flex items-center gap-4">
                 <div class="text-right">
@@ -105,7 +107,7 @@
         <div class="p-8 space-y-8">
 
             <div class="flex justify-between items-end flex-wrap gap-4">
-                <div><h1 class="text-3xl font-black tracking-tight">Clientes / SGP Intelligence</h1><p class="text-gray-500 text-sm mt-1">Consulta e gestão de assinantes, histórico de conexões e status financeiro</p></div>
+                <div><h1 class="text-3xl font-black tracking-tight">Clientes / SGP Intelligence</h1><p class="text-gray-500 text-sm mt-1">Consulta e gestÃ£o de assinantes, histÃ³rico de conexÃµes e status financeiro</p></div>
                 <div class="flex gap-3">
                     <button id="exportarClientesBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition">
                         <i data-lucide="download" class="w-4 h-4"></i> Baixar leads (CSV)
@@ -114,7 +116,7 @@
                 </div>
             </div>
 
-            <!-- Filtros Avançados -->
+            <!-- Filtros AvanÃ§ados -->
             <div class="flex flex-wrap gap-4 mb-6">
                 <input type="text" id="filtroNome" placeholder="Buscar por nome..." class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
                 <select id="filtroStatus" class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
@@ -144,13 +146,13 @@
     </main>
 </div>
 
-<!-- MODAL: NOVO USUÁRIO -->
+<!-- MODAL: NOVO USUÃRIO -->
 <div id="modalNovoUsuario" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] md:max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
             <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
                 <i data-lucide="user-plus" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
-                Novo Usuário
+                Novo UsuÃ¡rio
             </h2>
             <button onclick="closeModalNovoUsuario()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
@@ -180,8 +182,8 @@
                 <input type="email" id="novoEmail" placeholder="cliente@email.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Endereço</label>
-                <input type="text" id="novoEndereco" placeholder="Rua, número, bairro" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">EndereÃ§o</label>
+                <input type="text" id="novoEndereco" placeholder="Rua, nÃºmero, bairro" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
@@ -238,7 +240,7 @@
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">MAC</label><input type="text" id="editMac" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">CPF</label><input type="text" id="editCpf" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Endereço</label><input type="text" id="editEndereco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">EndereÃ§o</label><input type="text" id="editEndereco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="editPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="">Selecione</option></select></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
@@ -275,7 +277,7 @@
             <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmailPerfil" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div class="border-t border-gray-800 pt-4 mt-2">
                 <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
@@ -288,22 +290,22 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
 
 <script>
-// ==================== CONFIGURAÇÕES GLOBAIS ====================
+// ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let clientesData = [];
 let plansData = [];
 let autoUpdateInterval = null;
 
-// Helper para requisições autenticadas (CORREÇÃO: adiciona header Authorization)
+// Helper para requisiÃ§Ãµes autenticadas (CORREÃ‡ÃƒO: adiciona header Authorization)
 async function apiRequest(endpoint, options = {}) {
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
-    if (!token) throw new Error('Token não encontrado');
+    if (!token) throw new Error('Token nÃ£o encontrado');
     const defaultHeaders = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -316,7 +318,7 @@ async function apiRequest(endpoint, options = {}) {
         localStorage.removeItem('token');
         localStorage.removeItem('ms_token');
         window.location.href = 'login.html';
-        throw new Error('Sessão expirada');
+        throw new Error('SessÃ£o expirada');
     }
     // Algumas rotas retornam texto vazio em DELETE ou sucesso sem corpo
     const contentType = response.headers.get('content-type');
@@ -411,7 +413,7 @@ function renderizarClientes(clientes) {
         const planoNome = planoObj ? planoObj.name : (cliente.plan_name || 'N/A');
         const statusClass = getStatusBadgeClass(cliente.status);
         const statusText = getStatusText(cliente.status);
-        const isVip = cliente.is_vip ? '⭐ VIP' : '';
+        const isVip = cliente.is_vip ? 'â­ VIP' : '';
         
         return `
         <div class="glass-card rounded-2xl overflow-hidden border border-gray-800 hover:border-blue-500/50 transition-all cursor-pointer" onclick="openClienteModal(${cliente.id})">
@@ -490,7 +492,7 @@ function excluirCliente(id) {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
         apiRequest(`/api/users/${id}`, { method: 'DELETE' })
             .then(() => {
-                alert('Cliente excluído com sucesso!');
+                alert('Cliente excluÃ­do com sucesso!');
                 carregarClientes();
             })
             .catch(err => alert('Erro ao excluir cliente'));
@@ -515,13 +517,13 @@ async function openClienteModal(id) {
                     <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Telefone</p><p class="text-sm">${cliente.phone || '-'}</p></div>
                     <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">CPF</p><p class="text-sm">${cliente.cpf || '-'}</p></div>
                     <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">E-mail</p><p class="text-sm break-all">${cliente.email || '-'}</p></div>
-                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Endereço</p><p class="text-sm">${cliente.address || '-'}</p></div>
+                    <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">EndereÃ§o</p><p class="text-sm">${cliente.address || '-'}</p></div>
                     <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Plano</p><p><span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 rounded-lg text-xs">${planoNome}</span></p></div>
                     <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${getStatusBadgeClass(cliente.status)} rounded-lg text-xs">${getStatusText(cliente.status)}</span></p></div>
                     <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Data Cadastro</p><p class="text-xs">${cliente.created_at ? new Date(cliente.created_at).toLocaleString('pt-BR') : '-'}</p></div>
                 </div>`;
         } else {
-            content.innerHTML = '<div class="text-center text-red-500">Cliente não encontrado</div>';
+            content.innerHTML = '<div class="text-center text-red-500">Cliente nÃ£o encontrado</div>';
         }
     } catch (error) {
         content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>';
@@ -532,7 +534,7 @@ function closeModalDetalhes() { document.getElementById('modalDetalhesCliente').
 
 async function editarCliente(id) {
     const cliente = clientesData.find(c => c.id === id);
-    if (!cliente) { alert('Cliente não encontrado'); return; }
+    if (!cliente) { alert('Cliente nÃ£o encontrado'); return; }
     document.getElementById('editClienteId').value = id;
     document.getElementById('editNome').value = cliente.name || '';
     document.getElementById('editTelefone').value = cliente.phone || '';
@@ -668,10 +670,10 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 
 // Exportar CSV (client-side)
 document.getElementById('exportarClientesBtn')?.addEventListener('click', () => {
-    const headers = ['ID', 'Nome', 'CPF', 'Telefone', 'Email', 'Endereço', 'MAC', 'Plano', 'Status', 'VIP'];
+    const headers = ['ID', 'Nome', 'CPF', 'Telefone', 'Email', 'EndereÃ§o', 'MAC', 'Plano', 'Status', 'VIP'];
     const rows = clientesData.map(c => [
         c.id, c.name || '', c.cpf || '', c.phone || '', c.email || '', c.address || '', c.mac_address || '',
-        plansData.find(p => p.id === c.plan_id)?.name || '', getStatusText(c.status), c.is_vip ? 'Sim' : 'Não'
+        plansData.find(p => p.id === c.plan_id)?.name || '', getStatusText(c.status), c.is_vip ? 'Sim' : 'NÃ£o'
     ]);
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -706,7 +708,7 @@ async function salvarPerfil() {
     const senhaAtual = document.getElementById('senhaAtual')?.value;
     const novaSenha = document.getElementById('novaSenha')?.value;
     const confirmarSenha = document.getElementById('confirmarSenha')?.value;
-    if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas não coincidem'); return; }
+    if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas nÃ£o coincidem'); return; }
     if (novaSenha && !senhaAtual) { alert('Digite a senha atual para alterar'); return; }
     
     try {
@@ -769,3 +771,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
+

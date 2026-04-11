@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Perfil de Cadastro</title>
@@ -23,7 +24,7 @@
 
 <script>
     // ============================================
-    // PROTEÇÃO DE ACESSO - Verifica token JWT
+    // PROTEÃ‡ÃƒO DE ACESSO - Verifica token JWT
     // ============================================
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
@@ -54,7 +55,7 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
             </a>
@@ -74,7 +75,7 @@
                 <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
             </a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                <i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes
             </a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 transition-all">
                 <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
@@ -108,11 +109,12 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <!-- Top Bar -->
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 sm:px-8 py-4 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-center">
+  <base href="/">
             <div class="relative w-full sm:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
                 <input type="text" id="searchInput" placeholder="Buscar campo por nome ou identificador..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition focus:bg-gray-900">
@@ -134,19 +136,19 @@
             </div>
         </header>
 
-        <!-- CONTEÚDO -->
+        <!-- CONTEÃšDO -->
         <div class="p-4 sm:p-8 space-y-6 sm:space-y-8">
 
-            <!-- Header da Página -->
+            <!-- Header da PÃ¡gina -->
             <div>
                 <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Perfil de Cadastro</h1>
-                <p class="text-gray-500 text-xs sm:text-sm mt-1">Configure quais campos serão exibidos no formulário de cadastro de clientes</p>
+                <p class="text-gray-500 text-xs sm:text-sm mt-1">Configure quais campos serÃ£o exibidos no formulÃ¡rio de cadastro de clientes</p>
             </div>
 
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-12">
                 <i data-lucide="loader-circle" class="w-8 h-8 animate-spin mx-auto text-blue-500"></i>
-                <p class="text-gray-500 mt-2">Carregando configurações...</p>
+                <p class="text-gray-500 mt-2">Carregando configuraÃ§Ãµes...</p>
             </div>
 
             <!-- Campos Container -->
@@ -154,10 +156,10 @@
                 <!-- Carregado via JavaScript -->
             </div>
 
-            <!-- Botões -->
+            <!-- BotÃµes -->
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
                 <button id="salvarBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2">
-                    <i data-lucide="check" class="w-5 h-5"></i> Salvar Configurações
+                    <i data-lucide="check" class="w-5 h-5"></i> Salvar ConfiguraÃ§Ãµes
                 </button>
                 <button onclick="window.history.back()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
                     <i data-lucide="x" class="w-5 h-5"></i> Cancelar
@@ -170,7 +172,7 @@
 
 <script>
     // ============================================
-    // CONFIGURAÇÕES GLOBAIS
+    // CONFIGURAÃ‡Ã•ES GLOBAIS
     // ============================================
     const API_URL = 'https://mstelecom-api.duckdns.org';  // URL base do backend oficial
     let allCampos = []; // Armazena todos os campos carregados
@@ -197,7 +199,7 @@
     }
 
     // ============================================
-    // FUNÇÕES AUXILIARES
+    // FUNÃ‡Ã•ES AUXILIARES
     // ============================================
     function escapeHtml(str) {
         if (!str) return '';
@@ -210,7 +212,7 @@
     }
 
     // ============================================
-    // CARREGAR CONFIGURAÇÕES DE CAMPOS (GET /api/settings/fields)
+    // CARREGAR CONFIGURAÃ‡Ã•ES DE CAMPOS (GET /api/settings/fields)
     // CORRIGIDO: endpoint antigo /api/configuracoes/campos -> /api/settings/fields
     // Resposta esperada: array de objetos com { field, label, enabled, required }
     // ============================================
@@ -235,18 +237,18 @@
             // O novo backend retorna o array diretamente (ou pode estar dentro de { data })
             const data = await res.json();
             allCampos = Array.isArray(data) ? data : (data.data || []);
-            console.log('✅ Campos carregados:', allCampos);
+            console.log('âœ… Campos carregados:', allCampos);
             
             loadingState.classList.add('hidden');
             container.classList.remove('hidden');
             
             renderizarCampos(allCampos);
         } catch (error) {
-            console.error('❌ Erro ao carregar campos:', error);
+            console.error('âŒ Erro ao carregar campos:', error);
             document.getElementById('loadingState').innerHTML = `
                 <div class="text-center py-12">
                     <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500"></i>
-                    <p class="text-red-400 mt-2">Erro ao carregar configurações</p>
+                    <p class="text-red-400 mt-2">Erro ao carregar configuraÃ§Ãµes</p>
                     <p class="text-gray-500 text-sm mt-1">${escapeHtml(error.message)}</p>
                     <button onclick="carregarCampos()" class="mt-4 px-4 py-2 bg-blue-600 rounded-lg text-sm">Tentar novamente</button>
                 </div>
@@ -255,7 +257,7 @@
         }
     }
 
-    // Renderiza a lista de campos com toggles (habilitado/obrigatório)
+    // Renderiza a lista de campos com toggles (habilitado/obrigatÃ³rio)
     function renderizarCampos(campos) {
         const container = document.getElementById('camposContainer');
         
@@ -283,7 +285,7 @@
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition group">
                         <input type="checkbox" class="obrigatorio-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.field}" ${campo.required ? 'checked' : ''}>
-                        <span class="text-xs sm:text-sm text-gray-400 group-hover:text-blue-400 transition">Obrigatório</span>
+                        <span class="text-xs sm:text-sm text-gray-400 group-hover:text-blue-400 transition">ObrigatÃ³rio</span>
                     </label>
                 </div>
             </div>
@@ -293,7 +295,7 @@
     }
 
     // ============================================
-    // FUNÇÃO DE BUSCA (filtro local)
+    // FUNÃ‡ÃƒO DE BUSCA (filtro local)
     // ============================================
     function buscarCampos(termo) {
         if (!termo || termo.trim() === '') {
@@ -324,8 +326,8 @@
     }
 
     // ============================================
-    // SALVAR CONFIGURAÇÕES (PUT /api/settings/fields)
-    // CORRIGIDO: método POST antigo -> PUT, payload adaptado para { field, label, enabled, required }
+    // SALVAR CONFIGURAÃ‡Ã•ES (PUT /api/settings/fields)
+    // CORRIGIDO: mÃ©todo POST antigo -> PUT, payload adaptado para { field, label, enabled, required }
     // ============================================
     async function salvarConfiguracoes() {
         const salvarBtn = document.getElementById('salvarBtn');
@@ -337,7 +339,7 @@
             salvarBtn.disabled = true;
             lucide.createIcons();
             
-            // Monta o array de campos conforme o padrão do novo backend
+            // Monta o array de campos conforme o padrÃ£o do novo backend
             const fieldsToSave = [];
             document.querySelectorAll('.habilitado-toggle').forEach(toggle => {
                 const fieldName = toggle.dataset.campo;
@@ -345,7 +347,7 @@
                 const requiredToggle = document.querySelector(`.obrigatorio-toggle[data-campo="${fieldName}"]`);
                 const required = requiredToggle ? requiredToggle.checked : false;
                 
-                // Recupera o label original do allCampos (preserva o nome de exibição)
+                // Recupera o label original do allCampos (preserva o nome de exibiÃ§Ã£o)
                 const originalField = allCampos.find(f => f.field === fieldName);
                 const label = originalField ? originalField.label : fieldName;
                 
@@ -357,10 +359,10 @@
                 });
             });
             
-            console.log('📤 Salvando configurações (padrão novo):', fieldsToSave);
+            console.log('ðŸ“¤ Salvando configuraÃ§Ãµes (padrÃ£o novo):', fieldsToSave);
             
             const res = await fetch(`${API_URL}/api/settings/fields`, {
-                method: 'PUT',   // CORRIGIDO: usar PUT para atualização completa (ou POST conforme backend, mas PUT é mais RESTful)
+                method: 'PUT',   // CORRIGIDO: usar PUT para atualizaÃ§Ã£o completa (ou POST conforme backend, mas PUT Ã© mais RESTful)
                 headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -369,17 +371,17 @@
             });
             
             if (res.ok) {
-                alert('✅ Configurações salvas com sucesso!');
-                console.log('✅ Configurações salvas');
-                await carregarCampos(); // Recarregar para garantir consistência
+                alert('âœ… ConfiguraÃ§Ãµes salvas com sucesso!');
+                console.log('âœ… ConfiguraÃ§Ãµes salvas');
+                await carregarCampos(); // Recarregar para garantir consistÃªncia
             } else {
                 const errorText = await res.text();
-                console.error('❌ Erro:', errorText);
-                alert(`❌ Erro ao salvar configurações: ${res.status} - ${errorText}`);
+                console.error('âŒ Erro:', errorText);
+                alert(`âŒ Erro ao salvar configuraÃ§Ãµes: ${res.status} - ${errorText}`);
             }
         } catch (error) {
-            console.error('❌ Erro ao salvar:', error);
-            alert('❌ Erro ao salvar configurações. Verifique sua conexão.');
+            console.error('âŒ Erro ao salvar:', error);
+            alert('âŒ Erro ao salvar configuraÃ§Ãµes. Verifique sua conexÃ£o.');
         } finally {
             salvarBtn.innerHTML = originalText;
             salvarBtn.disabled = false;
@@ -388,7 +390,7 @@
     }
 
     // ============================================
-    // FUNÇÕES DE PERFIL (MEU PERFIL)
+    // FUNÃ‡Ã•ES DE PERFIL (MEU PERFIL)
     // CORRIGIDO: endpoint antigo /api/atualizar-perfil -> /api/profile (PUT)
     // ============================================
     function carregarPerfil() {
@@ -435,7 +437,7 @@
         const confirmarSenha = document.getElementById('confirmarSenha')?.value;
         
         if (novaSenha && novaSenha !== confirmarSenha) {
-            alert('As novas senhas não coincidem');
+            alert('As novas senhas nÃ£o coincidem');
             return;
         }
         
@@ -445,7 +447,7 @@
         }
         
         if (!tokenAtual) {
-            alert('Você precisa estar logado para alterar o perfil');
+            alert('VocÃª precisa estar logado para alterar o perfil');
             return;
         }
         
@@ -460,7 +462,7 @@
                 body: JSON.stringify({ 
                     username, 
                     email, 
-                    current_password: senhaAtual || null,  // campo em inglês conforme padrão
+                    current_password: senhaAtual || null,  // campo em inglÃªs conforme padrÃ£o
                     new_password: novaSenha || null 
                 })
             });
@@ -479,12 +481,12 @@
             }
         } catch (error) {
             console.error('Erro:', error);
-            alert('Erro ao atualizar perfil. Verifique sua conexão.');
+            alert('Erro ao atualizar perfil. Verifique sua conexÃ£o.');
         }
     }
     
     // ============================================
-    // FUNÇÃO DE LOGOUT
+    // FUNÃ‡ÃƒO DE LOGOUT
     // CORRIGIDO: endpoint /api/auth/logout (antes /api/logout)
     // ============================================
     async function sair() {
@@ -529,7 +531,7 @@
     }
     
     // ============================================
-    // INICIALIZAÇÃO
+    // INICIALIZAÃ‡ÃƒO
     // ============================================
     carregarCampos();
     carregarPerfil();
@@ -550,7 +552,7 @@
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label>
                 <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
             </div>
             <div>
@@ -577,10 +579,11 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/50 rounded-lg text-sm font-bold transition">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-lg hover:shadow-blue-500/50 rounded-lg text-sm font-bold transition">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
 
 </body>
 </html>
+

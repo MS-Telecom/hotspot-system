@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Hotspots / POPs</title>
@@ -43,12 +44,13 @@
             <a href="hotspots.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
         </nav>
     </aside>
 
     <main class="flex-1 overflow-y-auto bg-[#0a0c15]">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
             <div class="relative w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
                 <input type="text" id="searchInput" placeholder="Buscar hotspot..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
@@ -64,7 +66,7 @@
 
         <div class="p-8 space-y-8">
             <div class="flex justify-between items-end">
-                <div><h1 class="text-3xl font-black tracking-tight">Hotspots / POPs</h1><p class="text-gray-500 text-sm mt-1">Gestão de concentradores MikroTik</p></div>
+                <div><h1 class="text-3xl font-black tracking-tight">Hotspots / POPs</h1><p class="text-gray-500 text-sm mt-1">GestÃ£o de concentradores MikroTik</p></div>
                 <button onclick="openModalNovoHotspot()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Hotspot</button>
             </div>
             <div id="popsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -79,7 +81,7 @@
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-md border border-gray-700 shadow-2xl p-6 space-y-4">
         <h2 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="router" class="text-blue-500"></i> Novo Hotspot</h2>
         <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome</label><input type="text" id="hotspotNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm"></div>
-        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Localização</label><input type="text" id="hotspotLocalizacao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm"></div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">LocalizaÃ§Ã£o</label><input type="text" id="hotspotLocalizacao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm"></div>
         <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">IP do POP</label><input type="text" id="hotspotIp" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm"></div>
         <div class="flex justify-end gap-3 pt-4">
             <button onclick="closeModalNovoHotspot()" class="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white transition">Cancelar</button>
@@ -110,7 +112,7 @@
                         <div><h3 class="text-lg font-bold text-white">${escapeHtml(pop.name)}</h3><p class="text-xs text-gray-500">IP: ${escapeHtml(pop.ip)}</p></div>
                         <span class="px-3 py-1 ${pop.status === 'online' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'} text-[10px] font-bold rounded-full">${pop.status?.toUpperCase() || 'OFFLINE'}</span>
                     </div>
-                    <p class="text-xs text-gray-400 mb-6">📍 ${escapeHtml(pop.location)}</p>
+                    <p class="text-xs text-gray-400 mb-6">ðŸ“ ${escapeHtml(pop.location)}</p>
                     <div class="grid grid-cols-2 gap-3">
                         <button onclick="testarConexao(${pop.id})" class="py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-[10px] font-bold transition">TESTAR</button>
                         <button onclick="gerarScript(${pop.id})" class="py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold transition">SCRIPT</button>
@@ -135,17 +137,17 @@
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ name, location, ip, status: 'offline' })
             });
-            if (res.ok) { alert('✅ Hotspot criado!'); closeModalNovoHotspot(); carregarPOPs(); }
-            else alert('❌ Erro ao criar');
-        } catch (e) { alert('❌ Erro de conexão'); }
+            if (res.ok) { alert('âœ… Hotspot criado!'); closeModalNovoHotspot(); carregarPOPs(); }
+            else alert('âŒ Erro ao criar');
+        } catch (e) { alert('âŒ Erro de conexÃ£o'); }
     }
 
     async function testarConexao(id) {
         try {
             const res = await fetch(`${API_URL}/api/pops/${id}/heartbeat`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-            if (res.ok) { alert('✅ Heartbeat enviado!'); carregarPOPs(); }
-            else alert('❌ Falha no teste');
-        } catch (e) { alert('❌ Erro de conexão'); }
+            if (res.ok) { alert('âœ… Heartbeat enviado!'); carregarPOPs(); }
+            else alert('âŒ Falha no teste');
+        } catch (e) { alert('âŒ Erro de conexÃ£o'); }
     }
 
     async function gerarScript(id) {
@@ -157,7 +159,7 @@
                 win.document.write('<pre>' + data.script + '</pre>');
                 win.document.title = 'Script MikroTik';
             }
-        } catch (e) { alert('❌ Erro ao gerar script'); }
+        } catch (e) { alert('âŒ Erro ao gerar script'); }
     }
 
     function sair() { localStorage.clear(); window.location.href = 'login.html'; }
@@ -171,3 +173,4 @@
 </script>
 </body>
 </html>
+

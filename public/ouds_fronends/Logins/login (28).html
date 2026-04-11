@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - MS TELECOM</title>
@@ -21,8 +22,8 @@
 
     <form id="loginForm" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium mb-1">Usuário</label>
-        <input type="text" id="inputUsername" placeholder="Digite seu usuário" required
+        <label class="block text-sm font-medium mb-1">UsuÃ¡rio</label>
+        <input type="text" id="inputUsername" placeholder="Digite seu usuÃ¡rio" required
           class="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg focus:border-cyan-400 focus:outline-none text-white placeholder-gray-400">
       </div>
       <div>
@@ -42,7 +43,7 @@
 
     lucide.createIcons();
 
-    // Se já estiver logado, redirecionar
+    // Se jÃ¡ estiver logado, redirecionar
     const existingToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (existingToken) window.location.href = 'dashboard.html';
 
@@ -86,3 +87,4 @@
   </script>
 </body>
 </html>
+

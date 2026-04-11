@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Perfil de Cadastro</title>
@@ -44,7 +45,7 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
             </a>
@@ -64,7 +65,7 @@
                 <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
             </a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                <i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes
             </a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
@@ -95,11 +96,12 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <!-- Top Bar -->
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
             <div class="relative w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
                 <input type="text" placeholder="Buscar campo..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
@@ -115,13 +117,13 @@
             </div>
         </header>
 
-        <!-- CONTEÚDO -->
+        <!-- CONTEÃšDO -->
         <div class="p-8 space-y-8">
 
-            <!-- Header da Página -->
+            <!-- Header da PÃ¡gina -->
             <div>
                 <h1 class="text-3xl font-black tracking-tight">Perfil de Cadastro</h1>
-                <p class="text-gray-500 text-sm mt-1">Configure quais campos serão exibidos no formulário de cadastro de clientes</p>
+                <p class="text-gray-500 text-sm mt-1">Configure quais campos serÃ£o exibidos no formulÃ¡rio de cadastro de clientes</p>
             </div>
 
             <!-- Campos -->
@@ -129,10 +131,10 @@
                 <!-- Carregado via JavaScript -->
             </div>
 
-            <!-- Botões -->
+            <!-- BotÃµes -->
             <div class="flex gap-3 pt-4">
                 <button id="salvarBtn" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/50 transition flex items-center gap-2">
-                    <i data-lucide="check" class="w-5 h-5"></i> Salvar Configurações
+                    <i data-lucide="check" class="w-5 h-5"></i> Salvar ConfiguraÃ§Ãµes
                 </button>
                 <button onclick="window.history.back()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition flex items-center gap-2">
                     <i data-lucide="x" class="w-5 h-5"></i> Cancelar
@@ -164,10 +166,10 @@
         try {
             const res = await fetch(`${API_URL}/api/configuracoes/campos`);
             const campos = await res.json();
-            console.log('✅ Campos carregados:', campos);
+            console.log('âœ… Campos carregados:', campos);
             renderizarCampos(campos);
         } catch (error) {
-            console.error('❌ Erro ao carregar campos:', error);
+            console.error('âŒ Erro ao carregar campos:', error);
         }
     }
 
@@ -186,7 +188,7 @@
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer hover:text-blue-400 transition">
                         <input type="checkbox" class="obrigatorio-toggle w-4 h-4 sm:w-5 sm:h-5 rounded cursor-pointer" data-campo="${campo.campo}" ${campo.obrigatorio ? 'checked' : ''}>
-                        <span class="text-xs sm:text-sm text-gray-400">Obrigatório</span>
+                        <span class="text-xs sm:text-sm text-gray-400">ObrigatÃ³rio</span>
                     </label>
                 </div>
             </div>
@@ -195,7 +197,7 @@
         lucide.createIcons();
     }
 
-    // Salvar configurações
+    // Salvar configuraÃ§Ãµes
     document.getElementById('salvarBtn').addEventListener('click', async () => {
         try {
             const campos = {};
@@ -207,7 +209,7 @@
                 campos[campo] = { habilitado, obrigatorio };
             });
 
-            console.log('📤 Salvando configurações:', campos);
+            console.log('ðŸ“¤ Salvando configuraÃ§Ãµes:', campos);
 
             const res = await fetch(`${API_URL}/api/configuracoes/campos`, {
                 method: 'POST',
@@ -216,15 +218,15 @@
             });
 
             if (res.ok) {
-                alert('✅ Configurações salvas com sucesso!');
-                console.log('✅ Configurações salvas');
+                alert('âœ… ConfiguraÃ§Ãµes salvas com sucesso!');
+                console.log('âœ… ConfiguraÃ§Ãµes salvas');
             } else {
-                alert('❌ Erro ao salvar configurações');
-                console.error('❌ Erro:', await res.text());
+                alert('âŒ Erro ao salvar configuraÃ§Ãµes');
+                console.error('âŒ Erro:', await res.text());
             }
         } catch (error) {
-            console.error('❌ Erro ao salvar:', error);
-            alert('❌ Erro ao salvar configurações');
+            console.error('âŒ Erro ao salvar:', error);
+            alert('âŒ Erro ao salvar configuraÃ§Ãµes');
         }
     });
 
@@ -234,3 +236,4 @@
 </script>
 </body>
 </html>
+

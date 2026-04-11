@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Financeiro - MS TELECOM</title>
@@ -22,7 +23,7 @@
       <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
       <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
       <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
+      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>ConfiguraÃ§Ãµes</a>
       <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
       <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
     </nav>
@@ -30,6 +31,7 @@
 
   <main class="flex-1 p-4 md:p-6 overflow-auto">
     <header class="flex items-center justify-between mb-6">
+  <base href="/">
       <div class="flex items-center gap-3">
         <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
         <h1 class="text-2xl font-bold">Financeiro</h1>
@@ -37,7 +39,7 @@
       <div class="flex items-center gap-3">
         <button onclick="exportFinance()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="download" class="w-4 h-4"></i>Exportar CSV</button>
         <select id="periodoSelect" class="px-3 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm font-medium cursor-pointer">
-          <option value="hoje">Hoje</option><option value="ontem">Ontem</option><option value="7dias">Últimos 7 dias</option><option value="30dias">Últimos 30 dias</option><option value="mes" selected>Este Mês</option><option value="mesPassado">Mês Passado</option><option value="ano">Este Ano</option>
+          <option value="hoje">Hoje</option><option value="ontem">Ontem</option><option value="7dias">Ãšltimos 7 dias</option><option value="30dias">Ãšltimos 30 dias</option><option value="mes" selected>Este MÃªs</option><option value="mesPassado">MÃªs Passado</option><option value="ano">Este Ano</option>
         </select>
         <button onclick="openModalPerfil()" class="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"><i data-lucide="user" class="w-4 h-4"></i>Perfil</button>
         <button onclick="sair()" class="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Sair</button>
@@ -45,20 +47,20 @@
     </header>
 
     <!-- Busca -->
-    <div class="mb-4"><input type="text" id="searchInput" placeholder="Buscar transação por cliente, ID ou valor..." class="w-full md:w-96 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
+    <div class="mb-4"><input type="text" id="searchInput" placeholder="Buscar transaÃ§Ã£o por cliente, ID ou valor..." class="w-full md:w-96 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
 
-    <!-- Cards de Métricas -->
+    <!-- Cards de MÃ©tricas -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="bg-gray-800 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-gray-400 text-sm">Faturamento Hoje</span><span id="faturamentoHojeVariacao" class="text-xs text-green-400">+0%</span></div><p id="faturamentoHoje" class="text-2xl font-bold text-green-400">R$ 0,00</p><p class="text-xs text-gray-500 mt-1">vs ontem: <span id="vsOntem">R$ 0,00</span></p></div>
       <div class="bg-gray-800 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-gray-400 text-sm">Faturamento Mensal</span><i data-lucide="calendar" class="w-5 h-5 text-cyan-400"></i></div><p id="faturamentoMensal" class="text-2xl font-bold text-cyan-400">R$ 0,00</p><p class="text-xs text-gray-500 mt-1">Meta: <span id="metaMensal">R$ 0,00</span></p></div>
-      <div class="bg-gray-800 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-gray-400 text-sm">Ticket Médio</span><i data-lucide="credit-card" class="w-5 h-5 text-purple-400"></i></div><p id="ticketMedio" class="text-2xl font-bold text-purple-400">R$ 0,00</p><p class="text-xs text-gray-500 mt-1">vs mês passado: <span id="ticketVariacao">R$ 0,00</span></p></div>
-      <div class="bg-gray-800 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-gray-400 text-sm">Clientes Ativos</span><i data-lucide="users" class="w-5 h-5 text-orange-400"></i></div><p id="activeUsersMetric" class="text-2xl font-bold">0</p><p class="text-xs text-gray-500 mt-1">+<span id="newUsersMetric">0</span> este mês</p></div>
+      <div class="bg-gray-800 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-gray-400 text-sm">Ticket MÃ©dio</span><i data-lucide="credit-card" class="w-5 h-5 text-purple-400"></i></div><p id="ticketMedio" class="text-2xl font-bold text-purple-400">R$ 0,00</p><p class="text-xs text-gray-500 mt-1">vs mÃªs passado: <span id="ticketVariacao">R$ 0,00</span></p></div>
+      <div class="bg-gray-800 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-gray-400 text-sm">Clientes Ativos</span><i data-lucide="users" class="w-5 h-5 text-orange-400"></i></div><p id="activeUsersMetric" class="text-2xl font-bold">0</p><p class="text-xs text-gray-500 mt-1">+<span id="newUsersMetric">0</span> este mÃªs</p></div>
     </div>
 
-    <!-- Gráficos -->
+    <!-- GrÃ¡ficos -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
       <div class="bg-gray-800 rounded-xl p-4">
-        <h3 class="font-bold mb-3">Evolução Mensal</h3>
+        <h3 class="font-bold mb-3">EvoluÃ§Ã£o Mensal</h3>
         <div style="position:relative;height:250px;"><canvas id="monthlyChart"></canvas></div>
       </div>
       <div class="bg-gray-800 rounded-xl p-4">
@@ -66,7 +68,7 @@
         <div style="position:relative;height:200px;"><canvas id="plansRevenueChart"></canvas></div>
         <div class="grid grid-cols-3 gap-2 mt-4 text-center">
           <div class="bg-gray-900/50 rounded-lg p-2"><p class="text-xs text-gray-500">Premium</p><p id="premiumTotal" class="text-sm font-bold">R$ 0</p></div>
-          <div class="bg-gray-900/50 rounded-lg p-2"><p class="text-xs text-gray-500">Diário</p><p id="diarioTotal" class="text-sm font-bold">R$ 0</p></div>
+          <div class="bg-gray-900/50 rounded-lg p-2"><p class="text-xs text-gray-500">DiÃ¡rio</p><p id="diarioTotal" class="text-sm font-bold">R$ 0</p></div>
           <div class="bg-gray-900/50 rounded-lg p-2"><p class="text-xs text-gray-500">Teste</p><p id="testeTotal" class="text-sm font-bold">R$ 0</p></div>
         </div>
       </div>
@@ -78,13 +80,13 @@
       <div id="receitaPorPop" class="grid grid-cols-1 md:grid-cols-3 gap-3"><div class="text-center text-gray-500 py-4 col-span-3">Carregando dados...</div></div>
     </div>
 
-    <!-- Transações Recentes -->
+    <!-- TransaÃ§Ãµes Recentes -->
     <div class="bg-gray-800 rounded-xl p-4 mb-6">
-      <div class="flex justify-between items-center mb-3"><h3 class="font-bold">Transações Recentes</h3><button onclick="viewAllTransactions()" class="text-xs text-cyan-400 hover:text-cyan-300">Ver todas</button></div>
+      <div class="flex justify-between items-center mb-3"><h3 class="font-bold">TransaÃ§Ãµes Recentes</h3><button onclick="viewAllTransactions()" class="text-xs text-cyan-400 hover:text-cyan-300">Ver todas</button></div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Data/Hora</th><th class="text-left py-3">Cliente</th><th class="text-left py-3">Plano</th><th class="text-left py-3">Valor</th><th class="text-left py-3">Método</th><th class="text-left py-3">Status</th><th class="text-center py-3">Ação</th></tr></thead>
-          <tbody id="paymentsTable"><tr><td colspan="7" class="py-8 text-center text-gray-500">Carregando transações...</td></tr></tbody>
+          <thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left py-3">Data/Hora</th><th class="text-left py-3">Cliente</th><th class="text-left py-3">Plano</th><th class="text-left py-3">Valor</th><th class="text-left py-3">MÃ©todo</th><th class="text-left py-3">Status</th><th class="text-center py-3">AÃ§Ã£o</th></tr></thead>
+          <tbody id="paymentsTable"><tr><td colspan="7" class="py-8 text-center text-gray-500">Carregando transaÃ§Ãµes...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -95,18 +97,18 @@
         <div class="flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-400"></i><h3 class="font-bold">Pagamentos Pendentes</h3></div>
         <button onclick="chargeAllPending()" class="text-xs text-yellow-400 hover:text-yellow-300">Cobrar todos</button>
       </div>
-      <div id="pendentesContainer"><div class="text-center text-gray-500 py-4">Carregando pendências...</div></div>
+      <div id="pendentesContainer"><div class="text-center text-gray-500 py-4">Carregando pendÃªncias...</div></div>
     </div>
   </main>
 
-  <!-- Modal: Todas as Transações -->
+  <!-- Modal: Todas as TransaÃ§Ãµes -->
   <div id="modalTodasTransacoes" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2">
     <div class="bg-gray-800 rounded-xl w-full max-w-4xl max-h-[85vh] flex flex-col">
-      <div class="flex items-center justify-between p-4 border-b border-gray-700"><h3 class="text-lg font-bold">Todas as Transações</h3><button onclick="closeAllTransactionsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <div class="flex items-center justify-between p-4 border-b border-gray-700"><h3 class="text-lg font-bold">Todas as TransaÃ§Ãµes</h3><button onclick="closeAllTransactionsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <div class="flex-1 overflow-y-auto p-4">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead><tr class="text-gray-400 border-b border-gray-700 text-xs"><th class="text-left py-2">Data/Hora</th><th class="text-left py-2">Cliente</th><th class="text-left py-2">Plano</th><th class="text-left py-2">Valor</th><th class="text-left py-2">Método</th><th class="text-left py-2">Status</th><th class="text-center py-2">Ação</th></tr></thead>
+            <thead><tr class="text-gray-400 border-b border-gray-700 text-xs"><th class="text-left py-2">Data/Hora</th><th class="text-left py-2">Cliente</th><th class="text-left py-2">Plano</th><th class="text-left py-2">Valor</th><th class="text-left py-2">MÃ©todo</th><th class="text-left py-2">Status</th><th class="text-center py-2">AÃ§Ã£o</th></tr></thead>
             <tbody id="tabelaTodasTransacoes"><tr><td colspan="7" class="py-8 text-center text-gray-500">Carregando...</td></tr></tbody>
           </table>
         </div>
@@ -116,10 +118,10 @@
     </div>
   </div>
 
-  <!-- Modal: Detalhes Transação -->
+  <!-- Modal: Detalhes TransaÃ§Ã£o -->
   <div id="modalDetalhesTransacao" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2">
     <div class="bg-gray-800 rounded-xl w-full max-w-md max-h-[85vh] flex flex-col">
-      <div class="flex items-center justify-between p-4 border-b border-gray-700"><h3 class="text-lg font-bold">Detalhes da Transação</h3><button onclick="closeTransactionDetailsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+      <div class="flex items-center justify-between p-4 border-b border-gray-700"><h3 class="text-lg font-bold">Detalhes da TransaÃ§Ã£o</h3><button onclick="closeTransactionDetailsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <div id="detalhesTransacaoContent" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
       <div class="p-4 border-t border-gray-700 flex justify-end"><button onclick="closeTransactionDetailsModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-sm">Fechar</button></div>
     </div>
@@ -131,7 +133,7 @@
       <h3 class="text-lg font-bold mb-4">Pagamento via PIX</h3>
       <div id="qrCodeContainer" class="mb-4"></div>
       <code id="pixCopiaCola" class="text-xs font-mono break-all bg-gray-900 p-3 rounded-lg block mb-4"></code>
-      <button onclick="copyPix()" class="w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium mb-2">Copiar código PIX</button>
+      <button onclick="copyPix()" class="w-full bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg font-medium mb-2">Copiar cÃ³digo PIX</button>
       <button onclick="closePixModal()" class="w-full bg-gray-600 hover:bg-gray-500 py-2 rounded-lg font-medium">Fechar</button>
     </div>
   </div>
@@ -141,7 +143,7 @@
     <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">UsuÃ¡rio</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
         <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
       </div>
@@ -155,7 +157,7 @@
     if (!token) window.location.href = 'login.html';
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-    // Variáveis globais
+    // VariÃ¡veis globais
     let pagamentosData = [];
     let monthlyChartInstance = null;
     let plansChartInstance = null;
@@ -165,17 +167,17 @@
     lucide.createIcons();
     initMenuMobile();
 
-    // Helpers para acessar campos de pagamento de forma flexível
+    // Helpers para acessar campos de pagamento de forma flexÃ­vel
     function getPaymentDate(p) { return p.created_at || p.createdAt || p.criado_em || p.data || null; }
     function getPaymentAmount(p) { return parseFloat(p.amount ?? p.valor) || 0; }
     function getPaymentCustomer(p) { return p.user_name || p.usuario_nome || p.cliente || p.description || 'Cliente'; }
     function getPaymentPlan(p) { return p.plan_name || p.plano_nome || p.plano || 'N/A'; }
     function getPaymentMethod(p) { return p.payment_method || p.metodo || 'PIX'; }
-    function getPaymentHotspot(p) { return p.hotspot_name || p.pop || p.localidade || p.hotspot || 'Não informado'; }
+    function getPaymentHotspot(p) { return p.hotspot_name || p.pop || p.localidade || p.hotspot || 'NÃ£o informado'; }
     function isConfirmedPayment(p) { return p.status === 'approved' || p.status === 'confirmed' || p.status === 'pago'; }
     function sumValues(arr) { return arr?.reduce((s, p) => s + getPaymentAmount(p), 0) || 0; }
 
-    // Filtro por período
+    // Filtro por perÃ­odo
     function filterByPeriod(pagamentos, periodo) {
       const hoje = new Date(); hoje.setHours(0,0,0,0);
       const ontem = new Date(hoje); ontem.setDate(ontem.getDate()-1);
@@ -231,12 +233,12 @@
       document.getElementById('metaMensal').textContent = 'R$ 0,00';
       document.getElementById('ticketVariacao').textContent = 'R$ 0,00';
       document.getElementById('newUsersMetric').textContent = '0';
-      document.getElementById('paymentsTable').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">Nenhuma transação encontrada</td></tr>';
+      document.getElementById('paymentsTable').innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500">Nenhuma transaÃ§Ã£o encontrada</td></tr>';
       document.getElementById('pendentesContainer').innerHTML = '<div class="text-center text-gray-500 py-4">Nenhum pagamento pendente</div>';
-      document.getElementById('receitaPorPop').innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponível</div>';
+      document.getElementById('receitaPorPop').innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponÃ­vel</div>';
     }
 
-    // Atualizar cards de métricas
+    // Atualizar cards de mÃ©tricas
     function updateCards(pagamentos) {
       const hoje = new Date().toLocaleDateString('pt-BR');
       const ontem = new Date(Date.now()-86400000).toLocaleDateString('pt-BR');
@@ -261,7 +263,7 @@
       document.getElementById('newUsersMetric').textContent = clientesUnicos.size;
     }
 
-    // Atualizar gráficos Chart.js
+    // Atualizar grÃ¡ficos Chart.js
     function updateCharts(pagamentos) {
       const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
       const dadosMensais = new Array(12).fill(0);
@@ -270,13 +272,13 @@
       if (monthlyChartInstance) monthlyChartInstance.destroy();
       monthlyChartInstance = new Chart(ctxM, { type:'bar', data:{ labels:meses, datasets:[{ label:'Faturamento (R$)', data:dadosMensais, backgroundColor:'rgba(6,182,212,0.6)', borderRadius:8 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}, scales:{ y:{grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>'R$ '+v.toLocaleString('pt-BR')}} } } });
       let premiumTotal=0, diarioTotal=0, testeTotal=0;
-      pagamentos.forEach(p => { const v=getPaymentAmount(p); const pl=getPaymentPlan(p).toLowerCase(); if(pl.includes('premium')) premiumTotal+=v; else if(pl.includes('diario')||pl.includes('diário')) diarioTotal+=v; else if(pl.includes('teste')) testeTotal+=v; });
+      pagamentos.forEach(p => { const v=getPaymentAmount(p); const pl=getPaymentPlan(p).toLowerCase(); if(pl.includes('premium')) premiumTotal+=v; else if(pl.includes('diario')||pl.includes('diÃ¡rio')) diarioTotal+=v; else if(pl.includes('teste')) testeTotal+=v; });
       document.getElementById('premiumTotal').textContent = `R$ ${premiumTotal.toFixed(0)}`;
       document.getElementById('diarioTotal').textContent = `R$ ${diarioTotal.toFixed(0)}`;
       document.getElementById('testeTotal').textContent = `R$ ${testeTotal.toFixed(0)}`;
       const ctxP = document.getElementById('plansRevenueChart').getContext('2d');
       if (plansChartInstance) plansChartInstance.destroy();
-      plansChartInstance = new Chart(ctxP, { type:'doughnut', data:{ labels:['Premium','Diário','Teste'], datasets:[{ data:[premiumTotal,diarioTotal,testeTotal], backgroundColor:['#06b6d4','#8b5cf6','#10b981'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10}}}}, cutout:'60%' } });
+      plansChartInstance = new Chart(ctxP, { type:'doughnut', data:{ labels:['Premium','DiÃ¡rio','Teste'], datasets:[{ data:[premiumTotal,diarioTotal,testeTotal], backgroundColor:['#06b6d4','#8b5cf6','#10b981'], borderWidth:0 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10}}}}, cutout:'60%' } });
     }
 
     // Receita por POP
@@ -284,7 +286,7 @@
       const popMap = new Map();
       pagamentos.forEach(p => { const pop=getPaymentHotspot(p); popMap.set(pop, (popMap.get(pop)||0)+getPaymentAmount(p)); });
       const container = document.getElementById('receitaPorPop');
-      if (popMap.size===0) { container.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponível</div>'; return; }
+      if (popMap.size===0) { container.innerHTML = '<div class="text-center text-gray-500 py-4 col-span-3">Nenhum dado disponÃ­vel</div>'; return; }
       const maxVal = Math.max(...Array.from(popMap.values()));
       container.innerHTML = Array.from(popMap.entries()).sort((a,b)=>b[1]-a[1]).map(([pop,valor]) => `
         <div class="bg-gray-900/50 rounded-lg p-3"><div class="flex justify-between items-start mb-2"><span class="text-sm font-medium">${pop}</span><span class="text-green-400 font-bold">R$ ${valor.toFixed(2).replace('.',',')}</span></div>
@@ -292,11 +294,11 @@
       `).join('');
     }
 
-    // Tabela de transações recentes (top 5)
+    // Tabela de transaÃ§Ãµes recentes (top 5)
     function updateTable(pagamentos) {
       const tbody = document.getElementById('paymentsTable');
       const recentes = [...pagamentos].sort((a,b) => new Date(getPaymentDate(b))-new Date(getPaymentDate(a))).slice(0,5);
-      if(recentes.length===0) { tbody.innerHTML='<tr><td colspan="7" class="py-8 text-center text-gray-500">Nenhuma transação</td></tr>'; return; }
+      if(recentes.length===0) { tbody.innerHTML='<tr><td colspan="7" class="py-8 text-center text-gray-500">Nenhuma transaÃ§Ã£o</td></tr>'; return; }
       tbody.innerHTML = recentes.map(p => `
         <tr class="border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer" onclick="viewTransactionDetails('${p.id}')">
           <td class="py-3 text-gray-400">${new Date(getPaymentDate(p)).toLocaleString('pt-BR')}</td>
@@ -332,7 +334,7 @@
       });
     });
 
-    // Modal "Ver Todas" com paginação
+    // Modal "Ver Todas" com paginaÃ§Ã£o
     let todasTransacoesLista = [];
     function viewAllTransactions() {
       document.getElementById('modalTodasTransacoes').classList.remove('hidden');
@@ -362,7 +364,7 @@
     function goToPage(page) { currentPage=page; renderTransactionsPage(); }
     function closeAllTransactionsModal() { document.getElementById('modalTodasTransacoes').classList.add('hidden'); }
 
-    // Modal detalhes da transação
+    // Modal detalhes da transaÃ§Ã£o
     function viewTransactionDetails(id) {
       const t = pagamentosData.find(p=>p.id==id); if(!t) return;
       document.getElementById('modalDetalhesTransacao').classList.remove('hidden');
@@ -389,28 +391,28 @@
         const res = await fetch(`${API_URL}/api/payments/create`, { method:'POST', headers, body:JSON.stringify({payment_id:pagamentoId, amount:valor, description:'Plano WiFi'}) });
         const payload = await res.json(); const data = payload.data || payload;
         if(!res.ok) throw new Error(data.error||'Erro ao gerar PIX');
-        pixCode.textContent = data.pix_copy_paste || 'Código PIX não disponível';
-        qrContainer.innerHTML = data.qr_code ? `<img src="${data.qr_code}" alt="QR Code" class="w-48 h-48 mx-auto bg-white rounded-lg p-2">` : '<div class="text-center text-yellow-400">QR Code não disponível</div>';
+        pixCode.textContent = data.pix_copy_paste || 'CÃ³digo PIX nÃ£o disponÃ­vel';
+        qrContainer.innerHTML = data.qr_code ? `<img src="${data.qr_code}" alt="QR Code" class="w-48 h-48 mx-auto bg-white rounded-lg p-2">` : '<div class="text-center text-yellow-400">QR Code nÃ£o disponÃ­vel</div>';
       } catch(e) { console.error('Erro PIX:', e); qrContainer.innerHTML='<div class="text-center text-red-500">Erro ao gerar PIX</div>'; pixCode.textContent='Erro'; }
     }
     function closePixModal() { document.getElementById('modalPix').classList.add('hidden'); }
-    function copyPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(()=>alert('Código PIX copiado!')).catch(()=>alert('Erro ao copiar')); }
+    function copyPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(()=>alert('CÃ³digo PIX copiado!')).catch(()=>alert('Erro ao copiar')); }
 
-    // Funções de cobrança
+    // FunÃ§Ãµes de cobranÃ§a
     function chargeUser(pagamentoId) { const p = pagamentosData.find(i=>i.id==pagamentoId); if(p) openPixModal(p.id, getPaymentAmount(p)); }
-    function chargeAllPending() { const pend = pagamentosData.filter(p=>!isConfirmedPayment(p)); if(pend.length===0){alert('Não há pagamentos pendentes');return;} if(pend.length>1) alert(`${pend.length} pagamentos pendentes. Abrindo o primeiro.`); openPixModal(pend[0].id, getPaymentAmount(pend[0])); }
+    function chargeAllPending() { const pend = pagamentosData.filter(p=>!isConfirmedPayment(p)); if(pend.length===0){alert('NÃ£o hÃ¡ pagamentos pendentes');return;} if(pend.length>1) alert(`${pend.length} pagamentos pendentes. Abrindo o primeiro.`); openPixModal(pend[0].id, getPaymentAmount(pend[0])); }
 
     // Exportar CSV
     function exportFinance() {
-      if(pagamentosData.length===0){alert('Não há dados para exportar');return;}
-      const csvHeaders = ['ID','Data','Cliente','Plano','Valor','Método','Status'];
+      if(pagamentosData.length===0){alert('NÃ£o hÃ¡ dados para exportar');return;}
+      const csvHeaders = ['ID','Data','Cliente','Plano','Valor','MÃ©todo','Status'];
       const rows = pagamentosData.map(p=>[p.id,new Date(getPaymentDate(p)).toLocaleString('pt-BR'),getPaymentCustomer(p),getPaymentPlan(p),getPaymentAmount(p).toFixed(2),getPaymentMethod(p),isConfirmedPayment(p)?'Confirmado':'Pendente']);
       const csv = [csvHeaders,...rows].map(r=>r.join(';')).join('\n');
       const blob = new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8;'});
       const link = document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`financeiro_${new Date().toISOString().slice(0,10)}.csv`; link.style.visibility='hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
-    // Funções padrão admin: perfil e logout
+    // FunÃ§Ãµes padrÃ£o admin: perfil e logout
     function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user')||'{}'); document.getElementById('profileUsername').value=user.username||''; document.getElementById('profileEmail').value=user.email||''; }
     function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
     function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
@@ -418,10 +420,11 @@
     function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
     function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
 
-    // Evento de período e inicialização
+    // Evento de perÃ­odo e inicializaÃ§Ã£o
     document.getElementById('periodoSelect').addEventListener('change', () => loadFinance());
     loadFinance();
     setInterval(loadFinance, 30000);
   </script>
 </body>
 </html>
+

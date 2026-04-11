@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Perfil de Cadastro - MS TELECOM</title>
@@ -21,7 +22,7 @@
       <a href="vouchers.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="ticket" class="w-5 h-5"></i>Vouchers</a>
       <a href="campanhas.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="megaphone" class="w-5 h-5"></i>Campanhas</a>
       <a href="webhooks.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="webhook" class="w-5 h-5"></i>Webhooks</a>
-      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>Configurações</a>
+      <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="settings" class="w-5 h-5"></i>ConfiguraÃ§Ãµes</a>
       <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5"></i>Logs</a>
       <a href="logs-auditoria.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="shield" class="w-5 h-5"></i>Logs Auditoria</a>
       <a href="perfil-cadastro.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400"><i data-lucide="clipboard-list" class="w-5 h-5"></i>Perfil de Cadastro</a>
@@ -30,11 +31,12 @@
 
   <main class="flex-1 p-4 md:p-6 overflow-auto">
     <header class="flex items-center justify-between mb-6">
+  <base href="/">
       <div class="flex items-center gap-3">
         <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
         <div>
           <h1 class="text-2xl font-bold">Perfil de Cadastro</h1>
-          <p class="text-gray-400 text-sm">Configure quais campos serão exibidos no formulário de cadastro de clientes</p>
+          <p class="text-gray-400 text-sm">Configure quais campos serÃ£o exibidos no formulÃ¡rio de cadastro de clientes</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -51,15 +53,15 @@
     <!-- Estado de carregamento -->
     <div id="fieldsLoadingState" class="text-center py-12">
       <div class="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-gray-500 mt-3">Carregando configurações...</p>
+      <p class="text-gray-500 mt-3">Carregando configuraÃ§Ãµes...</p>
     </div>
 
     <!-- Container dos campos -->
     <div id="fieldsContainer" class="space-y-3 hidden"></div>
 
-    <!-- Botões de ação -->
+    <!-- BotÃµes de aÃ§Ã£o -->
     <div id="actionButtons" class="flex gap-3 mt-6 hidden">
-      <button id="saveBtn" onclick="saveSettings()" class="flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-medium"><i data-lucide="check" class="w-5 h-5"></i>Salvar Configurações</button>
+      <button id="saveBtn" onclick="saveSettings()" class="flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-medium"><i data-lucide="check" class="w-5 h-5"></i>Salvar ConfiguraÃ§Ãµes</button>
       <button onclick="window.history.back()" class="flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium"><i data-lucide="x" class="w-5 h-5"></i>Cancelar</button>
     </div>
   </main>
@@ -69,7 +71,7 @@
     <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
       <div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold">Meu Perfil</h3><button onclick="closeModalPerfil()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
       <div class="space-y-3">
-        <div><label class="block text-sm text-gray-400 mb-1">Usuário</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
+        <div><label class="block text-sm text-gray-400 mb-1">UsuÃ¡rio</label><input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300"></div>
         <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input id="profileEmail" type="email" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
         <div><label class="block text-sm text-gray-400 mb-1">Nova Senha</label><input id="profilePassword" type="password" placeholder="Deixe vazio para manter" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400"></div>
       </div>
@@ -83,7 +85,7 @@
     if (!token) window.location.href = 'login.html';
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-    // Variáveis globais para campos
+    // VariÃ¡veis globais para campos
     let allFields = [];
 
     lucide.createIcons();
@@ -121,7 +123,7 @@
         loadingState.innerHTML = `
           <div class="text-center py-12">
             <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-500"></i>
-            <p class="text-red-400 mt-2">Erro ao carregar configurações</p>
+            <p class="text-red-400 mt-2">Erro ao carregar configuraÃ§Ãµes</p>
             <p class="text-gray-500 text-sm mt-1">${escapeHtml(error.message)}</p>
             <button onclick="loadFields()" class="mt-4 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg text-sm">Tentar novamente</button>
           </div>`;
@@ -149,7 +151,7 @@
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" class="required-toggle w-5 h-5 rounded accent-cyan-500 cursor-pointer" data-field="${escapeHtml(field.field)}" ${field.required ? 'checked' : ''}>
-              <span class="text-sm text-gray-400">Obrigatório</span>
+              <span class="text-sm text-gray-400">ObrigatÃ³rio</span>
             </label>
           </div>
         </div>
@@ -172,7 +174,7 @@
       }
     });
 
-    // Salvar configurações de campos
+    // Salvar configuraÃ§Ãµes de campos
     async function saveSettings() {
       const saveBtn = document.getElementById('saveBtn');
       const originalHtml = saveBtn.innerHTML;
@@ -203,7 +205,7 @@
         });
 
         if (res.ok) {
-          alert('Configurações salvas com sucesso!');
+          alert('ConfiguraÃ§Ãµes salvas com sucesso!');
           await loadFields();
         } else {
           const errorText = await res.text();
@@ -211,7 +213,7 @@
         }
       } catch (error) {
         console.error('[Perfil Cadastro] Erro ao salvar:', error);
-        alert('Erro ao salvar configurações. Verifique sua conexão.');
+        alert('Erro ao salvar configuraÃ§Ãµes. Verifique sua conexÃ£o.');
       } finally {
         saveBtn.innerHTML = originalHtml;
         saveBtn.disabled = false;
@@ -219,7 +221,7 @@
       }
     }
 
-    // Funções padrão admin: perfil e logout
+    // FunÃ§Ãµes padrÃ£o admin: perfil e logout
     function carregarPerfil() { const user = JSON.parse(localStorage.getItem('user')||'{}'); document.getElementById('profileUsername').value=user.username||''; document.getElementById('profileEmail').value=user.email||''; }
     function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
     function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
@@ -227,8 +229,9 @@
     function sair() { fetch(`${API_URL}/api/logout`,{method:'POST',headers}).catch(()=>{}); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); window.location.href='login.html'; }
     function initMenuMobile() { const btn=document.getElementById('btnMenuMobile'); const sb=document.getElementById('sidebar'); if(btn) btn.addEventListener('click',()=>sb.classList.toggle('open')); }
 
-    // Inicialização
+    // InicializaÃ§Ã£o
     loadFields();
   </script>
 </body>
 </html>
+

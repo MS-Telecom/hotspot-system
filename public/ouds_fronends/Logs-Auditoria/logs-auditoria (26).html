@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
+  <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Logs de Auditoria</title>
@@ -31,7 +32,7 @@
 <body class="text-gray-200">
 
 <script>
-    // 🔒 PROTEÇÃO DE ACESSO - VERIFICAÇÃO MÚLTIPLA
+    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO - VERIFICAÃ‡ÃƒO MÃšLTIPLA
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
@@ -61,14 +62,14 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
             <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
@@ -85,24 +86,25 @@
             </div>
             <div class="space-y-2 text-[10px] font-mono">
                 <div class="flex justify-between text-gray-500">
-                    <span>Último acesso</span>
+                    <span>Ãšltimo acesso</span>
                     <span class="text-cyan-400" id="ultimoAcesso">-</span>
                 </div>
                 <div class="flex justify-between text-gray-500">
-                    <span>Sessão iniciada</span>
+                    <span>SessÃ£o iniciada</span>
                     <span class="text-gray-400" id="sessaoInicio">-</span>
                 </div>
             </div>
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃšDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex flex-wrap gap-3 justify-between items-center">
+  <base href="/">
             <div class="relative w-full md:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Buscar por usuário, ação, IP ou detalhes..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Buscar por usuÃ¡rio, aÃ§Ã£o, IP ou detalhes..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-3 ml-auto">
                 <div class="text-right hidden sm:block">
@@ -123,11 +125,11 @@
 
         <div class="p-4 md:p-8 space-y-6">
 
-            <!-- Header da Página -->
+            <!-- Header da PÃ¡gina -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-black tracking-tight">Logs de Auditoria</h1>
-                    <p class="text-gray-500 text-sm mt-1">Histórico completo de ações, acessos e alterações no sistema</p>
+                    <p class="text-gray-500 text-sm mt-1">HistÃ³rico completo de aÃ§Ãµes, acessos e alteraÃ§Ãµes no sistema</p>
                 </div>
                 <div class="flex gap-2">
                     <button id="exportLogsBtn" class="bg-gray-800 hover:bg-gray-700 px-3 md:px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition">
@@ -139,12 +141,12 @@
                 </div>
             </div>
 
-            <!-- Filtros Avançados -->
+            <!-- Filtros AvanÃ§ados -->
             <div class="glass-card rounded-2xl p-4 md:p-5 border border-gray-800">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Usuário</label>
-                        <input type="text" id="filtroUsuario" placeholder="Usuário..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">UsuÃ¡rio</label>
+                        <input type="text" id="filtroUsuario" placeholder="UsuÃ¡rio..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Tipo</label>
@@ -152,16 +154,16 @@
                             <option value="">Todos</option>
                             <option value="login">Login</option>
                             <option value="logout">Logout</option>
-                            <option value="alteracao">Alteração</option>
-                            <option value="criacao">Criação</option>
-                            <option value="exclusao">Exclusão</option>
-                            <option value="liberacao">Liberação</option>
+                            <option value="alteracao">AlteraÃ§Ã£o</option>
+                            <option value="criacao">CriaÃ§Ã£o</option>
+                            <option value="exclusao">ExclusÃ£o</option>
+                            <option value="liberacao">LiberaÃ§Ã£o</option>
                             <option value="bloqueio">Bloqueio</option>
                             <option value="erro">Erro</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Data Início</label>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Data InÃ­cio</label>
                         <input type="date" id="filtroDataInicio" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
                     </div>
                     <div>
@@ -175,7 +177,7 @@
                 </div>
             </div>
 
-            <!-- Estatísticas Rápidas -->
+            <!-- EstatÃ­sticas RÃ¡pidas -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 stats-grid">
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center">
                     <i data-lucide="log-in" class="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mx-auto mb-1 md:mb-2"></i>
@@ -189,12 +191,12 @@
                 </div>
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center">
                     <i data-lucide="edit" class="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mx-auto mb-1 md:mb-2"></i>
-                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Alterações</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">AlteraÃ§Ãµes</p>
                     <p id="statsAlteracoes" class="text-lg md:text-xl font-bold text-white">0</p>
                 </div>
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center">
                     <i data-lucide="users" class="w-4 h-4 md:w-5 md:h-5 text-blue-500 mx-auto mb-1 md:mb-2"></i>
-                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Usuários Ativos</p>
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase">UsuÃ¡rios Ativos</p>
                     <p id="statsUsuarios" class="text-lg md:text-xl font-bold text-white">0</p>
                 </div>
             </div>
@@ -202,18 +204,18 @@
             <!-- Tabela de Logs -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                 <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gray-900/30">
-                    <h3 class="font-bold text-white text-sm md:text-base">Histórico de Ações</h3>
+                    <h3 class="font-bold text-white text-sm md:text-base">HistÃ³rico de AÃ§Ãµes</h3>
                     <div class="flex gap-3 md:gap-4 text-[9px] md:text-[10px] text-gray-500">
                         <span>Total: <span id="totalRegistros">0</span> registros</span>
-                        <span>Últimas 24h: <span id="ultimas24h">0</span></span>
+                        <span>Ãšltimas 24h: <span id="ultimas24h">0</span></span>
                     </div>
                 </div>
                 <div class="overflow-x-auto table-responsive">
                     <table class="w-full min-w-[800px]">
                         <thead class="bg-gray-900/50 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                             <tr>
-                                <th class="px-4 md:px-6 py-3 text-left">Usuário</th>
-                                <th class="px-4 md:px-6 py-3 text-left">Objeto / Ação</th>
+                                <th class="px-4 md:px-6 py-3 text-left">UsuÃ¡rio</th>
+                                <th class="px-4 md:px-6 py-3 text-left">Objeto / AÃ§Ã£o</th>
                                 <th class="px-4 md:px-6 py-3 text-left">Data/Hora</th>
                                 <th class="px-4 md:px-6 py-3 text-left">IP</th>
                             </tr>
@@ -233,13 +235,13 @@
                     </table>
                 </div>
 
-                <!-- Paginação -->
+                <!-- PaginaÃ§Ã£o -->
                 <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoInicio">0</span> - <span id="mostrandoFim">0</span> de <span id="totalMostrando">0</span> registros</p>
                     <div class="flex gap-2">
                         <button id="prevPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button>
-                        <span id="pageInfo" class="text-xs text-gray-400 px-2 py-1">Página 1</span>
-                        <button id="nextPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Próximo</button>
+                        <span id="pageInfo" class="text-xs text-gray-400 px-2 py-1">PÃ¡gina 1</span>
+                        <button id="nextPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">PrÃ³ximo</button>
                     </div>
                 </div>
             </div>
@@ -261,7 +263,7 @@
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label>
                 <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:border-blue-500 outline-none">
             </div>
             <div>
@@ -288,7 +290,7 @@
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-lg text-sm font-bold transition">Salvar Alterações</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-lg text-sm font-bold transition">Salvar AlteraÃ§Ãµes</button>
         </div>
     </div>
 </div>
@@ -378,7 +380,7 @@ async function carregarLogs() {
         }
 
         if (!res.ok) {
-            throw new Error('API não disponível');
+            throw new Error('API nÃ£o disponÃ­vel');
         }
 
         const data = await res.json();
@@ -393,7 +395,7 @@ async function carregarLogs() {
         renderizarLogs();
         
     } catch (error) {
-        console.warn('API de logs não disponível, usando dados de exemplo:', error.message);
+        console.warn('API de logs nÃ£o disponÃ­vel, usando dados de exemplo:', error.message);
         logsData = [];
         atualizarEstatisticas();
         renderizarLogs();
@@ -448,7 +450,7 @@ function renderizarLogs() {
     document.getElementById('mostrandoInicio').innerText = totalItems === 0 ? 0 : start + 1;
     document.getElementById('mostrandoFim').innerText = Math.min(start + itemsPerPage, totalItems);
     document.getElementById('totalMostrando').innerText = totalItems;
-    document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages || 1}`;
+    document.getElementById('pageInfo').innerText = `PÃ¡gina ${currentPage} de ${totalPages || 1}`;
     
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
     document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
@@ -531,7 +533,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Paginação
+// PaginaÃ§Ã£o
 document.getElementById('prevPageBtn')?.addEventListener('click', () => {
     if (currentPage > 1) {
         currentPage--;
@@ -583,7 +585,7 @@ document.getElementById('searchInput')?.addEventListener('input', function(e) {
 
 // Exportar CSV
 document.getElementById('exportLogsBtn')?.addEventListener('click', () => {
-    const headers = ['Data/Hora', 'Usuário', 'Tipo', 'Objeto', 'Ação/Detalhes', 'IP'];
+    const headers = ['Data/Hora', 'UsuÃ¡rio', 'Tipo', 'Objeto', 'AÃ§Ã£o/Detalhes', 'IP'];
     const rows = logsData.map(log => [
         log.created_at ? new Date(log.created_at).toLocaleString('pt-BR') : '',
         log.usuario || 'Sistema',
@@ -607,7 +609,7 @@ document.getElementById('refreshLogsBtn')?.addEventListener('click', () => {
 });
 
 // ============================================
-// FUNÇÕES DE PERFIL E LOGOUT
+// FUNÃ‡Ã•ES DE PERFIL E LOGOUT
 // ============================================
 function carregarPerfil() {
     const userStr = localStorage.getItem('user');
@@ -620,7 +622,7 @@ function carregarPerfil() {
         } catch(e) {}
     }
     
-    // Atualizar informações do sidebar
+    // Atualizar informaÃ§Ãµes do sidebar
     const sessionStart = localStorage.getItem('session_start');
     if (sessionStart) {
         document.getElementById('sessaoInicio').innerText = new Date(sessionStart).toLocaleTimeString('pt-BR');
@@ -652,7 +654,7 @@ async function salvarPerfil() {
     const confirmarSenha = document.getElementById('confirmarSenha')?.value;
     
     if (novaSenha && novaSenha !== confirmarSenha) {
-        alert('As novas senhas não coincidem');
+        alert('As novas senhas nÃ£o coincidem');
         return;
     }
     
@@ -662,7 +664,7 @@ async function salvarPerfil() {
     }
     
     if (!token) {
-        alert('Você precisa estar logado para alterar o perfil');
+        alert('VocÃª precisa estar logado para alterar o perfil');
         return;
     }
     
@@ -721,15 +723,16 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarPerfil();
     if (typeof lucide !== 'undefined') lucide.createIcons();
     
-    // Salvar horário de início da sessão se não existir
+    // Salvar horÃ¡rio de inÃ­cio da sessÃ£o se nÃ£o existir
     if (!localStorage.getItem('session_start')) {
         localStorage.setItem('session_start', new Date().toISOString());
     }
 });
 
-// Atualização automática a cada 30 segundos
+// AtualizaÃ§Ã£o automÃ¡tica a cada 30 segundos
 setInterval(carregarLogs, 30000);
 </script>
 
 </body>
 </html>
+

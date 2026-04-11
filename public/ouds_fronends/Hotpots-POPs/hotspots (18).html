@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>MS Telecom | Hotspots / POPs</title>
@@ -46,7 +47,7 @@
         <i data-lucide="webhook" class="w-5 h-5"></i>Webhooks
       </a>
       <a href="configuracoes.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition">
-        <i data-lucide="settings" class="w-5 h-5"></i>Configurações
+        <i data-lucide="settings" class="w-5 h-5"></i>ConfiguraÃ§Ãµes
       </a>
       <a href="logs.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 transition">
         <i data-lucide="file-text" class="w-5 h-5"></i>Logs
@@ -60,6 +61,7 @@
   <!-- ================= MAIN CONTENT ================= -->
   <main class="flex-1 p-4 md:p-6 overflow-auto">
     <header class="flex items-center justify-between mb-6">
+  <base href="/">
       <div class="flex items-center gap-3">
         <button id="btnMenuMobile" class="md:hidden p-2 hover:bg-gray-700 rounded-lg">
           <i data-lucide="menu" class="w-6 h-6"></i>
@@ -81,7 +83,7 @@
 
     <!-- Busca -->
     <div class="mb-4">
-      <input type="text" id="searchInput" placeholder="Buscar hotspot por nome ou localização..." 
+      <input type="text" id="searchInput" placeholder="Buscar hotspot por nome ou localizaÃ§Ã£o..." 
              class="w-full md:w-96 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400">
     </div>
 
@@ -104,7 +106,7 @@
           <input type="text" id="popName" placeholder="MS-WIFI-POP-01" class="w-full px-3 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400">
         </div>
         <div>
-          <label class="block text-sm text-gray-400 mb-1">Localização</label>
+          <label class="block text-sm text-gray-400 mb-1">LocalizaÃ§Ã£o</label>
           <input type="text" id="popLocation" placeholder="Bairro, Cidade" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
         </div>
         <div>
@@ -112,12 +114,12 @@
           <input type="text" id="popIp" placeholder="192.168.1.1" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
         </div>
         <div>
-          <label class="block text-sm text-gray-400 mb-1">Tipo de Instalação</label>
+          <label class="block text-sm text-gray-400 mb-1">Tipo de InstalaÃ§Ã£o</label>
           <select id="installationType" onchange="toggleWanConfig()" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
-            <option value="new">🆕 Novo / Resetado (configurar WAN)</option>
-            <option value="existing">✅ Em Produção (apenas cadastrar)</option>
+            <option value="new">ðŸ†• Novo / Resetado (configurar WAN)</option>
+            <option value="existing">âœ… Em ProduÃ§Ã£o (apenas cadastrar)</option>
           </select>
-          <p id="installationTypeHelp" class="text-xs text-cyan-400 mt-1">Novo: configuração completa da WAN será solicitada</p>
+          <p id="installationTypeHelp" class="text-xs text-cyan-400 mt-1">Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada</p>
         </div>
         <div>
           <label class="block text-sm text-gray-400 mb-1">Interface WAN</label>
@@ -136,21 +138,21 @@
             </optgroup>
           </select>
         </div>
-        <!-- Configuração WAN (visível apenas se "new") -->
+        <!-- ConfiguraÃ§Ã£o WAN (visÃ­vel apenas se "new") -->
         <div id="wanConfig">
-          <label class="block text-sm text-gray-400 mb-1">Configuração WAN</label>
+          <label class="block text-sm text-gray-400 mb-1">ConfiguraÃ§Ã£o WAN</label>
           <select id="wanTipo" onchange="toggleWanFields()" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
-            <option value="dhcp">DHCP (Automático)</option>
+            <option value="dhcp">DHCP (AutomÃ¡tico)</option>
             <option value="pppoe">PPPoE (Provedor)</option>
-            <option value="static">Estático (IP Manual)</option>
+            <option value="static">EstÃ¡tico (IP Manual)</option>
           </select>
           <div id="pppoeFields" class="hidden space-y-3 mt-3">
-            <input type="text" id="pppoeUsername" placeholder="Usuário PPPoE" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
+            <input type="text" id="pppoeUsername" placeholder="UsuÃ¡rio PPPoE" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
             <input type="password" id="pppoePassword" placeholder="Senha PPPoE" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
           </div>
           <div id="staticFields" class="hidden space-y-3 mt-3">
             <input type="text" id="staticIp" placeholder="IP" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
-            <input type="text" id="staticMask" placeholder="Máscara" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
+            <input type="text" id="staticMask" placeholder="MÃ¡scara" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
             <input type="text" id="staticGateway" placeholder="Gateway" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
           </div>
         </div>
@@ -173,15 +175,15 @@
         </div>
         <div>
           <label class="block text-sm text-gray-400 mb-1">VLAN ID (opcional)</label>
-          <input type="text" id="vlanId" placeholder="Deixe em branco se não usar VLAN" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
-          <p class="text-xs text-gray-500 mt-1">Se preenchido, o hotspot será criado dentro da VLAN</p>
+          <input type="text" id="vlanId" placeholder="Deixe em branco se nÃ£o usar VLAN" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
+          <p class="text-xs text-gray-500 mt-1">Se preenchido, o hotspot serÃ¡ criado dentro da VLAN</p>
         </div>
         <div>
-          <label class="block text-sm text-gray-400 mb-1">Tipo de Saída do Hotspot</label>
+          <label class="block text-sm text-gray-400 mb-1">Tipo de SaÃ­da do Hotspot</label>
           <select id="popType" onchange="togglePopTypeFields()" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
-            <option value="new_vlan">🆕 Nova VLAN (usando VLAN ID acima)</option>
-            <option value="existing_vlan">📁 VLAN existente</option>
-            <option value="physical_port">🔌 Porta física dedicada</option>
+            <option value="new_vlan">ðŸ†• Nova VLAN (usando VLAN ID acima)</option>
+            <option value="existing_vlan">ðŸ“ VLAN existente</option>
+            <option value="physical_port">ðŸ”Œ Porta fÃ­sica dedicada</option>
           </select>
           <div id="existingVlanConfig" class="hidden mt-3">
             <input type="text" id="existingVlan" placeholder="Nome da VLAN existente (ex: vlan555)" class="w-full px-3 py-2 bg-gray-700 rounded-lg">
@@ -196,7 +198,7 @@
           </div>
         </div>
         <div class="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3">
-          <p id="infoMessage" class="text-xs text-cyan-400">Após criar, um script será gerado e copiado automaticamente.</p>
+          <p id="infoMessage" class="text-xs text-cyan-400">ApÃ³s criar, um script serÃ¡ gerado e copiado automaticamente.</p>
         </div>
       </div>
       <div class="p-4 border-t border-gray-700 flex gap-3">
@@ -241,7 +243,7 @@
       </div>
       <div class="space-y-3">
         <div>
-          <label class="block text-sm text-gray-400 mb-1">Usuário</label>
+          <label class="block text-sm text-gray-400 mb-1">UsuÃ¡rio</label>
           <input id="profileUsername" type="text" disabled class="w-full px-3 py-2 bg-gray-700 rounded-lg text-gray-300">
         </div>
         <div>
@@ -261,24 +263,24 @@
   </div>
 
   <script>
-    // ================= CONFIGURAÇÕES GLOBAIS =================
+    // ================= CONFIGURAÃ‡Ã•ES GLOBAIS =================
     const API_URL = 'https://mstelecom-api.duckdns.org';
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) window.location.href = 'login.html';
 
-    // Headers padrão para todas as requisições autenticadas
+    // Headers padrÃ£o para todas as requisiÃ§Ãµes autenticadas
     const headers = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
 
-    // Utilitário para escapar HTML
+    // UtilitÃ¡rio para escapar HTML
     function escapeHtml(str) {
       if (!str) return '';
       return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
     }
 
-    // ================= FUNÇÕES DE API (PADRÃO CORRIGIDO) =================
+    // ================= FUNÃ‡Ã•ES DE API (PADRÃƒO CORRIGIDO) =================
     // Carregar lista de POPs (endpoint /api/pops)
     async function loadPops() {
       try {
@@ -308,8 +310,8 @@
                 <span class="px-2 py-1 ${statusBg} text-xs font-bold rounded-full">${statusText}</span>
               </div>
               <div class="text-xs text-gray-400 space-y-1">
-                <p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p>
-                <p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
+                <p>ðŸ“ ${escapeHtml(pop.location) || 'LocalizaÃ§Ã£o nÃ£o definida'}</p>
+                <p>ðŸ“¡ Ãšltimo heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p>
               </div>
               <div class="mt-3 pt-3 border-t border-gray-700 flex justify-end gap-2">
                 <button onclick="event.stopPropagation(); generateScript(${pop.id}, '${escapeHtml(pop.name)}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs">Script</button>
@@ -325,7 +327,7 @@
       }
     }
 
-    // Ver detalhes de um POP específico
+    // Ver detalhes de um POP especÃ­fico
     async function viewPopDetails(id) {
       const modal = document.getElementById('popDetailsModal');
       const content = document.getElementById('popDetailsContent');
@@ -342,19 +344,19 @@
           content.innerHTML = `
             <div class="space-y-2">
               <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Nome</p><p class="font-medium">${escapeHtml(pop.name) || '-'}</p></div>
-              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">ID Único</p><p class="font-mono text-cyan-400 text-xs">${escapeHtml(String(pop.unique_id || pop.id)) || '-'}</p></div>
+              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">ID Ãšnico</p><p class="font-mono text-cyan-400 text-xs">${escapeHtml(String(pop.unique_id || pop.id)) || '-'}</p></div>
               <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Status</p><p><span class="px-2 py-1 ${statusBg} rounded-lg text-xs">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p></div>
-              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Localização</p><p>${escapeHtml(pop.location) || 'Não definida'}</p></div>
+              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">LocalizaÃ§Ã£o</p><p>${escapeHtml(pop.location) || 'NÃ£o definida'}</p></div>
               <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p></div>
-              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Tipo de Instalação</p><p>${pop.installation_type === 'new' ? 'Novo / Resetado' : 'Em Produção'}</p></div>
+              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Tipo de InstalaÃ§Ã£o</p><p>${pop.installation_type === 'new' ? 'Novo / Resetado' : 'Em ProduÃ§Ã£o'}</p></div>
               <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Interface WAN</p><p class="font-mono">${escapeHtml(pop.wan_interface) || '-'}</p></div>
               <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Interface LAN</p><p class="font-mono">${escapeHtml(pop.lan_interface) || '-'}</p></div>
-              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
-              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Data Criação</p><p>${pop.created_at ? new Date(pop.created_at).toLocaleString('pt-BR') : '-'}</p></div>
+              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Ãšltimo Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
+              <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-xs text-gray-500">Data CriaÃ§Ã£o</p><p>${pop.created_at ? new Date(pop.created_at).toLocaleString('pt-BR') : '-'}</p></div>
             </div>
           `;
         } else {
-          content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';
+          content.innerHTML = '<div class="text-center text-red-500">POP nÃ£o encontrado</div>';
         }
       } catch (error) {
         console.error('Erro:', error);
@@ -364,7 +366,7 @@
     }
     function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
 
-    // Gerar script de configuração para o POP (endpoint /api/pops/:id/script)
+    // Gerar script de configuraÃ§Ã£o para o POP (endpoint /api/pops/:id/script)
     async function generateScript(popId, popName) {
       try {
         const res = await fetch(`${API_URL}/api/pops/${popId}/script`, { headers });
@@ -376,11 +378,11 @@
           document.getElementById('modalScript').classList.remove('hidden');
           navigator.clipboard.writeText(script).catch(() => {});
         } else {
-          alert('Script não disponível para este POP');
+          alert('Script nÃ£o disponÃ­vel para este POP');
         }
       } catch (error) {
         console.error('Erro ao gerar script:', error);
-        alert('Não foi possível obter o script deste hotspot');
+        alert('NÃ£o foi possÃ­vel obter o script deste hotspot');
       }
     }
     function closeModalScript() { document.getElementById('modalScript').classList.add('hidden'); }
@@ -391,11 +393,11 @@
 
     // Deletar POP (DELETE /api/pops/:id)
     async function deletePop(id, nome) {
-      if (!confirm(`Deseja realmente excluir o POP "${nome}"?\n\nEsta ação não pode ser desfeita.`)) return;
+      if (!confirm(`Deseja realmente excluir o POP "${nome}"?\n\nEsta aÃ§Ã£o nÃ£o pode ser desfeita.`)) return;
       try {
         const res = await fetch(`${API_URL}/api/pops/${id}`, { method: 'DELETE', headers });
         if (res.ok) {
-          alert(`POP "${nome}" excluído com sucesso!`);
+          alert(`POP "${nome}" excluÃ­do com sucesso!`);
           loadPops();
         } else {
           alert('Erro ao excluir POP');
@@ -405,7 +407,7 @@
       }
     }
 
-    // ================= MODAL NOVO HOTSPOT (CAMPOS PADRÃO INGLÊS) =================
+    // ================= MODAL NOVO HOTSPOT (CAMPOS PADRÃƒO INGLÃŠS) =================
     function openNewPopModal() {
       document.getElementById('popName').value = '';
       document.getElementById('popLocation').value = '';
@@ -426,8 +428,8 @@
       document.getElementById('pppoeFields').classList.add('hidden');
       document.getElementById('staticFields').classList.add('hidden');
       document.getElementById('modalNewPop').classList.remove('hidden');
-      document.getElementById('installationTypeHelp').innerHTML = '🔧 Novo: configuração completa da WAN será solicitada';
-      document.getElementById('infoMessage').innerHTML = 'Após criar, um script COMPLETO com configuração WAN será gerado e copiado.';
+      document.getElementById('installationTypeHelp').innerHTML = 'ðŸ”§ Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada';
+      document.getElementById('infoMessage').innerHTML = 'ApÃ³s criar, um script COMPLETO com configuraÃ§Ã£o WAN serÃ¡ gerado e copiado.';
     }
     function closeNewPopModal() { document.getElementById('modalNewPop').classList.add('hidden'); }
 
@@ -435,11 +437,11 @@
       const isNew = document.getElementById('installationType').value === 'new';
       document.getElementById('wanConfig').classList.toggle('hidden', !isNew);
       document.getElementById('installationTypeHelp').innerHTML = isNew
-        ? '🔧 Novo: configuração completa da WAN será solicitada'
-        : '✅ Em Produção: apenas cadastro do POP existente (sem config WAN)';
+        ? 'ðŸ”§ Novo: configuraÃ§Ã£o completa da WAN serÃ¡ solicitada'
+        : 'âœ… Em ProduÃ§Ã£o: apenas cadastro do POP existente (sem config WAN)';
       document.getElementById('infoMessage').innerHTML = isNew
-        ? 'Após criar, um script COMPLETO com configuração WAN será gerado e copiado.'
-        : 'Após criar, um script BÁSICO (apenas heartbeat e RADIUS) será gerado e copiado.';
+        ? 'ApÃ³s criar, um script COMPLETO com configuraÃ§Ã£o WAN serÃ¡ gerado e copiado.'
+        : 'ApÃ³s criar, um script BÃSICO (apenas heartbeat e RADIUS) serÃ¡ gerado e copiado.';
     }
     function togglePopTypeFields() {
       const type = document.getElementById('popType').value;
@@ -452,17 +454,17 @@
       document.getElementById('staticFields').classList.toggle('hidden', type !== 'static');
     }
 
-    // Salvar novo hotspot (POST /api/pops) com payload totalmente em inglês
+    // Salvar novo hotspot (POST /api/pops) com payload totalmente em inglÃªs
     async function saveNewPop() {
       const nome = document.getElementById('popName').value.trim();
       if (!nome) {
-        alert('⚠️ Informe o nome do hotspot');
+        alert('âš ï¸ Informe o nome do hotspot');
         return;
       }
       const isNew = document.getElementById('installationType').value === 'new';
       const payload = {
         name: nome,
-        location: document.getElementById('popLocation').value.trim() || 'Localização não definida',
+        location: document.getElementById('popLocation').value.trim() || 'LocalizaÃ§Ã£o nÃ£o definida',
         ip: document.getElementById('popIp').value.trim() || '0.0.0.0',
         installation_type: isNew ? 'new' : 'existing',
         wan_interface: document.getElementById('wanInterface').value,
@@ -489,24 +491,24 @@
         const data = await res.json();
         const createdPop = data.data || data;
         if (res.ok && (createdPop.id || createdPop.unique_id)) {
-          let msg = `✅ Hotspot "${nome}" criado com sucesso!\n\n`;
-          msg += `📋 Tipo: ${isNew ? '🆕 Novo (com config WAN)' : '✅ Em Produção'}\n`;
-          msg += `🆔 ID: ${createdPop.id || createdPop.unique_id}\n\n`;
+          let msg = `âœ… Hotspot "${nome}" criado com sucesso!\n\n`;
+          msg += `ðŸ“‹ Tipo: ${isNew ? 'ðŸ†• Novo (com config WAN)' : 'âœ… Em ProduÃ§Ã£o'}\n`;
+          msg += `ðŸ†” ID: ${createdPop.id || createdPop.unique_id}\n\n`;
           if (createdPop.script) {
             navigator.clipboard.writeText(createdPop.script).catch(() => {});
-            msg += `📋 Script foi copiado para a área de transferência!`;
+            msg += `ðŸ“‹ Script foi copiado para a Ã¡rea de transferÃªncia!`;
           } else {
-            msg += `ℹ️ Nenhum script foi gerado automaticamente.`;
+            msg += `â„¹ï¸ Nenhum script foi gerado automaticamente.`;
           }
           alert(msg);
           closeNewPopModal();
           loadPops();
         } else {
-          alert('❌ Erro ao criar hotspot: ' + (data.error || 'Tente novamente'));
+          alert('âŒ Erro ao criar hotspot: ' + (data.error || 'Tente novamente'));
         }
       } catch (error) {
         console.error('Erro:', error);
-        alert('❌ Erro ao criar hotspot. Verifique sua conexão com a API.');
+        alert('âŒ Erro ao criar hotspot. Verifique sua conexÃ£o com a API.');
       }
     }
 
@@ -536,7 +538,7 @@
       if (email) payload.email = email;
       if (newPassword) payload.password = newPassword;
       if (Object.keys(payload).length === 0) {
-        alert('Nenhuma alteração informada.');
+        alert('Nenhuma alteraÃ§Ã£o informada.');
         return;
       }
       try {
@@ -547,18 +549,18 @@
         });
         const data = await res.json();
         if (res.ok && (data.success || data.id)) {
-          alert('✅ Perfil atualizado com sucesso!');
+          alert('âœ… Perfil atualizado com sucesso!');
           // Atualiza os dados no localStorage
           const user = JSON.parse(localStorage.getItem('user') || '{}');
           if (email) user.email = email;
           localStorage.setItem('user', JSON.stringify(user));
           closeModalPerfil();
         } else {
-          alert(data.error || '❌ Erro ao atualizar perfil');
+          alert(data.error || 'âŒ Erro ao atualizar perfil');
         }
       } catch (error) {
         console.error('Erro:', error);
-        alert('❌ Erro ao atualizar perfil');
+        alert('âŒ Erro ao atualizar perfil');
       }
     }
 
@@ -589,7 +591,7 @@
       });
     });
 
-    // ================= INICIALIZAÇÃO =================
+    // ================= INICIALIZAÃ‡ÃƒO =================
     document.addEventListener('DOMContentLoaded', () => {
       initMenuMobile();
       loadPops();
@@ -600,3 +602,4 @@
   </script>
 </body>
 </html>
+
