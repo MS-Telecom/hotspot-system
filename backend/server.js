@@ -1029,11 +1029,48 @@ app.get('/api/stats/summary', authMiddleware, async (req, res) => {
 // Estatísticas de usuários por hora (Dashboard)
 app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
   try {
-    // Mock de dados para o gráfico (24 horas)
-    const mockData = Array.from({ length: 24 }, () => Math.floor(Math.random() * 10));
-    res.json({ data: mockData });
-  } catch (err) {
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: sessions, error } = await supabase
+      .from('hotspot_sessions')
+      .select('created_at')
+      .gte('created_at', last24h);
+
+    if (error) throw error;
+
+    const hourlyData = new Array(24).fill(0);
+    const now = new Date();
+
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.created_at);
+      const hourDiff = Math.floor((now - sessionDate) / (1000 * 60 * 60));
+      if (hourDiff >= 0 && hourDiff < 24) {
+        const hour = sessionDate.getHours();
+        hourlyData[hour]++;
+      }
+    });
+
+    res.json({ data: hourlyData });
+  } catch (error) {
+    console.error('❌ Erro ao buscar estatísticas reais:', error.message);
     res.status(500).json({ error: 'Erro ao buscar estatísticas por hora' });
+  }
+});
+
+// Listar sessões ativas (usuários online)
+app.get('/api/sessions/active', authMiddleware, async (req, res) => {
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .eq('status', 'active')
+      .gt('expires_at', now);
+    
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error('❌ Erro ao listar sessões ativas:', err.message);
+    res.status(500).json({ error: 'Erro ao listar sessões ativas' });
   }
 });
 
@@ -1130,6 +1167,88 @@ app.put('/api/settings/fields', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
+// ⚙️ CONFIGURAÇÕES DO SISTEMA (SETTINGS)
+// ============================================================
+
+// Buscar configurações gerais
+app.get('/api/settings/system', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
+    if (error) throw error;
+    res.json(data?.value || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Salvar configurações gerais
+app.put('/api/settings/system', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'system',
+      value: req.body,
+      updated_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Buscar configurações de pagamento
+app.get('/api/settings/payment', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'payment').maybeSingle();
+    if (error) throw error;
+    res.json(data?.value || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Salvar configurações de pagamento
+app.put('/api/settings/payment', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'payment',
+      value: req.body,
+      updated_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Buscar configurações de teste grátis
+app.get('/api/settings/free_trial', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
+    if (error) throw error;
+    res.json(data?.value || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Salvar configurações de teste grátis
+app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'free_trial',
+      value: req.body,
+      updated_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
 // 👤 ADMINS
 // ============================================================
 
@@ -1150,6 +1269,89 @@ app.post('/api/admins', async (req, res) => {
 // ============================================================
 // 🪝 WEBHOOKS
 // ============================================================
+
+// Webhook do Mercado Pago (Público)
+app.post('/api/webhooks/mercadopago', async (req, res) => {
+  try {
+    const { action, data, type } = req.body;
+    
+    // Mercado Pago envia notificações de diferentes tipos, focamos em 'payment'
+    if (type === 'payment' || action === 'payment.created' || action === 'payment.updated') {
+      const paymentId = data?.id || req.query['data.id'];
+      if (!paymentId) return res.status(200).send('OK');
+
+      const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+      
+      // Buscar detalhes do pagamento no Mercado Pago
+      const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { 'Authorization': `Bearer ${MP_TOKEN}` }
+      });
+      
+      if (!mpResponse.ok) throw new Error('Falha ao buscar pagamento no Mercado Pago');
+      const mpData = await mpResponse.json();
+
+      if (mpData.status === 'approved') {
+        // 1. Buscar o registro de pagamento no nosso banco
+        const { data: payment, error: payError } = await supabase
+          .from('payments')
+          .select('*')
+          .eq('mercado_pago_id', String(paymentId))
+          .maybeSingle();
+
+        if (payError) throw payError;
+        
+        if (payment && payment.status !== 'approved') {
+          // 2. Atualizar status para aprovado
+          await supabase.from('payments').update({
+            status: 'approved',
+            approved_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }).eq('id', payment.id);
+
+          // 3. Liberar acesso no MikroTik/RADIUS
+          // Buscamos a duração do plano
+          const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
+          const durationMinutes = (plan?.duration_days || 1) * 24 * 60;
+          
+          await authorizeAccess(
+            payment.user_mac, 
+            '192.168.32.1', 
+            null, null, null, 
+            durationMinutes, 
+            plan?.speed_mbps || 10, 
+            payment.plan_name
+          );
+
+          // 4. Registrar sessão
+          await supabase.from('hotspot_sessions').insert({
+            user_mac: payment.user_mac,
+            plan_name: payment.plan_name,
+            status: 'active',
+            expires_at: new Date(Date.now() + durationMinutes * 60000).toISOString(),
+            created_at: new Date().toISOString()
+          });
+
+          // 5. Disparar webhooks internos
+          const { data: internalWebhooks } = await supabase.from('webhooks').select('*').eq('active', true).eq('event', 'payment.confirmed');
+          for (const wh of internalWebhooks || []) {
+            fetch(wh.url, {
+              method: wh.method || 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ event: 'payment.confirmed', payment_id: payment.id, mac: payment.user_mac })
+            }).catch(err => console.error(`❌ Erro ao disparar webhook ${wh.name}:`, err.message));
+          }
+
+          await registerSystemLog('info', 'mercadopago', `Pagamento aprovado e acesso liberado: ${payment.user_mac}`);
+        }
+      }
+    }
+    
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('❌ Erro no Webhook Mercado Pago:', err.message);
+    res.status(200).send('OK'); // Sempre retornar 200 para o MP não ficar retransmitindo em loop
+  }
+});
 
 app.get('/api/webhooks', authMiddleware, async (req, res) => {
   try {
