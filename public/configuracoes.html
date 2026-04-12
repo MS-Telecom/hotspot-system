@@ -703,14 +703,16 @@
         }
     }
 
+    // Inicialização imediata das abas
+    initTabs();
+    openTab('geral');
+
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
-        initTabs();
         initThemeButtons();
         updateSessionIp();
         
-        // Carregar aba inicial
-        openTab('geral');
+        // Listeners globais
 
         // Listeners globais
         document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
