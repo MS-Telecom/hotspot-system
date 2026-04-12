@@ -389,7 +389,8 @@
     }
 
     // ==================== SISTEMA DE ABAS ====================
-    function openTab(tabId) {
+    window.openTab = function(tabId) {
+        console.log('Abrindo aba:', tabId);
         // Atualizar botões
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.classList.remove('active', 'text-white');
@@ -404,7 +405,11 @@
         // Atualizar conteúdos
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         const target = document.getElementById(tabId);
-        if (target) target.classList.remove('hidden');
+        if (target) {
+            target.classList.remove('hidden');
+        } else {
+            console.error('Seção não encontrada:', tabId);
+        }
 
         // Carregar dados
         if (tabId === 'backup') carregarBackups();
@@ -416,15 +421,15 @@
         if (tabId === 'pagamento') carregarConfig('payment');
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-    }
+    };
 
     function initTabs() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
+            btn.onclick = function(e) {
                 e.preventDefault();
                 const tabId = this.getAttribute('data-tab');
-                if (tabId) openTab(tabId);
-            });
+                if (tabId) window.openTab(tabId);
+            };
         });
     }
 
