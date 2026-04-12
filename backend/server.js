@@ -25,6 +25,8 @@ try {
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Captura IP real quando estiver atrÃ¡s de proxy (Vercel/Cloudflare/Nginx)
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
@@ -62,6 +64,12 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // ============================================================
 
 // Remove acentos de uma string (útil para slugs)
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return String(forwarded).split(',')[0].trim();
+  return req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || null;
+}
+
 function removeAccents(str) {
   return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -357,7 +365,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     const token = jwt.sign({ id: admin.id, username: admin.username, role: admin.role }, JWT_SECRET, { expiresIn: '24h' });
     
-    await registerAuditLog(username, 'login', 'auth', 'Login realizado', req.ip, req.headers['user-agent']);
+    await registerAuditLog(username, 'login', 'auth', 'Login realizado', getClientIp(req), req.headers['user-agent']);
     
     res.json({ token, user: { id: admin.id, username: admin.username, role: admin.role } });
   } catch (err) {
@@ -367,7 +375,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.post('/api/auth/logout', authMiddleware, async (req, res) => {
-  await registerAuditLog(req.user.username, 'logout', 'auth', 'Logout realizado', req.ip, req.headers['user-agent']);
+  await registerAuditLog(req.user.username, 'logout', 'auth', 'Logout realizado', getClientIp(req), req.headers['user-agent']);
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
@@ -431,7 +439,7 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
       .single();
 
     if (updateError) throw updateError;
-    await registerAuditLog(admin.username, 'update', 'admin', 'Perfil atualizado', req.ip, req.headers['user-agent']);
+    await registerAuditLog(admin.username, 'update', 'admin', 'Perfil atualizado', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true, user: { id: data.id, username: data.username, email: data.email } });
   } catch (err) {
     console.error('❌ Erro ao atualizar perfil:', err.message);
@@ -479,7 +487,7 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     }).select().single();
 
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name}`, getClientIp(req), req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar usuário:', err.message);
@@ -498,7 +506,7 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     const { data, error } = await supabase.from('users').update(updateData).eq('id', id).select().single();
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao atualizar usuário:', err.message);
@@ -513,7 +521,7 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json({ message: 'Usuário removido com sucesso' });
   } catch (err) {
     console.error('❌ Erro ao deletar usuário:', err.message);
@@ -539,7 +547,7 @@ app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
     }).eq('id', id).select().single();
 
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao renovar plano:', err.message);
@@ -553,7 +561,7 @@ app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'blocked', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao bloquear usuário:', err.message);
@@ -567,7 +575,7 @@ app.post('/api/users/:id/unblock', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário desbloqueado: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao desbloquear usuário:', err.message);
@@ -582,7 +590,7 @@ app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
     const { is_vip = true } = req.body;
     const { data, error } = await supabase.from('users').update({ is_vip, updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `VIP atualizado: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `VIP atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao atualizar VIP:', err.message);
@@ -657,7 +665,7 @@ app.post('/api/plans', authMiddleware, async (req, res) => {
     }).select().single();
 
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'create', 'plan', `Plano criado: ${name}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'plan', `Plano criado: ${name}`, getClientIp(req), req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar plano:', err.message);
@@ -676,7 +684,7 @@ app.put('/api/plans/:id', authMiddleware, async (req, res) => {
     const { data, error } = await supabase.from('plans').update(updateData).eq('id', id).select().single();
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao atualizar plano:', err.message);
@@ -691,7 +699,7 @@ app.delete('/api/plans/:id', authMiddleware, async (req, res) => {
     const { error } = await supabase.from('plans').delete().eq('id', id);
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json({ message: 'Plano removido com sucesso' });
   } catch (err) {
     console.error('❌ Erro ao deletar plano:', err.message);
@@ -1329,6 +1337,15 @@ app.get('/api/health', (_req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     mikrotik_api: !!RouterOSAPI
+  });
+});
+
+// Debug: retorna IP real visto pelo backend
+app.get('/api/test-ip', (req, res) => {
+  res.json({
+    ip: getClientIp(req),
+    x_forwarded_for: req.headers['x-forwarded-for'] || null,
+    remote_address: req.socket?.remoteAddress || null
   });
 });
 
@@ -2182,7 +2199,7 @@ app.post('/api/admins', authMiddleware, async (req, res) => {
 
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'create', 'admin', `Criou administrador: ${username}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'admin', `Criou administrador: ${username}`, getClientIp(req), req.headers['user-agent']);
     
     res.status(201).json({ success: true, id: data.id });
   } catch (err) {
@@ -2211,7 +2228,7 @@ app.put('/api/admins/:id', authMiddleware, async (req, res) => {
 
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'update', 'admin', `Atualizou administrador ID: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'admin', `Atualizou administrador ID: ${id}`, getClientIp(req), req.headers['user-agent']);
     
     res.json({ success: true });
   } catch (err) {
@@ -2236,7 +2253,7 @@ app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
 
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'admin', `Excluiu administrador ID: ${id}`, req.ip, req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'delete', 'admin', `Excluiu administrador ID: ${id}`, getClientIp(req), req.headers['user-agent']);
     
     res.json({ success: true });
   } catch (err) {
