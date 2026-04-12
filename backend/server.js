@@ -99,6 +99,11 @@ function parseBoolean(value, fallback = false) {
   return ['true', '1', 'yes', 'sim', 'on'].includes(String(value).toLowerCase());
 }
 
+function generatePopId() {
+  // Mantem padrao humano e evita depender de default/serial no banco.
+  return `MS-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+}
+
 // ============================================================
 // 📝 LOGS DE AUDITORIA E SISTEMA
 // ============================================================
@@ -1012,6 +1017,13 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       }
     }
 
+    // Alguns bancos antigos exigem id obrigatório (sem default). Se vier vazio, geramos.
+    if (!normalized.id && !normalized.unique_id) {
+      const newId = generatePopId();
+      normalized.id = newId;
+      normalized.unique_id = newId;
+    }
+
     const preferred = { ...normalized, status: normalized.status || 'online', created_at: now };
     delete preferred.id;
 
@@ -1025,7 +1037,15 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       updated_at: now
     };
 
-    const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
+    let { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
+
+    // Se o banco exigir id not-null e nao tiver default, tenta inserir novamente com id explicitamente.
+    if (error && String(error.message || '').includes('null value in column \"id\"')) {
+      const forcedId = generatePopId();
+      const forcedPreferred = { ...preferred, id: forcedId, unique_id: forcedId };
+      const forcedFallback = { ...fallback, id: forcedId, unique_id: forcedId };
+      ({ data, error } = await safeInsertWithFallback('pops', forcedPreferred, forcedFallback));
+    }
     if (error) throw error;
 
     // Credenciais (quando a tabela tiver essas colunas, serão persistidas)
