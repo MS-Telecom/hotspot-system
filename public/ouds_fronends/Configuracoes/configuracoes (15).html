@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
   <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>MS Telecom | ConfiguraÃ§Ãµes</title>
+    <title>MS Telecom | Configurações</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
 <body class="text-gray-200">
 
 <script>
-    // Verificar autenticaÃ§Ã£o
+    // Verificar autenticação
 const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = 'login.html';
@@ -50,14 +50,14 @@ const token = localStorage.getItem('token');
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
+            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
@@ -77,13 +77,13 @@ const token = localStorage.getItem('token');
         </div>
     </aside>
 
-    <!-- CONTEÃšDO PRINCIPAL -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
   <base href="/">
             <div class="relative w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" placeholder="Buscar configuraÃ§Ã£o..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" placeholder="Buscar configuração..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-right">
@@ -104,19 +104,19 @@ const token = localStorage.getItem('token');
 
         <div class="p-8 space-y-8">
             <div>
-                <h1 class="text-3xl font-black tracking-tight">ConfiguraÃ§Ãµes</h1>
-                <p class="text-gray-500 text-sm mt-1">Gerencie as configuraÃ§Ãµes gerais do sistema</p>
+                <h1 class="text-3xl font-black tracking-tight">Configurações</h1>
+                <p class="text-gray-500 text-sm mt-1">Gerencie as configurações gerais do sistema</p>
             </div>
 
-            <!-- Abas de ConfiguraÃ§Ã£o -->
+            <!-- Abas de Configuração -->
             <div class="flex border-b border-gray-800 gap-6 overflow-x-auto">
                 <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste GrÃ¡tis</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste Grátis</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">IntegraÃ§Ãµes</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">UsuÃ¡rios Admin</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
             </div>
 
             <!-- Aba Geral -->
@@ -130,54 +130,54 @@ const token = localStorage.getItem('token');
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">InformaÃ§Ãµes da Empresa</h3>
+                    <h3 class="font-bold text-white mb-4">Informações da Empresa</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">RazÃ£o Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Razão Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" value="00.000.000/0001-00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Telefone</label><input type="text" id="telefone" value="(91) 98877-6655" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">E-mail</label><input type="text" id="email" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="salvarGeralBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar AlteraÃ§Ãµes</button></div>
+                <div class="flex justify-end"><button id="salvarGeralBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Alterações</button></div>
             </div>
 
             <!-- Aba Planos -->
             <div id="planos" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                        <h3 class="font-bold text-white">Planos DisponÃ­veis</h3>
+                        <h3 class="font-bold text-white">Planos Disponíveis</h3>
                         <button onclick="openNewPlanModal()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="plus" class="w-4 h-4"></i> Novo Plano</button>
                     </div>
                     <div id="listaPlanos" class="divide-y divide-gray-800"></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ãµes Globais</h3>
+                    <h3 class="font-bold text-white mb-4">Configurações Globais</h3>
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Limite mÃ¡ximo de velocidade (Mbps)</span><input type="number" id="velocidadeMaxima" value="100" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
-                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Tempo de sessÃ£o inativa (minutos)</span><input type="number" id="tempoSessao" value="30" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Limite máximo de velocidade (Mbps)</span><input type="number" id="velocidadeMaxima" value="100" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Tempo de sessão inativa (minutos)</span><input type="number" id="tempoSessao" value="30" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
                     </div>
                     <div class="flex justify-end mt-4"><button id="salvarConfigGlobaisBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar</button></div>
                 </div>
             </div>
 
-            <!-- Aba Teste GrÃ¡tis -->
+            <!-- Aba Teste Grátis -->
             <div id="teste_gratis" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ãµes do Teste GrÃ¡tis</h3>
+                    <h3 class="font-bold text-white mb-4">Configurações do Teste Grátis</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-2">Tempo de duraÃ§Ã£o (minutos)</label>
+                            <label class="text-sm text-gray-400 block mb-2">Tempo de duração (minutos)</label>
                             <input type="number" id="teste_tempo" value="15" min="5" max="1440" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
-                            <p class="text-[10px] text-gray-500 mt-1">MÃ­nimo 5 minutos, mÃ¡ximo 24 horas (1440 minutos)</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Mínimo 5 minutos, máximo 24 horas (1440 minutos)</p>
                         </div>
                         <div>
                             <label class="text-sm text-gray-400 block mb-2">Limite entre testes (horas)</label>
                             <input type="number" id="teste_limite" value="1" min="0.5" max="24" step="0.5" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
-                            <p class="text-[10px] text-gray-500 mt-1">Quanto tempo o usuÃ¡rio precisa esperar para outro teste</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Quanto tempo o usuário precisa esperar para outro teste</p>
                         </div>
                     </div>
                     <div class="mt-6">
-                        <button id="salvarConfigTesteBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar ConfiguraÃ§Ãµes do Teste</button>
+                        <button id="salvarConfigTesteBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações do Teste</button>
                         <div id="configTesteStatus" class="mt-3 hidden"></div>
                     </div>
                 </div>
@@ -186,24 +186,24 @@ const token = localStorage.getItem('token');
             <!-- Aba Pagamento -->
             <div id="pagamento" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ã£o PIX</h3>
+                    <h3 class="font-bold text-white mb-4">Configuração PIX</h3>
                     <div class="space-y-4">
                         <div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
-                        <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="BelÃ©m/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="Belém/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar ConfiguraÃ§Ãµes</button></div>
+                <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações</button></div>
             </div>
 
-            <!-- Aba IntegraÃ§Ã£o -->
+            <!-- Aba Integração -->
             <div id="integracao" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Supabase</h3>
                     <div class="space-y-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://pdgknfokdcqyfdrdwtbm.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://REDACTED.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Anon Key</label><input type="password" id="supabaseAnon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tuZm9rZGNxeWZkcmR3dGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjE1MjMsImV4cCI6MjA4OTA5NzUyM30.O5dMXBapRMtENBiUjYYWenfD_0uwMm7xRlh0euQ3780" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
-                        <div class="flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-xs text-emerald-500">ConexÃ£o ativa</span></div>
+                        <div class="flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-xs text-emerald-500">Conexão ativa</span></div>
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
@@ -215,7 +215,7 @@ const token = localStorage.getItem('token');
                         <div><label class="text-sm text-gray-400 block mb-2">Accounting Port</label><input type="text" id="radiusAcctPort" value="1813" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="testConnectionBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Testar ConexÃ£o</button></div>
+                <div class="flex justify-end"><button id="testConnectionBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Testar Conexão</button></div>
             </div>
 
             <!-- Aba Backup -->
@@ -223,33 +223,33 @@ const token = localStorage.getItem('token');
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Backup do Sistema</h3>
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">Ãšltimo backup</p><p class="text-xs text-gray-500">22/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
+                        <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">Último backup</p><p class="text-xs text-gray-500">22/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
                         <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">Backup anterior</p><p class="text-xs text-gray-500">21/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">Agendamento AutomÃ¡tico</h3>
+                    <h3 class="font-bold text-white mb-4">Agendamento Automático</h3>
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">FrequÃªncia</span><select id="backupFrequencia" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm"><option>DiÃ¡rio (03:00)</option><option>Semanal (Domingo 03:00)</option><option>Mensal (Dia 1 03:00)</option></select></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Frequência</span><select id="backupFrequencia" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm"><option>Diário (03:00)</option><option>Semanal (Domingo 03:00)</option><option>Mensal (Dia 1 03:00)</option></select></div>
                         <div class="flex items-center gap-2"><input type="checkbox" id="backupManter" class="rounded bg-gray-800"> <span class="text-sm text-gray-400">Manter backups por 30 dias</span></div>
                     </div>
                 </div>
                 <div class="flex justify-between"><button id="generateBackupBtn" class="bg-emerald-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-emerald-500 transition">Gerar Backup Agora</button></div>
             </div>
 
-            <!-- Aba UsuÃ¡rios Admin -->
+            <!-- Aba Usuários Admin -->
             <div id="usuarios" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                        <h3 class="font-bold text-white">UsuÃ¡rios Administradores</h3>
-                        <button onclick="openNewAdminModal()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo UsuÃ¡rio</button>
+                        <h3 class="font-bold text-white">Usuários Administradores</h3>
+                        <button onclick="openNewAdminModal()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo Usuário</button>
                     </div>
                     <div id="listaAdmins" class="divide-y divide-gray-800"></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Alterar Senha</h3>
                     <div class="space-y-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">UsuÃ¡rio</label><input type="text" id="changeUsername" value="admin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Usuário</label><input type="text" id="changeUsername" value="admin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Nova Senha</label><input type="password" id="changeNewPassword" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Confirmar Senha</label><input type="password" id="changeConfirmPassword" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
@@ -270,10 +270,10 @@ const token = localStorage.getItem('token');
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="newPlanName" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PreÃ§o (R$)</label><input type="number" id="newPlanPrice" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="newPlanPrice" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="newPlanSpeed" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃ§Ã£o (dias)</label><input type="number" id="newPlanDuration" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DescriÃ§Ã£o</label><textarea id="newPlanDescription" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (dias)</label><input type="number" id="newPlanDuration" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Descrição</label><textarea id="newPlanDescription" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeNewPlanModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
@@ -292,10 +292,10 @@ const token = localStorage.getItem('token');
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             <input type="hidden" id="editPlanId">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="editPlanNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PreÃ§o (R$)</label><input type="number" id="editPlanPreco" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="editPlanPreco" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="editPlanVelocidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃ§Ã£o (dias)</label><input type="number" id="editPlanDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DescriÃ§Ã£o</label><textarea id="editPlanDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (dias)</label><input type="number" id="editPlanDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Descrição</label><textarea id="editPlanDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closePlanEditModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
@@ -312,10 +312,10 @@ const token = localStorage.getItem('token');
             <button onclick="closeNewAdminModal()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="newAdminUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="newAdminUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="newAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label><input type="password" id="newAdminPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PermissÃµes</label><select id="newAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Permissões</label><select id="newAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeNewAdminModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
@@ -333,9 +333,9 @@ const token = localStorage.getItem('token');
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             <input type="hidden" id="editAdminId">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editAdminUser" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editAdminUser" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PermissÃµes</label><select id="editAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Permissões</label><select id="editAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeAdminEditModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
@@ -352,7 +352,7 @@ const token = localStorage.getItem('token');
             <button onclick="closeProfileModal()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div class="border-t border-gray-800 pt-4 mt-2">
                 <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
@@ -365,7 +365,7 @@ const token = localStorage.getItem('token');
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeProfileModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
+            <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
         </div>
     </div>
 </div>
@@ -388,7 +388,7 @@ const token = localStorage.getItem('token');
         });
     });
 
-    // ==================== CONFIGURAÃ‡Ã•ES GERAIS ====================
+    // ==================== CONFIGURAÇÕES GERAIS ====================
     async function loadGeneralSettings() {
         try {
             const res = await fetch(`${API_URL}/api/settings`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -400,7 +400,7 @@ const token = localStorage.getItem('token');
             document.getElementById('telefone').value = config.company_phone || '';
             document.getElementById('email').value = config.company_email || '';
         } catch (error) {
-            console.error('Erro ao carregar configuraÃ§Ãµes:', error);
+            console.error('Erro ao carregar configurações:', error);
         }
     }
 
@@ -417,14 +417,14 @@ const token = localStorage.getItem('token');
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(data)
             });
-            if (res.ok) alert('âœ… ConfiguraÃ§Ãµes salvas com sucesso!');
-            else alert('âŒ Erro ao salvar configuraÃ§Ãµes');
+            if (res.ok) alert('✅ Configurações salvas com sucesso!');
+            else alert('❌ Erro ao salvar configurações');
         } catch (error) {
-            alert('âŒ Erro ao salvar configuraÃ§Ãµes');
+            alert('❌ Erro ao salvar configurações');
         }
     }
 
-    // ==================== CONFIGURAÃ‡Ã•ES DO TESTE GRÃTIS ====================
+    // ==================== CONFIGURAÇÕES DO TESTE GRÁTIS ====================
     async function loadTrialSettings() {
         try {
             const res = await fetch(`${API_URL}/api/settings/system`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -434,7 +434,7 @@ const token = localStorage.getItem('token');
             document.getElementById('teste_tempo').value = config.free_trial_minutes || 15;
             document.getElementById('teste_limite').value = config.free_trial_limit_hours || 1;
         } catch (error) {
-            console.error('Erro ao carregar configuraÃ§Ãµes:', error);
+            console.error('Erro ao carregar configurações:', error);
         }
     }
 
@@ -452,7 +452,7 @@ const token = localStorage.getItem('token');
             });
             if (res.ok) {
                 statusDiv.className = 'bg-emerald-500/20 text-emerald-500 p-3 rounded-lg mt-3';
-                statusDiv.innerText = 'âœ… ConfiguraÃ§Ãµes salvas com sucesso!';
+                statusDiv.innerText = '✅ Configurações salvas com sucesso!';
                 statusDiv.classList.remove('hidden');
                 setTimeout(() => statusDiv.classList.add('hidden'), 3000);
             } else {
@@ -460,7 +460,7 @@ const token = localStorage.getItem('token');
             }
         } catch (error) {
             statusDiv.className = 'bg-red-500/20 text-red-500 p-3 rounded-lg mt-3';
-            statusDiv.innerText = 'âŒ Erro ao salvar configuraÃ§Ãµes';
+            statusDiv.innerText = '❌ Erro ao salvar configurações';
             statusDiv.classList.remove('hidden');
             setTimeout(() => statusDiv.classList.add('hidden'), 3000);
         }
@@ -503,7 +503,7 @@ const token = localStorage.getItem('token');
             duration_days: parseInt(document.getElementById('newPlanDuration').value),
             description: document.getElementById('newPlanDescription').value
         };
-        if (!data.name) { alert('Nome do plano Ã© obrigatÃ³rio'); return; }
+        if (!data.name) { alert('Nome do plano é obrigatório'); return; }
         try {
         const res = await fetch(`${API_URL}/api/plans`, {
                 method: 'POST',
@@ -511,11 +511,11 @@ const token = localStorage.getItem('token');
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('âœ… Plano criado com sucesso!');
+                alert('✅ Plano criado com sucesso!');
                 closeNewPlanModal();
                 loadPlans();
-            } else { alert('âŒ Erro ao criar plano'); }
-        } catch (error) { alert('âŒ Erro ao criar plano'); }
+            } else { alert('❌ Erro ao criar plano'); }
+        } catch (error) { alert('❌ Erro ao criar plano'); }
     }
 
     async function editPlan(id) {
@@ -552,11 +552,11 @@ const token = localStorage.getItem('token');
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('âœ… Plano atualizado!');
+                alert('✅ Plano atualizado!');
                 closePlanEditModal();
                 loadPlans();
-            } else { alert('âŒ Erro ao atualizar plano'); }
-        } catch (error) { alert('âŒ Erro ao atualizar plano'); }
+            } else { alert('❌ Erro ao atualizar plano'); }
+        } catch (error) { alert('❌ Erro ao atualizar plano'); }
     }
 
     async function deletePlan(id) {
@@ -564,13 +564,13 @@ const token = localStorage.getItem('token');
         try {
         const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             if (res.ok) {
-                alert('âœ… Plano excluÃ­do!');
+                alert('✅ Plano excluído!');
                 loadPlans();
-            } else { alert('âŒ Erro ao excluir plano'); }
-        } catch (error) { alert('âŒ Erro ao excluir plano'); }
+            } else { alert('❌ Erro ao excluir plano'); }
+        } catch (error) { alert('❌ Erro ao excluir plano'); }
     }
 
-    // ==================== CONFIGURAÃ‡Ã•ES DE PAGAMENTO ====================
+    // ==================== CONFIGURAÇÕES DE PAGAMENTO ====================
     async function loadPaymentSettings() {
         try {
             const res = await fetch(`${API_URL}/api/settings/payment`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -579,9 +579,9 @@ const token = localStorage.getItem('token');
             if (payload.success) {
                 document.getElementById('pixChave').value = data.pix_key || 'contato@mstelecom.com.br';
                 document.getElementById('pixNome').value = data.pix_name || 'MS Telecom Ltda';
-                document.getElementById('pixCidade').value = data.pix_city || 'BelÃ©m/PA';
+                document.getElementById('pixCidade').value = data.pix_city || 'Belém/PA';
             }
-        } catch (error) { console.error('Erro ao carregar configuraÃ§Ãµes PIX:', error); }
+        } catch (error) { console.error('Erro ao carregar configurações PIX:', error); }
     }
 
     async function savePaymentSettings() {
@@ -596,12 +596,12 @@ const token = localStorage.getItem('token');
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(data)
             });
-            if (res.ok) alert('âœ… ConfiguraÃ§Ãµes PIX salvas!');
-            else alert('âŒ Erro ao salvar configuraÃ§Ãµes');
-        } catch (error) { alert('âŒ Erro ao salvar configuraÃ§Ãµes'); }
+            if (res.ok) alert('✅ Configurações PIX salvas!');
+            else alert('❌ Erro ao salvar configurações');
+        } catch (error) { alert('❌ Erro ao salvar configurações'); }
     }
 
-    // ==================== USUÃRIOS ADMIN ====================
+    // ==================== USUÁRIOS ADMIN ====================
     async function loadAdmins() {
         try {
             const res = await fetch(`${API_URL}/api/admins`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -638,7 +638,7 @@ const token = localStorage.getItem('token');
             password: document.getElementById('newAdminPassword').value,
             role: document.getElementById('newAdminRole').value
         };
-        if (!data.username) { alert('UsuÃ¡rio Ã© obrigatÃ³rio'); return; }
+        if (!data.username) { alert('Usuário é obrigatório'); return; }
         try {
             const res = await fetch(`${API_URL}/api/admins`, {
                 method: 'POST',
@@ -646,11 +646,11 @@ const token = localStorage.getItem('token');
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('âœ… Administrador criado!');
+                alert('✅ Administrador criado!');
                 closeNewAdminModal();
                 loadAdmins();
-            } else { alert('âŒ Erro ao criar administrador'); }
-        } catch (error) { alert('âŒ Erro ao criar administrador'); }
+            } else { alert('❌ Erro ao criar administrador'); }
+        } catch (error) { alert('❌ Erro ao criar administrador'); }
     }
 
     async function editAdmin(id) {
@@ -683,11 +683,11 @@ const token = localStorage.getItem('token');
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('âœ… Administrador atualizado!');
+                alert('✅ Administrador atualizado!');
                 closeAdminEditModal();
                 loadAdmins();
-            } else { alert('âŒ Erro ao atualizar administrador'); }
-        } catch (error) { alert('âŒ Erro ao atualizar administrador'); }
+            } else { alert('❌ Erro ao atualizar administrador'); }
+        } catch (error) { alert('❌ Erro ao atualizar administrador'); }
     }
 
     async function deleteAdmin(id) {
@@ -698,10 +698,10 @@ const token = localStorage.getItem('token');
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                alert('âœ… Administrador excluÃ­do!');
+                alert('✅ Administrador excluído!');
                 loadAdmins();
-            } else { alert('âŒ Erro ao excluir administrador'); }
-        } catch (error) { alert('âŒ Erro ao excluir administrador'); }
+            } else { alert('❌ Erro ao excluir administrador'); }
+        } catch (error) { alert('❌ Erro ao excluir administrador'); }
     }
 
     async function changePassword() {
@@ -709,22 +709,22 @@ const token = localStorage.getItem('token');
         const newPassword = document.getElementById('changeNewPassword').value;
         const confirmPasswordValue = document.getElementById('changeConfirmPassword').value;
         if (!newPassword) { alert('Digite a nova senha'); return; }
-        if (newPassword !== confirmPasswordValue) { alert('As senhas nÃ£o coincidem'); return; }
-        alert('Funcionalidade em desenvolvimento - integraÃ§Ã£o com backend pendente');
+        if (newPassword !== confirmPasswordValue) { alert('As senhas não coincidem'); return; }
+        alert('Funcionalidade em desenvolvimento - integração com backend pendente');
     }
 
-    // ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
+    // ==================== CONFIGURAÇÕES GLOBAIS ====================
     async function saveGlobalSettings() {
         alert('Funcionalidade em desenvolvimento');
     }
 
-    // ==================== TESTAR CONEXÃƒO ====================
+    // ==================== TESTAR CONEXÃO ====================
     async function testConnection() {
         try {
             const res = await fetch(`${API_URL}/api/health`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (res.ok) alert('âœ… ConexÃ£o com a API estÃ¡ OK!');
-            else alert('âŒ Falha na conexÃ£o com a API');
-        } catch (error) { alert('âŒ Falha na conexÃ£o com a API'); }
+            if (res.ok) alert('✅ Conexão com a API está OK!');
+            else alert('❌ Falha na conexão com a API');
+        } catch (error) { alert('❌ Falha na conexão com a API'); }
     }
 
     // ==================== GERAR BACKUP ====================
@@ -769,7 +769,7 @@ const token = localStorage.getItem('token');
         const confirmPassword = document.getElementById('confirmPassword')?.value;
         
         if (newPassword && newPassword !== confirmPassword) {
-            alert('As novas senhas nÃ£o coincidem');
+            alert('As novas senhas não coincidem');
             return;
         }
         if (newPassword && !currentPassword) {
@@ -777,7 +777,7 @@ const token = localStorage.getItem('token');
             return;
         }
         if (!token) {
-            alert('VocÃª precisa estar logado para alterar o perfil');
+            alert('Você precisa estar logado para alterar o perfil');
             return;
         }
         
