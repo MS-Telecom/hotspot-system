@@ -17,6 +17,9 @@
         #sidebar { z-index: 100; }
         #menuToggle { z-index: 101; }
         #menuOverlay { z-index: 99; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-[#0a0c15] text-gray-200">
@@ -45,7 +48,7 @@
                 </div>
             </div>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+<nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
             <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
@@ -64,6 +67,18 @@
             </a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+            </a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas
+            </a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
+            </a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
+            </a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
             </a>
             <a href="perfil-cadastro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro
