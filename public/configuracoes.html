@@ -439,6 +439,15 @@
             document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
             document.getElementById(tabId)?.classList.remove('hidden');
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+
+            // carregar dados sob demanda por aba
+            if (tabId === 'backup') carregarBackups();
+            if (tabId === 'usuarios') carregarAdmins();
+            if (tabId === 'integracao') carregarIntegracoes();
+            if (tabId === 'planos') carregarPlanos();
+            if (tabId === 'geral') carregarConfig('system');
+            if (tabId === 'teste_gratis') carregarConfig('free_trial');
+            if (tabId === 'pagamento') carregarConfig('payment');
         } catch (e) {}
     }
 
