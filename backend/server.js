@@ -975,9 +975,13 @@ function isMissingColumnError(err) {
 
 async function safeInsertWithFallback(table, preferredPayload, fallbackPayload) {
   let result = await supabase.from(table).insert(preferredPayload).select().single();
-  if (result.error && isMissingColumnError(result.error) && fallbackPayload) {
+
+  // Se o payload preferido falhar (coluna ausente, tipo inválido, etc), tenta o fallback.
+  // Isso evita 500 quando o frontend envia campos "extras" que não existem na tabela.
+  if (result.error && fallbackPayload) {
     result = await supabase.from(table).insert(fallbackPayload).select().single();
   }
+
   return result;
 }
 
@@ -997,27 +1001,208 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
 app.post('/api/pops', authMiddleware, async (req, res) => {
   try {
     const now = new Date().toISOString();
-    const preferred = { ...req.body, status: req.body.status || 'online', created_at: now };
+
+    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numérica)
+    const normalized = { ...(req.body || {}) };
+    for (const k of ['vlan_id', 'radius_auth_port', 'radius_acct_port', 'session_time', 'idle_timeout', 'bandwidth', 'shared_users']) {
+      if (Object.prototype.hasOwnProperty.call(normalized, k)) {
+        const v = normalized[k];
+        if (v === '' || v === null || typeof v === 'undefined') normalized[k] = null;
+        else if (typeof v === 'string' && /^\d+$/.test(v.trim())) normalized[k] = Number(v.trim());
+      }
+    }
+
+    const preferred = { ...normalized, status: normalized.status || 'online', created_at: now };
     delete preferred.id;
 
+    // Fallback mínimo (compatível com esquemas antigos/novos)
     const fallback = {
-      name: req.body.name,
-      ip: req.body.ip,
-      api_user: req.body.api_user,
-      api_pass: req.body.api_pass,
-      location: req.body.location,
-      status: req.body.status || 'online',
-      created_at: now
+      name: normalized.name,
+      ip: normalized.ip || null,
+      location: normalized.location || null,
+      status: normalized.status || 'online',
+      created_at: now,
+      updated_at: now
     };
 
     const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
     if (error) throw error;
+
+    // Credenciais (quando a tabela tiver essas colunas, serão persistidas)
+    const popTag = `MS-${data.id}`;
+    const apiUser = `API_${popTag}`.replace(/[^A-Za-z0-9_]/g, '_').slice(0, 32);
+    const apiPass = generateStrongPassword(12);
+    const radiusSecret = generateStrongPassword(18);
+    try {
+      const upd = await supabase.from('pops').update({
+        api_user: apiUser,
+        api_pass: apiPass,
+        radius_secret: radiusSecret,
+        unique_id: data.unique_id || popTag,
+        updated_at: now
+      }).eq('id', data.id).select().single();
+      if (!upd.error && upd.data) {
+        data.api_user = upd.data.api_user;
+        data.api_pass = upd.data.api_pass;
+        data.radius_secret = upd.data.radius_secret;
+        data.unique_id = upd.data.unique_id;
+      }
+    } catch (_e) {
+      // ignora se a tabela pops não tiver colunas de credenciais
+    }
+
+    // Guarda configuração avançada (para gerar script completo mesmo se a tabela pops não tiver todas as colunas)
+    try {
+      await supabase.from('settings').upsert({
+        key: `pop_config_${data.id}`,
+        value: normalized,
+        updated_at: now
+      }, { onConflict: 'key' });
+    } catch (_e) {
+      // ignora se settings não existir/estruturar diferente
+    }
+
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar POP:', err.message);
     res.status(500).json({ error: 'Erro ao criar POP' });
   }
 });
+
+function buildPopInstallScript(pop, config = {}) {
+  const popId = pop.unique_id || `MS-${pop.id}`;
+  const popName = pop.name || `POP-${popId}`;
+  const tag = `MS-TELECOM-${popId}`;
+
+  const apiUser = pop.api_user || `API_${popId}`.replace(/[^A-Za-z0-9_]/g, '_').slice(0, 32);
+  const apiPass = pop.api_pass || 'REDACTED';
+  const radiusSecret = pop.radius_secret || generateStrongPassword(18);
+
+  const wanInterface = config.wan_interface || 'ether1';
+  const lanInterface = config.lan_interface || 'ether2';
+  const wanType = config.wan_type || 'dhcp'; // dhcp | pppoe | static
+  const pppoeUser = config.pppoe_username || '';
+  const pppoePass = config.pppoe_password || '';
+  const staticIp = config.static_ip || '';
+  const staticMask = config.static_mask || '';
+  const staticGw = config.static_gateway || '';
+
+  const vlanId = config.vlan_id ? String(config.vlan_id).trim() : '';
+  const idleTimeout = config.idle_timeout ? `${config.idle_timeout}m` : '15m';
+  const sessionTime = config.session_time ? `${config.session_time}m` : '';
+  const redirectUrl = config.redirect_url || '';
+
+  const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
+  const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
+  const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
+
+  const wgHosts = [
+    'hotspot-system.vercel.app',
+    'mstelecom-api.duckdns.org',
+    'api.mercadopago.com',
+    'mercadopago.com',
+    'www.mercadopago.com',
+    'cdn.tailwindcss.com',
+    'unpkg.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com'
+  ];
+
+  const wgLines = wgHosts.map(h => `/ip hotspot walled-garden add dst-host=${h} action=allow comment="${tag}"`).join('\n');
+
+  const wanBlock = (() => {
+    if (wanType === 'pppoe') {
+      return (
+        `# WAN (PPPoE)\n` +
+        `/interface pppoe-client add interface=${wanInterface} user="${pppoeUser}" password="${pppoePass}" disabled=no comment="${tag}"\n` +
+        `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
+      );
+    }
+    if (wanType === 'static') {
+      const mask = staticMask || '24';
+      return (
+        `# WAN (IP Estático)\n` +
+        `/ip address add address=${staticIp}/${mask} interface=${wanInterface} comment="${tag}"\n` +
+        (staticGw ? `/ip route add gateway=${staticGw} comment="${tag}"\n` : '') +
+        `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
+      );
+    }
+    return (
+      `# WAN (DHCP)\n` +
+      `/ip dhcp-client add interface=${wanInterface} disabled=no comment="${tag}"\n` +
+      `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
+    );
+  })();
+
+  const vlanLine = vlanId ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n` : '';
+  const clientIface = vlanId ? `"ms-vlan-${vlanId}"` : lanInterface;
+
+  const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface=${clientIface} name="${popName}" profile="ms-profile-${popId}" comment="${tag}"\n`;
+
+  const sessionTimeLine = sessionTime ? `/ip hotspot user profile set [find name="default"] session-timeout=${sessionTime}\n` : '';
+
+  const redirectLine = redirectUrl ? `/ip hotspot profile set [find name="ms-profile-${popId}"] html-directory=hotspot login-by=http-chap,http-pap http-cookie-lifetime=1d\n` : '';
+
+  return (
+`# ============================================
+# MS TELECOM - SCRIPT COMPLETO DE INSTALACAO
+# POP ID: ${popId}
+# Nome: ${popName}
+# ============================================
+
+/system backup save name=backup_pre_${popId}
+/export file=config_pre_${popId}
+:delay 2s
+
+/system identity set name="${popName}"
+:delay 500ms
+
+/user add name="${apiUser}" password="${apiPass}" group=full comment="${tag}"
+:delay 500ms
+
+${vlanLine}/interface bridge add name="ms-bridge-${popId}" comment="${tag}"
+:delay 500ms
+
+/interface bridge port add bridge="ms-bridge-${popId}" interface=${clientIface} comment="${tag}"
+:delay 500ms
+
+/ip address add address=192.168.32.1/20 interface="ms-bridge-${popId}" network=192.168.32.0 comment="${tag}"
+:delay 500ms
+
+/ip pool add name="ms-pool-${popId}" ranges=192.168.32.10-192.168.47.254 comment="${tag}"
+/ip dhcp-server add address-pool="ms-pool-${popId}" disabled=no interface="ms-bridge-${popId}" name="ms-dhcp-${popId}" lease-time=24h comment="${tag}"
+/ip dhcp-server network add address=192.168.32.0/20 gateway=192.168.32.1 dns-server=8.8.8.8,1.1.1.1 comment="${tag}"
+:delay 1s
+
+${wanBlock}
+
+/ip dns set allow-remote-requests=yes servers=8.8.8.8,1.1.1.1
+:delay 500ms
+
+/radius add address=${radiusServer} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 comment="${tag}" timeout=1000ms
+/radius incoming set accept=yes
+:delay 1s
+
+/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m comment="${tag}"
+:delay 500ms
+
+${hotspotLine}:delay 1s
+
+# Walled Garden (dominios liberados antes do login)
+${wgLines}
+:delay 1s
+
+${sessionTimeLine}${redirectLine}
+
+/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" keep-result=no" start-time=startup comment="${tag}"
+
+:put \"OK - INSTALACAO CONCLUIDA\"
+:put \"POP ID: ${popId}\"
+:put \"API User: ${apiUser}\"
+:put \"API Pass: ${apiPass}\"
+`
+  );
+}
 
 // Atualizar POP
 app.put('/api/pops/:id', authMiddleware, async (req, res) => {
@@ -1060,37 +1245,13 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
     if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
 
-    const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
-    const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
+    let config = {};
+    try {
+      const { data: cfg } = await supabase.from('settings').select('value').eq('key', `pop_config_${id}`).maybeSingle();
+      config = cfg?.value || {};
+    } catch (_e) {}
 
-    const uniqueTag = `MS-TELECOM-${id}`;
-
-    // Walled Garden: permitir acesso ao portal/API/pagamento antes de autenticar
-    const wgHosts = [
-      'hotspot-system.vercel.app',
-      'mstelecom-api.duckdns.org',
-      'api.mercadopago.com',
-      'mercadopago.com',
-      'www.mercadopago.com',
-      'cdn.tailwindcss.com',
-      'unpkg.com',
-      'fonts.googleapis.com',
-      'fonts.gstatic.com'
-    ];
-
-    const walledGarden =
-      `# Walled Garden (dominios liberados antes do login)\\n` +
-      wgHosts.map(h => `/ip hotspot walled-garden add dst-host=${h} action=allow comment="${uniqueTag}"`).join('\\n') +
-      `\\n\\n`;
-
-    const script = `/system identity set name="${pop.name}"\n` +
-      `/radius add address=${radiusServer} secret=testing123 service=hotspot authentication-port=1812 accounting-port=1813\n` +
-      `/ip hotspot profile set [find] use-radius=yes\n` +
-      walledGarden +
-      `/tool fetch url="${apiUrl}/api/pops/${id}/heartbeat" mode=http keep-result=no\n` +
-      `/system scheduler add name="heartbeat-${pop.name}" interval=1m on-event="/tool fetch url=\\"${apiUrl}/api/pops/${id}/heartbeat\\" keep-result=no" start-time=startup comment="${uniqueTag}"\n` +
-      `/ip hotspot set [find] address-pool=dhcp_pool1\n`;
-
+    const script = buildPopInstallScript(pop, config);
     res.json({ script });
   } catch (err) {
     console.error('âŒ Erro ao gerar script:', err.message);
