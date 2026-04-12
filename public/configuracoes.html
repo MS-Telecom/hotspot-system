@@ -432,39 +432,44 @@
 
     // ==================== SISTEMA DE ABAS ====================
     function openTab(tabId) {
-        try {
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active', 'text-white');
-                if (!b.classList.contains('text-gray-400')) b.classList.add('text-gray-400');
-            });
-            const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-            if (btn) {
-                btn.classList.add('active', 'text-white');
-                btn.classList.remove('text-gray-400');
-            }
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-            const tabEl = document.getElementById(tabId);
-            if (tabEl) tabEl.classList.remove('hidden');
-            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        // alterna visual/aba
+        const buttons = document.querySelectorAll('.tab-btn');
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active', 'text-white');
+            if (!buttons[i].classList.contains('text-gray-400')) buttons[i].classList.add('text-gray-400');
+        }
+        const activeBtn = document.querySelector('.tab-btn[data-tab="' + tabId + '"]');
+        if (activeBtn) {
+            activeBtn.classList.add('active', 'text-white');
+            activeBtn.classList.remove('text-gray-400');
+        }
+        const contents = document.querySelectorAll('.tab-content');
+        for (let i = 0; i < contents.length; i++) contents[i].classList.add('hidden');
+        const tabEl = document.getElementById(tabId);
+        if (tabEl) tabEl.classList.remove('hidden');
 
-            // carregar dados sob demanda por aba
-            if (tabId === 'backup') carregarBackups();
-            if (tabId === 'usuarios') carregarAdmins();
-            if (tabId === 'integracao') carregarIntegracoes();
-            if (tabId === 'planos') carregarPlanos();
-            if (tabId === 'geral') carregarConfig('system');
-            if (tabId === 'teste_gratis') carregarConfig('free_trial');
-            if (tabId === 'pagamento') carregarConfig('payment');
-        } catch (e) {}
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+
+        // carregar dados sob demanda por aba
+        if (tabId === 'backup') carregarBackups();
+        if (tabId === 'usuarios') carregarAdmins();
+        if (tabId === 'integracao') carregarIntegracoes();
+        if (tabId === 'planos') carregarPlanos();
+        if (tabId === 'geral') carregarConfig('system');
+        if (tabId === 'teste_gratis') carregarConfig('free_trial');
+        if (tabId === 'pagamento') carregarConfig('payment');
     }
 
-    // fallback por JS (além do onclick)
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tabId = this.getAttribute('data-tab');
-            openTab(tabId);
-        });
-    });
+    function initTabs() {
+        const buttons = document.querySelectorAll('.tab-btn');
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = this.getAttribute('data-tab') || this.dataset.tab;
+                if (tabId) openTab(tabId);
+            });
+        }
+    }
 
     // ==================== PLANOS (backend novo: /api/plans) ====================
     let planosData = [];
@@ -892,6 +897,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
+        initTabs();
         updateSessionIp();
         initThemeButtons();
         carregarPlanos();
