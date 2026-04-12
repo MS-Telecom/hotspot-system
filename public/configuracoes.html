@@ -394,7 +394,7 @@
         try {
             const res = await fetch(`${API_URL}/api/test-ip`);
             const data = await res.json();
-            el.textContent = data?.ip || '-';
+            el.textContent = (data && data.ip) ? data.ip : '-';
         } catch (e) {
             el.textContent = '-';
         }
@@ -424,8 +424,10 @@
     function initThemeButtons() {
         const saved = localStorage.getItem('ms_theme') || 'dark';
         applyTheme(saved);
-        document.getElementById('themeDarkBtn')?.addEventListener('click', () => applyTheme('dark'));
-        document.getElementById('themeLightBtn')?.addEventListener('click', () => applyTheme('light'));
+        const darkBtn = document.getElementById('themeDarkBtn');
+        const lightBtn = document.getElementById('themeLightBtn');
+        if (darkBtn) darkBtn.addEventListener('click', () => applyTheme('dark'));
+        if (lightBtn) lightBtn.addEventListener('click', () => applyTheme('light'));
     }
 
     // ==================== SISTEMA DE ABAS ====================
@@ -436,10 +438,13 @@
                 if (!b.classList.contains('text-gray-400')) b.classList.add('text-gray-400');
             });
             const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-            btn?.classList.add('active', 'text-white');
-            btn?.classList.remove('text-gray-400');
+            if (btn) {
+                btn.classList.add('active', 'text-white');
+                btn.classList.remove('text-gray-400');
+            }
             document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-            document.getElementById(tabId)?.classList.remove('hidden');
+            const tabEl = document.getElementById(tabId);
+            if (tabEl) tabEl.classList.remove('hidden');
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 
             // carregar dados sob demanda por aba
@@ -509,10 +514,11 @@
         document.getElementById('novoPlanoVelocidade').value = '';
         document.getElementById('novoPlanoDuracao').value = '';
         document.getElementById('novoPlanoDescricao').value = '';
-        document.getElementById('novoPlanoModal')?.classList.remove('hidden');
+        const m = document.getElementById('novoPlanoModal');
+        if (m) m.classList.remove('hidden');
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
-    function closeNovoPlanoModal() { document.getElementById('novoPlanoModal')?.classList.add('hidden'); }
+    function closeNovoPlanoModal() { const m = document.getElementById('novoPlanoModal'); if (m) m.classList.add('hidden'); }
 
     async function criarPlano() {
         const dados = {
@@ -540,10 +546,11 @@
         document.getElementById('editarPlanoVelocidade').value = p.speed_mbps || 0;
         document.getElementById('editarPlanoDuracao').value = p.duration_days || 0;
         document.getElementById('editarPlanoDescricao').value = p.description || '';
-        document.getElementById('editarPlanoModal')?.classList.remove('hidden');
+        const m = document.getElementById('editarPlanoModal');
+        if (m) m.classList.remove('hidden');
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
-    function closeEditarPlanoModal() { document.getElementById('editarPlanoModal')?.classList.add('hidden'); }
+    function closeEditarPlanoModal() { const m = document.getElementById('editarPlanoModal'); if (m) m.classList.add('hidden'); }
 
     async function salvarEdicaoPlano() {
         const id = document.getElementById('editarPlanoId').value;
@@ -651,6 +658,13 @@
         } catch (e) {}
     }
 
+    function getVal(id, fallback) {
+        const el = document.getElementById(id);
+        if (!el) return fallback;
+        const v = (el.value !== undefined) ? el.value : '';
+        return (v === '' || v === null || v === undefined) ? fallback : v;
+    }
+
     async function salvarConfig(key) {
         let url = '';
         let payload = {};
@@ -658,27 +672,27 @@
         if (key === 'system') {
             url = `${API_URL}/api/settings`;
             payload = {
-                system_name: document.getElementById('sistemaNome')?.value || '',
-                system_logo_url: document.getElementById('sistemaLogo')?.value || '',
-                company_name: document.getElementById('razaoSocial')?.value || '',
-                company_doc: document.getElementById('cnpj')?.value || '',
-                company_phone: document.getElementById('telefone')?.value || '',
-                company_email: document.getElementById('email')?.value || '',
-                max_speed_mbps: Number(document.getElementById('velocidadeMaxima')?.value || 0),
-                session_timeout_minutes: Number(document.getElementById('tempoSessao')?.value || 0)
+                system_name: getVal('sistemaNome', ''),
+                system_logo_url: getVal('sistemaLogo', ''),
+                company_name: getVal('razaoSocial', ''),
+                company_doc: getVal('cnpj', ''),
+                company_phone: getVal('telefone', ''),
+                company_email: getVal('email', ''),
+                max_speed_mbps: Number(getVal('velocidadeMaxima', 0)),
+                session_timeout_minutes: Number(getVal('tempoSessao', 0))
             };
         } else if (key === 'free_trial') {
             url = `${API_URL}/api/settings/free_trial`;
             payload = {
-                duration_minutes: Number(document.getElementById('teste_tempo')?.value || 15),
-                cooldown_hours: Number(document.getElementById('teste_limite')?.value || 24)
+                duration_minutes: Number(getVal('teste_tempo', 15)),
+                cooldown_hours: Number(getVal('teste_limite', 24))
             };
         } else if (key === 'payment') {
             url = `${API_URL}/api/settings/payment`;
             payload = {
-                pix_key: document.getElementById('pixChave')?.value || '',
-                pix_name: document.getElementById('pixNome')?.value || '',
-                pix_city: document.getElementById('pixCidade')?.value || ''
+                pix_key: getVal('pixChave', ''),
+                pix_name: getVal('pixNome', ''),
+                pix_city: getVal('pixCidade', '')
             };
         }
 
@@ -709,12 +723,12 @@
 
     async function salvarIntegracoes() {
         const payload = {
-            supabase_url: document.getElementById('supabaseUrl')?.value || '',
-            supabase_anon_key: document.getElementById('supabaseAnon')?.value || '',
-            radius_server: document.getElementById('radiusServer')?.value || '',
-            radius_secret: document.getElementById('radiusSecret')?.value || '',
-            radius_auth_port: Number(document.getElementById('radiusAuthPort')?.value || 1812),
-            radius_acct_port: Number(document.getElementById('radiusAcctPort')?.value || 1813)
+            supabase_url: getVal('supabaseUrl', ''),
+            supabase_anon_key: getVal('supabaseAnon', ''),
+            radius_server: getVal('radiusServer', ''),
+            radius_secret: getVal('radiusSecret', ''),
+            radius_auth_port: Number(getVal('radiusAuthPort', 1812)),
+            radius_acct_port: Number(getVal('radiusAcctPort', 1813))
         };
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
@@ -790,14 +804,14 @@
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
 
-    function openModalNovoAdmin() { document.getElementById('modalNovoAdmin')?.classList.remove('hidden'); if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons(); }
-    function closeModalNovoAdmin() { document.getElementById('modalNovoAdmin')?.classList.add('hidden'); }
+    function openModalNovoAdmin() { const m = document.getElementById('modalNovoAdmin'); if (m) m.classList.remove('hidden'); if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons(); }
+    function closeModalNovoAdmin() { const m = document.getElementById('modalNovoAdmin'); if (m) m.classList.add('hidden'); }
 
     async function salvarNovoAdmin() {
         const payload = {
-            username: document.getElementById('novoAdminUser')?.value || '',
-            email: document.getElementById('novoAdminEmail')?.value || '',
-            password: document.getElementById('novoAdminSenha')?.value || ''
+            username: getVal('novoAdminUser', ''),
+            email: getVal('novoAdminEmail', ''),
+            password: getVal('novoAdminSenha', '')
         };
         try {
             const res = await fetch(`${API_URL}/api/admins`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
@@ -817,19 +831,21 @@
         document.getElementById('editarAdminUser').value = admin.username || '';
         document.getElementById('editarAdminEmail').value = admin.email || '';
         document.getElementById('editarAdminPermissoes').value = admin.role || 'admin';
-        document.getElementById('modalEditarAdmin')?.classList.remove('hidden');
+        const m = document.getElementById('modalEditarAdmin');
+        if (m) m.classList.remove('hidden');
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
-    function closeModalEditarAdmin() { document.getElementById('modalEditarAdmin')?.classList.add('hidden'); }
+    function closeModalEditarAdmin() { const m = document.getElementById('modalEditarAdmin'); if (m) m.classList.add('hidden'); }
     function salvarEdicaoAdmin() { return salvarEditarAdmin(); }
 
     async function salvarEditarAdmin() {
-        const id = document.getElementById('editarAdminId')?.value;
+        const idEl = document.getElementById('editarAdminId');
+        const id = idEl ? idEl.value : '';
         if (!id) return;
         const payload = {
-            username: document.getElementById('editarAdminUser')?.value || '',
-            email: document.getElementById('editarAdminEmail')?.value || '',
-            role: document.getElementById('editarAdminPermissoes')?.value || 'admin'
+            username: getVal('editarAdminUser', ''),
+            email: getVal('editarAdminEmail', ''),
+            role: getVal('editarAdminPermissoes', 'admin')
         };
         try {
             const res = await fetch(`${API_URL}/api/admins/${encodeURIComponent(String(id))}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
@@ -865,10 +881,12 @@
                 sidebar.classList.toggle('hidden');
                 menuOverlay.classList.toggle('hidden');
             });
-            menuOverlay?.addEventListener('click', () => {
-                sidebar.classList.add('hidden');
-                menuOverlay.classList.add('hidden');
-            });
+            if (menuOverlay) {
+                menuOverlay.addEventListener('click', () => {
+                    sidebar.classList.add('hidden');
+                    menuOverlay.classList.add('hidden');
+                });
+            }
         }
     }
 
@@ -886,17 +904,26 @@
         carregarConfig('free_trial');
         carregarConfig('payment');
 
-        document.getElementById('criarPlanoBtn')?.addEventListener('click', openNovoPlanoModal);
-        document.getElementById('salvarNovoPlanoBtn')?.addEventListener('click', criarPlano);
-        document.getElementById('salvarEditarPlanoBtn')?.addEventListener('click', salvarEdicaoPlano);
-        document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
-        document.getElementById('salvarIntegracoesBtn')?.addEventListener('click', salvarIntegracoes);
-        document.getElementById('testarConexaoBtn')?.addEventListener('click', testarConexao);
+        const criarPlanoBtn = document.getElementById('criarPlanoBtn');
+        const salvarNovoPlanoBtn = document.getElementById('salvarNovoPlanoBtn');
+        const salvarEditarPlanoBtn = document.getElementById('salvarEditarPlanoBtn');
+        const gerarBackupBtn = document.getElementById('gerarBackupBtn');
+        const salvarIntegracoesBtn = document.getElementById('salvarIntegracoesBtn');
+        const testarConexaoBtn = document.getElementById('testarConexaoBtn');
+        if (criarPlanoBtn) criarPlanoBtn.addEventListener('click', openNovoPlanoModal);
+        if (salvarNovoPlanoBtn) salvarNovoPlanoBtn.addEventListener('click', criarPlano);
+        if (salvarEditarPlanoBtn) salvarEditarPlanoBtn.addEventListener('click', salvarEdicaoPlano);
+        if (gerarBackupBtn) gerarBackupBtn.addEventListener('click', gerarBackup);
+        if (salvarIntegracoesBtn) salvarIntegracoesBtn.addEventListener('click', salvarIntegracoes);
+        if (testarConexaoBtn) testarConexaoBtn.addEventListener('click', testarConexao);
         
         // Listeners para salvar configurações
-        document.getElementById('salvarGeralBtn')?.addEventListener('click', () => salvarConfig('system'));
-        document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', () => salvarConfig('free_trial'));
-        document.getElementById('salvarPagamentoBtn')?.addEventListener('click', () => salvarConfig('payment'));
+        const salvarGeralBtn = document.getElementById('salvarGeralBtn');
+        const salvarConfigTesteBtn = document.getElementById('salvarConfigTesteBtn');
+        const salvarPagamentoBtn = document.getElementById('salvarPagamentoBtn');
+        if (salvarGeralBtn) salvarGeralBtn.addEventListener('click', () => salvarConfig('system'));
+        if (salvarConfigTesteBtn) salvarConfigTesteBtn.addEventListener('click', () => salvarConfig('free_trial'));
+        if (salvarPagamentoBtn) salvarPagamentoBtn.addEventListener('click', () => salvarConfig('payment'));
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     });
