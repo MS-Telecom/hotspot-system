@@ -4,7 +4,7 @@
   <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>MS Telecom | ConfiguraÃ§Ãµes</title>
+    <title>MS Telecom | Configurações</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
 <body class="text-gray-200">
 
 <script>
-    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO
+    // PROTECAO DE ACESSO
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) window.location.href = 'login.html';
 </script>
@@ -58,7 +58,7 @@
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
+            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
             <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
@@ -67,8 +67,8 @@
         <div class="p-4 border-t border-gray-800 bg-black/30">
             <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
             <div class="space-y-2 text-[10px] font-mono">
-                <div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div>
-                <div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div>
+                <div class="flex justify-between text-gray-500"><span>Admin Master</span><span id="recentClientIp" class="text-cyan-400">-</span></div>
+                <div class="flex justify-between text-gray-500"><span>VPS Node</span><span id="recentServerIp" class="text-gray-600">40.233.118.238</span></div>
             </div>
         </div>
     </aside>
@@ -90,17 +90,17 @@
         </header>
 
         <div class="p-4 md:p-8 space-y-6 md:space-y-8">
-            <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">ConfiguraÃ§Ãµes</h1><p class="text-gray-500 text-xs md:text-sm mt-1">Gerencie as configuraÃ§Ãµes gerais do sistema</p></div>
+            <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Configurações</h1><p class="text-gray-500 text-xs md:text-sm mt-1">Gerencie as configurações gerais do sistema</p></div>
 
-            <!-- Abas de ConfiguraÃ§Ã£o -->
+            <!-- Abas de Configuracao -->
             <div class="flex border-b border-gray-800 gap-6 overflow-x-auto">
                 <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste GrÃ¡tis</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste Grátis</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">IntegraÃ§Ãµes</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">UsuÃ¡rios Admin</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
             </div>
 
             <!-- Aba Geral -->
@@ -110,8 +110,8 @@
                     <div class="space-y-4"><div><label class="text-sm text-gray-400 block mb-2">Nome do Sistema</label><input type="text" id="sistemaNome" value="MS TELECOM" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Logo (URL)</label><input type="text" id="sistemaLogo" placeholder="https://..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Tema</label><div class="flex gap-4"><button class="px-4 py-2 bg-blue-600 rounded-lg text-sm">Dark (Atual)</button><button class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Light</button></div></div></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">InformaÃ§Ãµes da Empresa</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="text-sm text-gray-400 block mb-2">RazÃ£o Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" value="00.000.000/0001-00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Telefone</label><input type="text" id="telefone" value="(91) 98877-6655" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">E-mail</label><input type="text" id="email" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div></div>
+                    <h3 class="font-bold text-white mb-4">Informações da Empresa</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="text-sm text-gray-400 block mb-2">Razão Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" value="00.000.000/0001-00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Telefone</label><input type="text" id="telefone" value="(91) 98877-6655" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">E-mail</label><input type="text" id="email" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ãµes Globais</h3>
@@ -139,15 +139,15 @@
 
             <!-- Aba Pagamento -->
             <div id="pagamento" class="tab-content hidden space-y-6">
-                <div class="glass-card rounded-2xl p-6 border border-gray-800"><h3 class="font-bold text-white mb-4">ConfiguraÃ§Ã£o PIX</h3><div class="space-y-4"><div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div><div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="BelÃ©m/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div></div></div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800"><h3 class="font-bold text-white mb-4">Configuração PIX</h3><div class="space-y-4"><div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div><div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="Belém/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div></div></div>
                 <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition">Salvar ConfiguraÃ§Ãµes</button></div>
             </div>
 
-            <!-- Aba IntegraÃ§Ã£o -->
+            <!-- Aba Integracao -->
             <div id="integracao" class="tab-content hidden space-y-6">
-                <div class="glass-card rounded-2xl p-6 border border-gray-800"><h3 class="font-bold text-white mb-4">Supabase</h3><div class="space-y-4"><div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://pdgknfokdcqyfdrdwtbm.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div><div><label class="text-sm text-gray-400 block mb-2">Anon Key</label><input type="password" id="supabaseAnon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tuZm9rZGNxeWZkcmR3dGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjE1MjMsImV4cCI6MjA4OTA5NzUyM30.O5dMXBapRMtENBiUjYYWenfD_0uwMm7xRlh0euQ3780" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div><div class="flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-xs text-emerald-500">ConexÃ£o ativa</span></div></div></div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800"><h3 class="font-bold text-white mb-4">Supabase</h3><div class="space-y-4"><div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://pdgknfokdcqyfdrdwtbm.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div><div><label class="text-sm text-gray-400 block mb-2">Anon Key</label><input type="password" id="supabaseAnon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tuZm9rZGNxeWZkcmR3dGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjE1MjMsImV4cCI6MjA4OTA5NzUyM30.O5dMXBapRMtENBiUjYYWenfD_0uwMm7xRlh0euQ3780" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div><div class="flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-xs text-emerald-500">Conexão ativa</span></div></div></div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800"><h3 class="font-bold text-white mb-4">MikroTik / RADIUS</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="text-sm text-gray-400 block mb-2">Servidor RADIUS</label><input type="text" id="radiusServer" value="40.233.118.238" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Secret</label><input type="password" id="radiusSecret" value="testing123" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Auth Port</label><input type="text" id="radiusAuthPort" value="1812" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div><div><label class="text-sm text-gray-400 block mb-2">Accounting Port</label><input type="text" id="radiusAcctPort" value="1813" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div></div></div>
-                <div class="flex justify-end"><button id="salvarIntegracoesBtn" class="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition">Salvar IntegraÃ§Ãµes</button></div>
+                <div class="flex items-center justify-end gap-2"><button id="testarIntegracoesBtn" class="bg-gray-900/60 border border-gray-700 px-6 py-2 rounded-xl text-sm font-medium hover:bg-gray-900 transition">Testar Conexão</button><button id="salvarIntegracoesBtn" class="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-2 rounded-xl text-sm font-medium hover:opacity-90 transition">Salvar Integrações</button></div>
             </div>
 
             <!-- Aba Backup -->
@@ -278,7 +278,7 @@ async function salvarConfiguracoesGerais() {
 // ==================== CONFIGURAÃ‡Ã•ES TESTE GRÃTIS ====================
 async function carregarConfiguracoesTeste() {
     try {
-        const res = await fetch(`${API_URL}/api/settings/freetrial`, { headers: authHeaders(false) });
+        const res = await fetch(`${API_URL}/api/settings/free_trial`, { headers: authHeaders(false) });
         const config = await res.json();
         document.getElementById('teste_tempo').value = config.duration_minutes || 15;
         document.getElementById('teste_limite').value = config.limit_hours || 1;
@@ -293,7 +293,7 @@ async function salvarConfiguracoesTeste() {
         limit_hours: parseFloat(document.getElementById('teste_limite').value)
     };
     try {
-        const res = await fetch(`${API_URL}/api/settings/freetrial`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(configuracoes) });
+        const res = await fetch(`${API_URL}/api/settings/free_trial`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(configuracoes) });
         if (res.ok) { statusDiv.className = 'bg-emerald-500/20 text-emerald-500 p-3 rounded-lg mt-3'; statusDiv.innerText = 'âœ… ConfiguraÃ§Ãµes salvas!'; statusDiv.classList.remove('hidden'); setTimeout(() => statusDiv.classList.add('hidden'), 3000); }
         else throw new Error();
     } catch (error) { statusDiv.className = 'bg-red-500/20 text-red-500 p-3 rounded-lg mt-3'; statusDiv.innerText = 'âŒ Erro ao salvar'; statusDiv.classList.remove('hidden'); setTimeout(() => statusDiv.classList.add('hidden'), 3000); }
@@ -360,7 +360,7 @@ async function carregarConfiguracoesPagamento() {
         const config = await res.json();
         document.getElementById('pixChave').value = config.pix_key || 'contato@mstelecom.com.br';
         document.getElementById('pixNome').value = config.pix_name || 'MS Telecom Ltda';
-        document.getElementById('pixCidade').value = config.pix_city || 'BelÃ©m/PA';
+        document.getElementById('pixCidade').value = config.pix_city || 'Belém/PA';
     } catch (error) { console.error('Erro ao carregar configuraÃ§Ãµes PIX:', error); }
 }
 async function salvarConfiguracoesPagamento() {
@@ -388,8 +388,46 @@ async function salvarIntegracoes() {
     const dados = { supabase_url: document.getElementById('supabaseUrl').value, supabase_anon_key: document.getElementById('supabaseAnon').value, radius_server: document.getElementById('radiusServer').value, radius_secret: document.getElementById('radiusSecret').value, radius_auth_port: document.getElementById('radiusAuthPort').value, radius_acct_port: document.getElementById('radiusAcctPort').value };
     try {
         const res = await fetch(`${API_URL}/api/settings/integrations`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
-        if (res.ok) alert('âœ… IntegraÃ§Ãµes salvas!'); else alert('âŒ Erro ao salvar');
-    } catch (error) { alert('âŒ Erro ao salvar'); }
+        if (res.ok) alert('✅ Integrações salvas!'); else alert('❌ Erro ao salvar');
+    } catch (error) { alert('❌ Erro ao salvar'); }
+}
+async function testarIntegracoes() {
+    try {
+        const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
+        if (!res.ok) { alert('❌ Falha ao testar conexão'); return; }
+        const config = await res.json();
+        if (!config || (!config.supabase_url && !config.radius_server)) { alert('⚠️ Integrações vazias'); return; }
+        alert('✅ Conexão OK');
+    } catch (e) {
+        alert('❌ Falha ao testar conexão');
+    }
+}
+
+function formatCnpj(value) {
+    const v = String(value || '').replace(/\D/g, '').slice(0, 14);
+    if (v.length <= 2) return v;
+    if (v.length <= 5) return `${v.slice(0,2)}.${v.slice(2)}`;
+    if (v.length <= 8) return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
+    if (v.length <= 12) return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
+    return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
+}
+
+function formatPhoneBr(value) {
+    const v = String(value || '').replace(/\D/g, '').slice(0, 11);
+    if (v.length <= 2) return v;
+    if (v.length <= 7) return `(${v.slice(0,2)}) ${v.slice(2)}`;
+    if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+    return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+}
+
+async function updateRecentClientIp() {
+    try {
+        const res = await fetch(`${API_URL}/api/test-ip`, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const el = document.getElementById('recentClientIp');
+        if (el) el.textContent = data.ip || '-';
+    } catch (e) {}
 }
 
 // ==================== BACKUP ====================
@@ -513,9 +551,10 @@ async function sair() {
     window.location.href = 'login.html';
 }
 
-// ==================== INICIALIZAÃ‡ÃƒO ====================
+// ==================== INICIALIZACAO ====================
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
+    updateRecentClientIp();
     carregarConfiguracoesGerais();
     carregarConfiguracoesTeste();
     carregarPlanos();
@@ -529,8 +568,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', salvarConfiguracoesTeste);
     document.getElementById('salvarPagamentoBtn')?.addEventListener('click', salvarConfiguracoesPagamento);
     document.getElementById('salvarIntegracoesBtn')?.addEventListener('click', salvarIntegracoes);
+    document.getElementById('testarIntegracoesBtn')?.addEventListener('click', testarIntegracoes);
     document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
     document.getElementById('alterarSenhaBtn')?.addEventListener('click', alterarSenha);
+
+    const cnpjEl = document.getElementById('cnpj');
+    if (cnpjEl) cnpjEl.addEventListener('blur', () => { cnpjEl.value = formatCnpj(cnpjEl.value); });
+    const phoneEl = document.getElementById('telefone');
+    if (phoneEl) phoneEl.addEventListener('blur', () => { phoneEl.value = formatPhoneBr(phoneEl.value); });
 });
 </script>
 </body>
