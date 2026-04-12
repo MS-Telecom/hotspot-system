@@ -525,6 +525,10 @@
     }
     function closeNovoPlanoModal() { const m = document.getElementById('novoPlanoModal'); if (m) m.classList.add('hidden'); }
 
+    // aliases (compat com HTML antigo)
+    function openModalNovoPlano() { return openNovoPlanoModal(); }
+    function closeModalNovoPlano() { return closeNovoPlanoModal(); }
+
     async function criarPlano() {
         const dados = {
             name: document.getElementById('novoPlanoNome').value,
@@ -542,6 +546,9 @@
         } catch(e) { alert('ERRO:  Erro ao criar plano'); }
     }
 
+    // aliases (compat com HTML antigo)
+    function salvarNovoPlano() { return criarPlano(); }
+
     function openEditarPlanoModal(id) {
         const p = planosData.find(x => String(x.id) === String(id));
         if (!p) return;
@@ -556,6 +563,10 @@
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
     function closeEditarPlanoModal() { const m = document.getElementById('editarPlanoModal'); if (m) m.classList.add('hidden'); }
+
+    // aliases (compat com HTML antigo)
+    function openModalEditarPlano(id) { return openEditarPlanoModal(id); }
+    function closeModalEditarPlano() { return closeEditarPlanoModal(); }
 
     async function salvarEdicaoPlano() {
         const id = document.getElementById('editarPlanoId').value;
@@ -940,6 +951,11 @@
     window.downloadBackup = downloadBackup;
     window.salvarIntegracoes = salvarIntegracoes;
     window.testarConexao = testarConexao;
+    window.openModalNovoPlano = openModalNovoPlano;
+    window.closeModalNovoPlano = closeModalNovoPlano;
+    window.salvarNovoPlano = salvarNovoPlano;
+    window.openModalEditarPlano = openModalEditarPlano;
+    window.closeModalEditarPlano = closeModalEditarPlano;
     window.openModalNovoAdmin = openModalNovoAdmin;
     window.closeModalNovoAdmin = closeModalNovoAdmin;
     window.salvarNovoAdmin = salvarNovoAdmin;
