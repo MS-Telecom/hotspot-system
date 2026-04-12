@@ -104,6 +104,10 @@
                     <span>Início</span>
                     <span id="sessionStart" class="text-gray-600">-</span>
                 </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>IP</span>
+                    <span id="sessionIp" class="text-gray-600">-</span>
+                </div>
             </div>
         </div>
     </aside>
@@ -763,6 +767,45 @@ async function sair() {
     window.location.href = 'login.html';
 }
 
+function updateSessionInfo() {
+    const elUser = document.getElementById('sessionUser');
+    const elStart = document.getElementById('sessionStart');
+    if (!elUser || !elStart) return;
+
+    const rawUser = localStorage.getItem('user');
+    if (!localStorage.getItem('session_start')) {
+        localStorage.setItem('session_start', new Date().toISOString());
+    }
+
+    if (rawUser) {
+        try {
+            const user = JSON.parse(rawUser);
+            elUser.innerText = user.username || 'Administrador';
+        } catch (e) {
+            elUser.innerText = 'Administrador';
+        }
+    }
+
+    try {
+        elStart.innerText = new Date(localStorage.getItem('session_start')).toLocaleTimeString('pt-BR');
+    } catch (e) {
+        elStart.innerText = '-';
+    }
+}
+
+async function updateSessionIp() {
+    const el = document.getElementById('sessionIp');
+    if (!el) return;
+    try {
+        const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+        const res = await fetch(`${API_URL}/api/test-ip`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        el.innerText = data && data.ip ? data.ip : '-';
+    } catch (e) {
+        el.innerText = '-';
+    }
+}
+
 // ==================== MOBILE MENU ====================
 function initMenuMobile() {
     const menuToggle = document.getElementById('menuToggle');
@@ -789,6 +832,8 @@ function iniciarAtualizacaoAutomatica() {
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', async () => {
     initMenuMobile();
+    updateSessionInfo();
+    updateSessionIp();
     await carregarPlanos();
     await carregarClientes();
     iniciarAtualizacaoAutomatica();

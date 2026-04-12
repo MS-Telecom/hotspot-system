@@ -97,6 +97,10 @@
                     <span>Início</span>
                     <span id="sessionStart" class="text-gray-600">-</span>
                 </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>IP</span>
+                    <span id="sessionIp" class="text-gray-600">-</span>
+                </div>
             </div>
         </div>
     </aside>
@@ -298,6 +302,18 @@ function updateSessionInfo() {
     }
 }
 
+async function updateSessionIp() {
+    const el = document.getElementById('sessionIp');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API_URL}/api/test-ip`, { headers: authHeaders(false) });
+        const data = await res.json();
+        el.innerText = data && data.ip ? data.ip : '-';
+    } catch (e) {
+        el.innerText = '-';
+    }
+}
+
 function carregarPerfil() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -316,6 +332,7 @@ async function sair() {
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
     updateSessionInfo();
+    updateSessionIp();
     carregarVouchers();
     carregarPerfil();
     if (typeof lucide !== 'undefined') lucide.createIcons();

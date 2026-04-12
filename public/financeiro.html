@@ -105,6 +105,10 @@
                     <span>Início</span>
                     <span id="sessionStart" class="text-gray-600">-</span>
                 </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>IP</span>
+                    <span id="sessionIp" class="text-gray-600">-</span>
+                </div>
             </div>
         </div>
     </aside>
@@ -445,6 +449,18 @@ function carregarPerfil() {
     const sessionStart = localStorage.getItem('session_start');
     if(sessionStart && document.getElementById('sessionStart')) document.getElementById('sessionStart').innerText = new Date(sessionStart).toLocaleTimeString('pt-BR');
 }
+
+async function updateSessionIp() {
+    const el = document.getElementById('sessionIp');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API_URL}/api/test-ip`, { headers: authHeaders(false) });
+        const data = await res.json();
+        el.innerText = data && data.ip ? data.ip : '-';
+    } catch (e) {
+        el.innerText = '-';
+    }
+}
 function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); }
 function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
 async function salvarPerfil() {
@@ -495,6 +511,7 @@ function initMenuMobile() {
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
     carregarPerfil();
+    updateSessionIp();
     carregarFinanceiro();
     if(typeof lucide !== 'undefined') lucide.createIcons();
     document.getElementById('searchInput')?.addEventListener('input', filtrarTransacoes);
