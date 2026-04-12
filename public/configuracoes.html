@@ -105,13 +105,13 @@
 
             <!-- Abas de Configuração -->
             <div class="flex border-b border-gray-800 gap-6 overflow-x-auto">
-                <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral" onclick="openTab('geral')">Geral</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos" onclick="openTab('planos')">Planos</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis" onclick="openTab('teste_gratis')">Teste Grátis</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento" onclick="openTab('pagamento')">Pagamento</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao" onclick="openTab('integracao')">Integrações</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup" onclick="openTab('backup')">Backup</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios" onclick="openTab('usuarios')">Usuários Admin</button>
+                <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste Grátis</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
             </div>
 
             <!-- Aba Geral -->
@@ -133,7 +133,7 @@
                         <div><label class="text-sm text-gray-400 block mb-2">E-mail</label><input type="text" id="email" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="salvarGeralBtn" onclick="salvarConfig('system')" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Alterações</button></div>
+                <div class="flex justify-end"><button id="salvarGeralBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Alterações</button></div>
             </div>
 
             <!-- Aba Planos -->
@@ -141,7 +141,7 @@
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
                         <h3 class="font-bold text-white">Planos Disponíveis</h3>
-                        <button onclick="openModalNovoPlano()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="plus" class="w-4 h-4"></i> Novo Plano</button>
+                        <button onclick="openNovoPlanoModal()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="plus" class="w-4 h-4"></i> Novo Plano</button>
                     </div>
                     <div id="listaPlanos" class="divide-y divide-gray-800"></div>
                 </div>
@@ -172,7 +172,7 @@
                         </div>
                     </div>
                     <div class="mt-6">
-                        <button id="salvarConfigTesteBtn" onclick="salvarConfig('free_trial')" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações do Teste</button>
+                        <button id="salvarConfigTesteBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações do Teste</button>
                         <div id="configTesteStatus" class="mt-3 hidden"></div>
                     </div>
                 </div>
@@ -188,7 +188,7 @@
                         <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="Belém/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="salvarPagamentoBtn" onclick="salvarConfig('payment')" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações</button></div>
+                <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações</button></div>
             </div>
 
             <!-- Aba Integração -->
@@ -196,34 +196,32 @@
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Supabase</h3>
                     <div class="space-y-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://pdgknfokdcqyfdrdwtbm.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
-                        <div><label class="text-sm text-gray-400 block mb-2">Anon Key</label><input type="password" id="supabaseAnon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tuZm9rZGNxeWZkcmR3dGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjE1MjMsImV4cCI6MjA4OTA5NzUyM30.O5dMXBapRMtENBiUjYYWenfD_0uwMm7xRlh0euQ3780" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
-                        <div class="flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-xs text-emerald-500">Conexão ativa</span></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://xyz.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Chave API (Anon Key)</label><input type="password" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">MikroTik / RADIUS</h3>
+                    <h3 class="font-bold text-white mb-4">MikroTik RADIUS</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">Servidor RADIUS</label><input type="text" id="radiusServer" value="40.233.118.238" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Servidor RADIUS (IP)</label><input type="text" id="radiusHost" value="40.233.118.238" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Secret</label><input type="password" id="radiusSecret" value="testing123" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Auth Port</label><input type="text" id="radiusAuthPort" value="1812" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Accounting Port</label><input type="text" id="radiusAcctPort" value="1813" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2"><button id="salvarIntegracoesBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações</button><button id="testarConexaoBtn" class="bg-gray-800 px-6 py-2 rounded-xl text-sm font-medium hover:bg-gray-700 transition">Testar Conexão</button></div>
+                <div class="flex justify-end"><button id="testarConexaoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Testar Conexão</button></div>
             </div>
 
             <!-- Aba Backup -->
             <div id="backup" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Backup do Sistema</h3>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">Último backup</p><p class="text-xs text-gray-500">22/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
-                        <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">Backup anterior</p><p class="text-xs text-gray-500">21/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
+                    <div id="listaBackups" class="divide-y divide-gray-800">
+                        <div class="text-center text-gray-500 p-4">Carregando backups...</div>
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">Agendamento Automático</h3>
+                    <h3 class="font-bold text-white mb-4">Agendamento</h3>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Frequência</span><select id="backupFrequencia" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm"><option>Diário (03:00)</option><option>Semanal (Domingo 03:00)</option><option>Mensal (Dia 1 03:00)</option></select></div>
                         <div class="flex items-center gap-2"><input type="checkbox" id="backupManter" class="rounded bg-gray-800"> <span class="text-sm text-gray-400">Manter backups por 30 dias</span></div>
@@ -242,9 +240,8 @@
                     <div id="listaAdmins" class="divide-y divide-gray-800"></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">Alterar Senha</h3>
-                    <div class="space-y-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">Usuário</label><input type="text" id="alterarUsuario" value="admin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                    <h3 class="font-bold text-white mb-4">Segurança da Conta</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-sm text-gray-400 block mb-2">Nova Senha</label><input type="password" id="alterarNovaSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Confirmar Senha</label><input type="password" id="alterarConfirmarSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
@@ -260,19 +257,19 @@
 <div id="modalNovoPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5 text-blue-500"></i> Novo Plano</h2>
-            <button onclick="closeModalNovoPlano()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+            <h3 class="text-lg font-black text-white">Novo Plano</h3>
+            <button onclick="closeModalNovoPlano()" class="p-2 hover:bg-gray-800 rounded-xl transition"><i data-lucide="x" class="w-5 h-5 text-gray-500"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="novoPlanoNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="novoPlanoPreco" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="novoPlanoVelocidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (dias)</label><input type="number" id="novoPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="novoPlanoNome" placeholder="Ex: Platinum" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="novoPlanoPreco" placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="novoPlanoVelocidade" placeholder="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (Dias)</label><input type="number" id="novoPlanoDuracao" placeholder="30" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Descrição</label><textarea id="novoPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalNovoPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarNovoPlano()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+            <button onclick="criarPlano()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Criar Plano</button>
         </div>
     </div>
 </div>
@@ -281,73 +278,33 @@
 <div id="modalEditarPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> Editar Plano</h2>
-            <button onclick="closeModalEditarPlano()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+            <h3 class="text-lg font-black text-white">Editar Plano</h3>
+            <button onclick="closeModalEditarPlano()" class="p-2 hover:bg-gray-800 rounded-xl transition"><i data-lucide="x" class="w-5 h-5 text-gray-500"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
             <input type="hidden" id="editarPlanoId">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="editarPlanoNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="editarPlanoPreco" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="editarPlanoPreco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="editarPlanoVelocidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (dias)</label><input type="number" id="editarPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (Dias)</label><input type="number" id="editarPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Descrição</label><textarea id="editarPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalEditarPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarEdicaoPlano()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Novo Admin -->
-<div id="modalNovoAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-blue-500"></i> Novo Administrador</h2>
-            <button onclick="closeModalNovoAdmin()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="novoAdminUser" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="novoAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label><input type="password" id="novoAdminSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Permissões</label><select id="novoAdminPermissoes" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
-        </div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-            <button onclick="closeModalNovoAdmin()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarNovoAdmin()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Editar Admin -->
-<div id="modalEditarAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> Editar Administrador</h2>
-            <button onclick="closeModalEditarAdmin()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-            <input type="hidden" id="editarAdminId">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editarAdminUser" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editarAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Permissões</label><select id="editarAdminPermissoes" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
-        </div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-            <button onclick="closeModalEditarAdmin()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarEdicaoAdmin()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+            <button onclick="salvarEdicaoPlano()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
         </div>
     </div>
 </div>
 
 <!-- Modal Perfil -->
-<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i> Meu Perfil</h2>
-            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+            <h3 class="text-lg font-black text-white">Meu Perfil</h3>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-xl transition"><i data-lucide="x" class="w-5 h-5 text-gray-500"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label><input type="text" id="editNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div class="border-t border-gray-800 pt-4 mt-2">
                 <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
@@ -447,7 +404,7 @@
         for (let i = 0; i < contents.length; i++) contents[i].classList.add('hidden');
         const tabEl = document.getElementById(tabId);
         if (tabEl) tabEl.classList.remove('hidden');
-
+        
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 
         // carregar dados sob demanda por aba
@@ -519,15 +476,10 @@
         document.getElementById('novoPlanoVelocidade').value = '';
         document.getElementById('novoPlanoDuracao').value = '';
         document.getElementById('novoPlanoDescricao').value = '';
-        const m = document.getElementById('novoPlanoModal');
-        if (m) m.classList.remove('hidden');
+        document.getElementById('modalNovoPlano')?.classList.remove('hidden');
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
-    function closeNovoPlanoModal() { const m = document.getElementById('novoPlanoModal'); if (m) m.classList.add('hidden'); }
-
-    // aliases (compat com HTML antigo)
-    function openModalNovoPlano() { return openNovoPlanoModal(); }
-    function closeModalNovoPlano() { return closeNovoPlanoModal(); }
+    function closeModalNovoPlano() { document.getElementById('modalNovoPlano')?.classList.add('hidden'); }
 
     async function criarPlano() {
         const dados = {
@@ -540,14 +492,11 @@
         try {
             const res = await fetch(`${API_URL}/api/plans`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(dados) });
             if (!res.ok) throw new Error();
-            closeNovoPlanoModal();
+            closeModalNovoPlano();
             await carregarPlanos();
-            alert('OK:  Plano criado!');
-        } catch(e) { alert('ERRO:  Erro ao criar plano'); }
+            alert('✅ Plano criado!');
+        } catch(e) { alert('❌ Erro ao criar plano'); }
     }
-
-    // aliases (compat com HTML antigo)
-    function salvarNovoPlano() { return criarPlano(); }
 
     function openEditarPlanoModal(id) {
         const p = planosData.find(x => String(x.id) === String(id));
@@ -558,15 +507,10 @@
         document.getElementById('editarPlanoVelocidade').value = p.speed_mbps || 0;
         document.getElementById('editarPlanoDuracao').value = p.duration_days || 0;
         document.getElementById('editarPlanoDescricao').value = p.description || '';
-        const m = document.getElementById('editarPlanoModal');
-        if (m) m.classList.remove('hidden');
+        document.getElementById('modalEditarPlano')?.classList.remove('hidden');
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
-    function closeEditarPlanoModal() { const m = document.getElementById('editarPlanoModal'); if (m) m.classList.add('hidden'); }
-
-    // aliases (compat com HTML antigo)
-    function openModalEditarPlano(id) { return openEditarPlanoModal(id); }
-    function closeModalEditarPlano() { return closeEditarPlanoModal(); }
+    function closeModalEditarPlano() { document.getElementById('modalEditarPlano')?.classList.add('hidden'); }
 
     async function salvarEdicaoPlano() {
         const id = document.getElementById('editarPlanoId').value;
@@ -580,10 +524,10 @@
         try {
             const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
             if (!res.ok) throw new Error();
-            closeEditarPlanoModal();
+            closeModalEditarPlano();
             await carregarPlanos();
-            alert('OK:  Plano atualizado!');
-        } catch(e) { alert('ERRO:  Erro ao atualizar plano'); }
+            alert('✅ Plano atualizado!');
+        } catch(e) { alert('❌ Erro ao atualizar plano'); }
     }
 
     async function excluirPlano(id) {
@@ -592,8 +536,8 @@
             const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers: authHeaders(false) });
             if (!res.ok) throw new Error();
             await carregarPlanos();
-            alert('OK:  Plano removido!');
-        } catch(e) { alert('ERRO:  Erro ao remover plano'); }
+            alert('✅ Plano removido!');
+        } catch(e) { alert('❌ Erro ao remover plano'); }
     }
 
     // ==================== BACKUP ====================
@@ -610,20 +554,17 @@
                 return;
             }
             const normalized = backups.map(b => ({ filename: b.filename || b.file || b.name, created_at: b.created_at || b.timestamp || b.date }));
-            container.innerHTML = normalized.map(b => {
-                const fname = String(b.filename || '');
-                return `
+            container.innerHTML = normalized.map(b => `
                 <div class="py-4 flex justify-between items-center">
                     <div>
-                        <p class="text-sm font-medium text-white">${escapeHtml(fname)}</p>
+                        <p class="text-sm font-medium text-white">${escapeHtml(String(b.filename || ''))}</p>
                         <p class="text-[10px] text-gray-500">${b.created_at ? new Date(b.created_at).toLocaleString() : '-'}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick='downloadBackup(${JSON.stringify(fname)})' class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Download"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i></button>
+                        <a href="${API_URL}/api/backup/download/${encodeURIComponent(String(b.filename || ''))}" target="_blank" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Download (se suportado)"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i></a>
                     </div>
                 </div>
-            `;
-            }).join('');
+            `).join('');
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
         } catch (e) {
             container.innerHTML = '<div class="text-center text-red-500 p-4">Erro ao carregar backups</div>';
@@ -634,341 +575,150 @@
         try {
             const res = await fetch(`${API_URL}/api/backup/create`, { method: 'POST', headers: authHeaders(false) });
             if (!res.ok) throw new Error();
-            alert('OK:  Backup gerado com sucesso!');
+            alert('✅ Backup gerado com sucesso!');
             carregarBackups();
         } catch (e) {
-            alert('ERRO:  Erro ao gerar backup');
+            alert('❌ Erro ao gerar backup');
         }
     }
 
     // ==================== CONFIGURAÇÕES (SETTINGS) ====================
     async function carregarConfig(key) {
         try {
-            let url = '';
-            if (key === 'system') url = `${API_URL}/api/settings`;
-            if (key === 'free_trial') url = `${API_URL}/api/settings/free_trial`;
-            if (key === 'payment') url = `${API_URL}/api/settings/payment`;
-            if (!url) return;
-
-            const res = await fetch(url, { headers: authHeaders(false) });
+            const res = await fetch(`${API_URL}/api/settings/${key}`, { headers: authHeaders(false) });
             if (!res.ok) throw new Error();
-            const value = await res.json();
+            const data = await res.json();
+            const value = data.value || data;
 
             if (key === 'system') {
                 if (document.getElementById('sistemaNome')) document.getElementById('sistemaNome').value = value.system_name || '';
-                if (document.getElementById('sistemaLogo')) document.getElementById('sistemaLogo').value = value.system_logo_url || '';
+                if (document.getElementById('sistemaLogo')) document.getElementById('sistemaLogo').value = value.logo_url || '';
                 if (document.getElementById('razaoSocial')) document.getElementById('razaoSocial').value = value.company_name || '';
-                if (document.getElementById('cnpj')) document.getElementById('cnpj').value = value.company_doc || '';
-                if (document.getElementById('telefone')) document.getElementById('telefone').value = value.company_phone || '';
-                if (document.getElementById('email')) document.getElementById('email').value = value.company_email || '';
-                if (document.getElementById('velocidadeMaxima')) document.getElementById('velocidadeMaxima').value = value.max_speed_mbps || '';
-                if (document.getElementById('tempoSessao')) document.getElementById('tempoSessao').value = value.session_timeout_minutes || '';
+                if (document.getElementById('cnpj')) document.getElementById('cnpj').value = value.cnpj || '';
+                if (document.getElementById('telefone')) document.getElementById('telefone').value = value.phone || '';
+                if (document.getElementById('email')) document.getElementById('email').value = value.email || '';
             } else if (key === 'free_trial') {
                 if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_minutes || 15;
-                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.cooldown_hours || value.limit_hours || 24;
+                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.limit_hours || 24;
             } else if (key === 'payment') {
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
                 if (document.getElementById('pixCidade')) document.getElementById('pixCidade').value = value.pix_city || '';
             }
-        } catch (e) {}
-    }
-
-    function getVal(id, fallback) {
-        const el = document.getElementById(id);
-        if (!el) return fallback;
-        const v = (el.value !== undefined) ? el.value : '';
-        return (v === '' || v === null || v === undefined) ? fallback : v;
+        } catch (e) {
+            console.error(`Erro ao carregar config ${key}:`, e);
+        }
     }
 
     async function salvarConfig(key) {
-        let url = '';
-        let payload = {};
-
+        let value = {};
         if (key === 'system') {
-            url = `${API_URL}/api/settings`;
-            payload = {
-                system_name: getVal('sistemaNome', ''),
-                system_logo_url: getVal('sistemaLogo', ''),
-                company_name: getVal('razaoSocial', ''),
-                company_doc: getVal('cnpj', ''),
-                company_phone: getVal('telefone', ''),
-                company_email: getVal('email', ''),
-                max_speed_mbps: Number(getVal('velocidadeMaxima', 0)),
-                session_timeout_minutes: Number(getVal('tempoSessao', 0))
+            value = {
+                system_name: document.getElementById('sistemaNome').value,
+                logo_url: document.getElementById('sistemaLogo').value,
+                company_name: document.getElementById('razaoSocial').value,
+                cnpj: document.getElementById('cnpj').value,
+                phone: document.getElementById('telefone').value,
+                email: document.getElementById('email').value
             };
         } else if (key === 'free_trial') {
-            url = `${API_URL}/api/settings/free_trial`;
-            payload = {
-                duration_minutes: Number(getVal('teste_tempo', 15)),
-                cooldown_hours: Number(getVal('teste_limite', 24))
+            value = {
+                duration_minutes: parseInt(document.getElementById('teste_tempo').value, 10),
+                limit_hours: parseInt(document.getElementById('teste_limite').value, 10)
             };
         } else if (key === 'payment') {
-            url = `${API_URL}/api/settings/payment`;
-            payload = {
-                pix_key: getVal('pixChave', ''),
-                pix_name: getVal('pixNome', ''),
-                pix_city: getVal('pixCidade', '')
+            value = {
+                pix_key: document.getElementById('pixChave').value,
+                pix_name: document.getElementById('pixNome').value,
+                pix_city: document.getElementById('pixCidade').value
             };
         }
-
-        if (!url) return;
-
         try {
-            const res = await fetch(url, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+            const res = await fetch(`${API_URL}/api/settings/${key}`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ value })
+            });
             if (!res.ok) throw new Error();
-            alert('OK: Configuração salva com sucesso!');
+            alert('✅ Configurações salvas!');
         } catch (e) {
-            alert('ERRO: Erro ao salvar configuração');
+            alert('❌ Erro ao salvar configurações');
         }
     }
 
-    async function carregarIntegracoes() {
-        try {
-            const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
-            if (!res.ok) throw new Error();
-            const value = await res.json();
-            document.getElementById('supabaseUrl') && (document.getElementById('supabaseUrl').value = value.supabase_url || '');
-            document.getElementById('supabaseAnon') && (document.getElementById('supabaseAnon').value = value.supabase_anon_key || '');
-            document.getElementById('radiusServer') && (document.getElementById('radiusServer').value = value.radius_server || '');
-            document.getElementById('radiusSecret') && (document.getElementById('radiusSecret').value = value.radius_secret || '');
-            document.getElementById('radiusAuthPort') && (document.getElementById('radiusAuthPort').value = value.radius_auth_port || '');
-            document.getElementById('radiusAcctPort') && (document.getElementById('radiusAcctPort').value = value.radius_acct_port || '');
-        } catch (e) {}
-    }
-
-    async function salvarIntegracoes() {
-        const payload = {
-            supabase_url: getVal('supabaseUrl', ''),
-            supabase_anon_key: getVal('supabaseAnon', ''),
-            radius_server: getVal('radiusServer', ''),
-            radius_secret: getVal('radiusSecret', ''),
-            radius_auth_port: Number(getVal('radiusAuthPort', 1812)),
-            radius_acct_port: Number(getVal('radiusAcctPort', 1813))
-        };
-        try {
-            const res = await fetch(`${API_URL}/api/settings/integrations`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
-            if (!res.ok) throw new Error();
-            alert('OK: Configurações salvas!');
-        } catch (e) {
-            alert('ERRO: Erro ao salvar integrações');
-        }
-    }
-
-    async function testarConexao() {
-        try {
-            const r1 = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
-            if (!r1.ok) throw new Error();
-            alert('OK: Conexão testada!');
-        } catch (e) {
-            alert('ERRO: Erro ao testar conexão');
-        }
-    }
-
-    async function downloadBackup(filename) {
-        try {
-            const res = await fetch(`${API_URL}/api/backup/download/${encodeURIComponent(String(filename || ''))}`, { headers: authHeaders(false) });
-            if (!res.ok) throw new Error();
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = String(filename || 'backup.json');
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        } catch (e) {
-            alert('ERRO: Token não fornecido');
-        }
-    }
-
-    // ==================== ADMINS (backend novo: /api/admins) ====================
-    let adminsData = [];
-
+    // ==================== ADMINS ====================
     async function carregarAdmins() {
+        const container = document.getElementById('listaAdmins');
+        if (!container) return;
         try {
             const res = await fetch(`${API_URL}/api/admins`, { headers: authHeaders(false) });
             if (!res.ok) throw new Error();
-            adminsData = await res.json();
-            renderAdmins();
-        } catch (e) {
-            adminsData = [];
-            renderAdmins();
-        }
-    }
-
-    function renderAdmins() {
-        const el = document.getElementById('listaAdmins');
-        if (!el) return;
-        if (!adminsData || adminsData.length === 0) {
-            el.innerHTML = '<div class="p-6 text-center text-gray-500">Nenhum admin encontrado</div>';
-            return;
-        }
-        el.innerHTML = adminsData.map(a => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-900/30 transition">
-                <div>
-                    <p class="text-sm font-bold text-white">${escapeHtml(a.username || '')}</p>
-                    <p class="text-[10px] text-gray-500 mono">${escapeHtml(a.email || '')}</p>
+            const admins = await res.json();
+            container.innerHTML = admins.map(a => `
+                <div class="py-4 px-6 flex justify-between items-center hover:bg-gray-900/30 transition">
+                    <div>
+                        <p class="text-sm font-bold text-white">${escapeHtml(a.full_name || '')}</p>
+                        <p class="text-xs text-gray-500">${escapeHtml(a.email || '')}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="excluirAdmin('${a.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="trash" class="w-4 h-4 text-red-500"></i></button>
+                    </div>
                 </div>
-                <div class="flex gap-1">
-                    <button onclick="openModalEditarAdmin('${a.id}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>
-                    <button onclick="excluirAdmin('${a.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition" title="Excluir"><i data-lucide="trash" class="w-4 h-4 text-red-500"></i></button>
-                </div>
-            </div>
-        `).join('');
-        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-    }
-
-    function openModalNovoAdmin() { const m = document.getElementById('modalNovoAdmin'); if (m) m.classList.remove('hidden'); if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons(); }
-    function closeModalNovoAdmin() { const m = document.getElementById('modalNovoAdmin'); if (m) m.classList.add('hidden'); }
-
-    async function salvarNovoAdmin() {
-        const payload = {
-            username: getVal('novoAdminUser', ''),
-            email: getVal('novoAdminEmail', ''),
-            password: getVal('novoAdminSenha', '')
-        };
-        try {
-            const res = await fetch(`${API_URL}/api/admins`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
-            if (!res.ok) throw new Error();
-            closeModalNovoAdmin();
-            await carregarAdmins();
+            `).join('');
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
         } catch (e) {
-            alert('ERRO: Erro ao criar admin');
+            container.innerHTML = '<div class="text-center text-red-500 p-4">Erro ao carregar administradores</div>';
         }
     }
 
-    function openModalEditarAdmin(id) {
-        const admin = (adminsData || []).find(a => String(a.id) === String(id));
-        if (!admin) return;
-        document.getElementById('editarAdminId').value = admin.id;
-        document.getElementById('editarAdminUser').value = admin.username || '';
-        document.getElementById('editarAdminEmail').value = admin.email || '';
-        document.getElementById('editarAdminPermissoes').value = admin.role || 'admin';
-        const m = document.getElementById('modalEditarAdmin');
-        if (m) m.classList.remove('hidden');
-        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-    }
-    function closeModalEditarAdmin() { const m = document.getElementById('modalEditarAdmin'); if (m) m.classList.add('hidden'); }
-    function salvarEdicaoAdmin() { return salvarEditarAdmin(); }
-
-    async function salvarEditarAdmin() {
-        const idEl = document.getElementById('editarAdminId');
-        const id = idEl ? idEl.value : '';
-        if (!id) return;
-        const payload = {
-            username: getVal('editarAdminUser', ''),
-            email: getVal('editarAdminEmail', ''),
-            role: getVal('editarAdminPermissoes', 'admin')
-        };
-        try {
-            const res = await fetch(`${API_URL}/api/admins/${encodeURIComponent(String(id))}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
-            if (!res.ok) throw new Error();
-            closeModalEditarAdmin();
-            await carregarAdmins();
-        } catch (e) {
-            alert('ERRO: Erro ao atualizar admin');
-        }
-    }
-
-    async function excluirAdmin(id) {
-        if (!confirm('Excluir admin?')) return;
-        try {
-            const res = await fetch(`${API_URL}/api/admins/${encodeURIComponent(String(id))}`, { method: 'DELETE', headers: authHeaders(false) });
-            if (!res.ok) throw new Error();
-            await carregarAdmins();
-        } catch (e) {
-            alert('ERRO: Erro ao excluir admin');
-        }
-    }
-
+    // ==================== UTILS ====================
     function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function sair() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        window.location.href = 'login.html';
     }
 
     function initMenuMobile() {
-        const menuToggle = document.getElementById('menuToggle');
-        const menuOverlay = document.getElementById('menuOverlay');
+        const toggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
-        if (menuToggle && sidebar) {
-            menuToggle.addEventListener('click', () => {
+        const overlay = document.getElementById('menuOverlay');
+        if (toggle && sidebar && overlay) {
+            toggle.addEventListener('click', () => {
                 sidebar.classList.toggle('hidden');
-                menuOverlay.classList.toggle('hidden');
+                sidebar.classList.toggle('flex');
+                overlay.classList.toggle('hidden');
             });
-            if (menuOverlay) {
-                menuOverlay.addEventListener('click', () => {
-                    sidebar.classList.add('hidden');
-                    menuOverlay.classList.add('hidden');
-                });
-            }
+            overlay.addEventListener('click', () => {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex');
+                overlay.classList.add('hidden');
+            });
         }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
         initTabs();
-        updateSessionIp();
         initThemeButtons();
-        carregarPlanos();
-        carregarBackups();
-        carregarIntegracoes();
-        carregarAdmins();
+        updateSessionIp();
         
-        // Carregar configurações iniciais
-        carregarConfig('system');
-        carregarConfig('free_trial');
-        carregarConfig('payment');
+        // Carregar aba inicial
+        openTab('geral');
 
-        const criarPlanoBtn = document.getElementById('criarPlanoBtn');
-        const salvarNovoPlanoBtn = document.getElementById('salvarNovoPlanoBtn');
-        const salvarEditarPlanoBtn = document.getElementById('salvarEditarPlanoBtn');
-        const gerarBackupBtn = document.getElementById('gerarBackupBtn');
-        const salvarIntegracoesBtn = document.getElementById('salvarIntegracoesBtn');
-        const testarConexaoBtn = document.getElementById('testarConexaoBtn');
-        if (criarPlanoBtn) criarPlanoBtn.addEventListener('click', openNovoPlanoModal);
-        if (salvarNovoPlanoBtn) salvarNovoPlanoBtn.addEventListener('click', criarPlano);
-        if (salvarEditarPlanoBtn) salvarEditarPlanoBtn.addEventListener('click', salvarEdicaoPlano);
-        if (gerarBackupBtn) gerarBackupBtn.addEventListener('click', gerarBackup);
-        if (salvarIntegracoesBtn) salvarIntegracoesBtn.addEventListener('click', salvarIntegracoes);
-        if (testarConexaoBtn) testarConexaoBtn.addEventListener('click', testarConexao);
-        
-        // Listeners para salvar configurações
-        const salvarGeralBtn = document.getElementById('salvarGeralBtn');
-        const salvarConfigTesteBtn = document.getElementById('salvarConfigTesteBtn');
-        const salvarPagamentoBtn = document.getElementById('salvarPagamentoBtn');
-        if (salvarGeralBtn) salvarGeralBtn.addEventListener('click', () => salvarConfig('system'));
-        if (salvarConfigTesteBtn) salvarConfigTesteBtn.addEventListener('click', () => salvarConfig('free_trial'));
-        if (salvarPagamentoBtn) salvarPagamentoBtn.addEventListener('click', () => salvarConfig('payment'));
+        // Listeners globais
+        document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
+        document.getElementById('salvarGeralBtn')?.addEventListener('click', () => salvarConfig('system'));
+        document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', () => salvarConfig('free_trial'));
+        document.getElementById('salvarPagamentoBtn')?.addEventListener('click', () => salvarConfig('payment'));
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     });
-
-    // Garante acesso global (onclick) mesmo se o escopo do browser variar
-    window.openTab = openTab;
-    window.salvarConfig = salvarConfig;
-    window.downloadBackup = downloadBackup;
-    window.salvarIntegracoes = salvarIntegracoes;
-    window.testarConexao = testarConexao;
-    window.openModalNovoPlano = openModalNovoPlano;
-    window.closeModalNovoPlano = closeModalNovoPlano;
-    window.salvarNovoPlano = salvarNovoPlano;
-    window.openModalEditarPlano = openModalEditarPlano;
-    window.closeModalEditarPlano = closeModalEditarPlano;
-    window.openModalNovoAdmin = openModalNovoAdmin;
-    window.closeModalNovoAdmin = closeModalNovoAdmin;
-    window.salvarNovoAdmin = salvarNovoAdmin;
-    window.openModalEditarAdmin = openModalEditarAdmin;
-    window.closeModalEditarAdmin = closeModalEditarAdmin;
-    window.salvarEditarAdmin = salvarEditarAdmin;
-    window.salvarEdicaoAdmin = salvarEdicaoAdmin;
-    window.excluirAdmin = excluirAdmin;
 </script>
 </body>
 </html>
-
-
-
-
-
