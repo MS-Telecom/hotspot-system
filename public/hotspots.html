@@ -144,448 +144,105 @@
       <p id="infoMessage" class="text-xs text-amber-400 bg-amber-500/10 p-3 rounded-lg mt-2">Após criar, um script COMPLETO com configuração WAN será gerado.</p>
       <div id="wanBlock">
         <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface WAN</label><select id="wanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-          <optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
-          <optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup>
-          <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option><option value="vlan">vlan</option></optgroup>
+          <optgroup label="Portas">
+            <option value="ether1">ether1</option>
+            <option value="ether2">ether2</option>
+            <option value="ether3">ether3</option>
+            <option value="ether4">ether4</option>
+            <option value="ether5">ether5</option>
+            <option value="wlan1">wlan1</option>
+            <option value="wlan2">wlan2</option>
+          </optgroup>
+        </select></div>
+        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Conexão WAN</label><select id="wanConnectionType" onchange="toggleWanConfig()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <option value="dhcp">DHCP Cliente</option>
+          <option value="static">IP Estático</option>
+          <option value="pppoe">PPPoE Cliente</option>
         </select></div>
 
-        <div id="wanConfig">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Configuração WAN</label>
-          <select id="wanTipo" onchange="toggleWanFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            <option value="dhcp">📡 DHCP (Automático)</option>
-            <option value="pppoe">🔌 PPPoE (Provedor)</option>
-            <option value="static">⚙️ Estático (IP Manual)</option>
-          </select>
-          <div id="pppoeFields" class="hidden space-y-2 mt-2">
-            <input type="text" id="pppoeUsername" placeholder="Usuário PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            <input type="password" id="pppoePassword" placeholder="Senha PPPoE" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-          </div>
-          <div id="staticFields" class="hidden space-y-2 mt-2">
-            <input type="text" id="staticIp" placeholder="IP" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            <input type="text" id="staticMask" placeholder="Máscara" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-            <input type="text" id="staticGateway" placeholder="Gateway" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-          </div>
+        <!-- Configuração IP Estático – oculto por padrão -->
+        <div id="staticIpConfig" class="space-y-3 hidden">
+          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Endereço IP WAN</label><input type="text" id="staticIpAddress" placeholder="192.168.88.2/24" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gateway WAN</label><input type="text" id="staticGateway" placeholder="192.168.88.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">DNS Primário</label><input type="text" id="staticDns1" placeholder="8.8.8.8" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">DNS Secundário</label><input type="text" id="staticDns2" placeholder="8.8.4.4" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+        </div>
+
+        <!-- Configuração PPPoE – oculto por padrão -->
+        <div id="pppoeConfig" class="space-y-3 hidden">
+          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Usuário PPPoE</label><input type="text" id="pppoeUser" placeholder="usuario@provedor" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Senha PPPoE</label><input type="password" id="pppoePassword" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
         </div>
       </div>
 
-      <!-- Interface LAN -->
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface LAN (clientes)</label><select id="lanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-        <optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4" selected>ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
-        <optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup>
-        <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option></optgroup>
-      </select></div>
-
-      <!-- VLAN ID -->
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN ID (opcional)</label><input type="text" id="vlanId" placeholder="Deixe em branco se não usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><p class="text-[9px] text-gray-500 mt-1">Se preenchido, o hotspot será criado dentro da VLAN</p></div>
-
-      <!-- Tipo de Saída do Hotspot -->
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Saída do Hotspot</label>
-        <select id="popType" onchange="togglePopTypeFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-          <option value="new_vlan">🆕 Nova VLAN (usando VLAN ID acima)</option>
-          <option value="existing_vlan">📁 VLAN existente</option>
-          <option value="physical_port">🔌 Porta física dedicada</option>
+      <!-- Configuração LAN -->
+      <div class="pt-4 mt-4 border-t border-gray-800">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface LAN</label>
+        <select id="lanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <optgroup label="Portas">
+            <option value="bridge">bridge (todas as portas)</option>
+            <option value="ether2">ether2</option>
+            <option value="ether3">ether3</option>
+            <option value="ether4">ether4</option>
+            <option value="ether5">ether5</option>
+            <option value="wlan1">wlan1</option>
+            <option value="wlan2">wlan2</option>
+          </optgroup>
         </select>
-        <div id="existingVlanConfig" class="hidden mt-2"><input type="text" id="existingVlan" placeholder="Nome da VLAN existente (ex: vlan555)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-        <div id="physicalPortConfig" class="hidden mt-2"><select id="physicalPort" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></select></div>
+      </div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Endereço IP LAN</label><input type="text" id="lanIpAddress" placeholder="10.0.0.1/24" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+
+      <!-- Configuração Hotspot -->
+      <div class="pt-4 mt-4 border-t border-gray-800">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface Hotspot</label>
+        <select id="hotspotInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <optgroup label="Portas">
+            <option value="bridge">bridge (todas as portas)</option>
+            <option value="ether2">ether2</option>
+            <option value="ether3">ether3</option>
+            <option value="ether4">ether4</option>
+            <option value="ether5">ether5</option>
+            <option value="wlan1">wlan1</option>
+            <option value="wlan2">wlan2</option>
+          </optgroup>
+        </select>
+      </div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Pool de IPs Hotspot</label><input type="text" id="hotspotIpPool" placeholder="10.0.0.10-10.0.0.254" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Servidor DNS Hotspot</label><input type="text" id="hotspotDns" placeholder="10.0.0.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Servidor SMTP (para e-mails)</label><input type="text" id="smtpServer" placeholder="smtp.seuservidor.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porta SMTP</label><input type="number" id="smtpPort" placeholder="587" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Usuário SMTP</label><input type="text" id="smtpUser" placeholder="usuario@seuservidor.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Senha SMTP</label><input type="password" id="smtpPassword" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+
+      <!-- RADIUS -->
+      <div class="pt-4 mt-4 border-t border-gray-800">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Servidor RADIUS</label>
+        <input type="text" id="radiusServer" placeholder="192.168.88.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porta de Autenticação RADIUS</label>
+        <input type="number" id="radiusAuthPort" placeholder="1812" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Porta de Contabilidade RADIUS</label>
+        <input type="number" id="radiusAcctPort" placeholder="1813" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Shared Secret RADIUS</label>
+        <input type="password" id="radiusSecret" placeholder="sua_senha_secreta" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
       </div>
 
-      <!-- ========== CAMPOS AVANÇADOS (da versão 8) ========== -->
-      <div class="border-t border-gray-700 pt-3">
-        <p class="text-xs font-bold text-blue-400 uppercase mb-3">⚙️ Configurações Avançadas</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">⏱️ Tempo de Sessão</label><select id="sessionTime" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="10">10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hora</option><option value="120">2 horas</option><option value="180">3 horas</option><option value="240">4 horas</option><option value="300">5 horas</option><option value="360">6 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">24 horas</option></select></div>
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">💤 Tempo de Inatividade</label><select id="idleTimeout" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="1">1 min</option><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option><option value="30">30 min</option><option value="60">1 hora</option></select></div>
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">📶 Controle de Banda</label><select id="bandwidth" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="0">Ilimitado</option><option value="512">512 Kbps</option><option value="1024">1 Mbps</option><option value="2048">2 Mbps</option><option value="5120">5 Mbps</option><option value="7168" selected>7 Mbps</option><option value="10240">10 Mbps</option><option value="20480">20 Mbps</option><option value="25600">25 Mbps</option><option value="30720">30 Mbps</option><option value="40960">40 Mbps</option><option value="51200">50 Mbps</option><option value="102400">100 Mbps</option><option value="512000">500 Mbps</option></select></div>
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">📱 Dispositivos Simultâneos</label><input type="number" id="sharedUsers" value="1" min="1" max="10" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-        </div>
-        <div class="mt-3"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">🔗 Redirecionar para URL (opcional)</label><input type="url" id="redirectUrl" placeholder="https://seusite.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-        <div class="mt-3">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">💰 Modo de Funcionamento</label>
-          <div class="flex gap-4 mt-2">
-            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="modoFuncionamento" value="padrao" checked class="w-4 h-4 text-blue-600"><span class="text-sm">📱 Padrão (Cadastro livre)</span></label>
-            <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="modoFuncionamento" value="pagamentos" class="w-4 h-4 text-blue-600"><span class="text-sm">💰 Pagamentos (Planos)</span></label>
-          </div>
-          <p class="text-[10px] text-gray-500 mt-1">Modo Pagamentos: usuário precisa pagar um plano para acessar</p>
-        </div>
-      </div>
-
-      <div class="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-2">
-        <p id="infoMessage" class="text-[10px] text-cyan-400">Após criar, um script será gerado e copiado automaticamente.</p>
+      <!-- Heartbeat -->
+      <div class="pt-4 mt-4 border-t border-gray-800">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Intervalo Heartbeat (segundos)</label>
+        <input type="number" id="heartbeatInterval" placeholder="30" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
       </div>
     </div>
-    <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-      <button onclick="closeNewPopModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
-      <button onclick="saveNewPop()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Criar Hotspot</button>
+    <div class="p-3 md:p-4 border-t border-gray-800 shrink-0">
+      <button onclick="saveNewPop()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition">Salvar Hotspot</button>
     </div>
   </div>
 </div>
-
-<!-- MODAL: DETALHES DO POP -->
-<div id="popDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-  <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
-    <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white">Detalhes do POP</h2><button onclick="closePopDetailsModal()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
-    <div id="popDetailsContent" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-    <div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="closePopDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button></div>
-  </div>
-</div>
-
-<!-- MODAL: SCRIPT MIKROTIK -->
-<div id="modalScript" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-  <div class="bg-[#0f1119] rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col border border-gray-700">
-    <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white">Script MikroTik / RouterOS</h2><button onclick="closeModalScript()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
-    <div class="flex-1 overflow-y-auto p-4"><pre id="scriptContent" class="bg-gray-900 p-4 rounded-xl text-sm text-green-400 overflow-auto whitespace-pre-wrap font-mono"></pre></div>
-    <div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="copyScript()" class="px-4 py-2 bg-cyan-600 rounded-lg text-sm font-bold">Copiar Script</button></div>
-  </div>
-</div>
-
-<!-- MODAL: MEU PERFIL (versão completa da 8) -->
-<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-  <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
-    <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-      <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>Meu Perfil</h2>
-      <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
-    </div>
-    <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-      <div class="border-t border-gray-800 pt-4 mt-2">
-        <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
-        <div class="space-y-3">
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-          <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-        </div>
-      </div>
-    </div>
-    <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-      <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-      <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ==================== CONFIGURAÇÕES GLOBAIS ====================
-const API_URL = 'https://mstelecom-api.duckdns.org';
-
-function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
-function authHeaders(contentType = true) {
-  const headers = { 'Authorization': `Bearer ${getToken()}` };
-  if (contentType) headers['Content-Type'] = 'application/json';
-  return headers;
-}
-
-// ==================== MENU MOBILE ====================
-function initMenuMobile() {
-  const btn = document.getElementById('menuToggle');
-  const overlay = document.getElementById('menuOverlay');
-  const sidebar = document.getElementById('sidebar');
-  if (btn && sidebar) {
-    btn.addEventListener('click', () => { sidebar.classList.toggle('hidden'); overlay.classList.toggle('hidden'); });
-    overlay.addEventListener('click', () => { sidebar.classList.add('hidden'); overlay.classList.add('hidden'); });
-  }
-}
-
-// ==================== CARREGAR LISTA DE POPS ====================
-async function loadPops() {
-  try {
-    const res = await fetch(`${API_URL}/api/pops`, { headers: authHeaders(false) });
-    if (res.status === 401) { window.location.href = 'login.html'; return; }
-    let pops = await res.json();
-    if (pops && typeof pops === 'object' && !Array.isArray(pops) && pops.data) pops = pops.data;
-    const container = document.getElementById('popsGrid');
-    if (!pops || pops.length === 0) {
-      container.innerHTML = '<div class="text-center text-gray-500 py-8 col-span-3">Nenhum POP cadastrado. Clique em "Novo Hotspot" para adicionar.</div>';
-      return;
-    }
-    container.innerHTML = pops.map(pop => {
-      const isOnline = pop.status === 'online' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
-      const statusBg = isOnline ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400';
-      const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
-      return `
-        <div class="glass-card rounded-2xl p-5 border border-gray-800 cursor-pointer hover:border-blue-500/50 transition-all" onclick="viewPopDetails(${pop.id})">
-          <div class="flex justify-between items-start mb-3">
-            <div><h3 class="text-base font-bold text-white">${escapeHtml(pop.name) || 'POP sem nome'}</h3><p class="text-[10px] text-gray-500">ID: ${escapeHtml(String(pop.unique_id || pop.id || 'N/A'))}</p></div>
-            <span class="px-2 py-1 ${statusBg} text-[10px] font-bold rounded-full">${statusText}</span>
-          </div>
-          <div class="text-xs text-gray-400 space-y-1"><p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p><p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
-          <div class="mt-3 pt-3 border-t border-gray-700 flex justify-end gap-2">
-            <button onclick="event.stopPropagation(); generateScript(${pop.id})" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-[10px] font-medium">Script</button>
-            <button onclick="event.stopPropagation(); deletePop(${pop.id}, '${escapeHtml(pop.name)}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-[10px] font-medium">Excluir</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  } catch (err) { console.error('Erro ao carregar POPs:', err); document.getElementById('popsGrid').innerHTML = '<p class="text-red-500 text-center py-8 col-span-3">Erro ao carregar POPs</p>'; }
-}
-
-// ==================== DETALHES DO POP ====================
-async function viewPopDetails(id) {
-  const modal = document.getElementById(\'popDetailsModal\');
-  const content = document.getElementById(\'popDetailsContent\');
-  modal.classList.remove(\'hidden\');
-  content.innerHTML = \'<div class="text-center text-gray-500">Carregando...</div>\';
-  try {
-    const res = await fetch(`${API_URL}/api/pops/${id}`, { headers: authHeaders(false) });
-    if (!res.ok) throw new Error(\'POP não encontrado\');
-    const pop = await res.json();
-    if (pop) {
-      const isOnline = pop.status === \'online\' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
-      content.innerHTML = `<div class="space-y-2">
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(pop.name)}</p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${isOnline ? \'bg-green-500/20 text-green-500\' : \'bg-red-500/20 text-red-500\'} rounded-lg text-[10px]">${isOnline ? \'ONLINE\' : \'OFFLINE\'}</span></p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Localização</p><p>${escapeHtml(pop.location) || \'-\'}</p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || \'0.0.0.0\'}</p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString(\'pt-BR\') : \'Nunca\'}</p></div>
-      </div>`;
-    } else content.innerHTML = \'<div class="text-center text-red-500">POP não encontrado</div>\';
-  } catch (error) { content.innerHTML = \'<div class="text-center text-red-500">Erro ao carregar detalhes</div>\'; }
-}
-function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
-
-// ==================== SCRIPT ====================
-async function generateScript(popId, isFullScript = false) {
-  try {
-    const res = await fetch(`${API_URL}/api/pops/${popId}/script`, { headers: authHeaders() });
-    if (!res.ok) throw new Error('Erro ao gerar scrip    const data = await res.json();
-    const script = data.script || (data.data && data.data.script);
-    if (script) {
-      document.getElementById(\'scriptContent\').textContent = script;
-      document.getElementById(\'modalScript\').classList.remove(\'hidden\');
-      navigator.clipboard.writeText(script);
-      const scriptInfoMessage = document.getElementById(\'scriptInfoMessage\');
-      if (isFullScript) {
-        scriptInfoMessage.innerHTML = \'Copie o script abaixo e cole no New Terminal do seu MikroTik. Este é o script COMPLETO para novas instalações, incluindo configuração WAN, RADIUS, Hotspot Profile e Heartbeat.\';
-      } else {
-        scriptInfoMessage.innerHTML = \'Copie o script abaixo e cole no New Terminal do seu MikroTik. Este é um script BÁSICO, que configura apenas o RADIUS, Hotspot Profile e Heartbeat.\';
-      }
-    } else alert(\'Script não disponível\');} catch (error) { alert('Não foi possível obter o script deste hotspot'); }
-}
-function closeModalScript() { document.getElementById('modalScript').classList.add('hidden'); }
-function copyScript() { navigator.clipboard.writeText(document.getElementById('scriptContent').textContent).then(()=>alert('Script copiado!')); }
-
-// ==================== DELETAR POP ====================
-async function deletePop(id, nome) {
-  if (!confirm(`Deseja excluir o POP "${nome}"?`)) return;
-  try {
-    const res = await fetch(`${API_URL}/api/pops/${id}`, { method: 'DELETE', headers: authHeaders(false) });
-    if (res.ok) { alert(`POP "${nome}" excluído!`); loadPops(); }
-    else alert('Erro ao excluir');
-  } catch (error) { alert('Erro ao excluir'); }
-}
-
-// ==================== MODAL NOVO / EDITAR ====================
-let editPopId = null;
-
-function openNewPopModal(editData = null) {
-  if (editData) {
-    editPopId = editData.id;
-    document.getElementById('modalPopTitle').innerText = 'Editar Hotspot';
-    document.getElementById('popName').value = editData.name || '';
-    document.getElementById('popLocation').value = editData.location || '';
-    document.getElementById('popIp').value = editData.ip || '';
-    document.getElementById('installationType').value = editData.installation_type || 'new';
-    document.getElementById('wanInterface').value = editData.wan_interface || 'ether1';
-    document.getElementById('lanInterface').value = editData.lan_interface || 'ether4';
-    document.getElementById('vlanId').value = editData.vlan_id || '';
-    document.getElementById('popType').value = editData.hotspot_type || 'new_vlan';
-    if (editData.hotspot_type === 'existing_vlan') document.getElementById('existingVlan').value = editData.existing_vlan || '';
-    if (editData.hotspot_type === 'physical_port') document.getElementById('physicalPort').value = editData.physical_port || '';
-    document.getElementById('sessionTime').value = editData.session_time || 10;
-    document.getElementById('idleTimeout').value = editData.idle_timeout || 10;
-    document.getElementById('bandwidth').value = editData.bandwidth || 7168;
-    document.getElementById('sharedUsers').value = editData.shared_users || 1;
-    document.getElementById('redirectUrl').value = editData.redirect_url || '';
-    const modo = editData.modo_pagamentos ? 'pagamentos' : 'padrao';
-    document.querySelector(`input[name="modoFuncionamento"][value="${modo}"]`).checked = true;
-    document.getElementById('editPopId').value = editData.id;
-  } else {
-    editPopId = null;
-    document.getElementById('modalPopTitle').innerText = 'Configurar Novo Hotspot';
-    ['popName','popLocation','popIp','vlanId','existingVlan','pppoeUsername','pppoePassword','staticIp','staticMask','staticGateway','redirectUrl'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('installationType').value = 'new';
-    document.getElementById('wanInterface').value = 'ether1';
-    document.getElementById('lanInterface').value = 'ether4';
-    document.getElementById('popType').value = 'new_vlan';
-    document.getElementById('sessionTime').value = '10';
-    document.getElementById('idleTimeout').value = '10';
-    document.getElementById('bandwidth').value = '7168';
-    document.getElementById('sharedUsers').value = '1';
-    document.querySelector('input[name="modoFuncionamento"][value="padrao"]').checked = true;
-    document.getElementById('editPopId').value = '';
-  }
-  toggleInstallationMode(); // aplica visibilidade inicial
-  togglePopTypeFields();
-  toggleWanFields();
-  document.getElementById('modalNewPop').classList.remove('hidden');
-}
-
-function closeNewPopModal() { document.getElementById('modalNewPop').classList.add('hidden'); editPopId = null; }
-
-// Controla exibição do bloco WAN (interface + configuração)
-function toggleInstallationMode() {
-  const isNew = document.getElementById('installationType').value === 'new';
-  const wanBlock = document.getElementById('wanBlock');
-  wanBlock.style.display = isNew ? 'block' : 'none';
-  document.getElementById('installationTypeHelp').innerHTML = isNew ? '🔧 Novo: configuração completa da WAN será solicitada' : '✅ Em Produção: apenas cadastro do POP existente (sem configurar WAN)';
-  document.getElementById(\'infoMessage\').innerHTML = isNew ? \'Após criar, um script COMPLETO com configuração WAN será gerado. Ele será copiado automaticamente.\' : \'Após criar, um script BÁSICO (heartbeat + RADIUS) será gerado. Ele será copiado automaticamente.\';
-}
-
-function togglePopTypeFields() {
-  const type = document.getElementById('popType').value;
-  document.getElementById('existingVlanConfig').classList.toggle('hidden', type !== 'existing_vlan');
-  document.getElementById('physicalPortConfig').classList.toggle('hidden', type !== 'physical_port');
-}
-
-function toggleWanFields() {
-  const type = document.getElementById('wanTipo').value;
-  document.getElementById('pppoeFields').classList.toggle('hidden', type !== 'pppoe');
-  document.getElementById('staticFields').classList.toggle('hidden', type !== 'static');
-}
-
-// ==================== SALVAR (POST / PUT) ====================
-async function saveNewPop() {
-  const nome = document.getElementById('popName').value.trim();
-  if (!nome) { alert('Informe o nome do hotspot'); return; }
-  const isNew = document.getElementById('installationType').value === 'new';
-
-  const payload = {
-    name: nome,
-    location: document.getElementById('popLocation').value.trim() || 'Localização não definida',
-    ip: document.getElementById('popIp').value.trim() || '0.0.0.0',
-    installation_type: isNew ? 'new' : 'existing',
-    wan_interface: document.getElementById('wanInterface').value,
-    lan_interface: document.getElementById('lanInterface').value,
-    vlan_id: document.getElementById('vlanId').value.trim(),
-    hotspot_type: document.getElementById('popType').value,
-    existing_vlan: document.getElementById('existingVlan')?.value.trim() || '',
-    physical_port: document.getElementById('physicalPort')?.value || '',
-    // campos avançados
-    session_time: parseInt(document.getElementById('sessionTime').value),
-    idle_timeout: parseInt(document.getElementById('idleTimeout').value),
-    bandwidth: parseInt(document.getElementById('bandwidth').value),
-    shared_users: parseInt(document.getElementById('sharedUsers').value),
-    redirect_url: document.getElementById('redirectUrl').value.trim(),
-    modo_pagamentos: document.querySelector('input[name="modoFuncionamento"]:checked')?.value === 'pagamentos'
-  };
-
-  if (isNew) {
-    payload.wan_type = document.getElementById('wanTipo').value;
-    payload.pppoe_username = document.getElementById('pppoeUsername').value.trim();
-    payload.pppoe_password = document.getElementById('pppoePassword').value;
-    payload.static_ip = document.getElementById('staticIp').value.trim();
-    payload.static_mask = document.getElementById('staticMask').value.trim();
-    payload.static_gateway = document.getElementById('staticGateway').value.trim();
-  }
-
-  try {
-    let res;
-    if (editPopId) {
-      res = await fetch(`${API_URL}/api/pops/${editPopId}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
-    } else {
-      res = await fetch(`${API_URL}/api/pops`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
-    }
-    const data = await res.json();
-    const createdPop = data.data || data;
-    if (res.ok && (createdPop.id || createdPop.unique_id)) {
-      alert(`✅ Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!`);
-      closeNewPopModal();
-      loadPops();
-      // Se for um novo POP, gerar e exibir o script completo
-      if (!editPopId && createdPop.id) {
-        generateScript(createdPop.id, true); // true indica que é um script completo
-      }
-    } else { alert('❌ Erro: ' + (data.error || 'Tente novamente')); }
-  } catch (error) { alert('❌ Erro ao salvar hotspot'); }
-}
-
-// ==================== PERFIL E LOGOUT (versão completa) ====================
-function carregarPerfil() {
-  const userStr = localStorage.getItem('user');
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-      document.getElementById('editUsername').value = user.username || '';
-      document.getElementById('editEmail').value = user.email || '';
-      document.getElementById('userName').innerText = user.username || 'Administrador';
-    } catch(e) {}
-  }
-}
-
-function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); document.getElementById('senhaAtual').value = ''; document.getElementById('novaSenha').value = ''; document.getElementById('confirmarSenha').value = ''; if (typeof lucide !== 'undefined') lucide.createIcons(); }
-function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-
-async function salvarPerfil() {
-  const username = document.getElementById('editUsername')?.value;
-  const email = document.getElementById('editEmail')?.value;
-  const senhaAtual = document.getElementById('senhaAtual')?.value;
-  const novaSenha = document.getElementById('novaSenha')?.value;
-  const confirmarSenha = document.getElementById('confirmarSenha')?.value;
-
-  if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas não coincidem'); return; }
-  if (novaSenha && !senhaAtual) { alert('Digite a senha atual para alterar'); return; }
-
-  const payload = { username, email };
-  if (novaSenha) { payload.current_password = senhaAtual; payload.new_password = novaSenha; }
-
-  try {
-    const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
-    const data = await res.json();
-    if (res.ok) {
-      alert('✅ Perfil atualizado com sucesso!');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      user.username = username;
-      user.email = email;
-      localStorage.setItem('user', JSON.stringify(user));
-      document.getElementById('userName').innerText = username;
-      closeModalPerfil();
-    } else { alert(data.error || 'Erro ao atualizar perfil'); }
-  } catch (error) { alert('Erro ao atualizar perfil'); }
-}
-
-async function sair() {
-  try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) {}
-  localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user');
-  window.location.href = 'login.html';
-}
-
-// ==================== BUSCA EM TEMPO REAL ====================
-document.getElementById('searchInput').addEventListener('input', function(e) {
-  const term = e.target.value.toLowerCase();
-  document.querySelectorAll('#popsGrid > div').forEach(card => {
-    const text = card.innerText.toLowerCase();
-    card.style.display = text.includes(term) ? '' : 'none';
-  });
-});
-
-// ==================== INICIALIZAÇÃO ====================
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m)); }
-
-async function updateSessionIp() {
-  const el = document.getElementById('sessionIp');
-  if (!el) return;
-  try {
-    const res = await fetch(`${API_URL}/api/test-ip`, { headers: authHeaders(false) });
-    const data = await res.json();
-    el.innerText = data && data.ip ? data.ip : '-';
-  } catch (e) {
-    el.innerText = '-';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  initMenuMobile();
-  loadPops();
-  updateSessionIp();
-  carregarPerfil();
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-});
-setInterval(loadPops, 30000);
-</script>
-</body>
-</html>
 
 <!-- MODAL: DETALHES DO POP -->
 <div id="popDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
@@ -630,7 +287,7 @@ setInterval(loadPops, 30000);
   <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
     <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
       <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-        <i data-lucide="user" class="w-4 h-4 text-blue-500"></i>
+        <i data-lucide="user-circle" class="w-4 h-4 text-blue-500"></i>
         <span>Meu Perfil</span>
       </h2>
       <button onclick="closeModalPerfil()" class="p-1.5 hover:bg-gray-800 rounded-lg">
@@ -638,138 +295,389 @@ setInterval(loadPops, 30000);
       </button>
     </div>
     <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm" disabled></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome de Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm" readonly></div>
       <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-      <div class="pt-4 border-t border-gray-800 mt-4"><p class="text-xs font-bold text-gray-500 uppercase mb-2">Alterar Senha</p><div><label class="block text-xs text-gray-500 uppercase mb-1">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div class="mt-3"><label class="block text-xs text-gray-500 uppercase mb-1">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div class="mt-3"><label class="block text-xs text-gray-500 uppercase mb-1">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
+      <div class="pt-4 mt-4 border-t border-gray-800"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
     </div>
-    <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-      <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-xl text-sm font-medium transition">Cancelar</button>
-      <button onclick="salvarPerfil()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-bold transition">Salvar Alterações</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: DETALHES DO POP -->
-<div id="popDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-  <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
-    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
-      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-        <i data-lucide="router" class="w-4 h-4 text-blue-500"></i>
-        <span id="popDetailsTitle">Detalhes do Hotspot</span>
-      </h2>
-      <button onclick="closePopDetailsModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
-        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
-      </button>
-    </div>
-    <div id="popDetailsContent" class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
-      <!-- Conteúdo carregado via JS -->
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: SCRIPT GERADO -->
-<div id="modalScript" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-  <div class="bg-[#0f1119] rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
-    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
-      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-        <i data-lucide="terminal" class="w-4 h-4 text-blue-500"></i>
-        <span>Script de Configuração MikroTik</span>
-      </h2>
-      <button onclick="closeModalScript()" class="p-1.5 hover:bg-gray-800 rounded-lg">
-        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
-      </button>
-    </div>
-    <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
-      <p class="text-xs text-gray-400 mb-3" id="scriptInfoMessage">Copie o script abaixo e cole no New Terminal do seu MikroTik. Este script configura o RADIUS, Hotspot Profile e Heartbeat.</p>
-      <pre class="bg-gray-900/50 border border-gray-700 rounded-xl p-3 text-sm text-emerald-400 overflow-x-auto"><code id="scriptContent"></code></pre>
-      <button onclick="copyScript()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition mt-4">Copiar Script</button>
+    <div class="p-3 md:p-4 border-t border-gray-800 shrink-0">
+      <button onclick="salvarPerfil()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition">Salvar Alterações</button>
     </div>
   </div>
 </div>
 
 <script>
-  // Função utilitária para escapar HTML e prevenir XSS
-  function escapeHtml(unsafe) {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+  const API_URL = 'https://hotspot-system.vercel.app/api'; // Use a URL da sua API
+
+  function authHeaders(includeContentType = true) {
+    const headers = { 'Authorization': `Bearer ${token}` };
+    if (includeContentType) headers['Content-Type'] = 'application/json';
+    return headers;
   }
 
-  // Funções de perfil (para consistência com outras páginas)
+  // ==================== FUNÇÕES GERAIS ====================
+  function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('hidden');
+      sidebar.classList.toggle('flex');
+      menuOverlay.classList.toggle('hidden');
+    });
+
+    menuOverlay.addEventListener('click', () => {
+      sidebar.classList.add('hidden');
+      sidebar.classList.remove('flex');
+      menuOverlay.classList.add('hidden');
+    });
+  }
+
+  // ==================== HOTSPOTS / POPS ====================
+  async function loadPops() {
+    const popsGrid = document.getElementById('popsGrid');
+    popsGrid.innerHTML = '<div class="text-center text-gray-500 py-8 col-span-3">Carregando POPs...</div>';
+    try {
+      const res = await fetch(`${API_URL}/api/pops`, { headers: authHeaders(false) });
+      const data = await res.json();
+
+      if (res.ok) {
+        popsGrid.innerHTML = '';
+        if (data.length === 0) {
+          popsGrid.innerHTML = '<div class="text-center text-gray-500 py-8 col-span-3">Nenhum Hotspot cadastrado.</div>';
+          return;
+        }
+        data.forEach(pop => {
+          const card = `
+            <div class="glass-card rounded-2xl p-4 space-y-3 relative">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-white text-lg">${escapeHtml(pop.name)}</h3>
+                <span class="text-xs font-semibold px-3 py-1 rounded-full ${pop.status === 'online' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">${pop.status === 'online' ? 'ONLINE' : 'OFFLINE'}</span>
+              </div>
+              <p class="text-gray-500 text-sm">ID: ${escapeHtml(pop.id)}</p>
+              <p class="text-gray-500 text-sm flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> ${pop.location ? escapeHtml(pop.location) : 'Localização não definida'}</p>
+              <p class="text-gray-500 text-sm flex items-center gap-2"><i data-lucide="activity" class="w-4 h-4"></i> Último heartbeat: ${pop.last_heartbeat ? new Date(pop.last_heartbeat).toLocaleString() : 'Nunca'}</p>
+              <div class="flex gap-2 mt-3">
+                <button onclick="viewPopDetails('${pop.id}')" class="flex-1 bg-blue-600/20 text-blue-400 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-600/30 transition">Detalhes</button>
+                <button onclick="generateScript('${pop.id}', 'basic')" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">Script</button>
+                <button onclick="deletePop('${pop.id}')" class="flex-1 bg-red-600/20 text-red-400 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-600/30 transition">Excluir</button>
+              </div>
+            </div>
+          `;
+          popsGrid.innerHTML += card;
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } else { popsGrid.innerHTML = `<div class="text-center text-red-400 py-8 col-span-3">Erro ao carregar Hotspots: ${data.error || 'Erro desconhecido'}</div>`; }
+    } catch (error) { popsGrid.innerHTML = `<div class="text-center text-red-400 py-8 col-span-3">Erro de conexão: ${error.message}</div>`; }
+  }
+
+  function openNewPopModal(pop = null) {
+    document.getElementById('modalPopTitle').innerText = pop ? 'Editar Hotspot' : 'Configurar Novo Hotspot';
+    document.getElementById('editPopId').value = pop ? pop.id : '';
+    document.getElementById('popName').value = pop ? pop.name : '';
+    document.getElementById('popLocation').value = pop ? pop.location : '';
+    document.getElementById('popIp').value = pop ? pop.ip_address : '';
+    document.getElementById('radiusServer').value = pop ? pop.radius_server : '';
+    document.getElementById('radiusAuthPort').value = pop ? pop.radius_auth_port : '';
+    document.getElementById('radiusAcctPort').value = pop ? pop.radius_acct_port : '';
+    document.getElementById('radiusSecret').value = pop ? pop.radius_secret : '';
+    document.getElementById('heartbeatInterval').value = pop ? pop.heartbeat_interval : '';
+
+    // Resetar campos WAN/LAN/Hotspot para novo POP
+    if (!pop) {
+      document.getElementById('installationType').value = 'new';
+      toggleInstallationMode(); // Atualiza a mensagem e visibilidade do bloco WAN
+      document.getElementById('wanInterface').value = 'ether1';
+      document.getElementById('wanConnectionType').value = 'dhcp';
+      toggleWanConfig();
+      document.getElementById('staticIpAddress').value = '';
+      document.getElementById('staticGateway').value = '';
+      document.getElementById('staticDns1').value = '';
+      document.getElementById('staticDns2').value = '';
+      document.getElementById('pppoeUser').value = '';
+      document.getElementById('pppoePassword').value = '';
+      document.getElementById('lanInterface').value = 'bridge';
+      document.getElementById('lanIpAddress').value = '10.0.0.1/24';
+      document.getElementById('hotspotInterface').value = 'bridge';
+      document.getElementById('hotspotIpPool').value = '10.0.0.10-10.0.0.254';
+      document.getElementById('hotspotDns').value = '10.0.0.1';
+      document.getElementById('smtpServer').value = '';
+      document.getElementById('smtpPort').value = '587';
+      document.getElementById('smtpUser').value = '';
+      document.getElementById('smtpPassword').value = '';
+    }
+
+    document.getElementById('modalNewPop').classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closeNewPopModal() {
+    document.getElementById('modalNewPop').classList.add('hidden');
+  }
+
+  function toggleInstallationMode() {
+    const type = document.getElementById('installationType').value;
+    const wanBlock = document.getElementById('wanBlock');
+    const infoMessage = document.getElementById('infoMessage');
+    const installationTypeHelp = document.getElementById('installationTypeHelp');
+
+    if (type === 'new') {
+      wanBlock.classList.remove('hidden');
+      infoMessage.classList.remove('hidden');
+      infoMessage.innerText = 'Após criar, um script COMPLETO com configuração WAN será gerado.';
+      installationTypeHelp.innerText = 'Novo: configuração completa da WAN será solicitada';
+    } else {
+      wanBlock.classList.add('hidden');
+      infoMessage.classList.add('hidden');
+      installationTypeHelp.innerText = 'Em Produção: apenas o cadastro do POP será realizado. O script de configuração deverá ser aplicado manualmente.';
+    }
+  }
+
+  function toggleWanConfig() {
+    const type = document.getElementById('wanConnectionType').value;
+    document.getElementById('staticIpConfig').classList.add('hidden');
+    document.getElementById('pppoeConfig').classList.add('hidden');
+    if (type === 'static') document.getElementById('staticIpConfig').classList.remove('hidden');
+    else if (type === 'pppoe') document.getElementById('pppoeConfig').classList.remove('hidden');
+  }
+
+  async function saveNewPop() {
+    const id = document.getElementById('editPopId').value;
+    const name = document.getElementById('popName').value;
+    const location = document.getElementById('popLocation').value;
+    const ip_address = document.getElementById('popIp').value;
+    const installation_type = document.getElementById('installationType').value;
+    const wan_interface = document.getElementById('wanInterface').value;
+    const wan_connection_type = document.getElementById('wanConnectionType').value;
+    const static_ip_address = document.getElementById('staticIpAddress').value;
+    const static_gateway = document.getElementById('staticGateway').value;
+    const static_dns1 = document.getElementById('staticDns1').value;
+    const static_dns2 = document.getElementById('staticDns2').value;
+    const pppoe_user = document.getElementById('pppoeUser').value;
+    const pppoe_password = document.getElementById('pppoePassword').value;
+    const lan_interface = document.getElementById('lanInterface').value;
+    const lan_ip_address = document.getElementById('lanIpAddress').value;
+    const hotspot_interface = document.getElementById('hotspotInterface').value;
+    const hotspot_ip_pool = document.getElementById('hotspotIpPool').value;
+    const hotspot_dns = document.getElementById('hotspotDns').value;
+    const smtp_server = document.getElementById('smtpServer').value;
+    const smtp_port = document.getElementById('smtpPort').value;
+    const smtp_user = document.getElementById('smtpUser').value;
+    const smtp_password = document.getElementById('smtpPassword').value;
+    const radius_server = document.getElementById('radiusServer').value;
+    const radius_auth_port = document.getElementById('radiusAuthPort').value;
+    const radius_acct_port = document.getElementById('radiusAcctPort').value;
+    const radius_secret = document.getElementById('radiusSecret').value;
+    const heartbeat_interval = document.getElementById('heartbeatInterval').value;
+
+    if (!name) { alert('O nome do Hotspot é obrigatório.'); return; }
+
+    const payload = {
+      name, location, ip_address, installation_type,
+      wan_interface, wan_connection_type, static_ip_address, static_gateway, static_dns1, static_dns2,
+      pppoe_user, pppoe_password, lan_interface, lan_ip_address, hotspot_interface, hotspot_ip_pool,
+      hotspot_dns, smtp_server, smtp_port, smtp_user, smtp_password,
+      radius_server, radius_auth_port, radius_acct_port, radius_secret, heartbeat_interval
+    };
+
+    try {
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${API_URL}/api/pops/${id}` : `${API_URL}/api/pops`;
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`✅ Hotspot ${id ? 'atualizado' : 'criado'} com sucesso!`);
+        closeNewPopModal();
+        loadPops();
+        if (!id && installation_type === 'new') {
+          // Se for um novo POP e tipo de instalação 'new', gerar script completo
+          generateScript(data.id, 'full');
+        }
+      } else { alert(`❌ Erro ao ${id ? 'atualizar' : 'criar'} hotspot: ${data.error || 'Erro desconhecido'}`); }
+    } catch (error) { alert(`❌ Erro ao ${id ? 'atualizar' : 'criar'} hotspot: ${error.message}`); }
+  }
+
+  async function deletePop(id) {
+    if (!confirm('Tem certeza que deseja excluir este Hotspot?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/pops/${id}`, { method: 'DELETE', headers: authHeaders(false) });
+      if (res.ok) {
+        alert('✅ Hotspot excluído com sucesso!');
+        loadPops();
+      } else { alert(`❌ Erro ao excluir hotspot: ${(await res.json()).error || 'Erro desconhecido'}`); }
+    } catch (error) { alert(`❌ Erro ao excluir hotspot: ${error.message}`); }
+  }
+
+  async function viewPopDetails(id) {
+    try {
+      const res = await fetch(`${API_URL}/api/pops/${id}`, { headers: authHeaders(false) });
+      const pop = await res.json();
+
+      if (res.ok) {
+        document.getElementById('popDetailsTitle').innerText = `Detalhes: ${escapeHtml(pop.name)}`;
+        const detailsContent = document.getElementById('popDetailsContent');
+        detailsContent.innerHTML = `
+          <p class="text-gray-400 text-sm">ID: <span class="text-white">${escapeHtml(pop.id)}</span></p>
+          <p class="text-gray-400 text-sm">Nome: <span class="text-white">${escapeHtml(pop.name)}</span></p>
+          <p class="text-gray-400 text-sm">Localização: <span class="text-white">${pop.location ? escapeHtml(pop.location) : 'Não definida'}</span></p>
+          <p class="text-gray-400 text-sm">IP: <span class="text-white">${pop.ip_address ? escapeHtml(pop.ip_address) : 'Não definido'}</span></p>
+          <p class="text-gray-400 text-sm">Status: <span class="${pop.status === 'online' ? 'text-emerald-400' : 'text-red-400'}">${pop.status === 'online' ? 'ONLINE' : 'OFFLINE'}</span></p>
+          <p class="text-gray-400 text-sm">Último Heartbeat: <span class="text-white">${pop.last_heartbeat ? new Date(pop.last_heartbeat).toLocaleString() : 'Nunca'}</span></p>
+          <div class="pt-4 mt-4 border-t border-gray-800">
+            <button onclick="openNewPopModal(${JSON.stringify(pop).replace(/'/g, '&apos;')})" class="w-full bg-blue-600/20 text-blue-400 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-600/30 transition">Editar Hotspot</button>
+          </div>
+        `;
+        document.getElementById('popDetailsModal').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } else { alert(`❌ Erro ao carregar detalhes do hotspot: ${pop.error || 'Erro desconhecido'}`); }
+    } catch (error) { alert(`❌ Erro ao carregar detalhes do hotspot: ${error.message}`); }
+  }
+
+  async function generateScript(popId, type = 'basic') {
+    try {
+      const res = await fetch(`${API_URL}/api/pops/${popId}/script?type=${type}`, { headers: authHeaders(false) });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('scriptContent').innerText = data.script;
+        const scriptInfoMessage = document.getElementById('scriptInfoMessage');
+        if (type === 'full') {
+          scriptInfoMessage.innerText = 'Copie o script COMPLETO abaixo e cole no New Terminal do seu MikroTik. Este script configura a WAN, LAN, Hotspot, RADIUS e Heartbeat.';
+          scriptInfoMessage.classList.remove('text-gray-400');
+          scriptInfoMessage.classList.add('text-amber-400');
+        } else {
+          scriptInfoMessage.innerText = 'Copie o script abaixo e cole no New Terminal do seu MikroTik. Este script configura o RADIUS, Hotspot Profile e Heartbeat. Esta é uma versão reduzida, para configuração inicial de um roteador novo/resetado, use o script completo gerado ao criar o Hotspot.';
+          scriptInfoMessage.classList.remove('text-amber-400');
+          scriptInfoMessage.classList.add('text-gray-400');
+        }
+        document.getElementById('modalScript').classList.remove('hidden');
+        copyScript(); // Copia automaticamente ao abrir o modal
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } else { alert(`❌ Erro ao gerar script: ${data.error || 'Erro desconhecido'}`); }
+    } catch (error) { alert(`❌ Erro ao gerar script: ${error.message}`); }
+  }
+
+  function closeModalScript() {
+    document.getElementById('modalScript').classList.add('hidden');
+  }
+
+  function copyScript() {
+    const scriptContent = document.getElementById('scriptContent').innerText;
+    navigator.clipboard.writeText(scriptContent).then(() => {
+      alert('✅ Script copiado para a área de transferência!');
+    }).catch(err => {
+      console.error('Erro ao copiar script: ', err);
+      alert('❌ Erro ao copiar script. Por favor, copie manualmente.');
+    });
+  }
+
+  // ==================== PERFIL E LOGOUT ====================
   function carregarPerfil() {
-    const userStr = localStorage.getItem(\'user\');
+    const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        document.getElementById(\'editUsername\').value = user.username || \'\';
-        document.getElementById(\'editEmail\').value = user.email || \'\';
+        document.getElementById('editUsername').value = user.username || '';
+        document.getElementById('editEmail').value = user.email || '';
+        document.getElementById('userName').innerText = user.username || 'Administrador';
       } catch(e) {
-        console.error(\'Erro ao parsear usuário do localStorage:\', e);
+        console.error("Erro ao parsear user do localStorage", e);
       }
     }
   }
 
   function openModalPerfil() {
     carregarPerfil();
-    document.getElementById(\'modalPerfil\').classList.remove(\'hidden\');
-    document.getElementById(\'senhaAtual\').value = \'\';
-    document.getElementById(\'novaSenha\').value = \'\';
-    document.getElementById(\'confirmarSenha\').value = \'\';
-    if (typeof lucide !== \'undefined\') lucide.createIcons();
+    document.getElementById('modalPerfil').classList.remove('hidden');
+    document.getElementById('senhaAtual').value = '';
+    document.getElementById('novaSenha').value = '';
+    document.getElementById('confirmarSenha').value = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
   function closeModalPerfil() {
-    document.getElementById(\'modalPerfil\').classList.add(\'hidden\');
+    document.getElementById('modalPerfil').classList.add('hidden');
   }
 
   async function salvarPerfil() {
-    const username = document.getElementById(\'editUsername\')?.value;
-    const email = document.getElementById(\'editEmail\')?.value;
-    const senhaAtual = document.getElementById(\'senhaAtual\')?.value;
-    const novaSenha = document.getElementById(\'novaSenha\')?.value;
-    const confirmarSenha = document.getElementById(\'confirmarSenha\')?.value;
+    const username = document.getElementById('editUsername')?.value;
+    const email = document.getElementById('editEmail')?.value;
+    const senhaAtual = document.getElementById('senhaAtual')?.value;
+    const novaSenha = document.getElementById('novaSenha')?.value;
+    const confirmarSenha = document.getElementById('confirmarSenha')?.value;
 
-    if (novaSenha && novaSenha !== confirmarSenha) {
-      alert(\'As novas senhas não coincidem\');
-      return;
-    }
+    if (novaSenha && novaSenha !== confirmarSenha) { alert('As novas senhas não coincidem'); return; }
+    if (novaSenha && !senhaAtual) { alert('Digite a senha atual para alterar'); return; }
+
+    const payload = { username, email };
+    if (novaSenha) { payload.current_password = senhaAtual; payload.new_password = novaSenha; }
 
     try {
-      const payload = { email };
-      if (senhaAtual && novaSenha) {
-        payload.current_password = senhaAtual;
-        payload.new_password = novaSenha;
-      }
-
-      const res = await fetch(`${API_URL}/api/admins/${localStorage.getItem(\'user_id\')}`, {
-        method: \'PUT\',
-        headers: authHeaders(),
-        body: JSON.stringify(payload)
-      });
-
+      const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || \'Erro ao salvar perfil\');
+      if (res.ok) {
+        alert('✅ Perfil atualizado com sucesso!');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.username = username;
+        user.email = email;
+        localStorage.setItem('user', JSON.stringify(user));
+        document.getElementById('userName').innerText = username;
+        closeModalPerfil();
+      } else { alert(data.error || 'Erro ao atualizar perfil'); }
+    } catch (error) { alert('Erro ao atualizar perfil'); }
+  }
 
-      alert(\'Perfil atualizado com sucesso!\');
-      closeModalPerfil();
-      // Atualizar dados do usuário no localStorage se o email foi alterado
-      const user = JSON.parse(localStorage.getItem(\'user\'));
-      user.email = email;
-      localStorage.setItem(\'user\', JSON.stringify(user));
+  async function sair() {
+    try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) { console.error("Erro ao fazer logout", e); }
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+  }
 
-    } catch (error) {
-      alert(\'Erro ao salvar perfil: \' + error.message);
+  // ==================== BUSCA EM TEMPO REAL ====================
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('#popsGrid > div').forEach(card => {
+      const text = card.innerText.toLowerCase();
+      card.style.display = text.includes(term) ? '' : 'none';
+    });
+  });
+
+  // ==================== INICIALIZAÇÃO ====================
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;'
+    }[m] || m));
+  }
+
+  async function updateSessionIp() {
+    const el = document.getElementById('sessionIp');
+    if (!el) return;
+    try {
+      const res = await fetch(`${API_URL}/api/test-ip`, { headers: authHeaders(false) });
+      const data = await res.json();
+      el.innerText = data && data.ip ? data.ip : '-';
+    } catch (e) {
+      el.innerText = '-';
+      console.error("Erro ao obter IP da sessão", e);
     }
   }
 
-  function sair() {
-    localStorage.removeItem(\'token\');
-    localStorage.removeItem(\'ms_token\');
-    localStorage.removeItem(\'user\');
-    localStorage.removeItem(\'user_id\');
-    window.location.href = \'login.html\';
-  }
+  document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    loadPops();
+    updateSessionIp();
+    carregarPerfil();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  });
+  setInterval(loadPops, 30000);
 </script>
+</body>
+</html>
