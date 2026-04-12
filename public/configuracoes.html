@@ -390,25 +390,23 @@
 
     // ==================== SISTEMA DE ABAS ====================
     function openTab(tabId) {
-        // alterna visual/aba
-        const buttons = document.querySelectorAll('.tab-btn');
-        for (let i = 0; i < buttons.length; i++) {
-            buttons[i].classList.remove('active', 'text-white');
-            if (!buttons[i].classList.contains('text-gray-400')) buttons[i].classList.add('text-gray-400');
-        }
-        const activeBtn = document.querySelector('.tab-btn[data-tab="' + tabId + '"]');
+        // Atualizar botões
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active', 'text-white');
+            b.classList.add('text-gray-400');
+        });
+        const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
         if (activeBtn) {
             activeBtn.classList.add('active', 'text-white');
             activeBtn.classList.remove('text-gray-400');
         }
-        const contents = document.querySelectorAll('.tab-content');
-        for (let i = 0; i < contents.length; i++) contents[i].classList.add('hidden');
-        const tabEl = document.getElementById(tabId);
-        if (tabEl) tabEl.classList.remove('hidden');
-        
-        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 
-        // carregar dados sob demanda por aba
+        // Atualizar conteúdos
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        const target = document.getElementById(tabId);
+        if (target) target.classList.remove('hidden');
+
+        // Carregar dados
         if (tabId === 'backup') carregarBackups();
         if (tabId === 'usuarios') carregarAdmins();
         if (tabId === 'integracao') carregarIntegracoes();
@@ -416,6 +414,8 @@
         if (tabId === 'geral') carregarConfig('system');
         if (tabId === 'teste_gratis') carregarConfig('free_trial');
         if (tabId === 'pagamento') carregarConfig('payment');
+
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     }
 
     function initTabs() {
@@ -423,30 +423,7 @@
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const tabId = this.getAttribute('data-tab');
-                
-                // Atualizar botões
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.classList.remove('active', 'text-white');
-                    b.classList.add('text-gray-400');
-                });
-                this.classList.add('active', 'text-white');
-                this.classList.remove('text-gray-400');
-
-                // Atualizar conteúdos
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                const target = document.getElementById(tabId);
-                if (target) target.classList.remove('hidden');
-
-                // Carregar dados
-                if (tabId === 'backup') carregarBackups();
-                if (tabId === 'usuarios') carregarAdmins();
-                if (tabId === 'integracao') carregarIntegracoes();
-                if (tabId === 'planos') carregarPlanos();
-                if (tabId === 'geral') carregarConfig('system');
-                if (tabId === 'teste_gratis') carregarConfig('free_trial');
-                if (tabId === 'pagamento') carregarConfig('payment');
-
-                if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+                if (tabId) openTab(tabId);
             });
         });
     }
