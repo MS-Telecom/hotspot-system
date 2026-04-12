@@ -263,10 +263,10 @@
             return await res.json();
         },
         async checkPayment(mac) {
-            const res = await fetch(`${API_BASE}/api/portal/status?mac_address=${mac}`);
+            const res = await fetch(`${API_BASE}/api/portal/payment-status?mac_address=${encodeURIComponent(mac)}`);
             if (!res.ok) return { paid: false };
             const data = await res.json();
-            return { paid: data.connected || data.status === 'active' };
+            return { paid: data && (data.status === 'approved' || data.status === 'paid'), payment: data };
         },
         async requestTestAccess(mac, durationMinutes) {
             const res = await fetch(`${API_BASE}/api/users/test-access`, {

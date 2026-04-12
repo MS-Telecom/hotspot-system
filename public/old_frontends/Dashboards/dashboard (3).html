@@ -1,0 +1,586 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .stat-card { transition: all 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        #sidebar { z-index: 100; }
+        #sidebarOverlay { z-index: 99; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+        .modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-gray-200">
+
+<!-- HAMBURGER MENU (Mobile) -->
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
+
+<div class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
+            <a href="dashboard.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs
+            </a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP
+            </a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="banknote" class="w-5 h-5"></i> Financeiro
+            </a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas
+            </a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
+            </a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes
+            </a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+            </a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            </div>
+            <div class="space-y-2 text-[10px] font-mono">
+                <div class="flex justify-between text-gray-500">
+                    <span>Admin Master</span>
+                    <span class="text-cyan-400">177.34.21.109</span>
+                </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>VPS Node</span>
+                    <span class="text-gray-600">40.233.118.238</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTEÃšDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
+            <div class="relative w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar cliente por CPF, Nome, MAC ou IP..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, Administrador</p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTEÃšDO DO DASHBOARD -->
+        <div class="p-8 space-y-8">
+
+            <!-- Header da PÃ¡gina -->
+            <div>
+                <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
+                <p class="text-gray-500 text-sm mt-1">VisÃ£o geral da rede e mÃ©tricas em tempo real</p>
+            </div>
+
+            <!-- Cards de MÃ©tricas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="text-emerald-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">+12%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Receita Total</p>
+                    <span id="receitaTotal" class="text-3xl font-black mt-1">R$ 0,00</span>
+                    <p class="text-[10px] text-gray-600 mt-2">MÃªs atual</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="check-circle" class="text-blue-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">ConcluÃ­dos</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos ConcluÃ­dos</p>
+                    <span id="pagamentosConcluidos" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">TransaÃ§Ãµes confirmadas</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="clock" class="text-yellow-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-full">Pendentes</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Pendentes</p>
+                    <span id="pagamentosPendentes" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Aguardando confirmaÃ§Ã£o</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-full">Cancelados</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Cancelados</p>
+                    <span id="pagamentosCancelados" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">TransaÃ§Ãµes canceladas</p>
+                </div>
+            </div>
+
+            <!-- Cards de Resumo por Plano -->
+            <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-white">Faturamento por Plano (Ãºltimos 30 dias)</h3>
+                    <button onclick="verDetalhesPlano()" class="text-[10px] font-bold text-blue-500">Ver detalhes</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-br from-blue-600/20 to-blue-600/5 rounded-xl p-5 text-center border border-blue-500/20">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="crown" class="w-6 h-6 text-blue-500"></i>
+                        </div>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider">Premium</p>
+                        <p id="premiumTotal" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                        <p class="text-[9px] text-gray-600 mt-1">assinantes premium</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-cyan-600/20 to-cyan-600/5 rounded-xl p-5 text-center border border-cyan-500/20">
+                        <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
+                        </div>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider">DiÃ¡rio</p>
+                        <p id="diarioTotal" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                        <p class="text-[9px] text-gray-600 mt-1">acessos diÃ¡rios</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
+                        <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
+                        </div>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste GrÃ¡tis</p>
+                        <p id="testeTotal" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                        <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ãšltimas LiberaÃ§Ãµes -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white">Ãšltimas LiberaÃ§Ãµes (PIX)</h3>
+                    <button onclick="verTodasLiberacoes()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                             <tr>
+                                <th class="px-6 py-3 text-left">Cliente / MAC</th>
+                                <th class="px-6 py-3 text-left">POP</th>
+                                <th class="px-6 py-3 text-left">Plano</th>
+                                <th class="px-6 py-3 text-left">Valor</th>
+                                <th class="px-6 py-3 text-left">Data/Hora</th>
+                                <th class="px-6 py-3 text-center">AÃ§Ã£o</th>
+                             </tr>
+                        </thead>
+                        <tbody id="tabelaLiberacoes" class="divide-y divide-gray-800/50">
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberaÃ§Ãµes...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL: NOVO VOUCHER -->
+<div id="modalNovoVoucher" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="ticket" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Gerar Novo Voucher
+            </h2>
+            <button onclick="closeModalNovoVoucher()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
+                <select id="voucherPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="diario">DiÃ¡rio (24h - R$ 5,00)</option>
+                    <option value="premium">Premium 24h (R$ 15,00)</option>
+                    <option value="semanal">Premium Semanal (R$ 50,00)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Quantidade</label>
+                <input type="number" id="voucherQuantidade" value="1" min="1" max="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label>
+                <input type="date" id="voucherValidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div id="voucherResultado" class="hidden bg-gray-900/50 rounded-xl p-4">
+                <p class="text-[10px] text-gray-500 uppercase mb-1">Voucher Gerado</p>
+                <code id="voucherCodigo" class="text-lg font-mono text-emerald-400 break-all"></code>
+                <button onclick="copiarVoucher()" class="mt-2 text-xs text-blue-500">Copiar cÃ³digo</button>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
+            <button onclick="closeModalNovoVoucher()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Cancelar</button>
+            <button onclick="gerarVoucher()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-lg text-xs sm:text-sm font-bold text-white">Gerar Voucher</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: TODAS AS LIBERAÃ‡Ã•ES (RESPONSIVO) -->
+<div id="modalTodasLiberacoes" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
+        <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Todas as LiberaÃ§Ãµes
+            </h2>
+            <button onclick="closeModalTodasLiberacoes()" class="p-1 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs sm:text-sm">
+                    <thead class="bg-gray-900/50 sticky top-0">
+                        <tr class="text-left text-[10px] sm:text-xs font-bold text-gray-500 uppercase">
+                            <th class="px-1 sm:px-2 py-2">Cliente</th>
+                            <th class="px-1 sm:px-2 py-2">Plano</th>
+                            <th class="px-1 sm:px-2 py-2">Valor</th>
+                            <th class="px-1 sm:px-2 py-2">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaTodasLiberacoes" class="divide-y divide-gray-800">
+                        <tr><td colspan="4" class="px-2 py-8 text-center text-gray-500 text-xs">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closeModalTodasLiberacoes()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO PLANO -->
+<div id="modalDetalhesPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="crown" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do Plano
+            </h2>
+            <button onclick="closeModalDetalhesPlano()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="detalhesPlanoContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closeModalDetalhesPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = 'https://mstelecom-api.duckdns.org';
+
+// Menu Mobile
+function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            menuOverlay.classList.toggle('hidden');
+        });
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
+            menuOverlay.classList.add('hidden');
+        });
+    }
+}
+
+// Carregar dados do dashboard
+async function carregarDashboard() {
+    try {
+        const res = await fetch(`${API_URL}/api/stats`);
+        let data = {};
+        
+        if (res.ok) data = await res.json();
+        
+        document.getElementById('receitaTotal').innerHTML = `R$ ${(data.receitaTotal || 0).toFixed(2)}`;
+        document.getElementById('pagamentosConcluidos').innerText = data.pagamentosConcluidos || 0;
+        document.getElementById('pagamentosPendentes').innerText = data.pagamentosPendentes || 0;
+        document.getElementById('pagamentosCancelados').innerText = data.pagamentosCancelados || 0;
+        document.getElementById('premiumTotal').innerHTML = `R$ ${(data.faturamentoPremium || 0).toFixed(0)}`;
+        document.getElementById('diarioTotal').innerHTML = `R$ ${(data.faturamentoDiario || 0).toFixed(0)}`;
+        document.getElementById('testeTotal').innerHTML = `R$ ${(data.faturamentoTeste || 0).toFixed(0)}`;
+        
+        const liberacoes = data.ultimasLiberacoes || [];
+        const tabela = document.getElementById('tabelaLiberacoes');
+        
+        if (liberacoes.length === 0) {
+            tabela.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma liberaÃ§Ã£o encontrada</td></tr>';
+        } else {
+            tabela.innerHTML = liberacoes.slice(0, 5).map((lib, index) => `
+                <tr class="hover:bg-gray-900/30 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">${(lib.cliente || 'U').substring(0, 2).toUpperCase()}</div>
+                            <div>
+                                <p class="text-sm font-medium text-white">${lib.cliente || 'Cliente'}</p>
+                                <p class="text-[10px] text-gray-500 font-mono">${lib.mac || '-'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${lib.pop || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${lib.plano || '-'}</span></td>
+                    <td class="px-6 py-4 font-bold text-emerald-400">R$ ${(lib.valor || 0).toFixed(2)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-400">${lib.data || '-'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button class="p-1.5 hover:bg-red-500/10 rounded-lg transition" onclick="bloquearCliente('${lib.cliente_id || ''}')" title="Bloquear cliente">
+                            <i data-lucide="unplug" class="w-4 h-4 text-gray-500 hover:text-red-500"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    } catch (error) {
+        console.error('[Dashboard] Erro:', error);
+    }
+}
+
+// Ver todas as liberaÃ§Ãµes
+async function verTodasLiberacoes() {
+    const modal = document.getElementById('modalTodasLiberacoes');
+    const tbody = document.getElementById('tabelaTodasLiberacoes');
+    
+    modal.classList.remove('hidden');
+    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">Carregando...</td></tr>';
+    
+    try {
+        let liberacoes = [];
+        
+        // Tentar /api/pagamentos (mais provÃ¡vel)
+        const res = await fetch(`${API_URL}/api/pagamentos`);
+        const pagamentos = await res.json();
+        liberacoes = pagamentos.filter(p => p.status === 'confirmed');
+        
+        if (liberacoes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">Nenhuma liberaÃ§Ã£o encontrada</td></tr>';
+        } else {
+            tbody.innerHTML = liberacoes.map(lib => `
+                <tr class="hover:bg-gray-900/30">
+                    <td class="px-4 py-3">
+                        <div>
+                            <p class="text-sm font-medium text-white">${lib.usuario_id || 'Cliente'}</p>
+                            <p class="text-[10px] text-gray-500">${lib.mac || '-'}</p>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${lib.plano_id || 'N/A'}</span></td>
+                    <td class="px-4 py-3 text-emerald-400">R$ ${(lib.valor || 0).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${new Date(lib.criado_em || lib.created_at).toLocaleString('pt-BR')}</td>
+                </tr>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberaÃ§Ãµes</td></tr>';
+    }
+    
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+}
+
+function closeModalTodasLiberacoes() {
+    document.getElementById('modalTodasLiberacoes').classList.add('hidden');
+}
+
+// Ver detalhes do plano
+async function verDetalhesPlano() {
+    const modal = document.getElementById('modalDetalhesPlano');
+    const content = document.getElementById('detalhesPlanoContent');
+    
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+    
+    try {
+        const res = await fetch(`${API_URL}/api/planos`);
+        const planos = await res.json();
+        
+        // Remover duplicatas
+        const planosUnicos = [];
+        const nomes = new Set();
+        for (const plano of planos) {
+            if (!nomes.has(plano.nome)) {
+                nomes.add(plano.nome);
+                planosUnicos.push(plano);
+            }
+        }
+        
+        if (planosUnicos.length > 0) {
+            content.innerHTML = planosUnicos.map(plano => `
+                <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-white">${plano.nome}</h3>
+                        <span class="text-emerald-400 font-bold">R$ ${plano.preco}</span>
+                    </div>
+                    <p class="text-xs text-gray-500">Velocidade: ${plano.banda_mbps} Mbps</p>
+                    <p class="text-xs text-gray-500">DuraÃ§Ã£o: ${plano.duracao_dias} dias</p>
+                    <p class="text-xs text-gray-400 mt-2">${plano.descricao || ''}</p>
+                </div>
+            `).join('');
+        } else {
+            content.innerHTML = '<div class="text-center text-gray-500">Nenhum plano cadastrado</div>';
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar planos</div>';
+    }
+}
+
+function closeModalDetalhesPlano() {
+    document.getElementById('modalDetalhesPlano').classList.add('hidden');
+}
+
+// Bloquear cliente
+async function bloquearCliente(id) {
+    if (!id) {
+        alert('ID do cliente nÃ£o informado');
+        return;
+    }
+    
+    if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
+    
+    try {
+        const res = await fetch(`${API_URL}/api/usuarios/${id}/bloquear`, { method: 'POST' });
+        
+        if (res.ok) {
+            alert('âœ… Cliente bloqueado com sucesso!');
+            carregarDashboard();
+        } else {
+            alert('âŒ Erro ao bloquear cliente');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('âŒ Erro ao bloquear cliente');
+    }
+}
+
+// Voucher
+function openModalNovoVoucher() {
+    document.getElementById('modalNovoVoucher').classList.remove('hidden');
+    document.getElementById('voucherValidade').value = new Date().toISOString().split('T')[0];
+    document.getElementById('voucherResultado').classList.add('hidden');
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+}
+
+function closeModalNovoVoucher() {
+    document.getElementById('modalNovoVoucher').classList.add('hidden');
+    document.getElementById('voucherResultado').classList.add('hidden');
+}
+
+function gerarVoucher() {
+    const plano = document.getElementById('voucherPlano').value;
+    const quantidade = document.getElementById('voucherQuantidade').value;
+    const validade = document.getElementById('voucherValidade').value;
+    const codigo = `MS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+    
+    document.getElementById('voucherCodigo').innerHTML = codigo;
+    document.getElementById('voucherResultado').classList.remove('hidden');
+    alert(`Voucher gerado!\nCÃ³digo: ${codigo}`);
+}
+
+function copiarVoucher() {
+    const codigo = document.getElementById('voucherCodigo').innerText;
+    navigator.clipboard.writeText(codigo);
+    alert('CÃ³digo copiado!');
+}
+
+// Busca
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#tabelaLiberacoes tr');
+    rows.forEach(row => {
+        if (row.cells && row.cells.length > 0) {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        }
+    });
+});
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    carregarDashboard();
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+});
+
+setInterval(carregarDashboard, 30000);
+</script>
+
+</body>
+</html>
+

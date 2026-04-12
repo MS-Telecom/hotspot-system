@@ -292,12 +292,10 @@
 
             // Verifica se existe pagamento confirmado para o MAC (GET /api/payments?mac_address=...)
             async checkPayment(macAddress) {
-                const response = await fetch(`${API_BASE}/api/payments?mac_address=${macAddress}`);
+                const response = await fetch(`${API_BASE}/api/portal/payment-status?mac_address=${encodeURIComponent(macAddress)}`);
                 if (!response.ok) return { paid: false };
-                const payments = await response.json(); // espera array de pagamentos
-                // Considera pago se houver algum pagamento com status 'approved' ou 'paid'
-                const approved = payments.find(p => p.status === 'approved' || p.status === 'paid');
-                return { paid: !!approved };
+                const payment = await response.json();
+                return { paid: payment && (payment.status === 'approved' || payment.status === 'paid'), payment };
             },
 
             // Solicita acesso de teste (POST /api/users/test-access)

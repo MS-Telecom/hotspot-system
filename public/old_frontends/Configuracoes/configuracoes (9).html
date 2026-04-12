@@ -1,0 +1,592 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | ConfiguraÃƒÂ§ÃƒÂµes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .tab-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#0a0c15] text-gray-200">
+
+<script>
+    // Verificar autenticaÃƒÂ§ÃƒÂ£o
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+</script>
+
+<!-- HAMBURGER MENU (Mobile) -->
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[100] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
+
+<div class="flex h-screen overflow-hidden">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃƒÂ§ÃƒÂµes</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃƒÂ§ÃƒÂµes</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs do Sistema
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
+        </nav>
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            </div>
+            <div class="space-y-2 text-[10px] font-mono">
+                <div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div>
+                <div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTEÃƒÅ¡DO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
+            <div class="relative w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" placeholder="Buscar configuraÃƒÂ§ÃƒÂ£o..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 space-y-8">
+            <div>
+                <h1 class="text-3xl font-black tracking-tight">ConfiguraÃƒÂ§ÃƒÂµes</h1>
+                <p class="text-gray-500 text-sm mt-1">Gerencie as configuraÃƒÂ§ÃƒÂµes gerais do sistema</p>
+            </div>
+
+            <!-- Abas de ConfiguraÃƒÂ§ÃƒÂ£o -->
+            <div class="flex border-b border-gray-800 gap-6 overflow-x-auto">
+                <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste GrÃƒÂ¡tis</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">IntegraÃƒÂ§ÃƒÂµes</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">UsuÃƒÂ¡rios Admin</button>
+            </div>
+
+            <!-- Aba Geral -->
+            <div id="geral" class="tab-content space-y-6">
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">Identidade Visual</h3>
+                    <div class="space-y-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">Nome do Sistema</label><input type="text" id="sistemaNome" value="MS TELECOM" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Logo (URL)</label><input type="text" id="sistemaLogo" placeholder="https://..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Tema</label><div class="flex gap-4"><button class="px-4 py-2 bg-blue-600 rounded-lg text-sm">Dark (Atual)</button><button class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Light</button></div></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">InformaÃƒÂ§ÃƒÂµes da Empresa</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">RazÃƒÂ£o Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" value="00.000.000/0001-00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Telefone</label><input type="text" id="telefone" value="(91) 98877-6655" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">E-mail</label><input type="text" id="email" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end"><button id="salvarGeralBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar AlteraÃƒÂ§ÃƒÂµes</button></div>
+            </div>
+
+            <!-- Aba Planos -->
+            <div id="planos" class="tab-content hidden space-y-6">
+                <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                    <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="font-bold text-white">Planos DisponÃƒÂ­veis</h3>
+                        <button onclick="openModalNovoPlano()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="plus" class="w-4 h-4"></i> Novo Plano</button>
+                    </div>
+                    <div id="listaPlanos" class="divide-y divide-gray-800"></div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">ConfiguraÃƒÂ§ÃƒÂµes Globais</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Limite mÃƒÂ¡ximo de velocidade (Mbps)</span><input type="number" id="velocidadeMaxima" value="100" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Tempo de sessÃƒÂ£o inativa (minutos)</span><input type="number" id="tempoSessao" value="30" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
+                    </div>
+                    <div class="flex justify-end mt-4"><button id="salvarConfigGlobaisBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar</button></div>
+                </div>
+            </div>
+
+            <!-- Aba Teste GrÃƒÂ¡tis -->
+            <div id="teste_gratis" class="tab-content hidden space-y-6">
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">ConfiguraÃƒÂ§ÃƒÂµes do Teste GrÃƒÂ¡tis</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-2">Tempo de duraÃƒÂ§ÃƒÂ£o (minutos)</label>
+                            <input type="number" id="teste_tempo" value="15" min="5" max="1440" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
+                            <p class="text-[10px] text-gray-500 mt-1">MÃƒÂ­nimo 5 minutos, mÃƒÂ¡ximo 24 horas (1440 minutos)</p>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400 block mb-2">Limite entre testes (horas)</label>
+                            <input type="number" id="teste_limite" value="1" min="0.5" max="24" step="0.5" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
+                            <p class="text-[10px] text-gray-500 mt-1">Quanto tempo o usuÃƒÂ¡rio precisa esperar para outro teste</p>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <button id="salvarConfigTesteBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar ConfiguraÃƒÂ§ÃƒÂµes do Teste</button>
+                        <div id="configTesteStatus" class="mt-3 hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Pagamento -->
+            <div id="pagamento" class="tab-content hidden space-y-6">
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">ConfiguraÃƒÂ§ÃƒÂ£o PIX</h3>
+                    <div class="space-y-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="BelÃƒÂ©m/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar ConfiguraÃƒÂ§ÃƒÂµes</button></div>
+            </div>
+
+            <!-- Aba IntegraÃƒÂ§ÃƒÂ£o -->
+            <div id="integracao" class="tab-content hidden space-y-6">
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">Supabase</h3>
+                    <div class="space-y-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">URL do Projeto</label><input type="text" id="supabaseUrl" value="https://pdgknfokdcqyfdrdwtbm.supabase.co" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Anon Key</label><input type="password" id="supabaseAnon" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkZ2tuZm9rZGNxeWZkcmR3dGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MjE1MjMsImV4cCI6MjA4OTA5NzUyM30.O5dMXBapRMtENBiUjYYWenfD_0uwMm7xRlh0euQ3780" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
+                        <div class="flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span class="text-xs text-emerald-500">ConexÃƒÂ£o ativa</span></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">MikroTik / RADIUS</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">Servidor RADIUS</label><input type="text" id="radiusServer" value="40.233.118.238" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Secret</label><input type="password" id="radiusSecret" value="testing123" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Auth Port</label><input type="text" id="radiusAuthPort" value="1812" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Accounting Port</label><input type="text" id="radiusAcctPort" value="1813" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end"><button id="testarConexaoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Testar ConexÃƒÂ£o</button></div>
+            </div>
+
+            <!-- Aba Backup -->
+            <div id="backup" class="tab-content hidden space-y-6">
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">Backup do Sistema</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">ÃƒÅ¡ltimo backup</p><p class="text-xs text-gray-500">22/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
+                        <div class="flex justify-between items-center p-4 bg-gray-900/50 rounded-xl"><div><p class="font-medium text-white">Backup anterior</p><p class="text-xs text-gray-500">21/03/2026 03:00:00</p></div><button class="text-blue-500 text-sm">Baixar</button></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">Agendamento AutomÃƒÂ¡tico</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">FrequÃƒÂªncia</span><select id="backupFrequencia" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm"><option>DiÃƒÂ¡rio (03:00)</option><option>Semanal (Domingo 03:00)</option><option>Mensal (Dia 1 03:00)</option></select></div>
+                        <div class="flex items-center gap-2"><input type="checkbox" id="backupManter" class="rounded bg-gray-800"> <span class="text-sm text-gray-400">Manter backups por 30 dias</span></div>
+                    </div>
+                </div>
+                <div class="flex justify-between"><button id="gerarBackupBtn" class="bg-emerald-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-emerald-500 transition">Gerar Backup Agora</button></div>
+            </div>
+
+            <!-- Aba UsuÃƒÂ¡rios Admin -->
+            <div id="usuarios" class="tab-content hidden space-y-6">
+                <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                    <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="font-bold text-white">UsuÃƒÂ¡rios Administradores</h3>
+                        <button onclick="openModalNovoAdmin()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo UsuÃƒÂ¡rio</button>
+                    </div>
+                    <div id="listaAdmins" class="divide-y divide-gray-800"></div>
+                </div>
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <h3 class="font-bold text-white mb-4">Alterar Senha</h3>
+                    <div class="space-y-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">UsuÃƒÂ¡rio</label><input type="text" id="alterarUsuario" value="admin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Nova Senha</label><input type="password" id="alterarNovaSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Confirmar Senha</label><input type="password" id="alterarConfirmarSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                    </div>
+                    <button id="alterarSenhaBtn" class="mt-4 bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Alterar Senha</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAIS -->
+<!-- Modal Novo Plano -->
+<div id="modalNovoPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5 text-blue-500"></i> Novo Plano</h2>
+            <button onclick="closeModalNovoPlano()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="novoPlanoNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PreÃƒÂ§o (R$)</label><input type="number" id="novoPlanoPreco" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="novoPlanoVelocidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃƒÂ§ÃƒÂ£o (dias)</label><input type="number" id="novoPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DescriÃƒÂ§ÃƒÂ£o</label><textarea id="novoPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalNovoPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarNovoPlano()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Plano -->
+<div id="modalEditarPlano" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> Editar Plano</h2>
+            <button onclick="closeModalEditarPlano()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <input type="hidden" id="editarPlanoId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="editarPlanoNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PreÃƒÂ§o (R$)</label><input type="number" id="editarPlanoPreco" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="editarPlanoVelocidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃƒÂ§ÃƒÂ£o (dias)</label><input type="number" id="editarPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DescriÃƒÂ§ÃƒÂ£o</label><textarea id="editarPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalEditarPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarEdicaoPlano()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Admin -->
+<div id="modalNovoAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-blue-500"></i> Novo Administrador</h2>
+            <button onclick="closeModalNovoAdmin()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃƒÂ¡rio</label><input type="text" id="novoAdminUser" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="novoAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label><input type="password" id="novoAdminSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PermissÃƒÂµes</label><select id="novoAdminPermissoes" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalNovoAdmin()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarNovoAdmin()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Admin -->
+<div id="modalEditarAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> Editar Administrador</h2>
+            <button onclick="closeModalEditarAdmin()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <input type="hidden" id="editarAdminId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃƒÂ¡rio</label><input type="text" id="editarAdminUser" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editarAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PermissÃƒÂµes</label><select id="editarAdminPermissoes" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="operador">Operador</option><option value="admin">Administrador</option><option value="master">Master</option></select></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalEditarAdmin()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarEdicaoAdmin()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Perfil -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i> Meu Perfil</h2>
+            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃƒÂ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃƒÂ§ÃƒÂµes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // RESTAURACAO (configuracoes.html)
+    // - Restaurado: layout completo, abas, modais e UX (base old_main2)
+    // - Mantido: rotas/payloads/autenticacao do backend atual
+    // - Corrigido: backups (tenta /api/backup/list -> fallback /api/backup)
+    // - Removido/Desativado: chamadas antigas /api/configuracoes* (backend atual nao expÃµe)
+    // ============================================
+
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+
+    const API_URL = 'https://mstelecom-api.duckdns.org';
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) window.location.href = 'login.html';
+
+    function authHeaders(withJson = true) {
+        const h = { 'Authorization': `Bearer ${token}` };
+        if (withJson) h['Content-Type'] = 'application/json';
+        return h;
+    }
+
+    // ==================== SISTEMA DE ABAS ====================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-white'));
+            this.classList.add('active', 'text-white');
+            this.classList.remove('text-gray-400');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.getElementById(tabId)?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        });
+    });
+
+    // ==================== PLANOS (backend novo: /api/plans) ====================
+    let planosData = [];
+
+    async function carregarPlanos() {
+        try {
+            const res = await fetch(`${API_URL}/api/plans`, { headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            planosData = await res.json();
+            renderPlanos();
+        } catch (e) {
+            const tbody = document.getElementById('tabelaPlanos');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Erro ao carregar planos</td></tr>';
+        }
+    }
+
+    function renderPlanos() {
+        const tbody = document.getElementById('tabelaPlanos');
+        if (!tbody) return;
+        if (!planosData || planosData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhum plano encontrado</td></tr>';
+            return;
+        }
+        tbody.innerHTML = planosData.map(p => `
+            <tr class="hover:bg-gray-900/30">
+                <td class="px-6 py-4 text-sm font-medium text-white">${escapeHtml(p.name || '')}</td>
+                <td class="px-6 py-4 text-sm text-emerald-400 font-bold">R$ ${Number(p.price || 0).toFixed(2)}</td>
+                <td class="px-6 py-4 text-sm text-gray-400">${p.speed_mbps || '-'} Mbps</td>
+                <td class="px-6 py-4 text-sm text-gray-400">${p.duration_days || '-'} dias</td>
+                <td class="px-6 py-4 text-xs text-gray-500">${escapeHtml(p.description || '')}</td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="openEditarPlanoModal('${p.id}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>
+                    <button onclick="excluirPlano('${p.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="trash" class="w-4 h-4 text-red-500"></i></button>
+                </td>
+            </tr>
+        `).join('');
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    }
+
+    function openNovoPlanoModal() {
+        document.getElementById('novoPlanoNome').value = '';
+        document.getElementById('novoPlanoPreco').value = '';
+        document.getElementById('novoPlanoVelocidade').value = '';
+        document.getElementById('novoPlanoDuracao').value = '';
+        document.getElementById('novoPlanoDescricao').value = '';
+        document.getElementById('novoPlanoModal')?.classList.remove('hidden');
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    }
+    function closeNovoPlanoModal() { document.getElementById('novoPlanoModal')?.classList.add('hidden'); }
+
+    async function criarPlano() {
+        const dados = {
+            name: document.getElementById('novoPlanoNome').value,
+            price: parseFloat(document.getElementById('novoPlanoPreco').value || '0'),
+            speed_mbps: parseInt(document.getElementById('novoPlanoVelocidade').value || '0', 10),
+            duration_days: parseInt(document.getElementById('novoPlanoDuracao').value || '0', 10),
+            description: document.getElementById('novoPlanoDescricao').value
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/plans`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(dados) });
+            if (!res.ok) throw new Error();
+            closeNovoPlanoModal();
+            await carregarPlanos();
+            alert('âœ… Plano criado!');
+        } catch(e) { alert('âŒ Erro ao criar plano'); }
+    }
+
+    function openEditarPlanoModal(id) {
+        const p = planosData.find(x => String(x.id) === String(id));
+        if (!p) return;
+        document.getElementById('editarPlanoId').value = p.id;
+        document.getElementById('editarPlanoNome').value = p.name || '';
+        document.getElementById('editarPlanoPreco').value = p.price || 0;
+        document.getElementById('editarPlanoVelocidade').value = p.speed_mbps || 0;
+        document.getElementById('editarPlanoDuracao').value = p.duration_days || 0;
+        document.getElementById('editarPlanoDescricao').value = p.description || '';
+        document.getElementById('editarPlanoModal')?.classList.remove('hidden');
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    }
+    function closeEditarPlanoModal() { document.getElementById('editarPlanoModal')?.classList.add('hidden'); }
+
+    async function salvarEdicaoPlano() {
+        const id = document.getElementById('editarPlanoId').value;
+        const dados = {
+            name: document.getElementById('editarPlanoNome').value,
+            price: parseFloat(document.getElementById('editarPlanoPreco').value || '0'),
+            speed_mbps: parseInt(document.getElementById('editarPlanoVelocidade').value || '0', 10),
+            duration_days: parseInt(document.getElementById('editarPlanoDuracao').value || '0', 10),
+            description: document.getElementById('editarPlanoDescricao').value
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
+            if (!res.ok) throw new Error();
+            closeEditarPlanoModal();
+            await carregarPlanos();
+            alert('âœ… Plano atualizado!');
+        } catch(e) { alert('âŒ Erro ao atualizar plano'); }
+    }
+
+    async function excluirPlano(id) {
+        if (!confirm('Remover este plano?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            await carregarPlanos();
+            alert('âœ… Plano removido!');
+        } catch(e) { alert('âŒ Erro ao remover plano'); }
+    }
+
+    // ==================== BACKUP ====================
+    async function carregarBackups() {
+        const container = document.getElementById('listaBackups');
+        if (!container) return;
+        try {
+            let res = await fetch(`${API_URL}/api/backup/list`, { headers: authHeaders(false) });
+            if (!res.ok) res = await fetch(`${API_URL}/api/backup`, { headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            const backups = await res.json();
+            if (!backups || backups.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 p-4">Nenhum backup encontrado</div>';
+                return;
+            }
+            const normalized = backups.map(b => ({ filename: b.filename || b.file || b.name, created_at: b.created_at || b.timestamp || b.date }));
+            container.innerHTML = normalized.map(b => `
+                <div class="py-4 flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-medium text-white">${escapeHtml(String(b.filename || ''))}</p>
+                        <p class="text-[10px] text-gray-500">${b.created_at ? new Date(b.created_at).toLocaleString() : '-'}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="${API_URL}/api/backup/download/${encodeURIComponent(String(b.filename || ''))}" target="_blank" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Download (se suportado)"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i></a>
+                    </div>
+                </div>
+            `).join('');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        } catch (e) {
+            container.innerHTML = '<div class="text-center text-red-500 p-4">Erro ao carregar backups</div>';
+        }
+    }
+
+    async function gerarBackup() {
+        try {
+            const res = await fetch(`${API_URL}/api/backup/create`, { method: 'POST', headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            alert('âœ… Backup gerado com sucesso!');
+            carregarBackups();
+        } catch (e) {
+            alert('âŒ Erro ao gerar backup');
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function initMenuMobile() {
+        const menuToggle = document.getElementById('menuToggle');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const sidebar = document.getElementById('sidebar');
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                menuOverlay.classList.toggle('hidden');
+            });
+            menuOverlay?.addEventListener('click', () => {
+                sidebar.classList.add('hidden');
+                menuOverlay.classList.add('hidden');
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initMenuMobile();
+        carregarPlanos();
+        carregarBackups();
+
+        document.getElementById('criarPlanoBtn')?.addEventListener('click', openNovoPlanoModal);
+        document.getElementById('salvarNovoPlanoBtn')?.addEventListener('click', criarPlano);
+        document.getElementById('salvarEditarPlanoBtn')?.addEventListener('click', salvarEdicaoPlano);
+        document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
+
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    });
+</script>
+</body>
+</html>
+

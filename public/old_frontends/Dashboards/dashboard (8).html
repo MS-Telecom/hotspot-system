@@ -1,0 +1,1071 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); transition: all 0.2s ease; }
+        .glass-card:hover { border-color: rgba(59,130,246,0.5); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .sidebar-link:hover { background: rgba(59,130,246,0.1); color: #60a5fa; }
+        .stat-card { transition: all 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+        #sidebar { z-index: 100; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+        .status-badge-online { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+        .status-badge-offline { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+    </style>
+</head>
+<body class="bg-[#0a0c15] text-gray-200">
+
+<!-- 🔒 PROTEÇÃO DE ACESSO -->
+<script>
+    const authToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!authToken) {
+        window.location.href = 'login.html';
+    }
+</script>
+
+<!-- HAMBURGER MENU (Mobile) -->
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white">
+    <i data-lucide="menu" class="w-5 h-5"></i>
+</button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
+
+<div class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <a href="dashboard.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs
+            </a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP
+            </a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="banknote" class="w-5 h-5"></i> Financeiro
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="ticket" class="w-5 h-5"></i> Vouchers
+            </a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas
+            </a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
+            </a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+            </a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs do Sistema
+            </a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Sessão Atual</p>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            </div>
+            <div class="space-y-2 text-[10px] font-mono">
+                <div class="flex justify-between text-gray-500">
+                    <span>Usuário</span>
+                    <span id="sessionUser" class="text-cyan-400">-</span>
+                </div>
+                <div class="flex justify-between text-gray-500">
+                    <span>Início</span>
+                    <span id="sessionStart" class="text-gray-600">-</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
+  <base href="/">
+            <div class="relative w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar cliente, hotspot, plano..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p>
+                </div>
+                <button onclick="openProfileModal()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTEÚDO DO DASHBOARD -->
+        <div class="p-8 space-y-8">
+
+            <!-- Header da Página -->
+            <div>
+                <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
+                <p class="text-gray-500 text-sm mt-1">Visão geral da rede e métricas em tempo real</p>
+            </div>
+
+            <!-- Cards de Métricas Financeiras -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="trending-up" class="text-emerald-500 w-6 h-6"></i>
+                        </div>
+                        <span id="revenueVariation" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">0%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Receita Total</p>
+                    <span id="totalRevenue" class="text-3xl font-black mt-1">R$ 0,00</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Mês atual</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="check-circle" class="text-blue-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">Concluídos</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Concluídos</p>
+                    <span id="completedPayments" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Transações confirmadas</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="clock" class="text-yellow-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-full">Pendentes</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Pendentes</p>
+                    <span id="pendingPayments" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Aguardando confirmação</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-full">Cancelados</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Cancelados</p>
+                    <span id="canceledPayments" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Transações canceladas</p>
+                </div>
+            </div>
+
+            <!-- Cards de Métricas de Rede -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="router" class="text-purple-500 w-6 h-6"></i>
+                        </div>
+                        <span id="hotspotsVariation" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">0%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">POPs Online</p>
+                    <span id="onlineHotspots" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2"><span id="offlineHotspots">0</span> offline</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="users" class="text-cyan-500 w-6 h-6"></i>
+                        </div>
+                        <span id="usersVariation" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">0%</span>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Usuários Online</p>
+                    <span id="onlineUsers" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Pico hoje: <span id="peakUsers">0</span></p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="activity" class="text-orange-500 w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Tráfego Total</p>
+                    <span id="totalTraffic" class="text-3xl font-black mt-1">0 GB</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Pico: <span id="peakBandwidth">0</span> Mbps</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="users-round" class="text-pink-500 w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Total Clientes</p>
+                    <span id="totalCustomers" class="text-3xl font-black mt-1">0</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Cadastrados na plataforma</p>
+                </div>
+            </div>
+
+            <!-- Gráfico + Faturamento por Plano (2 colunas) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfico de Usuários Online -->
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-white">Usuários Online (últimas 24h)</h3>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span class="text-[10px] text-gray-500">Tempo real</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="usersPerHourChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Cards de Resumo por Plano -->
+                <div class="glass-card rounded-2xl p-6 border border-gray-800">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-white">Faturamento por Plano (últimos 30 dias)</h3>
+                        <button onclick="openPlanDetailsModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver detalhes</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-blue-600/20 to-blue-600/5 rounded-xl p-5 text-center border border-blue-500/20">
+                            <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="crown" class="w-6 h-6 text-blue-500"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Premium</p>
+                            <p id="premiumRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                            <p class="text-[9px] text-gray-600 mt-1">assinantes premium</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-cyan-600/20 to-cyan-600/5 rounded-xl p-5 text-center border border-cyan-500/20">
+                            <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Diário</p>
+                            <p id="dailyRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                            <p class="text-[9px] text-gray-600 mt-1">acessos diários</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
+                            <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
+                            <p id="trialRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
+                            <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Últimas Liberações -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white">Últimas Liberações (PIX)</h3>
+                    <button onclick="openAllReleasesModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Cliente / MAC</th>
+                                <th class="px-6 py-3 text-left">POP</th>
+                                <th class="px-6 py-3 text-left">Plano</th>
+                                <th class="px-6 py-3 text-left">Valor</th>
+                                <th class="px-6 py-3 text-left">Data/Hora</th>
+                                <th class="px-6 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="releasesTable" class="divide-y divide-gray-800/50">
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberações...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hotspots / POPs -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i data-lucide="router" class="w-4 h-4 text-purple-500"></i>
+                        POPs / Hotspots
+                    </h3>
+                    <a href="hotspots.html" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver todos</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Nome do POP</th>
+                                <th class="px-6 py-3 text-left">Status</th>
+                                <th class="px-6 py-3 text-left">Clientes Ativos</th>
+                                <th class="px-6 py-3 text-left">Última Atividade</th>
+                                <th class="px-6 py-3 text-center">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotspotsTable" class="divide-y divide-gray-800/50">
+                            <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Carregando POPs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ==================== MODAIS ==================== -->
+
+<!-- MODAL: NOVO VOUCHER (redireciona para página de vouchers) -->
+<div id="newVoucherModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="ticket" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Gerar Novo Voucher
+            </h2>
+            <button onclick="closeNewVoucherModal()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-5">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
+                <select id="voucherPlan" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                    <option value="diario">Diário (24h - R$ 5,00)</option>
+                    <option value="premium">Premium 24h (R$ 15,00)</option>
+                    <option value="semanal">Premium Semanal (R$ 50,00)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Quantidade</label>
+                <input type="number" id="voucherQuantity" value="1" min="1" max="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label>
+                <input type="date" id="voucherExpiration" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+            </div>
+            <div id="voucherResult" class="hidden bg-gray-900/50 rounded-xl p-4">
+                <p class="text-[10px] text-gray-500 uppercase mb-1">Voucher Gerado</p>
+                <code id="voucherCode" class="text-lg font-mono text-emerald-400 break-all"></code>
+                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar código</button>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
+            <button onclick="closeNewVoucherModal()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Cancelar</button>
+            <button onclick="generateVoucher()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-lg text-xs sm:text-sm font-bold text-white">Gerar Voucher</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: TODAS AS LIBERAÇÕES -->
+<div id="allReleasesModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
+        <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
+                Todas as Liberações
+            </h2>
+            <button onclick="closeAllReleasesModal()" class="p-1 sm:p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs sm:text-sm">
+                    <thead class="bg-gray-900/50 sticky top-0">
+                        <tr class="text-left text-[10px] sm:text-xs font-bold text-gray-500 uppercase">
+                            <th class="px-1 sm:px-2 py-2">Cliente</th>
+                            <th class="px-1 sm:px-2 py-2">Plano</th>
+                            <th class="px-1 sm:px-2 py-2">Valor</th>
+                            <th class="px-1 sm:px-2 py-2">Data</th>
+                            <th class="px-1 sm:px-2 py-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allReleasesTable" class="divide-y divide-gray-800">
+                        <tr><td colspan="5" class="px-2 py-8 text-center text-gray-500 text-xs">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="p-3 sm:p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closeAllReleasesModal()" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-800 rounded-lg text-xs sm:text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO PLANO -->
+<div id="planDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="crown" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do Plano
+            </h2>
+            <button onclick="closePlanDetailsModal()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="planDetailsContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end shrink-0">
+            <button onclick="closePlanDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DETALHES DO CLIENTE -->
+<div id="customerDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="user" class="w-5 h-5 text-blue-500"></i>
+                Detalhes do Cliente
+            </h2>
+            <button onclick="closeCustomerDetailsModal()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="customerDetailsContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeCustomerDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+            <button id="blockCustomerModalBtn" onclick="blockCustomerFromModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-bold hidden">Bloquear Cliente</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: MEU PERFIL -->
+<div id="profileModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
+                Meu Perfil
+            </h2>
+            <button onclick="closeProfileModal()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label>
+                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
+                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+            </div>
+            <div class="border-t border-gray-800 pt-4 mt-2">
+                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
+                        <input type="password" id="currentPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
+                        <input type="password" id="newPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeProfileModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURAÇÕES GLOBAIS
+// ============================================
+const API_URL = 'https://mstelecom-api.duckdns.org';
+let usersPerHourChart = null;
+let currentCustomerId = null;
+
+// Função para obter o token de autenticação
+function getAuthToken() {
+    return localStorage.getItem('token') || localStorage.getItem('ms_token');
+}
+
+// Função para construir headers com autenticação
+function buildAuthHeaders(includeJson = true) {
+    const headers = {
+        'Authorization': `Bearer ${getAuthToken()}`
+    };
+    if (includeJson) {
+        headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+}
+
+// ============================================
+// FUNÇÕES AUXILIARES
+// ============================================
+function updateSessionInfo() {
+    const rawUser = localStorage.getItem('user');
+    const sessionStart = localStorage.getItem('session_start');
+    if (!sessionStart) {
+        localStorage.setItem('session_start', new Date().toISOString());
+    }
+    if (rawUser) {
+        try {
+            const user = JSON.parse(rawUser);
+            document.getElementById('sessionUser').innerText = user.username || 'Administrador';
+        } catch (error) {
+            document.getElementById('sessionUser').innerText = 'Administrador';
+        }
+    }
+    document.getElementById('sessionStart').innerText = new Date(localStorage.getItem('session_start')).toLocaleTimeString('pt-BR');
+}
+
+function loadUserProfile() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            document.getElementById('editUsername').value = user.username || '';
+            document.getElementById('editEmail').value = user.email || '';
+            document.getElementById('userName').innerText = user.username || 'Administrador';
+        } catch(e) {}
+    }
+}
+
+// ============================================
+// INICIALIZAÇÃO DO GRÁFICO
+// ============================================
+function initUsersPerHourChart(dataPoints = []) {
+    const canvas = document.getElementById('usersPerHourChart');
+    const ctx = canvas?.getContext('2d');
+    if (!ctx) return;
+    if (usersPerHourChart) usersPerHourChart.destroy();
+    const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+    usersPerHourChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: hours,
+            datasets: [{
+                label: 'Usuários Online',
+                data: dataPoints.length ? dataPoints : Array(24).fill(0),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+            scales: {
+                x: { grid: { color: 'rgba(75,85,99,0.2)' }, ticks: { color: '#9ca3af', maxRotation: 45, autoSkip: true, maxTicksLimit: 12 } },
+                y: { grid: { color: 'rgba(75,85,99,0.2)' }, ticks: { color: '#9ca3af', stepSize: 5 } }
+            }
+        }
+    });
+}
+
+// ============================================
+// CARREGAR DADOS DO DASHBOARD (CORRIGIDO)
+// ============================================
+async function loadDashboard() {
+    const token = getAuthToken();
+    if (!token) {
+        console.error('[Dashboard] Token não encontrado');
+        return;
+    }
+
+    try {
+        // CORRIGIDO: Endpoints em inglês conforme tabela de mapeamento
+        const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes] = await Promise.all([
+            fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) }),
+            fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) }),
+            fetch(`${API_URL}/api/users`, { headers: buildAuthHeaders(false) }),
+            fetch(`${API_URL}/api/pops`, { headers: buildAuthHeaders(false) }), // CORRIGIDO: /api/hotspots -> /api/pops
+            fetch(`${API_URL}/api/stats/users-per-hour`, { headers: buildAuthHeaders(false) }).catch(() => ({ ok: false }))
+        ]);
+
+        const payments = paymentsRes.ok ? await paymentsRes.json() : [];
+        const plans = plansRes.ok ? await plansRes.json() : [];
+        const users = usersRes.ok ? await usersRes.json() : [];
+        const pops = popsRes.ok ? await popsRes.json() : [];
+        let usersPerHourData = [];
+        if (usersPerHourRes.ok) {
+            const result = await usersPerHourRes.json();
+            usersPerHourData = result.data || result.users_per_hour || [];
+        }
+
+        // Métricas financeiras
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const sixtyDaysAgo = new Date(thirtyDaysAgo);
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30);
+
+        const completedPayments = payments.filter(p => p.status === 'confirmed').length;
+        const pendingPayments = payments.filter(p => p.status === 'pending').length;
+        const canceledPayments = payments.filter(p => p.status === 'canceled').length;
+
+        const totalRevenue = payments
+            .filter(p => p.status === 'confirmed' && new Date(p.created_at) >= thirtyDaysAgo)
+            .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        const previousRevenue = payments
+            .filter(p => {
+                if (p.status !== 'confirmed') return false;
+                const date = new Date(p.created_at);
+                return date >= sixtyDaysAgo && date < thirtyDaysAgo;
+            })
+            .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+        const revenueVariation = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : totalRevenue > 0 ? 100 : 0;
+
+        // Faturamento por plano
+        let premiumRevenue = 0, dailyRevenue = 0, trialRevenue = 0;
+        payments.forEach(p => {
+            if (p.status !== 'confirmed') return;
+            const planName = (p.plan_name || '').toLowerCase();
+            const amount = p.amount || 0;
+            if (planName.includes('premium')) premiumRevenue += amount;
+            else if (planName.includes('diario') || planName.includes('daily')) dailyRevenue += amount;
+            else if (planName.includes('teste') || planName.includes('trial')) trialRevenue += amount;
+        });
+
+        // Métricas de rede
+        const onlineUsers = users.filter(u => u.status === 'active' || u.status === 'online').length;
+        const totalCustomers = users.length;
+        const onlinePops = pops.filter(p => p.status === 'online' || p.status === 'active').length;
+        const offlinePops = pops.filter(p => p.status !== 'online' && p.status !== 'active').length;
+        const peakUsers = usersPerHourData.length ? Math.max(...usersPerHourData) : onlineUsers;
+
+        // Tráfego (mockado porque endpoint não especificado)
+        const totalTraffic = 0; // Seria substituído por chamada real
+        const peakBandwidth = 0;
+
+        // Atualizar DOM
+        document.getElementById('totalRevenue').innerHTML = `R$ ${totalRevenue.toFixed(2)}`;
+        document.getElementById('completedPayments').innerText = completedPayments;
+        document.getElementById('pendingPayments').innerText = pendingPayments;
+        document.getElementById('canceledPayments').innerText = canceledPayments;
+        document.getElementById('revenueVariation').innerHTML = `${revenueVariation >= 0 ? '+' : ''}${revenueVariation.toFixed(1)}%`;
+
+        document.getElementById('onlineHotspots').innerText = onlinePops;
+        document.getElementById('offlineHotspots').innerText = offlinePops;
+        document.getElementById('onlineUsers').innerText = onlineUsers;
+        document.getElementById('peakUsers').innerText = peakUsers;
+        document.getElementById('totalTraffic').innerHTML = `${totalTraffic.toFixed(2)} GB`;
+        document.getElementById('peakBandwidth').innerText = peakBandwidth;
+        document.getElementById('totalCustomers').innerText = totalCustomers;
+
+        document.getElementById('premiumRevenue').innerHTML = `R$ ${premiumRevenue.toFixed(0)}`;
+        document.getElementById('dailyRevenue').innerHTML = `R$ ${dailyRevenue.toFixed(0)}`;
+        document.getElementById('trialRevenue').innerHTML = `R$ ${trialRevenue.toFixed(0)}`;
+
+        initUsersPerHourChart(usersPerHourData);
+
+        // Tabela de últimas liberações
+        const latestReleases = payments
+            .filter(p => p.status === 'confirmed')
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 5);
+
+        const releasesTable = document.getElementById('releasesTable');
+        if (latestReleases.length === 0) {
+            releasesTable.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma liberação encontrada</td></tr>';
+        } else {
+            releasesTable.innerHTML = latestReleases.map(release => `
+                <tr class="hover:bg-gray-900/30 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">
+                                ${(release.user_name || 'U').substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-white">${release.user_name || 'Cliente'}</p>
+                                <p class="text-[10px] text-gray-500 font-mono">${release.mac_address || '-'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${release.pop_name || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${release.plan_name || '-'}</span></td>
+                    <td class="px-6 py-4 font-bold text-emerald-400">R$ ${(release.amount || 0).toFixed(2)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-400">${new Date(release.created_at).toLocaleString('pt-BR')}</td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="blockCustomer('${release.user_id || ''}')" class="p-1.5 hover:bg-red-500/10 rounded-lg transition" title="Bloquear cliente">
+                                <i data-lucide="unplug" class="w-4 h-4 text-gray-500 hover:text-red-500"></i>
+                            </button>
+                            <button onclick="markAsVip('${release.user_id || ''}')" class="p-1.5 hover:bg-yellow-500/10 rounded-lg transition" title="Marcar VIP">
+                                <i data-lucide="crown" class="w-4 h-4 text-gray-500 hover:text-yellow-500"></i>
+                            </button>
+                            <button onclick="viewCustomerDetails('${release.user_id || ''}', '${release.user_name || ''}')" class="p-1.5 hover:bg-blue-500/10 rounded-lg transition" title="Ver detalhes">
+                                <i data-lucide="eye" class="w-4 h-4 text-gray-500 hover:text-blue-500"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Tabela de POPs
+        const hotspotsTable = document.getElementById('hotspotsTable');
+        if (pops.length === 0) {
+            hotspotsTable.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Nenhum POP cadastrado</td></tr>';
+        } else {
+            hotspotsTable.innerHTML = pops.map(pop => `
+                <tr class="hover:bg-gray-900/30 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                <i data-lucide="wifi" class="w-4 h-4 text-purple-500"></i>
+                            </div>
+                            <span class="text-sm font-medium text-white">${pop.name || 'POP'}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${pop.status === 'online' || pop.status === 'active' ? 'status-badge-online' : 'status-badge-offline'}">
+                            ${pop.status === 'online' || pop.status === 'active' ? 'â— Online' : 'â— Offline'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${pop.active_clients || 0}</td>
+                    <td class="px-6 py-4 text-sm text-gray-400">${pop.last_activity || '-'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <a href="hotspot-detalhe.html?id=${pop.id}" class="inline-flex items-center gap-1 text-blue-500 hover:text-blue-400 text-xs transition">
+                            <i data-lucide="arrow-right" class="w-3 h-3"></i> Detalhes
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    } catch (error) {
+        console.error('[Dashboard] Erro:', error);
+    }
+}
+
+// ============================================
+// FUNÇÕES DOS MODAIS
+// ============================================
+async function openAllReleasesModal() {
+    const modal = document.getElementById('allReleasesModal');
+    const tableBody = document.getElementById('allReleasesTable');
+    modal.classList.remove('hidden');
+    tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Carregando...</td></tr>';
+    try {
+        const response = await fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) });
+        const payments = await response.json();
+        const releases = payments.filter(p => p.status === 'confirmed');
+        if (releases.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberação encontrada</td></tr>';
+        } else {
+            tableBody.innerHTML = releases.map(release => `
+                <tr class="hover:bg-gray-900/30">
+                    <td class="px-4 py-3">
+                        <div>
+                            <p class="text-sm font-medium text-white">${release.user_name || 'Cliente'}</p>
+                            <p class="text-[10px] text-gray-500">${release.mac_address || '-'}</p>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${release.plan_name || 'N/A'}</span></td>
+                    <td class="px-4 py-3 text-emerald-400">R$ ${(release.amount || 0).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${new Date(release.created_at).toLocaleString('pt-BR')}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-lg">Confirmado</span></td>
+                </tr>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberações</td></tr>';
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeAllReleasesModal() { document.getElementById('allReleasesModal').classList.add('hidden'); }
+
+async function openPlanDetailsModal() {
+    const modal = document.getElementById('planDetailsModal');
+    const content = document.getElementById('planDetailsContent');
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+    try {
+        const response = await fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) });
+        const plans = await response.json();
+        const uniquePlans = [];
+        const namesSet = new Set();
+        for (const plan of plans) {
+            if (!namesSet.has(plan.name)) {
+                namesSet.add(plan.name);
+                uniquePlans.push(plan);
+            }
+        }
+        if (uniquePlans.length > 0) {
+            content.innerHTML = uniquePlans.map(plan => `
+                <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-white">${plan.name}</h3>
+                        <span class="text-emerald-400 font-bold">R$ ${plan.price}</span>
+                    </div>
+                    <p class="text-xs text-gray-500">Velocidade: ${plan.speed_mbps} Mbps</p>
+                    <p class="text-xs text-gray-500">Duração: ${plan.duration_days} dias</p>
+                    <p class="text-xs text-gray-400 mt-2">${plan.description || ''}</p>
+                </div>
+            `).join('');
+        } else {
+            content.innerHTML = '<div class="text-center text-gray-500">Nenhum plano cadastrado</div>';
+        }
+    } catch (error) {
+        content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar planos</div>';
+    }
+}
+function closePlanDetailsModal() { document.getElementById('planDetailsModal').classList.add('hidden'); }
+
+async function viewCustomerDetails(id, name) {
+    if (!id) return alert('ID do cliente não informado');
+    currentCustomerId = id;
+    const modal = document.getElementById('customerDetailsModal');
+    const content = document.getElementById('customerDetailsContent');
+    const blockBtn = document.getElementById('blockCustomerModalBtn');
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+    blockBtn.classList.add('hidden');
+    try {
+        const response = await fetch(`${API_URL}/api/users/${id}`, { headers: buildAuthHeaders(false) });
+        if (!response.ok) throw new Error('Erro ao carregar cliente');
+        const customer = await response.json();
+        content.innerHTML = `
+            <div class="space-y-3">
+                <div class="flex items-center gap-3 pb-3 border-b border-gray-700">
+                    <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <i data-lucide="user" class="w-6 h-6 text-blue-500"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-white">${customer.name || name || 'Cliente'}</p>
+                        <p class="text-xs text-gray-500">ID: ${String(id).substring(0,12)}...</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'Não informado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? 'â— Ativo' : 'â— Bloqueado'}</p></div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Último acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
+            </div>
+        `;
+        if (customer.status !== 'blocked') blockBtn.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (error) {
+        content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar dados do cliente</div>';
+    }
+}
+function closeCustomerDetailsModal() { document.getElementById('customerDetailsModal').classList.add('hidden'); currentCustomerId = null; }
+function blockCustomerFromModal() { if (currentCustomerId) blockCustomer(currentCustomerId); }
+
+async function blockCustomer(id) {
+    if (!id) return alert('ID do cliente não informado');
+    if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
+    try {
+        const response = await fetch(`${API_URL}/api/users/${id}/block`, {
+            method: 'POST',
+            headers: buildAuthHeaders(true)
+        });
+        if (response.ok) {
+            alert('✅ Cliente bloqueado com sucesso!');
+            closeCustomerDetailsModal();
+            loadDashboard();
+        } else {
+            const data = await response.json();
+            alert(data.error || '❌ Erro ao bloquear cliente');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('❌ Erro ao bloquear cliente');
+    }
+}
+
+async function markAsVip(id) {
+    if (!id) return alert('ID do cliente não informado');
+    if (!confirm('Deseja marcar este cliente como VIP?')) return;
+    try {
+        const response = await fetch(`${API_URL}/api/users/${id}/vip`, {
+            method: 'POST',
+            headers: buildAuthHeaders(true)
+        });
+        if (response.ok) {
+            alert('✅ Cliente marcado como VIP com sucesso!');
+            loadDashboard();
+        } else {
+            const data = await response.json();
+            alert(data.error || '❌ Erro ao marcar cliente como VIP');
+        }
+    } catch (error) {
+        alert('❌ Erro ao marcar cliente como VIP');
+    }
+}
+
+// ============================================
+// PERFIL E LOGOUT
+// ============================================
+function openProfileModal() {
+    loadUserProfile();
+    document.getElementById('profileModal').classList.remove('hidden');
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
+
+async function saveProfile() {
+    const username = document.getElementById('editUsername').value;
+    const email = document.getElementById('editEmail').value;
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas não coincidem');
+    if (newPassword && !currentPassword) return alert('Digite a senha atual para alterar');
+    try {
+        const response = await fetch(`${API_URL}/api/profile`, {
+            method: 'PUT',
+            headers: buildAuthHeaders(true),
+            body: JSON.stringify({ username, email, current_password: currentPassword || null, new_password: newPassword || null })
+        });
+        const data = await response.json();
+        if (data.success || response.ok) {
+            alert('Perfil atualizado com sucesso!');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.username = username;
+            user.email = email;
+            localStorage.setItem('user', JSON.stringify(user));
+            document.getElementById('userName').innerText = username;
+            closeProfileModal();
+        } else {
+            alert(data.error || 'Erro ao atualizar perfil');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Erro ao atualizar perfil');
+    }
+}
+
+async function logout() {
+    try {
+        await fetch(`${API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: buildAuthHeaders(true),
+            body: JSON.stringify({ username: localStorage.getItem('ms_user') })
+        });
+    } catch(e) {}
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('ms_user');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// ============================================
+// VOUCHER (redireciona)
+// ============================================
+function openNewVoucherModal() { window.location.href = 'vouchers.html'; }
+function closeNewVoucherModal() { document.getElementById('newVoucherModal').classList.add('hidden'); }
+function generateVoucher() { alert('A geração de vouchers foi movida para o módulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
+function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('Código copiado!'); }
+
+// ============================================
+// BUSCA
+// ============================================
+function applySearch() {
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    const releaseRows = document.querySelectorAll('#releasesTable tr');
+    releaseRows.forEach(row => { if (row.cells && row.cells.length) row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none'; });
+    const hotspotRows = document.querySelectorAll('#hotspotsTable tr');
+    hotspotRows.forEach(row => { if (row.cells && row.cells.length) row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none'; });
+}
+document.getElementById('searchInput')?.addEventListener('input', applySearch);
+
+// ============================================
+// MENU MOBILE
+// ============================================
+function initMobileMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            menuOverlay.classList.toggle('hidden');
+        });
+        menuOverlay.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
+            menuOverlay.classList.add('hidden');
+        });
+    }
+}
+
+// ============================================
+// INICIALIZAÇÃO
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    initMobileMenu();
+    loadUserProfile();
+    updateSessionInfo();
+    loadDashboard();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+setInterval(loadDashboard, 30000);
+</script>
+</body>
+</html>
+
+

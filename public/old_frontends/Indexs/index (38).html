@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDV AutÃ´nomo</title>
+    <style>
+        /* EstilizaÃ§Ã£o bÃ¡sica */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 50%;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .cart {
+            margin-top: 20px;
+        }
+        .total {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MS PDV</h1>
+        <label for="codigoBarras">QR code CÃ³digo de Barras:</label>
+        <input type="text" id="codigoBarras">
+        <button onclick="addProduct()">Adicionar</button>
+
+        <div class="cart">
+            <h2>Carrinho</h2>
+            <ul id="cartItems"></ul>
+            <div class="total">Total: R$ <span id="total">0.00</span></div>
+            <button onclick="processPayment('cartao')">Pagar com CartÃ£o</button>
+            <button onclick="processPayment('pix')">Pagar com PIX</button>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let total = 0;
+
+        async function addProduct() {
+            const codigoBarras = document.getElementById('codigoBarras').value;
+            const response = await fetch(`/produtos/${codigoBarras}`);
+            const product = await response.json();
+
+            if (product) {
+                cart.push(product);
+                total += product.preco;
+                document.getElementById('cartItems').innerHTML += `<li>${product.nome} - R$ ${product.preco}</li>`;
+                document.getElementById('total').innerText = total.toFixed(2);
+            } else {
+                alert('Produto nÃ£o encontrado!');
+            }
+
+            document.getElementById('codigoBarras').value = '';
+        }
+
+        async function processPayment(method) {
+            const items = cart.map(product => ({ codigoBarras: product.codigoBarras, quantidade: 1 }));
+            const response = await fetch('/vendas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(items)
+            });
+
+            if (response.ok) {
+                alert(`Pagamento com ${method} processado!`);
+                clearCart();
+            } else {
+                alert('Erro ao processar pagamento!');
+            }
+        }
+
+        function clearCart() {
+            cart = [];
+            total = 0;
+            document.getElementById('cartItems').innerHTML = '';
+            document.getElementById('total').innerText = '0.00';
+        }
+    </script>
+</body>
+</html>
+

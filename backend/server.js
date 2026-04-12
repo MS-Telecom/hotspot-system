@@ -1063,11 +1063,32 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
     const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
     const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 
+    const uniqueTag = `MS-TELECOM-${id}`;
+
+    // Walled Garden: permitir acesso ao portal/API/pagamento antes de autenticar
+    const wgHosts = [
+      'hotspot-system.vercel.app',
+      'mstelecom-api.duckdns.org',
+      'api.mercadopago.com',
+      'mercadopago.com',
+      'www.mercadopago.com',
+      'cdn.tailwindcss.com',
+      'unpkg.com',
+      'fonts.googleapis.com',
+      'fonts.gstatic.com'
+    ];
+
+    const walledGarden =
+      `# Walled Garden (dominios liberados antes do login)\\n` +
+      wgHosts.map(h => `/ip hotspot walled-garden add dst-host=${h} action=allow comment="${uniqueTag}"`).join('\\n') +
+      `\\n\\n`;
+
     const script = `/system identity set name="${pop.name}"\n` +
       `/radius add address=${radiusServer} secret=testing123 service=hotspot authentication-port=1812 accounting-port=1813\n` +
       `/ip hotspot profile set [find] use-radius=yes\n` +
+      walledGarden +
       `/tool fetch url="${apiUrl}/api/pops/${id}/heartbeat" mode=http keep-result=no\n` +
-      `/system scheduler add name="heartbeat-${pop.name}" interval=1m on-event="/tool fetch url=\\"${apiUrl}/api/pops/${id}/heartbeat\\" keep-result=no" start-time=startup\n` +
+      `/system scheduler add name="heartbeat-${pop.name}" interval=1m on-event="/tool fetch url=\\"${apiUrl}/api/pops/${id}/heartbeat\\" keep-result=no" start-time=startup comment="${uniqueTag}"\n` +
       `/ip hotspot set [find] address-pool=dhcp_pool1\n`;
 
     res.json({ script });
@@ -1347,6 +1368,24 @@ app.get('/api/test-ip', (req, res) => {
     x_forwarded_for: req.headers['x-forwarded-for'] || null,
     remote_address: req.socket?.remoteAddress || null
   });
+});
+
+// ============================================================
+// 🌐 ENTRYPOINT (MikroTik -> API -> Portal)
+// ============================================================
+
+app.get('/entrypoint', (req, res) => {
+  const q = req.query || {};
+  const mac = (q.mac || q.mac_address || q.called || q['mac-address'] || '').toString();
+  const ip = (q.ip || q.ip_address || q.nasip || '').toString();
+  const pop = (q.pop || q.pop_id || q.hotspot || '').toString();
+
+  const url = new URL('/portal.html', FRONTEND_BASE_URL);
+  if (mac) url.searchParams.set('mac', mac);
+  if (ip) url.searchParams.set('ip', ip);
+  if (pop) url.searchParams.set('pop', pop);
+
+  return res.redirect(302, url.toString());
 });
 
 // ============================================================
@@ -1935,9 +1974,30 @@ app.get('/api/portal/plans', async (req, res) => {
 });
 
 app.post('/api/portal/create-pix', async (req, res) => {
+  try {
+    const { mac_address } = req.body || {};
+    if (mac_address) {
+      // Libera acesso temporario para realizar pagamento (janela curta)
+      const durationMinutes = 5;
+      const expiresAt = new Date(Date.now() + durationMinutes * 60000).toISOString();
+
+      const result = await authorizeAccess(mac_address, '192.168.32.1', null, null, null, durationMinutes, 5, 'payment_window');
+      if (result?.success) {
+        await supabase.from('hotspot_sessions').insert({
+          mac_address,
+          status: 'active',
+          expires_at: expiresAt,
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+  } catch (_e) {
+    // ignora erro de janela temporaria (nao bloqueia a geracao do PIX)
+  }
+
   // Encaminha para a rota oficial de geração de PIX
   req.url = '/api/payments/generate-pix';
-  app._router.handle(req, res);
+  return app._router.handle(req, res);
 });
 
 app.get('/api/portal/check-payment/:id', async (req, res) => {
@@ -1970,6 +2030,17 @@ app.post('/api/portal/login', async (req, res) => {
 app.post('/api/portal/register', async (req, res) => {
   try {
     const { name, cpf, phone, password, mac_address } = req.body;
+
+    // Se o MAC ja esta associado a algum usuario, evita duplicar cadastro
+    if (mac_address) {
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id, username')
+        .eq('mac_address', mac_address)
+        .maybeSingle();
+      if (existing) return res.json({ user_id: existing.id, username: existing.username, existing: true });
+    }
+
     const username = cpf || phone || name.toLowerCase().replace(/\s+/g, '.');
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     

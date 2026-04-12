@@ -1,0 +1,363 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>MS Telecom | Vouchers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
+        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); transition: all 0.2s ease; }
+        .glass-card:hover { border-color: rgba(59,130,246,0.5); }
+        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
+        .sidebar-link:hover { background: rgba(59,130,246,0.1); color: #60a5fa; }
+        #sidebar { z-index: 100; }
+        #menuToggle { z-index: 101; }
+        #menuOverlay { z-index: 99; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-gray-200">
+
+<script>
+    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!token) window.location.href = 'login.html';
+</script>
+
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white"><i data-lucide="menu" class="w-5 h-5"></i></button>
+<div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-[90]"></div>
+
+<div class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR (padrÃ£o MS Telecom) -->
+    <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <i data-lucide="zap" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
+            <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria</a>
+            <a href="vouchers.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
+        </nav>
+        <div class="p-4 border-t border-gray-800 bg-black/30">
+            <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
+            <div class="space-y-2 text-[10px] font-mono">
+                <div class="flex justify-between text-gray-500"><span>Admin Master</span><span class="text-cyan-400">177.34.21.109</span></div>
+                <div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTEÃšDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
+        <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 md:px-8 py-4 flex justify-between items-center gap-4 flex-wrap">
+  <base href="/">
+            <div class="relative w-full md:w-96">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                <input type="text" id="searchInput" placeholder="Buscar voucher por cÃ³digo..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+            </div>
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="text-right hidden sm:block"><p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil"><i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i></button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair"><i data-lucide="log-out" class="w-5 h-5 text-red-400"></i></button>
+                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg"><span class="text-white font-bold text-xs md:text-sm">AD</span></div>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-8 space-y-6 md:space-y-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                <div><h1 class="text-2xl md:text-3xl font-black tracking-tight">Vouchers</h1><p class="text-gray-500 text-xs md:text-sm mt-1">Gerencie vouchers de acesso promocional</p></div>
+                <button id="novoVoucherBtn" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-blue-500/20 transition flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Gerar Voucher</button>
+            </div>
+
+            <!-- Tabela de Vouchers (glass-card) -->
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-900/50 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-800">
+                            <tr><th class="px-6 py-4 text-left">CÃ³digo</th><th class="px-6 py-4 text-left">Plano</th><th class="px-6 py-4 text-left">Valor</th><th class="px-6 py-4 text-left">Validade</th><th class="px-6 py-4 text-left">Status</th><th class="px-6 py-4 text-left">Usado Por</th><th class="px-6 py-4 text-left">Data Uso</th><th class="px-6 py-4 text-center">AÃ§Ãµes</th></tr>
+                        </thead>
+                        <tbody id="vouchersTable" class="divide-y divide-gray-800"><tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">Carregando vouchers...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL: NOVO VOUCHER -->
+<div id="modalNovoVoucher" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="ticket" class="w-5 h-5 text-blue-500"></i> Gerar Novo Voucher</h2><button onclick="closeModalNovoVoucher()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="planoSelect" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="">Selecione um plano</option><option value="diario">DiÃ¡rio (24h - R$ 5,00)</option><option value="premium">Premium 24h (R$ 15,00)</option><option value="semanal">Premium Semanal (R$ 50,00)</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Valor (R$)</label><input type="number" id="valorInput" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label><input type="date" id="validadeInput" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalNovoVoucher()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button id="gerarVoucherBtn" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white">Gerar Voucher</button></div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR VOUCHER -->
+<div id="modalEditarVoucher" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> Editar Voucher</h2><button onclick="closeModalEditarVoucher()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <input type="hidden" id="editarVoucherId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">CÃ³digo</label><input type="text" id="editarVoucherCodigo" readonly class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono text-blue-400"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label><select id="editarVoucherPlano" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="diario">DiÃ¡rio (24h - R$ 5,00)</option><option value="premium">Premium 24h (R$ 15,00)</option><option value="semanal">Premium Semanal (R$ 50,00)</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Valor (R$)</label><input type="number" id="editarVoucherValor" step="0.01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label><input type="date" id="editarVoucherValidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Status</label><select id="editarVoucherStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="false">DisponÃ­vel</option><option value="true">Usado</option></select></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalEditarVoucher()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button id="salvarEdicaoVoucherBtn" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold">Salvar</button></div>
+    </div>
+</div>
+
+<!-- MODAL: VALIDAR VOUCHER -->
+<div id="modalValidarVoucher" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i> Validar Voucher</h2><button onclick="closeModalValidarVoucher()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            <input type="hidden" id="validarVoucherId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">CÃ³digo</label><input type="text" id="validarVoucherCodigo" readonly class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono text-blue-400"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">MAC do Cliente</label><input type="text" id="validarVoucherMac" placeholder="AA:BB:CC:DD:EE:FF" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm font-mono"><p class="text-[10px] text-gray-500 mt-1">Digite o MAC address do dispositivo que usarÃ¡ o voucher</p></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalValidarVoucher()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button id="confirmarValidacaoBtn" class="px-4 py-2 bg-emerald-600 rounded-lg text-sm font-bold">Validar Voucher</button></div>
+    </div>
+</div>
+
+<!-- MODAL: PERFIL (padronizado) -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i> Meu Perfil</h2><button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div class="border-t border-gray-800 pt-4 mt-2"><p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p><div class="space-y-3"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div></div></div></div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0"><button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button><button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button></div>
+    </div>
+</div>
+
+<script>
+// ==================== CONFIGURAÃ‡Ã•ES GLOBAIS ====================
+const API_URL = 'https://mstelecom-api.duckdns.org';
+let autoUpdateInterval = null;
+
+function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
+function authHeaders(contentType = true) {
+    const headers = { 'Authorization': `Bearer ${getToken()}` };
+    if (contentType) headers['Content-Type'] = 'application/json';
+    return headers;
+}
+
+// ==================== MENU MOBILE ====================
+function initMenuMobile() {
+    const btn = document.getElementById('menuToggle');
+    const overlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (btn && sidebar) {
+        btn.addEventListener('click', () => { sidebar.classList.toggle('hidden'); overlay.classList.toggle('hidden'); });
+        overlay.addEventListener('click', () => { sidebar.classList.add('hidden'); overlay.classList.add('hidden'); });
+    }
+}
+
+// ==================== CRUD VOUCHERS ====================
+async function carregarVouchers() {
+    try {
+        const res = await fetch(`${API_URL}/api/vouchers`, { headers: authHeaders(false) });
+        if (res.status === 401) { window.location.href = 'login.html'; return; }
+        const vouchers = await res.json();
+        renderizarVouchers(vouchers);
+    } catch (error) { console.error('Erro ao carregar vouchers:', error); }
+}
+
+function renderizarVouchers(vouchers) {
+    const table = document.getElementById('vouchersTable');
+    if (!vouchers || vouchers.length === 0) {
+        table.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">Nenhum voucher encontrado</td></tr>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+    table.innerHTML = vouchers.map(v => `
+        <tr class="hover:bg-gray-900/30 transition border-b border-gray-800">
+            <td class="px-6 py-4 font-mono text-sm text-blue-400">${v.code || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-300">${v.plan_name || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-300">R$ ${parseFloat(v.amount || 0).toFixed(2)}</td>
+            <td class="px-6 py-4 text-sm text-gray-300">${v.expires_at ? new Date(v.expires_at).toLocaleDateString('pt-BR') : 'Sem limite'}</td>
+            <td class="px-6 py-4 text-sm"><span class="px-3 py-1 rounded-full text-xs font-medium ${v.used ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${v.used ? 'Usado' : 'DisponÃ­vel'}</span></td>
+            <td class="px-6 py-4 text-sm text-gray-300">${v.used_by || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-300">${v.used_at ? new Date(v.used_at).toLocaleString('pt-BR') : '-'}</td>
+            <td class="px-6 py-4 text-sm text-center"><div class="flex justify-center gap-2"><button onclick="editarVoucher('${v.id}')" class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button><button onclick="validarVoucher('${v.id}')" class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Validar"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i></button><button onclick="deletarVoucher('${v.id}')" class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Deletar"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button></div></td>
+        </tr>
+    `).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// MODAL NOVO VOUCHER
+document.getElementById('novoVoucherBtn').addEventListener('click', () => document.getElementById('modalNovoVoucher').classList.remove('hidden'));
+function closeModalNovoVoucher() { document.getElementById('modalNovoVoucher').classList.add('hidden'); document.getElementById('planoSelect').value = ''; document.getElementById('valorInput').value = ''; document.getElementById('validadeInput').value = ''; }
+
+document.getElementById('gerarVoucherBtn').addEventListener('click', async () => {
+    try {
+        const plan_name = document.getElementById('planoSelect').value;
+        const amount = parseFloat(document.getElementById('valorInput').value) || 0;
+        const expires_at = document.getElementById('validadeInput').value || null;
+        if (!plan_name) { alert('âŒ Selecione um plano'); return; }
+        const res = await fetch(`${API_URL}/api/vouchers`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ plan_name, amount, expires_at }) });
+        if (res.ok) { const data = await res.json(); alert(`âœ… Voucher gerado: ${data.code}`); closeModalNovoVoucher(); carregarVouchers(); }
+        else alert('âŒ Erro ao gerar voucher');
+    } catch (error) { alert('âŒ Erro ao gerar voucher'); }
+});
+
+// EDITAR VOUCHER
+async function editarVoucher(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/vouchers`, { headers: authHeaders(false) });
+        const vouchers = await res.json();
+        const voucher = vouchers.find(v => v.id == id);
+        if (voucher) {
+            document.getElementById('editarVoucherId').value = voucher.id;
+            document.getElementById('editarVoucherCodigo').value = voucher.code;
+            document.getElementById('editarVoucherPlano').value = voucher.plan_name;
+            document.getElementById('editarVoucherValor').value = voucher.amount;
+            document.getElementById('editarVoucherValidade').value = voucher.expires_at || '';
+            document.getElementById('editarVoucherStatus').value = voucher.used ? 'true' : 'false';
+            document.getElementById('modalEditarVoucher').classList.remove('hidden');
+        }
+    } catch (error) { alert('Erro ao carregar voucher'); }
+}
+function closeModalEditarVoucher() { document.getElementById('modalEditarVoucher').classList.add('hidden'); }
+document.getElementById('salvarEdicaoVoucherBtn').addEventListener('click', async () => {
+    const id = document.getElementById('editarVoucherId').value;
+    const dados = { plan_name: document.getElementById('editarVoucherPlano').value, amount: parseFloat(document.getElementById('editarVoucherValor').value), expires_at: document.getElementById('editarVoucherValidade').value || null, used: document.getElementById('editarVoucherStatus').value === 'true' };
+    try {
+        const res = await fetch(`${API_URL}/api/vouchers/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
+        if (res.ok) { alert('âœ… Voucher atualizado!'); closeModalEditarVoucher(); carregarVouchers(); }
+        else alert('âŒ Erro ao atualizar voucher');
+    } catch (error) { alert('âŒ Erro ao atualizar voucher'); }
+});
+
+// VALIDAR VOUCHER
+async function validarVoucher(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/vouchers`, { headers: authHeaders(false) });
+        const vouchers = await res.json();
+        const voucher = vouchers.find(v => v.id == id);
+        if (voucher) {
+            document.getElementById('validarVoucherId').value = voucher.id;
+            document.getElementById('validarVoucherCodigo').value = voucher.code;
+            document.getElementById('validarVoucherMac').value = '';
+            document.getElementById('modalValidarVoucher').classList.remove('hidden');
+        }
+    } catch (error) { alert('Erro ao carregar voucher'); }
+}
+function closeModalValidarVoucher() { document.getElementById('modalValidarVoucher').classList.add('hidden'); }
+document.getElementById('confirmarValidacaoBtn').addEventListener('click', async () => {
+    const code = document.getElementById('validarVoucherCodigo').value;
+    const mac_address = document.getElementById('validarVoucherMac').value;
+    if (!mac_address) { alert('âŒ Digite o MAC do cliente'); return; }
+    try {
+        const res = await fetch(`${API_URL}/api/vouchers/validate`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ code, mac_address }) });
+        if (res.ok) { alert('âœ… Voucher validado! Acesso liberado.'); closeModalValidarVoucher(); carregarVouchers(); }
+        else alert('âŒ Erro ao validar voucher');
+    } catch (error) { alert('âŒ Erro ao validar voucher'); }
+});
+
+// DELETAR VOUCHER
+async function deletarVoucher(id) {
+    if (!confirm('Tem certeza que deseja deletar este voucher?')) return;
+    try {
+        const res = await fetch(`${API_URL}/api/vouchers/${id}`, { method: 'DELETE', headers: authHeaders(false) });
+        if (res.ok) { alert('âœ… Voucher deletado'); carregarVouchers(); }
+        else alert('âŒ Erro ao deletar voucher');
+    } catch (error) { alert('âŒ Erro ao deletar voucher'); }
+}
+
+// ==================== BUSCA ====================
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#vouchersTable tr');
+    rows.forEach(row => { if (row.cells && row.cells.length > 0) { const text = row.innerText.toLowerCase(); row.style.display = text.includes(term) ? '' : 'none'; } });
+});
+
+// ==================== PERFIL ====================
+function carregarPerfil() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try { const user = JSON.parse(userStr);
+            document.getElementById('editUsername').value = user.username || '';
+            document.getElementById('editEmail').value = user.email || '';
+            document.getElementById('userName').innerText = user.username || 'Administrador';
+        } catch(e) {}
+    }
+}
+function openModalPerfil() { carregarPerfil(); document.getElementById('modalPerfil').classList.remove('hidden'); document.getElementById('senhaAtual').value = ''; document.getElementById('novaSenha').value = ''; document.getElementById('confirmarSenha').value = ''; }
+function closeModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
+async function salvarPerfil() {
+    const email = document.getElementById('editEmail').value.trim();
+    const currentPassword = document.getElementById('senhaAtual').value;
+    const newPassword = document.getElementById('novaSenha').value;
+    const confirmPassword = document.getElementById('confirmarSenha').value;
+    if (newPassword && newPassword !== confirmPassword) { alert('As novas senhas nÃ£o coincidem'); return; }
+    if (newPassword && !currentPassword) { alert('Digite a senha atual para alterar'); return; }
+    const payload = {};
+    if (email) payload.email = email;
+    if (newPassword) { payload.current_password = currentPassword; payload.new_password = newPassword; }
+    if (Object.keys(payload).length === 0) { alert('Nenhuma alteraÃ§Ã£o informada'); return; }
+    try {
+        const res = await fetch(`${API_URL}/api/profile`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+        if (res.ok) {
+            alert('Perfil atualizado com sucesso!');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (email) user.email = email;
+            localStorage.setItem('user', JSON.stringify(user));
+            closeModalPerfil();
+        } else alert('Erro ao atualizar perfil');
+    } catch (error) { alert('Erro ao atualizar perfil.'); }
+}
+async function sair() {
+    try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) {}
+    localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('ms_user'); localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// ==================== AUTO UPDATE ====================
+function iniciarAtualizacaoAutomatica() {
+    if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+    autoUpdateInterval = setInterval(() => carregarVouchers(), 30000);
+}
+function pararAtualizacaoAutomatica() { if (autoUpdateInterval) { clearInterval(autoUpdateInterval); autoUpdateInterval = null; } }
+
+// ==================== INICIALIZAÃ‡ÃƒO ====================
+document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    carregarVouchers();
+    carregarPerfil();
+    iniciarAtualizacaoAutomatica();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+</script>
+</body>
+</html>
+

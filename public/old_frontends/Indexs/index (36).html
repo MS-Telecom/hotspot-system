@@ -1,0 +1,243 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento de AÃ§Ãµes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin: 20px 0;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .buy {
+            color: green;
+        }
+        .sell {
+            color: red;
+        }
+        .tradingview-widget-container {
+            width: 80%;
+            height: 400px;
+            margin: 20px auto;
+        }
+        #highlight-container {
+            width: 80%;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .highlight {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .highlight.buy {
+            color: green;
+        }
+        .highlight.sell {
+            color: red;
+        }
+        h2 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monitoramento de AÃ§Ãµes para Day Trade</h1>
+
+    <div class="tradingview-widget-container">
+        <div id="tradingview_12345"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+        <script type="text/javascript">
+            new TradingView.widget({
+                "width": "100%",
+                "height": 400,
+                "symbol": "NASDAQ:AAPL",
+                "interval": "D",
+                "timezone": "Etc/UTC",
+                "theme": "light",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "allow_symbol_change": true,
+                "container_id": "tradingview_12345"
+            });
+        </script>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>AÃ§Ã£o</th>
+                <th>PreÃ§o Atual</th>
+                <th>Alta</th>
+                <th>Baixa</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="stocks-table">
+            <!-- Linhas das aÃ§Ãµes serÃ£o inseridas aqui pelo JavaScript -->
+        </tbody>
+    </table>
+
+    <div id="highlight-container">Carregando...</div>
+
+    <div id="highlighted-stocks">
+        <h2>AÃ§Ãµes em Alta</h2>
+        <ul id="high-stocks-list"></ul>
+    </div>
+
+    <div id="falling-stocks">
+        <h2>AÃ§Ãµes em Queda</h2>
+        <ul id="low-stocks-list"></ul>
+    </div>
+
+    <script>
+        const API_KEY = 'GFY7TCO682NLRQW0'; // Sua chave da API da Alpha Vantage
+        const stockPrices = {};
+        let stocksData = [];
+
+        // FunÃ§Ã£o para obter os dados de uma aÃ§Ã£o da Alpha Vantage
+        async function getStockData(stockSymbol) {
+            const response = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=5min&apikey=${API_KEY}`);
+            const data = await response.json();
+            const timeSeries = data['Time Series (5min)'];
+            const latestTime = Object.keys(timeSeries)[0];
+            const latestPrice = parseFloat(timeSeries[latestTime]['1. open']);
+            const highPrice = Math.max(...Object.values(timeSeries).map(entry => parseFloat(entry['2. high'])));
+            const lowPrice = Math.min(...Object.values(timeSeries).map(entry => parseFloat(entry['3. low'])));
+            return { latestPrice, highPrice, lowPrice };
+        }
+
+        // FunÃ§Ã£o para atualizar a tabela com dados das aÃ§Ãµes
+        function updateTable() {
+            const tableBody = document.getElementById('stocks-table');
+            tableBody.innerHTML = ''; // Limpa a tabela
+            stocksData.forEach(stock => {
+                const row = document.createElement('tr');
+                const nameCell = document.createElement('td');
+                const priceCell = document.createElement('td');
+                const highCell = document.createElement('td');
+                const lowCell = document.createElement('td');
+                const statusCell = document.createElement('td');
+
+                nameCell.textContent = stock.name;
+                priceCell.textContent = stock.latestPrice.toFixed(2);
+                highCell.textContent = stock.highPrice.toFixed(2);
+                lowCell.textContent = stock.lowPrice.toFixed(2);
+                statusCell.textContent = stock.status;
+                statusCell.classList.add(stock.status === 'Comprar' ? 'buy' : 'sell');
+
+                row.appendChild(nameCell);
+                row.appendChild(priceCell);
+                row.appendChild(highCell);
+                row.appendChild(lowCell);
+                row.appendChild(statusCell);
+                tableBody.appendChild(row);
+            });
+        }
+
+        // FunÃ§Ã£o para determinar se uma aÃ§Ã£o deve ser comprada ou vendida
+        function determineStatus(stock) {
+            const { name, latestPrice } = stock;
+
+            if (!stockPrices[name]) {
+                stockPrices[name] = [];
+            }
+
+            stockPrices[name].push(latestPrice);
+
+            if (stockPrices[name].length > 10) {
+                stockPrices[name].shift(); // MantÃ©m apenas os Ãºltimos 10 preÃ§os
+            }
+
+            const initialPrice = stockPrices[name][0];
+            const priceChange = latestPrice - initialPrice;
+
+            if (priceChange >= 0.10) {
+                return 'Vender';
+            } else if (priceChange <= -0.10) {
+                return 'Comprar';
+            } else {
+                return 'Aguardar';
+            }
+        }
+
+        // FunÃ§Ã£o para atualizar os dados das aÃ§Ãµes
+        async function updateStocks() {
+            const stockSymbols = ['AAPL', 'GOOGL', 'AMZN'];
+            stocksData = [];
+            for (const symbol of stockSymbols) {
+                const { latestPrice, highPrice, lowPrice } = await getStockData(symbol);
+                const stock = { name: symbol, latestPrice, highPrice, lowPrice };
+                stock.status = determineStatus(stock);
+                stocksData.push(stock);
+            }
+
+            updateTable();
+            updateHighlights();
+        }
+
+        // FunÃ§Ã£o para atualizar as aÃ§Ãµes em alta e em queda
+        function updateHighlights() {
+            const highStocks = stocksData.filter(stock => stock.status === 'Vender');
+            const lowStocks = stocksData.filter(stock => stock.status === 'Comprar');
+
+            const highStocksList = document.getElementById('high-stocks-list');
+            const lowStocksList = document.getElementById('low-stocks-list');
+
+            highStocksList.innerHTML = '';
+            lowStocksList.innerHTML = '';
+
+            highStocks.forEach(stock => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${stock.name}: ${stock.latestPrice.toFixed(2)}`;
+                highStocksList.appendChild(listItem);
+            });
+
+            lowStocks.forEach(stock => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${stock.name}: ${stock.latestPrice.toFixed(2)}`;
+                lowStocksList.appendChild(listItem);
+            });
+
+            document.getElementById('highlight-container').textContent = 'Atualizado';
+        }
+
+        // Atualiza a tabela com os dados em tempo real
+        updateStocks();
+
+        // Intervalo para atualizar os dados das aÃ§Ãµes a cada 5 minutos (300000 ms)
+        setInterval(updateStocks, 300000);
+    </script>
+</body>
+</html>
+
