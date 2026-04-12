@@ -591,21 +591,26 @@
     // ==================== CONFIGURAÇÕES (SETTINGS) ====================
     async function carregarConfig(key) {
         try {
-            const res = await fetch(`${API_URL}/api/settings/${key}`, { headers: authHeaders(false) });
+            let url = '';
+            if (key === 'system') url = `${API_URL}/api/settings`;
+            if (key === 'free_trial') url = `${API_URL}/api/settings/free_trial`;
+            if (key === 'payment') url = `${API_URL}/api/settings/payment`;
+            if (!url) return;
+
+            const res = await fetch(url, { headers: authHeaders(false) });
             if (!res.ok) throw new Error();
-            const data = await res.json();
-            const value = data.value || data;
+            const value = await res.json();
 
             if (key === 'system') {
                 if (document.getElementById('sistemaNome')) document.getElementById('sistemaNome').value = value.system_name || '';
-                if (document.getElementById('sistemaLogo')) document.getElementById('sistemaLogo').value = value.logo_url || '';
+                if (document.getElementById('sistemaLogo')) document.getElementById('sistemaLogo').value = value.system_logo_url || '';
                 if (document.getElementById('razaoSocial')) document.getElementById('razaoSocial').value = value.company_name || '';
-                if (document.getElementById('cnpj')) document.getElementById('cnpj').value = value.cnpj || '';
-                if (document.getElementById('telefone')) document.getElementById('telefone').value = value.phone || '';
-                if (document.getElementById('email')) document.getElementById('email').value = value.email || '';
+                if (document.getElementById('cnpj')) document.getElementById('cnpj').value = value.company_doc || '';
+                if (document.getElementById('telefone')) document.getElementById('telefone').value = value.company_phone || '';
+                if (document.getElementById('email')) document.getElementById('email').value = value.company_email || '';
             } else if (key === 'free_trial') {
                 if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_minutes || 15;
-                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.limit_hours || 24;
+                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.cooldown_hours || value.limit_hours || 24;
             } else if (key === 'payment') {
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
@@ -615,6 +620,60 @@
             console.error(`Erro ao carregar config ${key}:`, e);
         }
     }
+
+    // ==================== INTEGRAÇÕES (backend novo: /api/settings/integrations) ====================
+    async function carregarIntegracoes() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            const value = await res.json();
+
+            const supabaseUrl = document.getElementById('supabaseUrl');
+            const supabaseAnon = document.getElementById('supabaseAnon');
+            const radiusServer = document.getElementById('radiusServer');
+            const radiusSecret = document.getElementById('radiusSecret');
+            const radiusAuthPort = document.getElementById('radiusAuthPort');
+            const radiusAcctPort = document.getElementById('radiusAcctPort');
+
+            if (supabaseUrl) supabaseUrl.value = value.supabase_url || '';
+            if (supabaseAnon) supabaseAnon.value = value.supabase_anon_key || '';
+            if (radiusServer) radiusServer.value = value.radius_server || '';
+            if (radiusSecret) radiusSecret.value = value.radius_secret || '';
+            if (radiusAuthPort) radiusAuthPort.value = value.radius_auth_port || '';
+            if (radiusAcctPort) radiusAcctPort.value = value.radius_acct_port || '';
+        } catch (e) {}
+    }
+    window.carregarIntegracoes = carregarIntegracoes;
+
+    async function salvarIntegracoes() {
+        const payload = {
+            supabase_url: getVal('supabaseUrl', ''),
+            supabase_anon_key: getVal('supabaseAnon', ''),
+            radius_server: getVal('radiusServer', ''),
+            radius_secret: getVal('radiusSecret', ''),
+            radius_auth_port: Number(getVal('radiusAuthPort', 1812)),
+            radius_acct_port: Number(getVal('radiusAcctPort', 1813))
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/settings/integrations`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error();
+            alert('OK: Configurações salvas!');
+        } catch (e) {
+            alert('ERRO: Erro ao salvar integrações');
+        }
+    }
+    window.salvarIntegracoes = salvarIntegracoes;
+
+    async function testarConexao() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
+            if (!res.ok) throw new Error();
+            alert('OK: Conexão testada!');
+        } catch (e) {
+            alert('ERRO: Erro ao testar conexão');
+        }
+    }
+    window.testarConexao = testarConexao;
 
     async function salvarConfig(key) {
         let value = {};
