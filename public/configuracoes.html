@@ -389,7 +389,7 @@
     }
 
     // ==================== SISTEMA DE ABAS ====================
-    window.openTab = function(tabId) {
+    function openTab(tabId) {
         console.log('Abrindo aba:', tabId);
         // Atualizar botões
         document.querySelectorAll('.tab-btn').forEach(b => {
@@ -421,15 +421,16 @@
         if (tabId === 'pagamento') carregarConfig('payment');
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
-    };
+    }
+    window.openTab = openTab;
 
     function initTabs() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.onclick = function(e) {
+            btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const tabId = this.getAttribute('data-tab');
-                if (tabId) window.openTab(tabId);
-            };
+                if (tabId) openTab(tabId);
+            });
         });
     }
 
