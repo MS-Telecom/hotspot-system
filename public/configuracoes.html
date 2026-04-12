@@ -703,18 +703,17 @@
         }
     }
 
-    // Inicialização imediata das abas
-    initTabs();
-    openTab('geral');
-
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
+        initTabs();
         initThemeButtons();
         updateSessionIp();
         
-        // Listeners globais
+        // Carregar aba inicial
+        openTab('geral');
 
         // Listeners globais
+
         document.getElementById('gerarBackupBtn')?.addEventListener('click', gerarBackup);
         document.getElementById('salvarGeralBtn')?.addEventListener('click', () => salvarConfig('system'));
         document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', () => salvarConfig('free_trial'));
