@@ -141,6 +141,7 @@
       </div>
 
       <!-- Bloco WAN (interface + configuração) – oculto quando "Em Produção" -->
+      <p id="infoMessage" class="text-xs text-amber-400 bg-amber-500/10 p-3 rounded-lg mt-2">Após criar, um script COMPLETO com configuração WAN será gerado.</p>
       <div id="wanBlock">
         <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface WAN</label><select id="wanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
           <optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
@@ -322,42 +323,45 @@ async function loadPops() {
 
 // ==================== DETALHES DO POP ====================
 async function viewPopDetails(id) {
-  const modal = document.getElementById('popDetailsModal');
-  const content = document.getElementById('popDetailsContent');
-  modal.classList.remove('hidden');
-  content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+  const modal = document.getElementById(\'popDetailsModal\');
+  const content = document.getElementById(\'popDetailsContent\');
+  modal.classList.remove(\'hidden\');
+  content.innerHTML = \'<div class="text-center text-gray-500">Carregando...</div>\';
   try {
-    const res = await fetch(`${API_URL}/api/pops`, { headers: authHeaders(false) });
-    let pops = await res.json();
-    if (pops && typeof pops === 'object' && !Array.isArray(pops) && pops.data) pops = pops.data;
-    const pop = pops.find(p => p.id == id);
+    const res = await fetch(`${API_URL}/api/pops/${id}`, { headers: authHeaders(false) });
+    if (!res.ok) throw new Error(\'POP não encontrado\');
+    const pop = await res.json();
     if (pop) {
-      const isOnline = pop.status === 'online' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
+      const isOnline = pop.status === \'online\' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
       content.innerHTML = `<div class="space-y-2">
         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(pop.name)}</p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${isOnline ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'} rounded-lg text-[10px]">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Localização</p><p>${escapeHtml(pop.location) || '-'}</p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p></div>
-        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${isOnline ? \'bg-green-500/20 text-green-500\' : \'bg-red-500/20 text-red-500\'} rounded-lg text-[10px]">${isOnline ? \'ONLINE\' : \'OFFLINE\'}</span></p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Localização</p><p>${escapeHtml(pop.location) || \'-\'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || \'0.0.0.0\'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString(\'pt-BR\') : \'Nunca\'}</p></div>
       </div>`;
-    } else content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';
-  } catch (error) { content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>'; }
+    } else content.innerHTML = \'<div class="text-center text-red-500">POP não encontrado</div>\';
+  } catch (error) { content.innerHTML = \'<div class="text-center text-red-500">Erro ao carregar detalhes</div>\'; }
 }
 function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
 
 // ==================== SCRIPT ====================
-async function generateScript(popId) {
+async function generateScript(popId, isFullScript = false) {
   try {
     const res = await fetch(`${API_URL}/api/pops/${popId}/script`, { headers: authHeaders() });
-    if (!res.ok) throw new Error('Erro ao gerar script');
-    const data = await res.json();
+    if (!res.ok) throw new Error('Erro ao gerar scrip    const data = await res.json();
     const script = data.script || (data.data && data.data.script);
     if (script) {
-      document.getElementById('scriptContent').textContent = script;
-      document.getElementById('modalScript').classList.remove('hidden');
+      document.getElementById(\'scriptContent\').textContent = script;
+      document.getElementById(\'modalScript\').classList.remove(\'hidden\');
       navigator.clipboard.writeText(script);
-    } else alert('Script não disponível');
-  } catch (error) { alert('Não foi possível obter o script deste hotspot'); }
+      const scriptInfoMessage = document.getElementById(\'scriptInfoMessage\');
+      if (isFullScript) {
+        scriptInfoMessage.innerHTML = \'Copie o script abaixo e cole no New Terminal do seu MikroTik. Este é o script COMPLETO para novas instalações, incluindo configuração WAN, RADIUS, Hotspot Profile e Heartbeat.\';
+      } else {
+        scriptInfoMessage.innerHTML = \'Copie o script abaixo e cole no New Terminal do seu MikroTik. Este é um script BÁSICO, que configura apenas o RADIUS, Hotspot Profile e Heartbeat.\';
+      }
+    } else alert(\'Script não disponível\');} catch (error) { alert('Não foi possível obter o script deste hotspot'); }
 }
 function closeModalScript() { document.getElementById('modalScript').classList.add('hidden'); }
 function copyScript() { navigator.clipboard.writeText(document.getElementById('scriptContent').textContent).then(()=>alert('Script copiado!')); }
@@ -426,7 +430,7 @@ function toggleInstallationMode() {
   const wanBlock = document.getElementById('wanBlock');
   wanBlock.style.display = isNew ? 'block' : 'none';
   document.getElementById('installationTypeHelp').innerHTML = isNew ? '🔧 Novo: configuração completa da WAN será solicitada' : '✅ Em Produção: apenas cadastro do POP existente (sem configurar WAN)';
-  document.getElementById('infoMessage').innerHTML = isNew ? 'Após criar, um script COMPLETO com configuração WAN será gerado.' : 'Após criar, um script BÁSICO (heartbeat + RADIUS) será gerado.';
+  document.getElementById(\'infoMessage\').innerHTML = isNew ? \'Após criar, um script COMPLETO com configuração WAN será gerado. Ele será copiado automaticamente.\' : \'Após criar, um script BÁSICO (heartbeat + RADIUS) será gerado. Ele será copiado automaticamente.\';
 }
 
 function togglePopTypeFields() {
@@ -487,9 +491,12 @@ async function saveNewPop() {
     const createdPop = data.data || data;
     if (res.ok && (createdPop.id || createdPop.unique_id)) {
       alert(`✅ Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!`);
-      if (createdPop.script) navigator.clipboard.writeText(createdPop.script);
       closeNewPopModal();
       loadPops();
+      // Se for um novo POP, gerar e exibir o script completo
+      if (!editPopId && createdPop.id) {
+        generateScript(createdPop.id, true); // true indica que é um script completo
+      }
     } else { alert('❌ Erro: ' + (data.error || 'Tente novamente')); }
   } catch (error) { alert('❌ Erro ao salvar hotspot'); }
 }
@@ -579,3 +586,190 @@ setInterval(loadPops, 30000);
 </script>
 </body>
 </html>
+
+<!-- MODAL: DETALHES DO POP -->
+<div id="popDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+  <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+        <i data-lucide="router" class="w-4 h-4 text-blue-500"></i>
+        <span id="popDetailsTitle">Detalhes do Hotspot</span>
+      </h2>
+      <button onclick="closePopDetailsModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+      </button>
+    </div>
+    <div id="popDetailsContent" class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+      <!-- Conteúdo carregado via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SCRIPT GERADO -->
+<div id="modalScript" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+  <div class="bg-[#0f1119] rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+        <i data-lucide="terminal" class="w-4 h-4 text-blue-500"></i>
+        <span>Script de Configuração MikroTik</span>
+      </h2>
+      <button onclick="closeModalScript()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+      <p class="text-xs text-gray-400 mb-3" id="scriptInfoMessage">Copie o script abaixo e cole no New Terminal do seu MikroTik. Este script configura o RADIUS, Hotspot Profile e Heartbeat.</p>
+      <pre class="bg-gray-900/50 border border-gray-700 rounded-xl p-3 text-sm text-emerald-400 overflow-x-auto"><code id="scriptContent"></code></pre>
+      <button onclick="copyScript()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition mt-4">Copiar Script</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PERFIL DE USUÁRIO -->
+<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+  <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+        <i data-lucide="user" class="w-4 h-4 text-blue-500"></i>
+        <span>Meu Perfil</span>
+      </h2>
+      <button onclick="closeModalPerfil()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Usuário</label><input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm" disabled></div>
+      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div class="pt-4 border-t border-gray-800 mt-4"><p class="text-xs font-bold text-gray-500 uppercase mb-2">Alterar Senha</p><div><label class="block text-xs text-gray-500 uppercase mb-1">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div class="mt-3"><label class="block text-xs text-gray-500 uppercase mb-1">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div class="mt-3"><label class="block text-xs text-gray-500 uppercase mb-1">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
+    </div>
+    <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+      <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-xl text-sm font-medium transition">Cancelar</button>
+      <button onclick="salvarPerfil()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-bold transition">Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHES DO POP -->
+<div id="popDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+  <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm md:max-w-md max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+        <i data-lucide="router" class="w-4 h-4 text-blue-500"></i>
+        <span id="popDetailsTitle">Detalhes do Hotspot</span>
+      </h2>
+      <button onclick="closePopDetailsModal()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+      </button>
+    </div>
+    <div id="popDetailsContent" class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+      <!-- Conteúdo carregado via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SCRIPT GERADO -->
+<div id="modalScript" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+  <div class="bg-[#0f1119] rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+    <div class="flex justify-between items-center p-3 md:p-4 border-b border-gray-800 shrink-0">
+      <h2 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+        <i data-lucide="terminal" class="w-4 h-4 text-blue-500"></i>
+        <span>Script de Configuração MikroTik</span>
+      </h2>
+      <button onclick="closeModalScript()" class="p-1.5 hover:bg-gray-800 rounded-lg">
+        <i data-lucide="x" class="w-4 h-4 text-gray-400"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
+      <p class="text-xs text-gray-400 mb-3" id="scriptInfoMessage">Copie o script abaixo e cole no New Terminal do seu MikroTik. Este script configura o RADIUS, Hotspot Profile e Heartbeat.</p>
+      <pre class="bg-gray-900/50 border border-gray-700 rounded-xl p-3 text-sm text-emerald-400 overflow-x-auto"><code id="scriptContent"></code></pre>
+      <button onclick="copyScript()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 py-2.5 rounded-xl text-sm font-bold transition mt-4">Copiar Script</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Função utilitária para escapar HTML e prevenir XSS
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // Funções de perfil (para consistência com outras páginas)
+  function carregarPerfil() {
+    const userStr = localStorage.getItem(\'user\');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        document.getElementById(\'editUsername\').value = user.username || \'\';
+        document.getElementById(\'editEmail\').value = user.email || \'\';
+      } catch(e) {
+        console.error(\'Erro ao parsear usuário do localStorage:\', e);
+      }
+    }
+  }
+
+  function openModalPerfil() {
+    carregarPerfil();
+    document.getElementById(\'modalPerfil\').classList.remove(\'hidden\');
+    document.getElementById(\'senhaAtual\').value = \'\';
+    document.getElementById(\'novaSenha\').value = \'\';
+    document.getElementById(\'confirmarSenha\').value = \'\';
+    if (typeof lucide !== \'undefined\') lucide.createIcons();
+  }
+
+  function closeModalPerfil() {
+    document.getElementById(\'modalPerfil\').classList.add(\'hidden\');
+  }
+
+  async function salvarPerfil() {
+    const username = document.getElementById(\'editUsername\')?.value;
+    const email = document.getElementById(\'editEmail\')?.value;
+    const senhaAtual = document.getElementById(\'senhaAtual\')?.value;
+    const novaSenha = document.getElementById(\'novaSenha\')?.value;
+    const confirmarSenha = document.getElementById(\'confirmarSenha\')?.value;
+
+    if (novaSenha && novaSenha !== confirmarSenha) {
+      alert(\'As novas senhas não coincidem\');
+      return;
+    }
+
+    try {
+      const payload = { email };
+      if (senhaAtual && novaSenha) {
+        payload.current_password = senhaAtual;
+        payload.new_password = novaSenha;
+      }
+
+      const res = await fetch(`${API_URL}/api/admins/${localStorage.getItem(\'user_id\')}`, {
+        method: \'PUT\',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || \'Erro ao salvar perfil\');
+
+      alert(\'Perfil atualizado com sucesso!\');
+      closeModalPerfil();
+      // Atualizar dados do usuário no localStorage se o email foi alterado
+      const user = JSON.parse(localStorage.getItem(\'user\'));
+      user.email = email;
+      localStorage.setItem(\'user\', JSON.stringify(user));
+
+    } catch (error) {
+      alert(\'Erro ao salvar perfil: \' + error.message);
+    }
+  }
+
+  function sair() {
+    localStorage.removeItem(\'token\');
+    localStorage.removeItem(\'ms_token\');
+    localStorage.removeItem(\'user\');
+    localStorage.removeItem(\'user_id\');
+    window.location.href = \'login.html\';
+  }
+</script>
