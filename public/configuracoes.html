@@ -565,17 +565,20 @@
                 return;
             }
             const normalized = backups.map(b => ({ filename: b.filename || b.file || b.name, created_at: b.created_at || b.timestamp || b.date }));
-            container.innerHTML = normalized.map(b => `
+            container.innerHTML = normalized.map(b => {
+                const fname = String(b.filename || '');
+                return `
                 <div class="py-4 flex justify-between items-center">
                     <div>
-                        <p class="text-sm font-medium text-white">${escapeHtml(String(b.filename || ''))}</p>
+                        <p class="text-sm font-medium text-white">${escapeHtml(fname)}</p>
                         <p class="text-[10px] text-gray-500">${b.created_at ? new Date(b.created_at).toLocaleString() : '-'}</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="downloadBackup('${String(b.filename || '').replace(/'/g, \"\\\\'\")}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Download"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i></button>
+                        <button onclick='downloadBackup(${JSON.stringify(fname)})' class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Download"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i></button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
         } catch (e) {
             container.innerHTML = '<div class="text-center text-red-500 p-4">Erro ao carregar backups</div>';
