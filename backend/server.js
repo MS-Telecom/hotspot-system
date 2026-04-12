@@ -384,32 +384,6 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
-// Aliases de compatibilidade (rotas antigas)
-app.post('/api/login', (req, res) => {
-  req.url = '/api/auth/login';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/logout', authMiddleware, (req, res) => {
-  req.url = '/api/auth/logout';
-  return app._router.handle(req, res);
-});
-
-app.put('/api/update-profile', authMiddleware, (req, res) => {
-  req.url = '/api/profile';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/update-profile', authMiddleware, (req, res) => {
-  req.url = '/api/profile';
-  return app._router.handle(req, res);
-});
-
-app.put('/api/atualizar-perfil', authMiddleware, (req, res) => {
-  req.url = '/api/profile';
-  return app._router.handle(req, res);
-});
-
 // Atualizar perfil do administrador logado
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
@@ -819,27 +793,6 @@ app.post('/api/payments/generate-pix', async (req, res) => {
   }
 });
 
-// Aliases de pagamento (legado)
-app.post('/api/create-payment', (req, res) => {
-  req.url = '/api/payments/generate-pix';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/confirm-payment', (req, res) => {
-  req.url = '/api/check-payment';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/criar-pagamento', (req, res) => {
-  req.url = '/api/payments/generate-pix';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/confirmar-pagamento', (req, res) => {
-  req.url = '/api/check-payment';
-  return app._router.handle(req, res);
-});
-
 // Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
@@ -945,11 +898,6 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
 
 // Validar voucher (público)
 // Alias legado PT
-app.post('/api/vouchers/validar', (req, res) => {
-  req.url = '/api/vouchers/validate';
-  return app._router.handle(req, res);
-});
-
 app.post('/api/vouchers/validate', async (req, res) => {
   try {
     const { code, mac_address } = req.body;
@@ -1107,6 +1055,8 @@ function buildPopInstallScript(pop, config = {}) {
   const staticMask = config.static_mask || '';
   const staticGw = config.static_gateway || '';
 
+  const installationType = String(config.installation_type || config.installation || 'new').toLowerCase(); // new | production
+
   const vlanId = config.vlan_id ? String(config.vlan_id).trim() : '';
   const idleTimeout = config.idle_timeout ? `${config.idle_timeout}m` : '15m';
   const sessionTime = config.session_time ? `${config.session_time}m` : '';
@@ -1131,6 +1081,9 @@ function buildPopInstallScript(pop, config = {}) {
   const wgLines = wgHosts.map(h => `/ip hotspot walled-garden add dst-host=${h} action=allow comment="${tag}"`).join('\n');
 
   const wanBlock = (() => {
+    if (installationType === 'production') {
+      return `# WAN (Production Mode) - nao altera WAN\n`;
+    }
     if (wanType === 'pppoe') {
       return (
         `# WAN (PPPoE)\n` +
@@ -1161,7 +1114,21 @@ function buildPopInstallScript(pop, config = {}) {
 
   const sessionTimeLine = sessionTime ? `/ip hotspot user profile set [find name="default"] session-timeout=${sessionTime}\n` : '';
 
-  const redirectLine = redirectUrl ? `/ip hotspot profile set [find name="ms-profile-${popId}"] html-directory=hotspot login-by=http-chap,http-pap http-cookie-lifetime=1d\n` : '';
+  const redirectLine = redirectUrl ? `# Redirect URL (opcional)\n/ip hotspot profile set [find name="ms-profile-${popId}"] login-by=http-chap,http-pap,http-cookie http-cookie-lifetime=1d\n` : '';
+
+  // HTML do portal no MikroTik (login.html/alogin.html -> /entrypoint)
+  const entrypointUrl = `${apiUrl}/entrypoint`;
+  const loginHtml = `<html><head><title>MS Telecom</title><script>var hotspotIdentity='\\$(server-name)';var userMac='\\$(mac)';var hostname='\\$(ip)';var error='\\$(error)';window.location.href='${entrypointUrl}?hotspotIdentity=' + encodeURIComponent(hotspotIdentity) + '&userMac=' + encodeURIComponent(userMac) + '&hostname=' + encodeURIComponent(hostname) + '&error=' + encodeURIComponent(error);</script></head><body style='background:#0a0c15;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh'><div style='text-align:center'><div style='width:50px;height:50px;border:3px solid #1e293b;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px'></div><h2>MS TELECOM</h2><p>Conectando...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></body></html>`;
+  const aloginHtml = `<html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"2; url=\\$(link-redirect)\"><title>MS Telecom - Conectado</title><style>body{margin:0;padding:24px;background:#0a0c15;font-family:sans-serif;height:100vh;display:flex;align-items:center;justify-content:center}.card{background:#0f1119;padding:30px;border-radius:16px;border:1px solid #3b82f6;text-align:center}.success-icon{color:#10b981;font-size:48px;margin-bottom:16px}.success-text{color:#10b981;font-weight:bold;font-size:20px}.redirect{margin-top:20px;color:#9ca3af}.spinner{width:16px;height:16px;border:2px solid #1e293b;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;margin-left:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}</style><script>location.href='\\$(link-redirect)';</script></head><body><div class=\"card\"><div class=\"success-icon\">✓</div><div class=\"success-text\">Conexao realizada com sucesso!</div><div class=\"redirect\">Redirecionando <span class=\"spinner\"></span></div></div></body></html>`;
+
+  const hotspotHtmlBlock =
+    `# HTML do Hotspot (Portal)\n` +
+    `:local hotspotDir \"hotspot\";\n` +
+    `:if ([:len [/file find name=\"flash/hotspot\"]] > 0) do={ :set hotspotDir \"flash/hotspot\" }\n` +
+    `:if ([:len [/file find name=\"hotspot\"]] > 0) do={ :set hotspotDir \"hotspot\" }\n` +
+    `:do { /ip hotspot profile reset-html [find name=\"ms-profile-${popId}\"] } on-error={}\n` +
+    `/file set [:put ($hotspotDir.\"/login.html\")] contents=\"${loginHtml.replace(/\"/g, '\\\\\"')}\"\n` +
+    `/file set [:put ($hotspotDir.\"/alogin.html\")] contents=\"${aloginHtml.replace(/\"/g, '\\\\\"')}\"\n`;
 
   return (
 `# ============================================
@@ -1174,8 +1141,12 @@ function buildPopInstallScript(pop, config = {}) {
 /export file=config_pre_${popId}
 :delay 2s
 
-/system identity set name="${popName}"
-:delay 500ms
+:if (${installationType === 'production' ? 'true' : 'false'}) do={
+  # Production Mode: nao altera identity
+} else={
+  /system identity set name="${popName}"
+  :delay 500ms
+}
 
 /user add name="${apiUser}" password="${apiPass}" group=full comment="${tag}"
 :delay 500ms
@@ -1203,13 +1174,16 @@ ${wanBlock}
 /radius incoming set accept=yes
 :delay 1s
 
-/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m comment="${tag}"
+/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap,http-cookie html-directory=hotspot use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m comment="${tag}"
 :delay 500ms
 
 ${hotspotLine}:delay 1s
 
 # Walled Garden (dominios liberados antes do login)
 ${wgLines}
+:delay 1s
+
+${hotspotHtmlBlock}
 :delay 1s
 
 ${sessionTimeLine}${redirectLine}
@@ -1500,34 +1474,6 @@ app.get('/api/sessions/active', authMiddleware, async (req, res) => {
 // 📂 ROTAS DE BACKUP
 // ============================================================
 
-app.get('/api/backup', authMiddleware, async (req, res) => {
-  try {
-    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
-    const files = fs.readdirSync(BACKUP_DIR);
-    res.json(files.map(f => ({ name: f, size: fs.statSync(path.join(BACKUP_DIR, f)).size, date: fs.statSync(path.join(BACKUP_DIR, f)).mtime })));
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao listar backups' });
-  }
-});
-
-app.post('/api/backup/create', authMiddleware, async (req, res) => {
-  try {
-    const filename = `backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    const tables = ['users', 'plans', 'vouchers', 'payments', 'pops', 'admins', 'settings'];
-    const backupData = {};
-    
-    for (const table of tables) {
-      const { data } = await supabase.from(table).select('*');
-      backupData[table] = data || [];
-    }
-    
-    fs.writeFileSync(path.join(BACKUP_DIR, filename), JSON.stringify(backupData, null, 2));
-    res.json({ message: 'Backup criado com sucesso', filename });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao criar backup' });
-  }
-});
-
 // ============================================================
 // 🏥 HEALTH CHECK
 // ============================================================
@@ -1647,50 +1593,6 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
 });
 
 // Aliases legado PT (configuraÃ§Ãµes)
-app.get('/api/configuracoes', authMiddleware, (req, res) => {
-  req.url = '/api/settings';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/configuracoes', authMiddleware, (req, res) => {
-  req.url = '/api/settings';
-  req.method = 'PUT';
-  return app._router.handle(req, res);
-});
-
-app.get('/api/configuracoes/sistema', authMiddleware, (req, res) => {
-  req.url = '/api/settings/system';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/configuracoes/sistema', authMiddleware, (req, res) => {
-  req.url = '/api/settings/system';
-  req.method = 'PUT';
-  return app._router.handle(req, res);
-});
-
-app.get('/api/configuracoes/pagamento', authMiddleware, (req, res) => {
-  req.url = '/api/settings/payment';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/configuracoes/pagamento', authMiddleware, (req, res) => {
-  req.url = '/api/settings/payment';
-  req.method = 'PUT';
-  return app._router.handle(req, res);
-});
-
-app.get('/api/configuracoes/campos', authMiddleware, (req, res) => {
-  req.url = '/api/settings/fields';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/configuracoes/campos', authMiddleware, (req, res) => {
-  req.url = '/api/settings/fields';
-  req.method = 'PUT';
-  return app._router.handle(req, res);
-});
-
 app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -1818,16 +1720,6 @@ app.post('/api/admins', async (req, res) => {
 
 // Webhook do Mercado Pago (Público)
 // Aliases legado
-app.post('/api/mercado-pago/webhook', (req, res) => {
-  req.url = '/api/webhooks/mercadopago';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/webhook/pagamento', (req, res) => {
-  req.url = '/api/webhooks/mercadopago';
-  return app._router.handle(req, res);
-});
-
 app.post('/api/webhooks/mercadopago', async (req, res) => {
   try {
     const { action, data, type } = req.body;
@@ -1957,12 +1849,6 @@ app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Alias legado PT
-app.post('/api/webhooks/:id/testar', authMiddleware, (req, res) => {
-  req.url = `/api/webhooks/${req.params.id}/test`;
-  return app._router.handle(req, res);
-});
-
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const { data: webhook } = await supabase.from('webhooks').select('*').eq('id', req.params.id).single();
@@ -2080,7 +1966,7 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
 });
 
 // Listar backups
-app.get('/api/backups', authMiddleware, async (req, res) => {
+app.get('/api/backup/list', authMiddleware, async (req, res) => {
   try {
     if (!fs.existsSync(BACKUP_DIR)) return res.json([]);
     const files = fs.readdirSync(BACKUP_DIR)
@@ -2097,25 +1983,12 @@ app.get('/api/backups', authMiddleware, async (req, res) => {
   }
 });
 
-// Alias para listar backups (compatibilidade)
-app.get('/api/backup/list', authMiddleware, (req, res) => {
-  req.url = '/api/backups';
-  app._router.handle(req, res);
-});
-
 // Download de backup
-app.get('/api/backups/download/:filename', authMiddleware, (req, res) => {
+app.get('/api/backup/download/:filename', authMiddleware, (req, res) => {
   const { filename } = req.params;
   const filePath = path.join(BACKUP_DIR, filename);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
   res.download(filePath);
-});
-
-// Alias para download de backup (compatibilidade)
-app.get('/api/backup/download/:filename', authMiddleware, (req, res) => {
-  const { filename } = req.params;
-  req.url = `/api/backups/download/${filename}`;
-  app._router.handle(req, res);
 });
 
 app.post('/api/backup/create', authMiddleware, async (req, res) => {
@@ -2389,22 +2262,6 @@ app.post('/api/access/validate', async (req, res) => {
   } catch (_err) {
     res.status(500).json({ authorized: false });
   }
-});
-
-// Aliases (legado PT)
-app.post('/api/liberar-teste', (req, res) => {
-  req.url = '/api/users/test-access';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/validar-acesso', (req, res) => {
-  req.url = '/api/access/validate';
-  return app._router.handle(req, res);
-});
-
-app.post('/api/validate-access', (req, res) => {
-  req.url = '/api/access/validate';
-  return app._router.handle(req, res);
 });
 
 app.post('/api/auth/check', (req, res) => {
