@@ -419,14 +419,36 @@
     }
 
     function initTabs() {
-        const buttons = document.querySelectorAll('.tab-btn');
-        for (let i = 0; i < buttons.length; i++) {
-            buttons[i].addEventListener('click', function(e) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const tabId = this.getAttribute('data-tab') || this.dataset.tab;
-                if (tabId) openTab(tabId);
+                const tabId = this.getAttribute('data-tab');
+                
+                // Atualizar botões
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active', 'text-white');
+                    b.classList.add('text-gray-400');
+                });
+                this.classList.add('active', 'text-white');
+                this.classList.remove('text-gray-400');
+
+                // Atualizar conteúdos
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                const target = document.getElementById(tabId);
+                if (target) target.classList.remove('hidden');
+
+                // Carregar dados
+                if (tabId === 'backup') carregarBackups();
+                if (tabId === 'usuarios') carregarAdmins();
+                if (tabId === 'integracao') carregarIntegracoes();
+                if (tabId === 'planos') carregarPlanos();
+                if (tabId === 'geral') carregarConfig('system');
+                if (tabId === 'teste_gratis') carregarConfig('free_trial');
+                if (tabId === 'pagamento') carregarConfig('payment');
+
+                if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
             });
-        }
+        });
     }
 
     // ==================== PLANOS (backend novo: /api/plans) ====================
@@ -710,7 +732,8 @@
         updateSessionIp();
         
         // Carregar aba inicial
-        openTab('geral');
+        const firstTab = document.querySelector('.tab-btn[data-tab="geral"]');
+        if (firstTab) firstTab.click();
 
         // Listeners globais
 
