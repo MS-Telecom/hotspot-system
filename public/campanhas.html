@@ -218,6 +218,32 @@ function authHeaders(contentType = true) {
     return headers;
 }
 
+function updateSessionInfo() {
+    const elUser = document.getElementById('sessionUser');
+    const elStart = document.getElementById('sessionStart');
+    if (!elUser || !elStart) return;
+
+    const rawUser = localStorage.getItem('user');
+    if (!localStorage.getItem('session_start')) {
+        localStorage.setItem('session_start', new Date().toISOString());
+    }
+
+    if (rawUser) {
+        try {
+            const user = JSON.parse(rawUser);
+            elUser.innerText = user.username || 'Administrador';
+        } catch (e) {
+            elUser.innerText = 'Administrador';
+        }
+    }
+
+    try {
+        elStart.innerText = new Date(localStorage.getItem('session_start')).toLocaleTimeString('pt-BR');
+    } catch (e) {
+        elStart.innerText = '-';
+    }
+}
+
 // ==================== MENU MOBILE ====================
 function initMenuMobile() {
     const btn = document.getElementById('menuToggle');
@@ -428,6 +454,7 @@ async function sair() {
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
+    updateSessionInfo();
     carregarCampanhas();
     carregarPerfil();
     if (typeof lucide !== 'undefined') lucide.createIcons();
