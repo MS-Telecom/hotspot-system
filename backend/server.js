@@ -371,6 +371,32 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
+// Aliases de compatibilidade (rotas antigas)
+app.post('/api/login', (req, res) => {
+  req.url = '/api/auth/login';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/logout', authMiddleware, (req, res) => {
+  req.url = '/api/auth/logout';
+  return app._router.handle(req, res);
+});
+
+app.put('/api/update-profile', authMiddleware, (req, res) => {
+  req.url = '/api/profile';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/update-profile', authMiddleware, (req, res) => {
+  req.url = '/api/profile';
+  return app._router.handle(req, res);
+});
+
+app.put('/api/atualizar-perfil', authMiddleware, (req, res) => {
+  req.url = '/api/profile';
+  return app._router.handle(req, res);
+});
+
 // Atualizar perfil do administrador logado
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
@@ -780,6 +806,27 @@ app.post('/api/payments/generate-pix', async (req, res) => {
   }
 });
 
+// Aliases de pagamento (legado)
+app.post('/api/create-payment', (req, res) => {
+  req.url = '/api/payments/generate-pix';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/confirm-payment', (req, res) => {
+  req.url = '/api/check-payment';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/criar-pagamento', (req, res) => {
+  req.url = '/api/payments/generate-pix';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/confirmar-pagamento', (req, res) => {
+  req.url = '/api/check-payment';
+  return app._router.handle(req, res);
+});
+
 // Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
@@ -884,6 +931,12 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
 });
 
 // Validar voucher (público)
+// Alias legado PT
+app.post('/api/vouchers/validar', (req, res) => {
+  req.url = '/api/vouchers/validate';
+  return app._router.handle(req, res);
+});
+
 app.post('/api/vouchers/validate', async (req, res) => {
   try {
     const { code, mac_address } = req.body;
@@ -906,6 +959,20 @@ app.post('/api/vouchers/validate', async (req, res) => {
 // 📊 ROTAS DE ESTATÍSTICAS E DASHBOARD
 // ============================================================
 
+// ðŸ”§ HELPERS (compatibilidade / schema flexÃ­vel)
+function isMissingColumnError(err) {
+  const msg = (err && (err.message || err.details || err.hint)) ? `${err.message || ''} ${err.details || ''} ${err.hint || ''}` : '';
+  return /Could not find the '.+' column/i.test(msg) || /column .* does not exist/i.test(msg);
+}
+
+async function safeInsertWithFallback(table, preferredPayload, fallbackPayload) {
+  let result = await supabase.from(table).insert(preferredPayload).select().single();
+  if (result.error && isMissingColumnError(result.error) && fallbackPayload) {
+    result = await supabase.from(table).insert(fallbackPayload).select().single();
+  }
+  return result;
+}
+
 // Listar POPs (Hotspots)
 app.get('/api/pops', authMiddleware, async (req, res) => {
   try {
@@ -921,12 +988,21 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
 // Criar POP
 app.post('/api/pops', authMiddleware, async (req, res) => {
   try {
-    const { name, ip, api_user, api_pass, location, status } = req.body;
-    const { data, error } = await supabase.from('pops').insert({
-      name, ip, api_user, api_pass, location,
-      status: status || 'online',
-      created_at: new Date().toISOString()
-    }).select().single();
+    const now = new Date().toISOString();
+    const preferred = { ...req.body, status: req.body.status || 'online', created_at: now };
+    delete preferred.id;
+
+    const fallback = {
+      name: req.body.name,
+      ip: req.body.ip,
+      api_user: req.body.api_user,
+      api_pass: req.body.api_pass,
+      location: req.body.location,
+      status: req.body.status || 'online',
+      created_at: now
+    };
+
+    const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
     if (error) throw error;
     res.status(201).json(data);
   } catch (err) {
@@ -939,8 +1015,14 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
 app.put('/api/pops/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
-    delete updateData.id;
+    const { data: existing, error: existingErr } = await supabase.from('pops').select('*').eq('id', id).single();
+    if (existingErr || !existing) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+
+    const updateData = { updated_at: new Date().toISOString() };
+    for (const [k, v] of Object.entries(req.body || {})) {
+      if (k === 'id') continue;
+      if (Object.prototype.hasOwnProperty.call(existing, k)) updateData[k] = v;
+    }
     const { data, error } = await supabase.from('pops').update(updateData).eq('id', id).select().single();
     if (error) throw error;
     res.json(data);
@@ -988,6 +1070,103 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
 });
 
 // Receber heartbeat do MikroTik (atualiza status e Ãºltima atividade)
+// Gerar script de reversÃ£o para um POP
+app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+
+    const uniqueTag = `MS-TELECOM-${id}`;
+    const script =
+      `# ============================================\n` +
+      `# MS TELECOM - SCRIPT DE REVERSAO\n` +
+      `# POP: ${pop.name || id}\n` +
+      `# TAG: ${uniqueTag}\n` +
+      `# ============================================\n\n` +
+      `# Remove APENAS itens criados pelo Hotspot (por comment/tag)\n` +
+      `:foreach i in=[/system scheduler find where comment~\"${uniqueTag}\"] do={/system scheduler remove $i}\n` +
+      `:foreach i in=[/ip hotspot find where comment~\"${uniqueTag}\"] do={/ip hotspot remove $i}\n` +
+      `:foreach i in=[/ip hotspot profile find where comment~\"${uniqueTag}\"] do={/ip hotspot profile remove $i}\n` +
+      `:foreach i in=[/ip pool find where comment~\"${uniqueTag}\"] do={/ip pool remove $i}\n` +
+      `:foreach i in=[/ip dhcp-server find where comment~\"${uniqueTag}\"] do={/ip dhcp-server remove $i}\n` +
+      `:foreach i in=[/ip address find where comment~\"${uniqueTag}\"] do={/ip address remove $i}\n` +
+      `:foreach i in=[/interface bridge find where comment~\"${uniqueTag}\"] do={/interface bridge remove $i}\n` +
+      `:foreach i in=[/interface vlan find where comment~\"${uniqueTag}\"] do={/interface vlan remove $i}\n`;
+
+    res.json({ script });
+  } catch (err) {
+    console.error('âŒ Erro ao gerar script de reversÃ£o:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar script de reversÃ£o' });
+  }
+});
+
+// Ping do POP (compat: antigos chamavam /api/pops/:id/ping)
+app.post('/api/pops/:id/ping', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const now = new Date().toISOString();
+    const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+
+    const updateData = { status: 'online', updated_at: now };
+    if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
+    if (Object.prototype.hasOwnProperty.call(pop, 'last_seen')) updateData.last_seen = now;
+    if (Object.prototype.hasOwnProperty.call(pop, 'users_connected') && req.body && typeof req.body.users_connected !== 'undefined') {
+      updateData.users_connected = req.body.users_connected;
+    }
+    if (Object.prototype.hasOwnProperty.call(pop, 'bandwidth') && req.body && typeof req.body.bandwidth !== 'undefined') {
+      updateData.bandwidth = req.body.bandwidth;
+    }
+
+    const { error: updateErr } = await supabase.from('pops').update(updateData).eq('id', id);
+    if (updateErr) throw updateErr;
+    res.json({ status: 'ok', pop_id: id, timestamp: now });
+  } catch (err) {
+    console.error('âŒ Erro ao processar ping do POP:', err.message);
+    res.status(500).json({ error: 'Erro ao processar ping' });
+  }
+});
+
+// Status do POP (pÃºblico)
+app.get('/api/pops/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+
+    const last = pop.last_heartbeat || pop.last_seen || pop.updated_at || pop.created_at;
+    const seconds = last ? Math.floor((Date.now() - new Date(last).getTime()) / 1000) : null;
+    const status = (seconds !== null && seconds > 60) ? 'offline' : (pop.status || 'online');
+    res.json({ id, name: pop.name, status, seconds_since_last: seconds });
+  } catch (err) {
+    console.error('âŒ Erro ao consultar status do POP:', err.message);
+    res.status(500).json({ error: 'Erro ao consultar status' });
+  }
+});
+
+// Registrar POP via MikroTik (pÃºblico)
+app.post('/api/pops/register', async (req, res) => {
+  try {
+    const now = new Date().toISOString();
+    const { name, ip, location } = req.body || {};
+    if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃ£o obrigatÃ³rios' });
+
+    const popToken = crypto.randomBytes(32).toString('hex');
+    const preferred = { ...req.body, name, ip, location, status: 'online', token: popToken, last_heartbeat: now, created_at: now };
+    delete preferred.id;
+    const fallback = { name, ip, location, status: 'online', created_at: now };
+
+    const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
+    if (error) throw error;
+
+    res.status(201).json({ status: 'success', pop_id: data.id, pop_token: popToken });
+  } catch (err) {
+    console.error('âŒ Erro ao registrar POP:', err.message);
+    res.status(500).json({ error: 'Erro ao registrar POP' });
+  }
+});
+
 app.post('/api/pops/:id/heartbeat', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1057,6 +1236,39 @@ app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
 });
 
 // Listar sessões ativas (usuários online)
+// EstatÃ­sticas de trÃ¡fego total (real quando existir coluna de trÃ¡fego)
+app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: sessions, error } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .gte('created_at', since);
+
+    if (error) throw error;
+
+    let inBytes = 0;
+    let outBytes = 0;
+
+    (sessions || []).forEach(s => {
+      if (typeof s.bytes_in === 'number') inBytes += s.bytes_in;
+      if (typeof s.bytes_out === 'number') outBytes += s.bytes_out;
+      if (typeof s.rx_bytes === 'number') inBytes += s.rx_bytes;
+      if (typeof s.tx_bytes === 'number') outBytes += s.tx_bytes;
+    });
+
+    res.json({
+      since,
+      total_bytes_in: inBytes,
+      total_bytes_out: outBytes,
+      total_bytes: inBytes + outBytes
+    });
+  } catch (err) {
+    console.error('âŒ Erro ao buscar trÃ¡fego total:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar trÃ¡fego total' });
+  }
+});
+
 app.get('/api/sessions/active', authMiddleware, async (req, res) => {
   try {
     const now = new Date().toISOString();
@@ -1171,6 +1383,77 @@ app.put('/api/settings/fields', authMiddleware, async (req, res) => {
 // ============================================================
 
 // Buscar configurações gerais
+// Buscar configuraÃ§Ãµes consolidadas (compat com HTMLs)
+app.get('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
+    if (error) throw error;
+    res.json(data?.value || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Salvar configuraÃ§Ãµes consolidadas (compat com HTMLs)
+app.put('/api/settings', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'system',
+      value: req.body,
+      updated_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Aliases legado PT (configuraÃ§Ãµes)
+app.get('/api/configuracoes', authMiddleware, (req, res) => {
+  req.url = '/api/settings';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/configuracoes', authMiddleware, (req, res) => {
+  req.url = '/api/settings';
+  req.method = 'PUT';
+  return app._router.handle(req, res);
+});
+
+app.get('/api/configuracoes/sistema', authMiddleware, (req, res) => {
+  req.url = '/api/settings/system';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/configuracoes/sistema', authMiddleware, (req, res) => {
+  req.url = '/api/settings/system';
+  req.method = 'PUT';
+  return app._router.handle(req, res);
+});
+
+app.get('/api/configuracoes/pagamento', authMiddleware, (req, res) => {
+  req.url = '/api/settings/payment';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/configuracoes/pagamento', authMiddleware, (req, res) => {
+  req.url = '/api/settings/payment';
+  req.method = 'PUT';
+  return app._router.handle(req, res);
+});
+
+app.get('/api/configuracoes/campos', authMiddleware, (req, res) => {
+  req.url = '/api/settings/fields';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/configuracoes/campos', authMiddleware, (req, res) => {
+  req.url = '/api/settings/fields';
+  req.method = 'PUT';
+  return app._router.handle(req, res);
+});
+
 app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -1223,6 +1506,32 @@ app.put('/api/settings/payment', authMiddleware, async (req, res) => {
 });
 
 // Buscar configurações de teste grátis
+// Buscar configuraÃ§Ãµes de integraÃ§Ãµes
+app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'integrations').maybeSingle();
+    if (error) throw error;
+    res.json(data?.value || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Salvar configuraÃ§Ãµes de integraÃ§Ãµes
+app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase.from('settings').upsert({
+      key: 'integrations',
+      value: req.body,
+      updated_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/settings/free_trial', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
@@ -1271,6 +1580,17 @@ app.post('/api/admins', async (req, res) => {
 // ============================================================
 
 // Webhook do Mercado Pago (Público)
+// Aliases legado
+app.post('/api/mercado-pago/webhook', (req, res) => {
+  req.url = '/api/webhooks/mercadopago';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/webhook/pagamento', (req, res) => {
+  req.url = '/api/webhooks/mercadopago';
+  return app._router.handle(req, res);
+});
+
 app.post('/api/webhooks/mercadopago', async (req, res) => {
   try {
     const { action, data, type } = req.body;
@@ -1400,6 +1720,12 @@ app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Alias legado PT
+app.post('/api/webhooks/:id/testar', authMiddleware, (req, res) => {
+  req.url = `/api/webhooks/${req.params.id}/test`;
+  return app._router.handle(req, res);
+});
+
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const { data: webhook } = await supabase.from('webhooks').select('*').eq('id', req.params.id).single();
@@ -1491,6 +1817,30 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
 // ============================================================
 // 💾 BACKUP
 // ============================================================
+
+// ============================================================
+// ðŸ“ LOGS DO SISTEMA
+// ============================================================
+
+app.get('/api/logs', authMiddleware, async (req, res) => {
+  try {
+    const { start_date, end_date, search, type } = req.query;
+    let query = supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(200);
+
+    if (type) query = query.eq('type', type);
+    if (start_date) query = query.gte('created_at', start_date);
+    if (end_date) query = query.lte('created_at', end_date);
+    if (search) {
+      query = query.or(`message.ilike.%${search}%,type.ilike.%${search}%,ip.ilike.%${search}%`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Listar backups
 app.get('/api/backups', authMiddleware, async (req, res) => {
@@ -1700,6 +2050,99 @@ app.post('/api/users/test-access', async (req, res) => {
 // ============================================================
 
 // Listar todos os administradores
+// Free trial (pÃºblico) - 1 uso por MAC
+app.post('/api/free-trial', async (req, res) => {
+  try {
+    const { mac_address } = req.body || {};
+    if (!mac_address) return res.status(400).json({ success: false, message: 'MAC Ã© obrigatÃ³rio' });
+
+    let alreadyUsed = false;
+    try {
+      const { data: ft, error: ftErr } = await supabase
+        .from('free_trials')
+        .select('id')
+        .eq('mac_address', mac_address)
+        .maybeSingle();
+      if (ftErr) throw ftErr;
+      if (ft) alreadyUsed = true;
+    } catch (_e) {
+      // Se a tabela nÃ£o existir ainda, nÃ£o bloqueia.
+    }
+
+    if (alreadyUsed) return res.json({ success: false, message: 'Teste grÃ¡tis jÃ¡ utilizado para este MAC' });
+
+    const duration = 15;
+    const expiresAt = new Date(Date.now() + duration * 60000).toISOString();
+    const result = await authorizeAccess(mac_address, '192.168.32.1', null, null, null, duration, 5, 'free_trial');
+
+    if (!result.success) return res.status(500).json({ success: false, message: 'Erro ao liberar acesso' });
+
+    await supabase.from('hotspot_sessions').insert({
+      mac_address,
+      status: 'active',
+      expires_at: expiresAt,
+      created_at: new Date().toISOString()
+    });
+
+    try {
+      await supabase.from('free_trials').insert({ mac_address, used_at: new Date().toISOString() });
+    } catch (_e) {
+      // ignora se nÃ£o existir
+    }
+
+    res.json({ success: true, expires_at: expiresAt, message: 'Acesso liberado' });
+  } catch (_err) {
+    res.status(500).json({ success: false, message: 'Erro interno' });
+  }
+});
+
+// Validar acesso (pÃºblico)
+app.post('/api/access/validate', async (req, res) => {
+  try {
+    const { mac_address } = req.body || {};
+    if (!mac_address) return res.status(400).json({ authorized: false });
+
+    const now = new Date().toISOString();
+    const { data: session, error } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .eq('mac_address', mac_address)
+      .eq('status', 'active')
+      .gt('expires_at', now)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!session) return res.json({ authorized: false });
+
+    res.json({ authorized: true, expires_at: session.expires_at, session });
+  } catch (_err) {
+    res.status(500).json({ authorized: false });
+  }
+});
+
+// Aliases (legado PT)
+app.post('/api/liberar-teste', (req, res) => {
+  req.url = '/api/users/test-access';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/validar-acesso', (req, res) => {
+  req.url = '/api/access/validate';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/validate-access', (req, res) => {
+  req.url = '/api/access/validate';
+  return app._router.handle(req, res);
+});
+
+app.post('/api/auth/check', (req, res) => {
+  req.url = '/api/access/validate';
+  return app._router.handle(req, res);
+});
+
 app.get('/api/admins', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase
