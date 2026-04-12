@@ -376,7 +376,9 @@
 
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
 
-    const API_URL = 'https://mstelecom-api.duckdns.org';
+    const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3000'
+        : 'https://mstelecom-api.duckdns.org';
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) window.location.href = 'login.html';
 
@@ -898,6 +900,21 @@
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     });
+
+    // Garante acesso global (onclick) mesmo se o escopo do browser variar
+    window.openTab = openTab;
+    window.salvarConfig = salvarConfig;
+    window.downloadBackup = downloadBackup;
+    window.salvarIntegracoes = salvarIntegracoes;
+    window.testarConexao = testarConexao;
+    window.openModalNovoAdmin = openModalNovoAdmin;
+    window.closeModalNovoAdmin = closeModalNovoAdmin;
+    window.salvarNovoAdmin = salvarNovoAdmin;
+    window.openModalEditarAdmin = openModalEditarAdmin;
+    window.closeModalEditarAdmin = closeModalEditarAdmin;
+    window.salvarEditarAdmin = salvarEditarAdmin;
+    window.salvarEdicaoAdmin = salvarEdicaoAdmin;
+    window.excluirAdmin = excluirAdmin;
 </script>
 </body>
 </html>
