@@ -337,7 +337,7 @@
     const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:3000'
         : 'https://mstelecom-api.duckdns.org';
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    // O token já foi verificado e declarado no início do arquivo
     if (!token) window.location.href = 'login.html';
 
     function authHeaders(withJson = true) {
