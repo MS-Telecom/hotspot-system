@@ -325,6 +325,7 @@ async function loadPops() {
       const statusBg = isOnline ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400';
       const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
       const popIdJs = JSON.stringify(String(pop.id));
+      const popNameJs = JSON.stringify(String(pop.name || ''));
       return `
         <div class="glass-card rounded-2xl p-5 border border-gray-800 cursor-pointer hover:border-blue-500/50 transition-all" onclick="viewPopDetails(${popIdJs})">
           <div class="flex justify-between items-start mb-3">
@@ -334,7 +335,7 @@ async function loadPops() {
           <div class="text-xs text-gray-400 space-y-1"><p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p><p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
           <div class="mt-3 pt-3 border-t border-gray-700 flex justify-end gap-2">
             <button onclick="event.stopPropagation(); generateScript(${popIdJs})" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-[10px] font-medium">Script</button>
-            <button onclick="event.stopPropagation(); deletePop(${popIdJs}, '${escapeHtml(pop.name)}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-[10px] font-medium">Excluir</button>
+            <button onclick="event.stopPropagation(); deletePop(${popIdJs}, ${popNameJs})" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-[10px] font-medium">Excluir</button>
           </div>
         </div>
       `;
