@@ -963,7 +963,7 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
     // Normaliza status: so fica online se recebeu heartbeat recente
     const nowMs = Date.now();
     const normalized = (data || []).map(p => {
-      const hb = p.last_heartbeat || p.updated_at || null;
+      const hb = p.last_heartbeat || p.last_seen_at || p.updated_at || null;
       if (!hb) return { ...p, status: 'offline' };
       const diffSec = Math.floor((nowMs - new Date(hb).getTime()) / 1000);
       const isOnline = diffSec >= 0 && diffSec <= 90; // tolerancia
@@ -1406,12 +1406,22 @@ app.post('/api/pops/register', async (req, res) => {
     if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃ£o obrigatÃ³rios' });
 
     const popToken = crypto.randomBytes(32).toString('hex');
-    const preferred = { ...req.body, name, ip, location, status: 'online', token: popToken, created_at: now, updated_at: now };
+    // NÃ£o insere `token` na tabela pops porque o schema atual nÃ£o possui essa coluna.
+    const preferred = { ...req.body, name, ip, location, status: 'online', created_at: now, updated_at: now };
     delete preferred.id;
     const fallback = { name, ip, location, status: 'online', created_at: now };
 
     const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
     if (error) throw error;
+
+    // Guarda o token em settings para validaÃ§Ã£o futura (se necessÃ¡rio)
+    try {
+      await supabase.from('settings').upsert({
+        key: `pop_token_${data.id}`,
+        value: { token: popToken },
+        updated_at: now
+      }, { onConflict: 'key' });
+    } catch (_e) {}
 
     res.status(201).json({ status: 'success', pop_id: data.id, pop_token: popToken });
   } catch (err) {
