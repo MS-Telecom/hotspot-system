@@ -999,7 +999,8 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     }
 
     // Ao criar, o POP inicia offline ate receber heartbeat do MikroTik
-    const preferred = { ...normalized, status: 'offline', last_heartbeat: null, created_at: now, updated_at: now };
+    // Obs: nao seta `last_heartbeat` aqui porque nem todo schema tem essa coluna.
+    const preferred = { ...normalized, status: 'offline', created_at: now, updated_at: now };
     delete preferred.id;
 
     // Fallback mínimo (compatível com esquemas antigos/novos)
@@ -1008,7 +1009,6 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       ip: normalized.ip || null,
       location: normalized.location || null,
       status: 'offline',
-      last_heartbeat: null,
       created_at: now,
       updated_at: now
     };
@@ -1406,7 +1406,7 @@ app.post('/api/pops/register', async (req, res) => {
     if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃ£o obrigatÃ³rios' });
 
     const popToken = crypto.randomBytes(32).toString('hex');
-    const preferred = { ...req.body, name, ip, location, status: 'online', token: popToken, last_heartbeat: now, created_at: now };
+    const preferred = { ...req.body, name, ip, location, status: 'online', token: popToken, created_at: now, updated_at: now };
     delete preferred.id;
     const fallback = { name, ip, location, status: 'online', created_at: now };
 
@@ -1423,14 +1423,15 @@ app.post('/api/pops/register', async (req, res) => {
 app.post('/api/pops/:id/heartbeat', async (req, res) => {
   try {
     const { id } = req.params;
-    await supabase
-      .from('pops')
-      .update({
-        status: 'online',
-        last_heartbeat: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
+    const now = new Date().toISOString();
+    const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
+    if (popErr || !pop) return res.sendStatus(404);
+
+    const updateData = { status: 'online', updated_at: now };
+    if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
+    if (Object.prototype.hasOwnProperty.call(pop, 'last_seen')) updateData.last_seen = now;
+
+    await supabase.from('pops').update(updateData).eq('id', id);
     res.sendStatus(200);
   } catch (err) {
     console.error('âŒ Erro no heartbeat:', err.message);
