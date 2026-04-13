@@ -92,6 +92,12 @@ O script fará automaticamente:
 - Liberação do Walled Garden (Mercado Pago, Vercel, API).
 - Criação do Scheduler de Heartbeat (ping a cada 30s).
 
+## ✅ Correcoes recentes (2026-04-13)
+
+- RouterOS 6.47.9: removidos `comment` e `radius-interim-update` do `/ip hotspot profile add` (evita erro de parser e falha ao criar hotspot).
+- Modal de detalhes: `escapeHtml` agora tolera valores nao string.
+- Trunk VLAN: campos LAN/VLAN/Tipo de saida ocultos quando topologia=single.
+
 ## 🔐 Variáveis de Ambiente (.env)
 
 O backend requer as seguintes variáveis no arquivo `.env` da VPS:
