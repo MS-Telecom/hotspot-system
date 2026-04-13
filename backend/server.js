@@ -943,7 +943,16 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('pops').select('*').order('name', { ascending: true });
     if (error) throw error;
-    res.json(data || []);
+    // Normaliza status: so fica online se recebeu heartbeat recente
+    const nowMs = Date.now();
+    const normalized = (data || []).map(p => {
+      const hb = p.last_heartbeat || p.updated_at || null;
+      if (!hb) return { ...p, status: 'offline' };
+      const diffSec = Math.floor((nowMs - new Date(hb).getTime()) / 1000);
+      const isOnline = diffSec >= 0 && diffSec <= 90; // tolerancia
+      return { ...p, status: isOnline ? 'online' : 'offline' };
+    });
+    res.json(normalized);
   } catch (err) {
     console.error('❌ Erro ao listar POPs:', err.message);
     res.status(500).json({ error: 'Erro ao listar POPs' });
@@ -972,7 +981,8 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       normalized.unique_id = newId;
     }
 
-    const preferred = { ...normalized, status: normalized.status || 'online', created_at: now };
+    // Ao criar, o POP inicia offline ate receber heartbeat do MikroTik
+    const preferred = { ...normalized, status: 'offline', last_heartbeat: null, created_at: now, updated_at: now };
     delete preferred.id;
 
     // Fallback mínimo (compatível com esquemas antigos/novos)
@@ -980,7 +990,8 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       name: normalized.name,
       ip: normalized.ip || null,
       location: normalized.location || null,
-      status: normalized.status || 'online',
+      status: 'offline',
+      last_heartbeat: null,
       created_at: now,
       updated_at: now
     };
@@ -1030,7 +1041,11 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       // ignora se settings não existir/estruturar diferente
     }
 
-    res.status(201).json(data);
+    // Gera script completo imediatamente para o frontend copiar no fluxo de criacao
+    let script = null;
+    try { script = buildPopInstallScript(data, normalized); } catch (_e) {}
+
+    res.status(201).json({ ...data, script });
   } catch (err) {
     console.error('❌ Erro ao criar POP:', err.message);
     res.status(500).json({ error: 'Erro ao criar POP' });
@@ -1055,7 +1070,8 @@ function buildPopInstallScript(pop, config = {}) {
   const staticMask = config.static_mask || '';
   const staticGw = config.static_gateway || '';
 
-  const installationType = String(config.installation_type || config.installation || 'new').toLowerCase(); // new | production
+  let installationType = String(config.installation_type || config.installation || 'new').toLowerCase(); // new | production
+  if (installationType === 'existing') installationType = 'production';
 
   const vlanId = config.vlan_id ? String(config.vlan_id).trim() : '';
   const idleTimeout = config.idle_timeout ? `${config.idle_timeout}m` : '15m';
