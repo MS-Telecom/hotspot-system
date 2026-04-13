@@ -1109,11 +1109,15 @@ function buildPopInstallScript(pop, config = {}) {
 
   const wgHosts = [
     'hotspot-system.vercel.app',
+    '*.vercel.app',
+    'cdn.vercel.app',
+    'vercel.app',
     'mstelecom-api.duckdns.org',
     'api.mercadopago.com',
     'mercadopago.com',
     'www.mercadopago.com',
     'cdn.tailwindcss.com',
+    'cdnjs.cloudflare.com',
     'unpkg.com',
     'fonts.googleapis.com',
     'fonts.gstatic.com'
