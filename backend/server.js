@@ -983,6 +983,8 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
 
     // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numérica)
     const normalized = { ...(req.body || {}) };
+    // Evita erro de schema quando o frontend envia campos nÃ£o existentes (ex: last_heartbeat)
+    delete normalized.last_heartbeat;
     for (const k of ['vlan_id', 'radius_auth_port', 'radius_acct_port', 'session_time', 'idle_timeout', 'bandwidth', 'shared_users']) {
       if (Object.prototype.hasOwnProperty.call(normalized, k)) {
         const v = normalized[k];
@@ -1001,6 +1003,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     // Ao criar, o POP inicia offline ate receber heartbeat do MikroTik
     // Obs: nao seta `last_heartbeat` aqui porque nem todo schema tem essa coluna.
     const preferred = { ...normalized, status: 'offline', created_at: now, updated_at: now };
+    delete preferred.last_heartbeat;
     delete preferred.id;
 
     // Fallback mínimo (compatível com esquemas antigos/novos)
@@ -1087,8 +1090,9 @@ function buildPopInstallScript(pop, config = {}) {
   const staticMask = config.static_mask || '';
   const staticGw = config.static_gateway || '';
 
-  let installationType = String(config.installation_type || config.installation || 'new').toLowerCase(); // new | production
+  let installationType = String(config.installation_type || config.installation || 'new').toLowerCase(); // new | production | trunk
   if (installationType === 'existing') installationType = 'production';
+  const isTrunk = installationType === 'trunk';
 
   const vlanId = config.vlan_id ? String(config.vlan_id).trim() : '';
   const idleTimeout = config.idle_timeout ? `${config.idle_timeout}m` : '15m';
@@ -1117,6 +1121,24 @@ function buildPopInstallScript(pop, config = {}) {
     if (installationType === 'production') {
       return `# WAN (Production Mode) - nao altera WAN\n`;
     }
+    if (isTrunk) {
+      // Trunk: WAN vem de uma VLAN transportada pela interface uplink (wanInterface)
+      // Por padrÃ£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
+      if (vlanId) {
+        const wanVlan = `ms-wan-vlan-${vlanId}`;
+        return (
+          `# WAN (TRUNK VLAN - DHCP)\n` +
+          `/interface vlan add name="${wanVlan}" interface=${wanInterface} vlan-id=${vlanId} comment="${tag}"\n` +
+          `/ip dhcp-client add interface="${wanVlan}" disabled=no comment="${tag}"\n` +
+          `/ip firewall nat add action=masquerade chain=srcnat out-interface="${wanVlan}" comment="${tag}"\n`
+        );
+      }
+      return (
+        `# WAN (TRUNK - DHCP)\n` +
+        `/ip dhcp-client add interface=${wanInterface} disabled=no comment="${tag}"\n` +
+        `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
+      );
+    }
     if (wanType === 'pppoe') {
       return (
         `# WAN (PPPoE)\n` +
@@ -1140,8 +1162,9 @@ function buildPopInstallScript(pop, config = {}) {
     );
   })();
 
-  const vlanLine = vlanId ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n` : '';
-  const clientIface = vlanId ? `"ms-vlan-${vlanId}"` : lanInterface;
+  // VLAN do Hotspot: no modo TRUNK, a VLAN Ã© usada na WAN (uplink) e a LAN fica na porta/bridge local.
+  const vlanLine = (!isTrunk && vlanId) ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n` : '';
+  const clientIface = (!isTrunk && vlanId) ? `"ms-vlan-${vlanId}"` : lanInterface;
 
   const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface=${clientIface} name="${popName}" profile="ms-profile-${popId}" comment="${tag}"\n`;
 
