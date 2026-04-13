@@ -1171,15 +1171,20 @@ function buildPopInstallScript(pop, config = {}) {
   // VLAN do Hotspot:
   // - Default: se vlanId foi preenchido, cria VLAN em cima da lanInterface.
   // - TRUNK single: cria VLAN de clientes em cima da trunkUplinkInterface (mesma porta trunk).
-  const trunkClientEnabled = isTrunk && trunkTopology === 'single' && !!trunkClientVlanId;
-  const vlanLine = trunkClientEnabled
+  const trunkClientSingleEnabled = isTrunk && trunkTopology === 'single' && !!trunkClientVlanId;
+  const trunkClientDualEnabled = isTrunk && trunkTopology === 'dual' && !!vlanId;
+
+  const vlanLine = trunkClientSingleEnabled
     ? `/interface vlan add name="ms-vlan-${trunkClientVlanId}" interface=${trunkUplinkInterface} vlan-id=${trunkClientVlanId} comment="${tag}"\n`
-    : (!isTrunk && vlanId)
+    : trunkClientDualEnabled
       ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n`
-      : '';
-  const clientIface = trunkClientEnabled
+      : (!isTrunk && vlanId)
+        ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n`
+        : '';
+
+  const clientIface = trunkClientSingleEnabled
     ? `"ms-vlan-${trunkClientVlanId}"`
-    : (!isTrunk && vlanId)
+    : (trunkClientDualEnabled || (!isTrunk && vlanId))
       ? `"ms-vlan-${vlanId}"`
       : lanInterface;
 
