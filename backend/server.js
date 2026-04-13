@@ -1250,7 +1250,7 @@ ${wanBlock}
 /radius incoming set accept=yes
 :delay 1s
 
-/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap html-directory="ms-${popId}" use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m comment="${tag}"
+/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap html-directory="ms-${popId}" use-radius=yes radius-default-domain="${popId}" comment="${tag}"
 :delay 500ms
 
 ${hotspotLine}:delay 1s

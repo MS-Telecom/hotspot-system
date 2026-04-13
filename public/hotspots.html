@@ -212,17 +212,17 @@
       </div>
 
       <!-- Interface LAN -->
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface LAN (clientes)</label><select id="lanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+      <div id="lanBlock"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface LAN (clientes)</label><select id="lanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
         <optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4" selected>ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
         <optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup>
         <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option></optgroup>
       </select></div>
 
       <!-- VLAN ID -->
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN ID (opcional)</label><input type="text" id="vlanId" placeholder="Deixe em branco se não usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><p class="text-[9px] text-gray-500 mt-1">Se preenchido, o hotspot será criado dentro da VLAN</p></div>
+      <div id="vlanBlock"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN ID (opcional)</label><input type="text" id="vlanId" placeholder="Deixe em branco se não usar VLAN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><p class="text-[9px] text-gray-500 mt-1">Se preenchido, o hotspot será criado dentro da VLAN</p></div>
 
       <!-- Tipo de Saída do Hotspot -->
-      <div>
+      <div id="popTypeBlock">
         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Saída do Hotspot</label>
         <select id="popType" onchange="togglePopTypeFields()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
           <option value="new_vlan">🆕 Nova VLAN (usando VLAN ID acima)</option>
@@ -394,9 +394,13 @@ async function viewPopDetails(id) {
   modal.classList.remove('hidden');
   content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
   try {
-    const res = await fetch(`${API_URL}/api/pops/${encodeURIComponent(String(id))}/config`, { headers: authHeaders(false) });
-    if (!res.ok) throw new Error('Erro ao carregar detalhes');
+    const url = `${API_URL}/api/pops/${encodeURIComponent(String(id))}/config`;
+    const res = await fetch(url, { headers: authHeaders(false) });
     const payloadText = await res.text();
+    if (!res.ok) {
+      console.error('Erro ao carregar detalhes do POP', { id, status: res.status, body: payloadText });
+      throw new Error('Erro ao carregar detalhes');
+    }
     const payload = payloadText ? JSON.parse(payloadText) : {};
     const pop = payload.pop;
     const cfg = payload.config || {};
@@ -419,7 +423,10 @@ async function viewPopDetails(id) {
         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
       </div>`;
     } else content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';
-  } catch (error) { content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>'; }
+  } catch (error) {
+    console.error('Falha ao abrir detalhes do POP', { id, error });
+    content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>';
+  }
 }
 function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
 
@@ -533,13 +540,33 @@ function toggleInstallationMode() {
       ? 'Após criar, um script para o MikroTik do Hotspot será gerado (WAN por VLAN trunk).'
       : 'Após criar, um script BÁSICO (heartbeat + RADIUS) será gerado.';
 
-  if (isTrunk) toggleTrunkFields();
+  if (isTrunk) {
+    toggleTrunkFields();
+  } else {
+    const lanBlock = document.getElementById('lanBlock');
+    const vlanBlock = document.getElementById('vlanBlock');
+    const popTypeBlock = document.getElementById('popTypeBlock');
+    if (lanBlock) lanBlock.style.display = 'block';
+    if (vlanBlock) vlanBlock.style.display = 'block';
+    if (popTypeBlock) popTypeBlock.style.display = 'block';
+  }
 }
 
 function toggleTrunkFields() {
   const topology = document.querySelector('input[name="trunkTopology"]:checked')?.value || 'single';
+  const installationMode = document.getElementById('installationType')?.value || 'new';
+  const isTrunk = installationMode === 'trunk';
+
   document.getElementById('trunkSingleFields')?.classList.toggle('hidden', topology !== 'single');
   document.getElementById('trunkDualFields')?.classList.toggle('hidden', topology !== 'dual');
+
+  const showLanBlocks = !isTrunk || topology === 'dual';
+  const lanBlock = document.getElementById('lanBlock');
+  const vlanBlock = document.getElementById('vlanBlock');
+  const popTypeBlock = document.getElementById('popTypeBlock');
+  if (lanBlock) lanBlock.style.display = showLanBlocks ? 'block' : 'none';
+  if (vlanBlock) vlanBlock.style.display = showLanBlocks ? 'block' : 'none';
+  if (popTypeBlock) popTypeBlock.style.display = showLanBlocks ? 'block' : 'none';
 }
 
 function togglePopTypeFields() {
