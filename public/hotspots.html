@@ -141,6 +141,49 @@
         <p id="installationTypeHelp" class="text-[10px] text-cyan-400 mt-1">Novo: configuração completa da WAN será solicitada</p>
       </div>
 
+      <!-- TRUNK (MikroTik Secundario) -->
+      <div id="trunkBlock" class="hidden bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface Uplink (para o MikroTik Principal)</label>
+          <select id="trunkUplinkInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            <optgroup label="Portas Ethernet"><option value="ether1">ether1</option><option value="ether2">ether2</option><option value="ether3">ether3</option><option value="ether4">ether4</option><option value="ether5">ether5</option><option value="ether6">ether6</option><option value="ether7">ether7</option><option value="ether8">ether8</option><option value="ether9">ether9</option><option value="ether10">ether10</option><option value="ether11">ether11</option><option value="ether12">ether12</option></optgroup>
+            <optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup>
+            <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option></optgroup>
+          </select>
+          <p class="text-[10px] text-gray-400 mt-1">Cabo que liga no MikroTik principal (rede em producao).</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN da Internet (no trunk)</label>
+          <input type="text" id="trunkInternetVlanId" placeholder="Ex: 120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <p class="text-[10px] text-gray-400 mt-1">VLAN usada para o MikroTik secundario obter Internet via DHCP.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Topologia</label>
+          <div class="flex flex-col gap-2 mt-2">
+            <label class="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="trunkTopology" value="single" checked onchange="toggleTrunkFields()" class="w-4 h-4 text-blue-600">
+              <span>🔁 Uma porta (trunk para Internet + clientes)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="trunkTopology" value="dual" onchange="toggleTrunkFields()" class="w-4 h-4 text-blue-600">
+              <span>🔀 Duas portas (uplink trunk + porta clientes)</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="trunkSingleFields">
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN dos Clientes (no trunk)</label>
+          <input type="text" id="trunkClientVlanId" placeholder="Ex: 150" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <p class="text-[10px] text-gray-400 mt-1">Clientes chegam tagueados nessa VLAN pela mesma porta uplink.</p>
+        </div>
+
+        <div id="trunkDualFields" class="hidden">
+          <p class="text-[10px] text-gray-400">No modo duas portas, a porta LAN (clientes) abaixo sera usada no MikroTik secundario.</p>
+        </div>
+      </div>
+
       <!-- Bloco WAN (interface + configuração) – oculto quando "Em Produção" -->
       <div id="wanBlock">
         <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface WAN</label><select id="wanInterface" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
@@ -473,6 +516,10 @@ function toggleInstallationMode() {
   const mode = document.getElementById('installationType').value;
   const isNew = mode === 'new';
   const isTrunk = mode === 'trunk';
+  const isProduction = mode === 'existing';
+
+  const trunkBlock = document.getElementById('trunkBlock');
+  if (trunkBlock) trunkBlock.classList.toggle('hidden', !isTrunk);
   const wanBlock = document.getElementById('wanBlock');
   wanBlock.style.display = isNew ? 'block' : 'none';
   document.getElementById('installationTypeHelp').innerHTML = isNew
@@ -485,6 +532,14 @@ function toggleInstallationMode() {
     : isTrunk
       ? 'Após criar, um script para o MikroTik do Hotspot será gerado (WAN por VLAN trunk).'
       : 'Após criar, um script BÁSICO (heartbeat + RADIUS) será gerado.';
+
+  if (isTrunk) toggleTrunkFields();
+}
+
+function toggleTrunkFields() {
+  const topology = document.querySelector('input[name="trunkTopology"]:checked')?.value || 'single';
+  document.getElementById('trunkSingleFields')?.classList.toggle('hidden', topology !== 'single');
+  document.getElementById('trunkDualFields')?.classList.toggle('hidden', topology !== 'dual');
 }
 
 function togglePopTypeFields() {
@@ -505,13 +560,25 @@ async function saveNewPop() {
   if (!nome) { alert('Informe o nome do hotspot'); return; }
   const installationMode = document.getElementById('installationType').value;
   const isNew = installationMode === 'new';
+  const isTrunk = installationMode === 'trunk';
+
+  if (isTrunk) {
+    const topology = document.querySelector('input[name="trunkTopology"]:checked')?.value || 'single';
+    const uplink = document.getElementById('trunkUplinkInterface')?.value || '';
+    const internetVlan = document.getElementById('trunkInternetVlanId')?.value.trim() || '';
+    const clientVlan = document.getElementById('trunkClientVlanId')?.value.trim() || '';
+
+    if (!uplink) { alert('Selecione a Interface Uplink (trunk)'); return; }
+    if (!internetVlan) { alert('Informe a VLAN da Internet (no trunk)'); return; }
+    if (topology === 'single' && !clientVlan) { alert('Informe a VLAN dos Clientes (no trunk)'); return; }
+  }
 
   const payload = {
     name: nome,
     location: document.getElementById('popLocation').value.trim() || 'Localização não definida',
     ip: document.getElementById('popIp').value.trim() || '0.0.0.0',
     installation_type: installationMode,
-    wan_interface: document.getElementById('wanInterface').value,
+    wan_interface: (isTrunk ? (document.getElementById('trunkUplinkInterface')?.value || '') : document.getElementById('wanInterface').value),
     lan_interface: document.getElementById('lanInterface').value,
     vlan_id: document.getElementById('vlanId').value.trim(),
     hotspot_type: document.getElementById('popType').value,
@@ -525,6 +592,14 @@ async function saveNewPop() {
     redirect_url: document.getElementById('redirectUrl').value.trim(),
     modo_pagamentos: document.querySelector('input[name="modoFuncionamento"]:checked')?.value === 'pagamentos'
   };
+
+  if (isTrunk) {
+    const topology = document.querySelector('input[name="trunkTopology"]:checked')?.value || 'single';
+    payload.trunk_topology = topology; // single | dual
+    payload.trunk_uplink_interface = document.getElementById('trunkUplinkInterface')?.value || '';
+    payload.trunk_internet_vlan_id = document.getElementById('trunkInternetVlanId')?.value.trim() || '';
+    payload.trunk_client_vlan_id = document.getElementById('trunkClientVlanId')?.value.trim() || '';
+  }
   // Guarda config localmente para exibição de informações no modal de script (trunk)
   window.__lastPopConfig = payload;
 

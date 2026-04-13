@@ -1093,6 +1093,10 @@ function buildPopInstallScript(pop, config = {}) {
   let installationType = String(config.installation_type || config.installation || 'new').toLowerCase(); // new | production | trunk
   if (installationType === 'existing') installationType = 'production';
   const isTrunk = installationType === 'trunk';
+  const trunkTopology = String(config.trunk_topology || 'single').toLowerCase(); // single | dual
+  const trunkUplinkInterface = config.trunk_uplink_interface || wanInterface;
+  const trunkInternetVlanId = config.trunk_internet_vlan_id ? String(config.trunk_internet_vlan_id).trim() : '';
+  const trunkClientVlanId = config.trunk_client_vlan_id ? String(config.trunk_client_vlan_id).trim() : '';
 
   const vlanId = config.vlan_id ? String(config.vlan_id).trim() : '';
   const idleTimeout = config.idle_timeout ? `${config.idle_timeout}m` : '15m';
@@ -1124,19 +1128,21 @@ function buildPopInstallScript(pop, config = {}) {
     if (isTrunk) {
       // Trunk: WAN vem de uma VLAN transportada pela interface uplink (wanInterface)
       // Por padrÃ£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
-      if (vlanId) {
-        const wanVlan = `ms-wan-vlan-${vlanId}`;
+      const useWanVlan = trunkInternetVlanId || vlanId;
+      const uplink = trunkUplinkInterface;
+      if (useWanVlan) {
+        const wanVlan = `ms-wan-vlan-${useWanVlan}`;
         return (
           `# WAN (TRUNK VLAN - DHCP)\n` +
-          `/interface vlan add name="${wanVlan}" interface=${wanInterface} vlan-id=${vlanId} comment="${tag}"\n` +
+          `/interface vlan add name="${wanVlan}" interface=${uplink} vlan-id=${useWanVlan} comment="${tag}"\n` +
           `/ip dhcp-client add interface="${wanVlan}" disabled=no comment="${tag}"\n` +
           `/ip firewall nat add action=masquerade chain=srcnat out-interface="${wanVlan}" comment="${tag}"\n`
         );
       }
       return (
         `# WAN (TRUNK - DHCP)\n` +
-        `/ip dhcp-client add interface=${wanInterface} disabled=no comment="${tag}"\n` +
-        `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
+        `/ip dhcp-client add interface=${uplink} disabled=no comment="${tag}"\n` +
+        `/ip firewall nat add action=masquerade chain=srcnat out-interface=${uplink} comment="${tag}"\n`
       );
     }
     if (wanType === 'pppoe') {
@@ -1162,9 +1168,20 @@ function buildPopInstallScript(pop, config = {}) {
     );
   })();
 
-  // VLAN do Hotspot: no modo TRUNK, a VLAN Ã© usada na WAN (uplink) e a LAN fica na porta/bridge local.
-  const vlanLine = (!isTrunk && vlanId) ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n` : '';
-  const clientIface = (!isTrunk && vlanId) ? `"ms-vlan-${vlanId}"` : lanInterface;
+  // VLAN do Hotspot:
+  // - Default: se vlanId foi preenchido, cria VLAN em cima da lanInterface.
+  // - TRUNK single: cria VLAN de clientes em cima da trunkUplinkInterface (mesma porta trunk).
+  const trunkClientEnabled = isTrunk && trunkTopology === 'single' && !!trunkClientVlanId;
+  const vlanLine = trunkClientEnabled
+    ? `/interface vlan add name="ms-vlan-${trunkClientVlanId}" interface=${trunkUplinkInterface} vlan-id=${trunkClientVlanId} comment="${tag}"\n`
+    : (!isTrunk && vlanId)
+      ? `/interface vlan add name="ms-vlan-${vlanId}" interface=${lanInterface} vlan-id=${vlanId} comment="${tag}"\n`
+      : '';
+  const clientIface = trunkClientEnabled
+    ? `"ms-vlan-${trunkClientVlanId}"`
+    : (!isTrunk && vlanId)
+      ? `"ms-vlan-${vlanId}"`
+      : lanInterface;
 
   const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface=${clientIface} name="${popName}" profile="ms-profile-${popId}" comment="${tag}"\n`;
 
