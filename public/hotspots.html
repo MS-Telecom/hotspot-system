@@ -719,7 +719,10 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
 });
 
 // ==================== INICIALIZAÇÃO ====================
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m)); }
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m));
+}
 
 async function updateSessionIp() {
   const el = document.getElementById('sessionIp');
