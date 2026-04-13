@@ -192,7 +192,7 @@
 <script>
     // ==================== CONFIGURAÇÕES ====================
     const API_BASE = 'https://mstelecom-api.duckdns.org';
-    const MIKROTIK_LOGIN_URL = 'http://192.168.32.1/login';
+    let MIKROTIK_LOGIN_URL = 'http://192.168.32.1/login';
     let selectedPlan = null;
     let currentPaymentId = null;
     let macAddress = null;
@@ -206,6 +206,13 @@
         if (mac) return mac.toUpperCase();
         if (ip) return ip;
         if (pop) return pop;
+        return null;
+    }
+
+    function getLoginUrlFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const loginUrl = params.get('loginUrl') || params.get('link-login-only') || params.get('link_login_only');
+        if (loginUrl) return decodeURIComponent(loginUrl);
         return null;
     }
 
@@ -481,6 +488,8 @@
 
     // ==================== INICIALIZAÇÃO ====================
     macAddress = getMacFromUrl();
+    const loginUrlFromHotspot = getLoginUrlFromUrl();
+    if (loginUrlFromHotspot) MIKROTIK_LOGIN_URL = loginUrlFromHotspot;
     document.getElementById('dispositivoMac').innerText = macAddress || 'MAC não detectado';
     if (!macAddress) showStatusMessage('MAC não detectado. Conecte-se novamente ao Wi-Fi.', 'error');
 

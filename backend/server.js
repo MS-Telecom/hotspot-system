@@ -1110,13 +1110,12 @@ function buildPopInstallScript(pop, config = {}) {
   const wgHosts = [
     'hotspot-system.vercel.app',
     '*.vercel.app',
-    'cdn.vercel.app',
     'vercel.app',
+    'cdn.vercel.app',
     'mstelecom-api.duckdns.org',
     'api.mercadopago.com',
     'mercadopago.com',
     'www.mercadopago.com',
-    'cdn.tailwindcss.com',
     'cdnjs.cloudflare.com',
     'unpkg.com',
     'fonts.googleapis.com',
@@ -1199,8 +1198,8 @@ function buildPopInstallScript(pop, config = {}) {
   const redirectLine = redirectUrl ? `# Redirect URL (opcional)\n/ip hotspot profile set [find name="ms-profile-${popId}"] login-by=http-chap,http-pap\n` : '';
 
   // HTML do portal no MikroTik (login.html/alogin.html -> /entrypoint)
-  const entrypointUrl = `${apiUrl}/entrypoint`;
-  const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${entrypointUrl}\\?hotspotIdentity=\\$(server-name)&userMac=\\$(mac)&hostname=\\$(hostname)&loginUrl=\\$(link-login-only)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
+  const portalUrl = `${frontendUrl}/portal.html`;
+  const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${portalUrl}\\?mac=\\$(mac)&ip=\\$(ip)&hotspot=\\$(server-name)&loginUrl=\\$(link-login-only)&orig=\\$(link-orig)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
   const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">✔</div><div class="success-text">Autenticacao realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
 
   const hotspotHtmlBlock =
