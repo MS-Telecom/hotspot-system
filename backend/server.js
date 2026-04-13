@@ -1388,7 +1388,7 @@ app.get('/api/pops/:id/status', async (req, res) => {
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
     if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
 
-    const last = pop.last_heartbeat || pop.last_seen || pop.updated_at || pop.created_at;
+    const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || pop.created_at;
     const seconds = last ? Math.floor((Date.now() - new Date(last).getTime()) / 1000) : null;
     const status = (seconds !== null && seconds > 60) ? 'offline' : (pop.status || 'online');
     res.json({ id, name: pop.name, status, seconds_since_last: seconds });
@@ -1430,6 +1430,8 @@ app.post('/api/pops/:id/heartbeat', async (req, res) => {
     const updateData = { status: 'online', updated_at: now };
     if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
     if (Object.prototype.hasOwnProperty.call(pop, 'last_seen')) updateData.last_seen = now;
+    if (Object.prototype.hasOwnProperty.call(pop, 'last_seen_at')) updateData.last_seen_at = now;
+    if (Object.prototype.hasOwnProperty.call(pop, 'last_seen_at')) updateData.last_seen_at = now;
 
     await supabase.from('pops').update(updateData).eq('id', id);
     res.sendStatus(200);
