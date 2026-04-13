@@ -1,7 +1,7 @@
-// ============================================================
-// 🚀 HOTSPOT SYSTEM - MS TELECOM
-// Backend principal (server.js) - VERSÃO DEFINITIVA
-// Código interno em inglês, comentários em português
+﻿// ============================================================
+// ðŸš€ HOTSPOT SYSTEM - MS TELECOM
+// Backend principal (server.js) - VERSÃƒO DEFINITIVA
+// CÃ³digo interno em inglÃªs, comentÃ¡rios em portuguÃªs
 // ============================================================
 
 require('dotenv').config();
@@ -19,13 +19,13 @@ let RouterOSAPI = null;
 try {
   RouterOSAPI = require('node-routeros').RouterOSAPI;
 } catch (e) {
-  console.warn('⚠️ node-routeros não instalado - recursos de API MikroTik desabilitados');
+  console.warn('âš ï¸ node-routeros nÃ£o instalado - recursos de API MikroTik desabilitados');
 }
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Captura IP real quando estiver atrÃ¡s de proxy (Vercel/Cloudflare/Nginx)
+// Captura IP real quando estiver atrÃƒÂ¡s de proxy (Vercel/Cloudflare/Nginx)
 app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
@@ -39,7 +39,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-// CORS configurado para aceitar requisições do frontend no Vercel
+// CORS configurado para aceitar requisiÃ§Ãµes do frontend no Vercel
 app.use(cors({
     origin: [
         'https://hotspot-system.vercel.app',
@@ -51,19 +51,19 @@ app.use(cors({
     credentials: true
 }));
 
-// Validação de variáveis de ambiente
+// ValidaÃ§Ã£o de variÃ¡veis de ambiente
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !JWT_SECRET) {
-  console.error('❌ FATAL: Variáveis de ambiente obrigatórias faltando: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
+  console.error('âŒ FATAL: VariÃ¡veis de ambiente obrigatÃ³rias faltando: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
   process.exit(1);
 }
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // ============================================================
-// 🛠️ FUNÇÕES UTILITÁRIAS
+// ðŸ› ï¸ FUNÃ‡Ã•ES UTILITÃRIAS
 // ============================================================
 
-// Remove acentos de uma string (útil para slugs)
+// Remove acentos de uma string (Ãºtil para slugs)
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return String(forwarded).split(',')[0].trim();
@@ -82,12 +82,12 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-// Gera senha forte aleatória
+// Gera senha forte aleatÃ³ria
 function generateStrongPassword(length = 20) {
   return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
 
-// Converte para número de forma segura
+// Converte para nÃºmero de forma segura
 function parseNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -105,10 +105,10 @@ function generatePopId() {
 }
 
 // ============================================================
-// 📝 LOGS DE AUDITORIA E SISTEMA
+// ðŸ“ LOGS DE AUDITORIA E SISTEMA
 // ============================================================
 
-// Registrar log de auditoria (ações de usuários)
+// Registrar log de auditoria (aÃ§Ãµes de usuÃ¡rios)
 async function registerAuditLog(username, type, objectName, action, ip, userAgent, details = null) {
   try {
     await supabase.from('audit_logs').insert({
@@ -122,7 +122,7 @@ async function registerAuditLog(username, type, objectName, action, ip, userAgen
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ Erro ao registrar log de auditoria:', error.message);
+    console.error('âŒ Erro ao registrar log de auditoria:', error.message);
   }
 }
 
@@ -139,12 +139,12 @@ async function registerSystemLog(level, source, message, details = null, ip = ''
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ Erro ao registrar log do sistema:', error.message);
+    console.error('âŒ Erro ao registrar log do sistema:', error.message);
   }
 }
 
 // ============================================================
-// 🔐 MIDDLEWARE DE AUTENTICAÇÃO
+// ðŸ” MIDDLEWARE DE AUTENTICAÃ‡ÃƒO
 // ============================================================
 
 function authMiddleware(req, res, next) {
@@ -152,19 +152,19 @@ function authMiddleware(req, res, next) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
   
   if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' });
+    return res.status(401).json({ error: 'Token nÃ£o fornecido' });
   }
 
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (err) {
-    return res.status(401).json({ error: 'Token inválido ou expirado' });
+    return res.status(401).json({ error: 'Token invÃ¡lido ou expirado' });
   }
 }
 
 // ============================================================
-// 🔧 MIKROTIK CREDENTIALS HELPERS
+// ðŸ”§ MIKROTIK CREDENTIALS HELPERS
 // ============================================================
 
 // Buscar credenciais MikroTik
@@ -199,13 +199,13 @@ async function upsertMikrotikCredentials(payload) {
 }
 
 // ============================================================
-// 🔓 MIKROTIK ACCESS CONTROL
+// ðŸ”“ MIKROTIK ACCESS CONTROL
 // ============================================================
 
 // Revogar acesso - remove IP Binding do MikroTik
 async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null) {
   if (!RouterOSAPI) {
-    console.warn('⚠️ revokeAccess: node-routeros não disponível');
+    console.warn('âš ï¸ revokeAccess: node-routeros nÃ£o disponÃ­vel');
     return false;
   }
 
@@ -222,7 +222,7 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
     }
 
     if (!username || !password) {
-      throw new Error('Credenciais da API MikroTik não disponíveis');
+      throw new Error('Credenciais da API MikroTik nÃ£o disponÃ­veis');
     }
 
     const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
@@ -236,7 +236,7 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
     await conn.close();
     return true;
   } catch (error) {
-    console.error(`❌ Falha ao revogar acesso para ${macAddress}:`, error.message);
+    console.error(`âŒ Falha ao revogar acesso para ${macAddress}:`, error.message);
     return false;
   }
 }
@@ -317,14 +317,14 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
 }
 
 // ============================================================
-// ⏱️ CRON JOB - REMOVER ACESSOS EXPIRADOS
+// â±ï¸ CRON JOB - REMOVER ACESSOS EXPIRADOS
 // ============================================================
 
 setInterval(async () => {
   try {
     const now = new Date().toISOString();
     
-    // 1. Limpar sessões expiradas
+    // 1. Limpar sessÃµes expiradas
     const { data: expiredSessions } = await supabase.from('hotspot_sessions')
       .select('mac_address, pop_ip')
       .eq('status', 'active')
@@ -347,15 +347,15 @@ setInterval(async () => {
     }
 
   } catch (error) {
-    console.error('❌ Erro no CRON de limpeza:', error.message);
+    console.error('âŒ Erro no CRON de limpeza:', error.message);
   }
 }, 60000); // Executa a cada 1 minuto
 
 // ============================================================
-// 🔑 ROTAS DE AUTENTICAÇÃO (ADMIN)
+// ðŸ”‘ ROTAS DE AUTENTICAÃ‡ÃƒO (ADMIN)
 // ============================================================
 
-// Aliases legados (português/curtos) -> padrão novo
+// Aliases legados (portuguÃªs/curtos) -> padrÃ£o novo
 app.post('/api/login', (req, res, next) => {
   // Encaminha para /api/auth/login
   req.url = '/api/auth/login';
@@ -369,14 +369,14 @@ app.post('/api/logout', authMiddleware, (req, res, next) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+    if (!username || !password) return res.status(400).json({ error: 'UsuÃ¡rio e senha sÃ£o obrigatÃ³rios' });
 
     const { data: admin, error } = await supabase.from('admins').select('*').eq('username', username).single();
-    if (error || !admin) return res.status(401).json({ error: 'Credenciais inválidas' });
+    if (error || !admin) return res.status(401).json({ error: 'Credenciais invÃ¡lidas' });
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     if (admin.password !== hashedPassword && admin.password !== password) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ error: 'Credenciais invÃ¡lidas' });
     }
 
     const token = jwt.sign({ id: admin.id, username: admin.username, role: admin.role }, JWT_SECRET, { expiresIn: '24h' });
@@ -385,7 +385,7 @@ app.post('/api/auth/login', async (req, res) => {
     
     res.json({ token, user: { id: admin.id, username: admin.username, role: admin.role } });
   } catch (err) {
-    console.error('❌ Erro no login:', err.message);
+    console.error('âŒ Erro no login:', err.message);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
@@ -412,10 +412,10 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
       .select('*')
       .eq('id', adminId)
       .single();
-    if (error || !admin) return res.status(404).json({ error: 'Admin não encontrado' });
+    if (error || !admin) return res.status(404).json({ error: 'Admin nÃ£o encontrado' });
 
     if (new_password) {
-      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatória' });
+      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatÃ³ria' });
       const hashedCurrent = crypto.createHash('sha256').update(current_password).digest('hex');
       if (admin.password !== hashedCurrent && admin.password !== current_password) {
         return res.status(401).json({ error: 'Senha atual incorreta' });
@@ -438,16 +438,16 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     await registerAuditLog(admin.username, 'update', 'admin', 'Perfil atualizado', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true, user: { id: data.id, username: data.username, email: data.email } });
   } catch (err) {
-    console.error('❌ Erro ao atualizar perfil:', err.message);
+    console.error('âŒ Erro ao atualizar perfil:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
 });
 
 // ============================================================
-// 👥 ROTAS DE USUÁRIOS (CLIENTES)
+// ðŸ‘¥ ROTAS DE USUÃRIOS (CLIENTES)
 // ============================================================
 
-// Listar usuários
+// Listar usuÃ¡rios
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const { search, status, plan_id } = req.query;
@@ -463,12 +463,12 @@ app.get('/api/users', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar usuários:', err.message);
-    res.status(500).json({ error: 'Erro ao listar usuários' });
+    console.error('âŒ Erro ao listar usuÃ¡rios:', err.message);
+    res.status(500).json({ error: 'Erro ao listar usuÃ¡rios' });
   }
 });
 
-// Criar usuário
+// Criar usuÃ¡rio
 app.post('/api/users', authMiddleware, async (req, res) => {
   try {
     const { name, username, mac_address, phone, cpf, email, address, plan_id, plan_name, hotspot_id, status, is_vip } = req.body;
@@ -483,15 +483,15 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     }).select().single();
 
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'create', 'user', `UsuÃ¡rio criado: ${name}`, getClientIp(req), req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
-    console.error('❌ Erro ao criar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao criar usuário' });
+    console.error('âŒ Erro ao criar usuÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao criar usuÃ¡rio' });
   }
 });
 
-// Atualizar usuário
+// Atualizar usuÃ¡rio
 app.put('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -502,37 +502,37 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     const { data, error } = await supabase.from('users').update(updateData).eq('id', id).select().single();
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃ¡rio atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+    console.error('âŒ Erro ao atualizar usuÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar usuÃ¡rio' });
   }
 });
 
-// Deletar usuário
+// Deletar usuÃ¡rio
 app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, getClientIp(req), req.headers['user-agent']);
-    res.json({ message: 'Usuário removido com sucesso' });
+    await registerAuditLog(req.user.username, 'delete', 'user', `UsuÃ¡rio removido: ${id}`, getClientIp(req), req.headers['user-agent']);
+    res.json({ message: 'UsuÃ¡rio removido com sucesso' });
   } catch (err) {
-    console.error('❌ Erro ao deletar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar usuário' });
+    console.error('âŒ Erro ao deletar usuÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar usuÃ¡rio' });
   }
 });
 
-// Renovar plano do usuário
+// Renovar plano do usuÃ¡rio
 app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { plan_id, duration_days } = req.body;
 
     const { data: plan, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).single();
-    if (planError || !plan) return res.status(400).json({ error: 'Plano não encontrado' });
+    if (planError || !plan) return res.status(400).json({ error: 'Plano nÃ£o encontrado' });
 
     const days = duration_days || plan.duration_days || 30;
     const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
@@ -546,40 +546,40 @@ app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao renovar plano:', err.message);
+    console.error('âŒ Erro ao renovar plano:', err.message);
     res.status(500).json({ error: 'Erro ao renovar plano' });
   }
 });
 
-// Bloquear usuário
+// Bloquear usuÃ¡rio
 app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'blocked', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃ¡rio bloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao bloquear usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao bloquear usuário' });
+    console.error('âŒ Erro ao bloquear usuÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao bloquear usuÃ¡rio' });
   }
 });
 
-// Desbloquear usuário
+// Desbloquear usuÃ¡rio
 app.post('/api/users/:id/unblock', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃ¡rio desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao desbloquear usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao desbloquear usuário' });
+    console.error('âŒ Erro ao desbloquear usuÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao desbloquear usuÃ¡rio' });
   }
 });
 
-// Marcar usuário como VIP
+// Marcar usuÃ¡rio como VIP
 app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -589,17 +589,17 @@ app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'update', 'user', `VIP atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar VIP:', err.message);
+    console.error('âŒ Erro ao atualizar VIP:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar VIP' });
   }
 });
 
-// Buscar usuário por ID
+// Buscar usuÃ¡rio por ID
 app.get('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
-    if (userError || !user) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (userError || !user) return res.status(404).json({ error: 'UsuÃ¡rio nÃ£o encontrado' });
 
     const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
     const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
@@ -608,18 +608,18 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
 
     res.json({ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
   } catch (err) {
-    console.error('❌ Erro ao buscar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar usuário' });
+    console.error('âŒ Erro ao buscar usuÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar usuÃ¡rio' });
   }
 });
 
-// Exportar usuários para CSV
+// Exportar usuÃ¡rios para CSV
 app.get('/api/users/export', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
     if (error) throw error;
 
-    const headers = ['Nome', 'Usuário', 'MAC', 'Telefone', 'CPF', 'Email', 'Plano', 'Status', 'Data Cadastro'];
+    const headers = ['Nome', 'UsuÃ¡rio', 'MAC', 'Telefone', 'CPF', 'Email', 'Plano', 'Status', 'Data Cadastro'];
     const rows = (data || []).map(u => [
       u.name || '', u.username || '', u.mac_address || '', u.phone || '', u.cpf || '', u.email || '', u.plan_name || '', u.status || '',
       u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : ''
@@ -630,13 +630,13 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=users_${new Date().toISOString().slice(0, 10)}.csv`);
     res.send('\uFEFF' + csv);
   } catch (err) {
-    console.error('❌ Erro ao exportar usuários:', err.message);
-    res.status(500).json({ error: 'Erro ao exportar usuários' });
+    console.error('âŒ Erro ao exportar usuÃ¡rios:', err.message);
+    res.status(500).json({ error: 'Erro ao exportar usuÃ¡rios' });
   }
 });
 
 // ============================================================
-// 📋 ROTAS DE PLANOS
+// ðŸ“‹ ROTAS DE PLANOS
 // ============================================================
 
 // Listar planos
@@ -646,7 +646,7 @@ app.get('/api/plans', async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar planos:', err.message);
+    console.error('âŒ Erro ao listar planos:', err.message);
     res.status(500).json({ error: 'Erro ao listar planos' });
   }
 });
@@ -664,7 +664,7 @@ app.post('/api/plans', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'create', 'plan', `Plano criado: ${name}`, getClientIp(req), req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
-    console.error('❌ Erro ao criar plano:', err.message);
+    console.error('âŒ Erro ao criar plano:', err.message);
     res.status(500).json({ error: 'Erro ao criar plano' });
   }
 });
@@ -683,7 +683,7 @@ app.put('/api/plans/:id', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar plano:', err.message);
+    console.error('âŒ Erro ao atualizar plano:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar plano' });
   }
 });
@@ -698,13 +698,13 @@ app.delete('/api/plans/:id', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json({ message: 'Plano removido com sucesso' });
   } catch (err) {
-    console.error('❌ Erro ao deletar plano:', err.message);
+    console.error('âŒ Erro ao deletar plano:', err.message);
     res.status(500).json({ error: 'Erro ao deletar plano' });
   }
 });
 
 // ============================================================
-// 💳 ROTAS DE PAGAMENTOS
+// ðŸ’³ ROTAS DE PAGAMENTOS
 // ============================================================
 
 // Listar pagamentos
@@ -721,7 +721,7 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar pagamentos:', err.message);
+    console.error('âŒ Erro ao listar pagamentos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagamentos' });
   }
 });
@@ -730,10 +730,10 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 app.post('/api/payments/generate-pix', async (req, res) => {
   try {
     const { mac_address, plan_name, amount, description, payment_id } = req.body;
-    if (!mac_address || !amount) return res.status(400).json({ error: 'MAC e valor são obrigatórios' });
+    if (!mac_address || !amount) return res.status(400).json({ error: 'MAC e valor sÃ£o obrigatÃ³rios' });
 
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
-    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago nÃ£o configurado' });
 
     const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
@@ -805,7 +805,7 @@ app.post('/api/payments/generate-pix', async (req, res) => {
       external_reference: externalReference
     });
   } catch (err) {
-    console.error('❌ Erro ao gerar PIX:', err.message);
+    console.error('âŒ Erro ao gerar PIX:', err.message);
     res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
   }
 });
@@ -814,24 +814,24 @@ app.post('/api/payments/generate-pix', async (req, res) => {
 app.get('/api/check-payment', async (req, res) => {
   try {
     const { external_reference, mercado_pago_id } = req.query;
-    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'Referência ou ID do pagamento necessário' });
+    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'ReferÃªncia ou ID do pagamento necessÃ¡rio' });
 
     let query = supabase.from('payments').select('*');
     if (external_reference) query = query.eq('external_reference', external_reference);
     else query = query.eq('mercado_pago_id', mercado_pago_id);
 
     const { data: payment, error } = await query.single();
-    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento nÃ£o encontrado' });
 
     res.json(payment);
   } catch (err) {
-    console.error('❌ Erro ao verificar pagamento:', err.message);
+    console.error('âŒ Erro ao verificar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao verificar pagamento' });
   }
 });
 
 // ============================================================
-// 🎟️ ROTAS DE VOUCHERS
+// ðŸŽŸï¸ ROTAS DE VOUCHERS
 // ============================================================
 
 // Listar vouchers
@@ -841,7 +841,7 @@ app.get('/api/vouchers', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar vouchers:', err.message);
+    console.error('âŒ Erro ao listar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao listar vouchers' });
   }
 });
@@ -880,7 +880,7 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
       res.status(201).json(data);
     }
   } catch (err) {
-    console.error('❌ Erro ao criar vouchers:', err.message);
+    console.error('âŒ Erro ao criar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao criar vouchers' });
   }
 });
@@ -895,7 +895,7 @@ app.put('/api/vouchers/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar voucher:', err.message);
+    console.error('âŒ Erro ao atualizar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar voucher' });
   }
 });
@@ -908,18 +908,18 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json({ message: 'Voucher removido' });
   } catch (err) {
-    console.error('❌ Erro ao deletar voucher:', err.message);
+    console.error('âŒ Erro ao deletar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao deletar voucher' });
   }
 });
 
-// Validar voucher (público)
+// Validar voucher (pÃºblico)
 // Alias legado PT
 app.post('/api/vouchers/validate', async (req, res) => {
   try {
     const { code, mac_address } = req.body;
     const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', String(code).toUpperCase()).eq('status', 'active').maybeSingle();
-    if (error || !voucher) return res.status(404).json({ error: 'Voucher inválido ou já utilizado' });
+    if (error || !voucher) return res.status(404).json({ error: 'Voucher invÃ¡lido ou jÃ¡ utilizado' });
 
     await supabase.from('vouchers').update({
       status: 'used', used: true, used_at: new Date().toISOString(),
@@ -928,16 +928,16 @@ app.post('/api/vouchers/validate', async (req, res) => {
 
     res.json({ valid: true, plan_name: voucher.plan_name, duration_hours: voucher.duration_hours });
   } catch (err) {
-    console.error('❌ Erro ao validar voucher:', err.message);
+    console.error('âŒ Erro ao validar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao validar voucher' });
   }
 });
 
 // ============================================================
-// 📊 ROTAS DE ESTATÍSTICAS E DASHBOARD
+// ðŸ“Š ROTAS DE ESTATÃSTICAS E DASHBOARD
 // ============================================================
 
-// ðŸ”§ HELPERS (compatibilidade / schema flexÃ­vel)
+// Ã°Å¸â€Â§ HELPERS (compatibilidade / schema flexÃƒÂ­vel)
 function isMissingColumnError(err) {
   const msg = (err && (err.message || err.details || err.hint)) ? `${err.message || ''} ${err.details || ''} ${err.hint || ''}` : '';
   return /Could not find the '.+' column/i.test(msg) || /column .* does not exist/i.test(msg);
@@ -946,8 +946,8 @@ function isMissingColumnError(err) {
 async function safeInsertWithFallback(table, preferredPayload, fallbackPayload) {
   let result = await supabase.from(table).insert(preferredPayload).select().single();
 
-  // Se o payload preferido falhar (coluna ausente, tipo inválido, etc), tenta o fallback.
-  // Isso evita 500 quando o frontend envia campos "extras" que não existem na tabela.
+  // Se o payload preferido falhar (coluna ausente, tipo invÃ¡lido, etc), tenta o fallback.
+  // Isso evita 500 quando o frontend envia campos "extras" que nÃ£o existem na tabela.
   if (result.error && fallbackPayload) {
     result = await supabase.from(table).insert(fallbackPayload).select().single();
   }
@@ -971,7 +971,7 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
     });
     res.json(normalized);
   } catch (err) {
-    console.error('❌ Erro ao listar POPs:', err.message);
+    console.error('âŒ Erro ao listar POPs:', err.message);
     res.status(500).json({ error: 'Erro ao listar POPs' });
   }
 });
@@ -981,9 +981,9 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
   try {
     const now = new Date().toISOString();
 
-    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numérica)
+    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numÃ©rica)
     const normalized = { ...(req.body || {}) };
-    // Evita erro de schema quando o frontend envia campos nÃ£o existentes (ex: last_heartbeat)
+    // Evita erro de schema quando o frontend envia campos nÃƒÂ£o existentes (ex: last_heartbeat)
     delete normalized.last_heartbeat;
     for (const k of ['vlan_id', 'radius_auth_port', 'radius_acct_port', 'session_time', 'idle_timeout', 'bandwidth', 'shared_users']) {
       if (Object.prototype.hasOwnProperty.call(normalized, k)) {
@@ -993,7 +993,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       }
     }
 
-    // Alguns bancos antigos exigem id obrigatório (sem default). Se vier vazio, geramos.
+    // Alguns bancos antigos exigem id obrigatÃ³rio (sem default). Se vier vazio, geramos.
     if (!normalized.id && !normalized.unique_id) {
       const newId = generatePopId();
       normalized.id = newId;
@@ -1006,7 +1006,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     delete preferred.last_heartbeat;
     delete preferred.id;
 
-    // Fallback mínimo (compatível com esquemas antigos/novos)
+    // Fallback mÃ­nimo (compatÃ­vel com esquemas antigos/novos)
     const fallback = {
       name: normalized.name,
       ip: normalized.ip || null,
@@ -1027,7 +1027,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     }
     if (error) throw error;
 
-    // Credenciais (quando a tabela tiver essas colunas, serão persistidas)
+    // Credenciais (quando a tabela tiver essas colunas, serÃ£o persistidas)
     const popTag = `MS-${data.id}`;
     const apiUser = `API_${popTag}`.replace(/[^A-Za-z0-9_]/g, '_').slice(0, 32);
     const apiPass = generateStrongPassword(12);
@@ -1047,10 +1047,10 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
         data.unique_id = upd.data.unique_id;
       }
     } catch (_e) {
-      // ignora se a tabela pops não tiver colunas de credenciais
+      // ignora se a tabela pops nÃ£o tiver colunas de credenciais
     }
 
-    // Guarda configuração avançada (para gerar script completo mesmo se a tabela pops não tiver todas as colunas)
+    // Guarda configuraÃ§Ã£o avanÃ§ada (para gerar script completo mesmo se a tabela pops nÃ£o tiver todas as colunas)
     try {
       await supabase.from('settings').upsert({
         key: `pop_config_${data.id}`,
@@ -1058,7 +1058,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
         updated_at: now
       }, { onConflict: 'key' });
     } catch (_e) {
-      // ignora se settings não existir/estruturar diferente
+      // ignora se settings nÃ£o existir/estruturar diferente
     }
 
     // Gera script completo imediatamente para o frontend copiar no fluxo de criacao
@@ -1067,7 +1067,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
 
     res.status(201).json({ ...data, script });
   } catch (err) {
-    console.error('❌ Erro ao criar POP:', err.message);
+    console.error('âŒ Erro ao criar POP:', err.message);
     res.status(500).json({ error: 'Erro ao criar POP' });
   }
 });
@@ -1127,7 +1127,7 @@ function buildPopInstallScript(pop, config = {}) {
     }
     if (isTrunk) {
       // Trunk: WAN vem de uma VLAN transportada pela interface uplink (wanInterface)
-      // Por padrÃ£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
+      // Por padrÃƒÂ£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
       const useWanVlan = trunkInternetVlanId || vlanId;
       const uplink = trunkUplinkInterface;
       if (useWanVlan) {
@@ -1155,7 +1155,7 @@ function buildPopInstallScript(pop, config = {}) {
     if (wanType === 'static') {
       const mask = staticMask || '24';
       return (
-        `# WAN (IP Estático)\n` +
+        `# WAN (IP EstÃ¡tico)\n` +
         `/ip address add address=${staticIp}/${mask} interface=${wanInterface} comment="${tag}"\n` +
         (staticGw ? `/ip route add gateway=${staticGw} comment="${tag}"\n` : '') +
         `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
@@ -1188,26 +1188,24 @@ function buildPopInstallScript(pop, config = {}) {
       ? `"ms-vlan-${vlanId}"`
       : lanInterface;
 
-  const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface=${clientIface} name="${popName}" profile="ms-profile-${popId}" comment="${tag}"\n`;
+  const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
 
   const sessionTimeLine = sessionTime ? `/ip hotspot user profile set [find name="default"] session-timeout=${sessionTime}\n` : '';
 
-  const redirectLine = redirectUrl ? `# Redirect URL (opcional)\n/ip hotspot profile set [find name="ms-profile-${popId}"] login-by=http-chap,http-pap,http-cookie http-cookie-lifetime=1d\n` : '';
+  const redirectLine = redirectUrl ? `# Redirect URL (opcional)\n/ip hotspot profile set [find name="ms-profile-${popId}"] login-by=http-chap,http-pap\n` : '';
 
   // HTML do portal no MikroTik (login.html/alogin.html -> /entrypoint)
   const entrypointUrl = `${apiUrl}/entrypoint`;
-  const loginHtml = `<html><head><title>MS Telecom</title><script>var hotspotIdentity='\\$(server-name)';var userMac='\\$(mac)';var hostname='\\$(ip)';var error='\\$(error)';window.location.href='${entrypointUrl}?hotspotIdentity=' + encodeURIComponent(hotspotIdentity) + '&userMac=' + encodeURIComponent(userMac) + '&hostname=' + encodeURIComponent(hostname) + '&error=' + encodeURIComponent(error);</script></head><body style='background:#0a0c15;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh'><div style='text-align:center'><div style='width:50px;height:50px;border:3px solid #1e293b;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px'></div><h2>MS TELECOM</h2><p>Conectando...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></body></html>`;
-  const aloginHtml = `<html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"2; url=\\$(link-redirect)\"><title>MS Telecom - Conectado</title><style>body{margin:0;padding:24px;background:#0a0c15;font-family:sans-serif;height:100vh;display:flex;align-items:center;justify-content:center}.card{background:#0f1119;padding:30px;border-radius:16px;border:1px solid #3b82f6;text-align:center}.success-icon{color:#10b981;font-size:48px;margin-bottom:16px}.success-text{color:#10b981;font-weight:bold;font-size:20px}.redirect{margin-top:20px;color:#9ca3af}.spinner{width:16px;height:16px;border:2px solid #1e293b;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;margin-left:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}</style><script>location.href='\\$(link-redirect)';</script></head><body><div class=\"card\"><div class=\"success-icon\">✓</div><div class=\"success-text\">Conexao realizada com sucesso!</div><div class=\"redirect\">Redirecionando <span class=\"spinner\"></span></div></div></body></html>`;
+  const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${entrypointUrl}\\?hotspotIdentity=\\$(server-name)&userMac=\\$(mac)&hostname=\\$(hostname)&loginUrl=\\$(link-login-only)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
+  const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">✔</div><div class="success-text">Autenticacao realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
 
   const hotspotHtmlBlock =
     `# HTML do Hotspot (Portal)\n` +
-    `:local hotspotDir \"hotspot\";\n` +
-    `:if ([:len [/file find name=\"flash/hotspot\"]] > 0) do={ :set hotspotDir \"flash/hotspot\" }\n` +
-    `:if ([:len [/file find name=\"hotspot\"]] > 0) do={ :set hotspotDir \"hotspot\" }\n` +
-    `:do { /ip hotspot profile reset-html [find name=\"ms-profile-${popId}\"] } on-error={}\n` +
-    `/file set [:put ($hotspotDir.\"/login.html\")] contents=\"${loginHtml.replace(/\"/g, '\\\\\"')}\"\n` +
-    `/file set [:put ($hotspotDir.\"/alogin.html\")] contents=\"${aloginHtml.replace(/\"/g, '\\\\\"')}\"\n`;
-
+    `:execute {/ip hotspot reset-html "${popName}"}\n` +
+    `:delay 5000ms;\n` +
+    `:global hotspotDir [/ip hotspot profile get [find name="ms-profile-${popId}"] value-name=html-directory];\n` +
+    `/file set [:put ($hotspotDir."/login.html")] contents="${loginHtml.replace(/"/g, '\\"')}"\n` +
+    `/file set [:put ($hotspotDir."/alogin.html")] contents="${aloginHtml.replace(/"/g, '\\"')}"\n`;
   return (
 `# ============================================
 # MS TELECOM - SCRIPT COMPLETO DE INSTALACAO
@@ -1239,7 +1237,7 @@ ${vlanLine}/interface bridge add name="ms-bridge-${popId}" comment="${tag}"
 :delay 500ms
 
 /ip pool add name="ms-pool-${popId}" ranges=192.168.32.10-192.168.47.254 comment="${tag}"
-/ip dhcp-server add address-pool="ms-pool-${popId}" disabled=no interface="ms-bridge-${popId}" name="ms-dhcp-${popId}" lease-time=24h comment="${tag}"
+/ip dhcp-server add address-pool="ms-pool-${popId}" disabled=no interface="ms-bridge-${popId}" name="ms-dhcp-${popId}" lease-time=24h
 /ip dhcp-server network add address=192.168.32.0/20 gateway=192.168.32.1 dns-server=8.8.8.8,1.1.1.1 comment="${tag}"
 :delay 1s
 
@@ -1252,7 +1250,7 @@ ${wanBlock}
 /radius incoming set accept=yes
 :delay 1s
 
-/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap,http-cookie html-directory=hotspot use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m comment="${tag}"
+/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap html-directory="ms-${popId}" use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m comment="${tag}"
 :delay 500ms
 
 ${hotspotLine}:delay 1s
@@ -1281,7 +1279,7 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: existing, error: existingErr } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (existingErr || !existing) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+    if (existingErr || !existing) return res.status(404).json({ error: 'POP nÃƒÂ£o encontrado' });
 
     const updateData = { updated_at: new Date().toISOString() };
     for (const [k, v] of Object.entries(req.body || {})) {
@@ -1292,7 +1290,7 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar POP:', err.message);
+    console.error('âŒ Erro ao atualizar POP:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar POP' });
   }
 });
@@ -1305,12 +1303,12 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json({ message: 'POP removido com sucesso' });
   } catch (err) {
-    console.error('❌ Erro ao deletar POP:', err.message);
+    console.error('âŒ Erro ao deletar POP:', err.message);
     res.status(500).json({ error: 'Erro ao deletar POP' });
   }
 });
 
-// Alias legado (português)
+// Alias legado (portuguÃªs)
 app.put('/api/perfil', authMiddleware, (req, res, next) => {
   req.url = '/api/profile';
   next();
@@ -1326,7 +1324,7 @@ app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
       .select('*')
       .eq('id', id)
       .single();
-    if (popErr || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
 
     let config = {};
     try {
@@ -1341,17 +1339,17 @@ app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
     // Retorna sempre os dados do POP + o config salvo (quando existir)
     res.json({ pop, config });
   } catch (err) {
-    console.error('❌ Erro ao obter config do POP:', err.message);
+    console.error('âŒ Erro ao obter config do POP:', err.message);
     res.status(500).json({ error: 'Erro ao obter config do POP' });
   }
 });
 
-// Gerar script de configuraÃ§Ã£o para um POP
+// Gerar script de configuraÃƒÂ§ÃƒÂ£o para um POP
 app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÂ£o encontrado' });
 
     let config = {};
     try {
@@ -1362,18 +1360,18 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
     const script = buildPopInstallScript(pop, config);
     res.json({ script });
   } catch (err) {
-    console.error('âŒ Erro ao gerar script:', err.message);
+    console.error('Ã¢ÂÅ’ Erro ao gerar script:', err.message);
     res.status(500).json({ error: 'Erro ao gerar script' });
   }
 });
 
-// Receber heartbeat do MikroTik (atualiza status e Ãºltima atividade)
-// Gerar script de reversÃ£o para um POP
+// Receber heartbeat do MikroTik (atualiza status e ÃƒÂºltima atividade)
+// Gerar script de reversÃƒÂ£o para um POP
 app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÂ£o encontrado' });
 
     const uniqueTag = `MS-TELECOM-${id}`;
     const script =
@@ -1394,8 +1392,8 @@ app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
 
     res.json({ script });
   } catch (err) {
-    console.error('âŒ Erro ao gerar script de reversÃ£o:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar script de reversÃ£o' });
+    console.error('Ã¢ÂÅ’ Erro ao gerar script de reversÃƒÂ£o:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar script de reversÃƒÂ£o' });
   }
 });
 
@@ -1405,7 +1403,7 @@ app.post('/api/pops/:id/ping', async (req, res) => {
     const { id } = req.params;
     const now = new Date().toISOString();
     const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÂ£o encontrado' });
 
     const updateData = { status: 'online', updated_at: now };
     if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
@@ -1421,37 +1419,37 @@ app.post('/api/pops/:id/ping', async (req, res) => {
     if (updateErr) throw updateErr;
     res.json({ status: 'ok', pop_id: id, timestamp: now });
   } catch (err) {
-    console.error('âŒ Erro ao processar ping do POP:', err.message);
+    console.error('Ã¢ÂÅ’ Erro ao processar ping do POP:', err.message);
     res.status(500).json({ error: 'Erro ao processar ping' });
   }
 });
 
-// Status do POP (pÃºblico)
+// Status do POP (pÃƒÂºblico)
 app.get('/api/pops/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP nÃ£o encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÂ£o encontrado' });
 
     const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || pop.created_at;
     const seconds = last ? Math.floor((Date.now() - new Date(last).getTime()) / 1000) : null;
     const status = (seconds !== null && seconds > 60) ? 'offline' : (pop.status || 'online');
     res.json({ id, name: pop.name, status, seconds_since_last: seconds });
   } catch (err) {
-    console.error('âŒ Erro ao consultar status do POP:', err.message);
+    console.error('Ã¢ÂÅ’ Erro ao consultar status do POP:', err.message);
     res.status(500).json({ error: 'Erro ao consultar status' });
   }
 });
 
-// Registrar POP via MikroTik (pÃºblico)
+// Registrar POP via MikroTik (pÃƒÂºblico)
 app.post('/api/pops/register', async (req, res) => {
   try {
     const now = new Date().toISOString();
     const { name, ip, location } = req.body || {};
-    if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃ£o obrigatÃ³rios' });
+    if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃƒÂ£o obrigatÃƒÂ³rios' });
 
     const popToken = crypto.randomBytes(32).toString('hex');
-    // NÃ£o insere `token` na tabela pops porque o schema atual nÃ£o possui essa coluna.
+    // NÃƒÂ£o insere `token` na tabela pops porque o schema atual nÃƒÂ£o possui essa coluna.
     const preferred = { ...req.body, name, ip, location, status: 'online', created_at: now, updated_at: now };
     delete preferred.id;
     const fallback = { name, ip, location, status: 'online', created_at: now };
@@ -1459,7 +1457,7 @@ app.post('/api/pops/register', async (req, res) => {
     const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
     if (error) throw error;
 
-    // Guarda o token em settings para validaÃ§Ã£o futura (se necessÃ¡rio)
+    // Guarda o token em settings para validaÃƒÂ§ÃƒÂ£o futura (se necessÃƒÂ¡rio)
     try {
       await supabase.from('settings').upsert({
         key: `pop_token_${data.id}`,
@@ -1470,7 +1468,7 @@ app.post('/api/pops/register', async (req, res) => {
 
     res.status(201).json({ status: 'success', pop_id: data.id, pop_token: popToken });
   } catch (err) {
-    console.error('âŒ Erro ao registrar POP:', err.message);
+    console.error('Ã¢ÂÅ’ Erro ao registrar POP:', err.message);
     res.status(500).json({ error: 'Erro ao registrar POP' });
   }
 });
@@ -1491,7 +1489,7 @@ app.post('/api/pops/:id/heartbeat', async (req, res) => {
     await supabase.from('pops').update(updateData).eq('id', id);
     res.sendStatus(200);
   } catch (err) {
-    console.error('âŒ Erro no heartbeat:', err.message);
+    console.error('Ã¢ÂÅ’ Erro no heartbeat:', err.message);
     res.sendStatus(500);
   }
 });
@@ -1511,12 +1509,12 @@ app.get('/api/stats/summary', authMiddleware, async (req, res) => {
       online_pops: 1 // Mock ou buscar de pops ativos
     });
   } catch (err) {
-    console.error('❌ Erro ao buscar sumário:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    console.error('âŒ Erro ao buscar sumÃ¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar estatÃ­sticas' });
   }
 });
 
-// Estatísticas de usuários por hora (Dashboard)
+// EstatÃ­sticas de usuÃ¡rios por hora (Dashboard)
 app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
   try {
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -1541,13 +1539,13 @@ app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
 
     res.json({ data: hourlyData });
   } catch (error) {
-    console.error('❌ Erro ao buscar estatísticas reais:', error.message);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas por hora' });
+    console.error('âŒ Erro ao buscar estatÃ­sticas reais:', error.message);
+    res.status(500).json({ error: 'Erro ao buscar estatÃ­sticas por hora' });
   }
 });
 
-// Listar sessões ativas (usuários online)
-// EstatÃ­sticas de trÃ¡fego total (real quando existir coluna de trÃ¡fego)
+// Listar sessÃµes ativas (usuÃ¡rios online)
+// EstatÃƒÂ­sticas de trÃƒÂ¡fego total (real quando existir coluna de trÃƒÂ¡fego)
 app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -1575,8 +1573,8 @@ app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
       total_bytes: inBytes + outBytes
     });
   } catch (err) {
-    console.error('âŒ Erro ao buscar trÃ¡fego total:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar trÃ¡fego total' });
+    console.error('Ã¢ÂÅ’ Erro ao buscar trÃƒÂ¡fego total:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar trÃƒÂ¡fego total' });
   }
 });
 
@@ -1592,17 +1590,17 @@ app.get('/api/sessions/active', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar sessões ativas:', err.message);
-    res.status(500).json({ error: 'Erro ao listar sessões ativas' });
+    console.error('âŒ Erro ao listar sessÃµes ativas:', err.message);
+    res.status(500).json({ error: 'Erro ao listar sessÃµes ativas' });
   }
 });
 
 // ============================================================
-// 📂 ROTAS DE BACKUP
+// ðŸ“‚ ROTAS DE BACKUP
 // ============================================================
 
 // ============================================================
-// 🏥 HEALTH CHECK
+// ðŸ¥ HEALTH CHECK
 // ============================================================
 
 app.get('/api/health', (_req, res) => {
@@ -1625,7 +1623,7 @@ app.get('/api/test-ip', (req, res) => {
 });
 
 // ============================================================
-// 🌐 ENTRYPOINT (MikroTik -> API -> Portal)
+// ðŸŒ ENTRYPOINT (MikroTik -> API -> Portal)
 // ============================================================
 
 app.get('/entrypoint', (req, res) => {
@@ -1643,14 +1641,14 @@ app.get('/entrypoint', (req, res) => {
 });
 
 // ============================================================
-// 📊 ESTATÍSTICAS E DASHBOARD
+// ðŸ“Š ESTATÃSTICAS E DASHBOARD
 // ============================================================
 
-// Nota: Rotas de estatísticas e POPs já definidas anteriormente no arquivo.
-// Removendo duplicações para evitar conflitos.
+// Nota: Rotas de estatÃ­sticas e POPs jÃ¡ definidas anteriormente no arquivo.
+// Removendo duplicaÃ§Ãµes para evitar conflitos.
 
 // ============================================================
-// ⚙️ CONFIGURAÇÕES DE CAMPOS DE CADASTRO
+// âš™ï¸ CONFIGURAÃ‡Ã•ES DE CAMPOS DE CADASTRO
 // ============================================================
 
 app.get('/api/settings/fields', authMiddleware, async (req, res) => {
@@ -1664,7 +1662,7 @@ app.get('/api/settings/fields', authMiddleware, async (req, res) => {
       { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true },
       { field: 'cpf', label: 'CPF', enabled: false, required: false },
       { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
-      { field: 'gender', label: 'Gênero', enabled: false, required: false }
+      { field: 'gender', label: 'GÃªnero', enabled: false, required: false }
     ];
 
     res.json(data ? data.value : defaultFields);
@@ -1689,11 +1687,11 @@ app.put('/api/settings/fields', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// ⚙️ CONFIGURAÇÕES DO SISTEMA (SETTINGS)
+// âš™ï¸ CONFIGURAÃ‡Ã•ES DO SISTEMA (SETTINGS)
 // ============================================================
 
-// Buscar configurações gerais
-// Buscar configuraÃ§Ãµes consolidadas (compat com HTMLs)
+// Buscar configuraÃ§Ãµes gerais
+// Buscar configuraÃƒÂ§ÃƒÂµes consolidadas (compat com HTMLs)
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -1704,7 +1702,7 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configuraÃ§Ãµes consolidadas (compat com HTMLs)
+// Salvar configuraÃƒÂ§ÃƒÂµes consolidadas (compat com HTMLs)
 app.put('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -1719,7 +1717,7 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Aliases legado PT (configuraÃ§Ãµes)
+// Aliases legado PT (configuraÃƒÂ§ÃƒÂµes)
 app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -1730,7 +1728,7 @@ app.get('/api/settings/system', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações gerais
+// Salvar configuraÃ§Ãµes gerais
 app.put('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -1745,7 +1743,7 @@ app.put('/api/settings/system', authMiddleware, async (req, res) => {
   }
 });
 
-// Buscar configurações de pagamento
+// Buscar configuraÃ§Ãµes de pagamento
 app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'payment').maybeSingle();
@@ -1756,7 +1754,7 @@ app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações de pagamento
+// Salvar configuraÃ§Ãµes de pagamento
 app.put('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -1771,8 +1769,8 @@ app.put('/api/settings/payment', authMiddleware, async (req, res) => {
   }
 });
 
-// Buscar configurações de teste grátis
-// Buscar configuraÃ§Ãµes de integraÃ§Ãµes
+// Buscar configuraÃ§Ãµes de teste grÃ¡tis
+// Buscar configuraÃƒÂ§ÃƒÂµes de integraÃƒÂ§ÃƒÂµes
 app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'integrations').maybeSingle();
@@ -1783,7 +1781,7 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configuraÃ§Ãµes de integraÃ§Ãµes
+// Salvar configuraÃƒÂ§ÃƒÂµes de integraÃƒÂ§ÃƒÂµes
 app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -1808,7 +1806,7 @@ app.get('/api/settings/free_trial', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações de teste grátis
+// Salvar configuraÃ§Ãµes de teste grÃ¡tis
 app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -1824,7 +1822,7 @@ app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 👤 ADMINS
+// ðŸ‘¤ ADMINS
 // ============================================================
 
 app.post('/api/admins', async (req, res) => {
@@ -1842,16 +1840,16 @@ app.post('/api/admins', async (req, res) => {
 });
 
 // ============================================================
-// 🪝 WEBHOOKS
+// ðŸª WEBHOOKS
 // ============================================================
 
-// Webhook do Mercado Pago (Público)
+// Webhook do Mercado Pago (PÃºblico)
 // Aliases legado
 app.post('/api/webhooks/mercadopago', async (req, res) => {
   try {
     const { action, data, type } = req.body;
     
-    // Mercado Pago envia notificações de diferentes tipos, focamos em 'payment'
+    // Mercado Pago envia notificaÃ§Ãµes de diferentes tipos, focamos em 'payment'
     if (type === 'payment' || action === 'payment.created' || action === 'payment.updated') {
       const paymentId = data?.id || req.query['data.id'];
       if (!paymentId) return res.status(200).send('OK');
@@ -1885,7 +1883,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
           }).eq('id', payment.id);
 
           // 3. Liberar acesso no MikroTik/RADIUS
-          // Buscamos a duração do plano
+          // Buscamos a duraÃ§Ã£o do plano
           const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
           const durationMinutes = (plan?.duration_days || 1) * 24 * 60;
           
@@ -1898,7 +1896,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
             payment.plan_name
           );
 
-          // 4. Registrar sessão
+          // 4. Registrar sessÃ£o
           await supabase.from('hotspot_sessions').insert({
             user_mac: payment.user_mac,
             plan_name: payment.plan_name,
@@ -1914,7 +1912,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
               method: wh.method || 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ event: 'payment.confirmed', payment_id: payment.id, mac: payment.user_mac })
-            }).catch(err => console.error(`❌ Erro ao disparar webhook ${wh.name}:`, err.message));
+            }).catch(err => console.error(`âŒ Erro ao disparar webhook ${wh.name}:`, err.message));
           }
 
           await registerSystemLog('info', 'mercadopago', `Pagamento aprovado e acesso liberado: ${payment.user_mac}`);
@@ -1924,8 +1922,8 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
     
     res.status(200).send('OK');
   } catch (err) {
-    console.error('❌ Erro no Webhook Mercado Pago:', err.message);
-    res.status(200).send('OK'); // Sempre retornar 200 para o MP não ficar retransmitindo em loop
+    console.error('âŒ Erro no Webhook Mercado Pago:', err.message);
+    res.status(200).send('OK'); // Sempre retornar 200 para o MP nÃ£o ficar retransmitindo em loop
   }
 });
 
@@ -1952,7 +1950,7 @@ app.post('/api/webhooks', authMiddleware, async (req, res) => {
   }
 });
 
-// Rota de edição via POST (conforme frontend webhooks.html)
+// Rota de ediÃ§Ã£o via POST (conforme frontend webhooks.html)
 app.post('/api/webhooks/:id', authMiddleware, async (req, res) => {
   try {
     const { name, event, url, method, target, active } = req.body;
@@ -1979,9 +1977,9 @@ app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const { data: webhook } = await supabase.from('webhooks').select('*').eq('id', req.params.id).single();
-    if (!webhook) return res.status(404).json({ error: 'Webhook não encontrado' });
+    if (!webhook) return res.status(404).json({ error: 'Webhook nÃ£o encontrado' });
     
-    // Simulação de disparo
+    // SimulaÃ§Ã£o de disparo
     console.log(`[TEST] Disparando webhook ${webhook.name} para ${webhook.url}`);
     res.json({ success: true, message: 'Teste disparado com sucesso' });
   } catch (error) {
@@ -1990,7 +1988,7 @@ app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 📣 CAMPANHAS
+// ðŸ“£ CAMPANHAS
 // ============================================================
 
 app.get('/api/campaigns', authMiddleware, async (req, res) => {
@@ -2040,7 +2038,7 @@ app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 📜 LOGS DE AUDITORIA
+// ðŸ“œ LOGS DE AUDITORIA
 // ============================================================
 
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
@@ -2065,11 +2063,11 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 💾 BACKUP
+// ðŸ’¾ BACKUP
 // ============================================================
 
 // ============================================================
-// ðŸ“ LOGS DO SISTEMA
+// Ã°Å¸â€œÂ LOGS DO SISTEMA
 // ============================================================
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
@@ -2114,7 +2112,7 @@ app.get('/api/backup/list', authMiddleware, async (req, res) => {
 app.get('/api/backup/download/:filename', authMiddleware, (req, res) => {
   const { filename } = req.params;
   const filePath = path.join(BACKUP_DIR, filename);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo nÃ£o encontrado' });
   res.download(filePath);
 });
 
@@ -2144,10 +2142,10 @@ app.post('/api/backup/create', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 🔄 ALIAS E ROTAS DE COMPATIBILIDADE
+// ðŸ”„ ALIAS E ROTAS DE COMPATIBILIDADE
 // ============================================================
 
-// Alias para portal público
+// Alias para portal pÃºblico
 app.get('/api/portal/plans', async (req, res) => {
   const { data, error } = await supabase.from('plans').select('*').eq('active', true).order('price');
   if (error) return res.status(500).json({ error: 'Erro ao listar planos' });
@@ -2176,7 +2174,7 @@ app.post('/api/portal/create-pix', async (req, res) => {
     // ignora erro de janela temporaria (nao bloqueia a geracao do PIX)
   }
 
-  // Encaminha para a rota oficial de geração de PIX
+  // Encaminha para a rota oficial de geraÃ§Ã£o de PIX
   req.url = '/api/payments/generate-pix';
   return app._router.handle(req, res);
 });
@@ -2184,7 +2182,7 @@ app.post('/api/portal/create-pix', async (req, res) => {
 app.get('/api/portal/check-payment/:id', async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
-  if (error || !data) return res.status(404).json({ error: 'Pagamento não encontrado' });
+  if (error || !data) return res.status(404).json({ error: 'Pagamento nÃ£o encontrado' });
   res.json(data);
 });
 
@@ -2194,7 +2192,7 @@ app.post('/api/portal/login', async (req, res) => {
     const { data: user, error } = await supabase.from('users').select('*')
       .or(`username.eq.${identifier},email.eq.${identifier},cpf.eq.${identifier},phone.eq.${identifier}`)
       .single();
-    if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado' });
+    if (error || !user) return res.status(401).json({ error: 'UsuÃ¡rio nÃ£o encontrado' });
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     if (user.password !== hashedPassword && user.password !== password) return res.status(401).json({ error: 'Senha incorreta' });
@@ -2238,7 +2236,7 @@ app.post('/api/portal/register', async (req, res) => {
 });
 
 app.post('/api/portal/voucher', async (req, res) => {
-  // Encaminha para a rota oficial de validação de voucher
+  // Encaminha para a rota oficial de validaÃ§Ã£o de voucher
   req.url = '/api/vouchers/validate';
   app._router.handle(req, res);
 });
@@ -2259,11 +2257,11 @@ app.get('/api/portal/status', async (req, res) => {
   }
 });
 
-// Rota pública para verificar status de pagamento por MAC (usada pelo portal)
+// Rota pÃºblica para verificar status de pagamento por MAC (usada pelo portal)
 app.get('/api/portal/payment-status', async (req, res) => {
   try {
     const { mac_address } = req.query;
-    if (!mac_address) return res.status(400).json({ error: 'MAC é obrigatório' });
+    if (!mac_address) return res.status(400).json({ error: 'MAC Ã© obrigatÃ³rio' });
 
     const { data, error } = await supabase.from('payments')
       .select('*')
@@ -2279,26 +2277,26 @@ app.get('/api/portal/payment-status', async (req, res) => {
   }
 });
 
-// Rota de compatibilidade para o portal público que chama /api/payments sem token
+// Rota de compatibilidade para o portal pÃºblico que chama /api/payments sem token
 app.get('/api/payments', async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const { mac_address } = req.query;
 
-  // Se NÃO tem token e tem mac_address, redireciona para a rota pública do portal
+  // Se NÃƒO tem token e tem mac_address, redireciona para a rota pÃºblica do portal
   if (!authHeader && mac_address) {
     req.url = '/api/portal/payment-status';
     return app._router.handle(req, res);
   }
 
-  // Caso contrário, segue para o middleware de autenticação e rota admin
+  // Caso contrÃ¡rio, segue para o middleware de autenticaÃ§Ã£o e rota admin
   next();
 });
 
-// Rota de Teste Grátis (chamada pelo frontend)
+// Rota de Teste GrÃ¡tis (chamada pelo frontend)
 app.post('/api/users/test-access', async (req, res) => {
   try {
     const { mac_address, duration_minutes = 15 } = req.body;
-    if (!mac_address) return res.status(400).json({ error: 'MAC é obrigatório' });
+    if (!mac_address) return res.status(400).json({ error: 'MAC Ã© obrigatÃ³rio' });
     
     const result = await authorizeAccess(mac_address, '192.168.32.1', null, null, null, duration_minutes, 5, 'free_trial');
     if (result.success) {
@@ -2315,15 +2313,15 @@ app.post('/api/users/test-access', async (req, res) => {
 });
 
 // ============================================================
-// 👤 GESTÃO DE ADMINISTRADORES (ADMINS)
+// ðŸ‘¤ GESTÃƒO DE ADMINISTRADORES (ADMINS)
 // ============================================================
 
 // Listar todos os administradores
-// Free trial (pÃºblico) - 1 uso por MAC
+// Free trial (pÃƒÂºblico) - 1 uso por MAC
 app.post('/api/free-trial', async (req, res) => {
   try {
     const { mac_address } = req.body || {};
-    if (!mac_address) return res.status(400).json({ success: false, message: 'MAC Ã© obrigatÃ³rio' });
+    if (!mac_address) return res.status(400).json({ success: false, message: 'MAC ÃƒÂ© obrigatÃƒÂ³rio' });
 
     let alreadyUsed = false;
     try {
@@ -2335,10 +2333,10 @@ app.post('/api/free-trial', async (req, res) => {
       if (ftErr) throw ftErr;
       if (ft) alreadyUsed = true;
     } catch (_e) {
-      // Se a tabela nÃ£o existir ainda, nÃ£o bloqueia.
+      // Se a tabela nÃƒÂ£o existir ainda, nÃƒÂ£o bloqueia.
     }
 
-    if (alreadyUsed) return res.json({ success: false, message: 'Teste grÃ¡tis jÃ¡ utilizado para este MAC' });
+    if (alreadyUsed) return res.json({ success: false, message: 'Teste grÃƒÂ¡tis jÃƒÂ¡ utilizado para este MAC' });
 
     const duration = 15;
     const expiresAt = new Date(Date.now() + duration * 60000).toISOString();
@@ -2356,7 +2354,7 @@ app.post('/api/free-trial', async (req, res) => {
     try {
       await supabase.from('free_trials').insert({ mac_address, used_at: new Date().toISOString() });
     } catch (_e) {
-      // ignora se nÃ£o existir
+      // ignora se nÃƒÂ£o existir
     }
 
     res.json({ success: true, expires_at: expiresAt, message: 'Acesso liberado' });
@@ -2365,7 +2363,7 @@ app.post('/api/free-trial', async (req, res) => {
   }
 });
 
-// Validar acesso (pÃºblico)
+// Validar acesso (pÃƒÂºblico)
 app.post('/api/access/validate', async (req, res) => {
   try {
     const { mac_address } = req.body || {};
@@ -2416,7 +2414,7 @@ app.post('/api/admins', authMiddleware, async (req, res) => {
     const { username, email, password, role = 'admin' } = req.body;
     
     if (!username || !password) {
-      return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+      return res.status(400).json({ error: 'UsuÃ¡rio e senha sÃ£o obrigatÃ³rios' });
     }
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
@@ -2479,7 +2477,7 @@ app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
 
     // Impedir que o admin delete a si mesmo
     if (id == req.user.id) {
-      return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
+      return res.status(400).json({ error: 'VocÃª nÃ£o pode excluir seu prÃ³prio usuÃ¡rio' });
     }
 
     const { error } = await supabase
@@ -2498,21 +2496,21 @@ app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 🚀 INICIAR SERVIDOR
+// ðŸš€ INICIAR SERVIDOR
 // ============================================================
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║  🚀 MS TELECOM - HOTSPOT SYSTEM API                         ║
-║  ✅ Servidor rodando em: http://localhost:${PORT}              ║
-║  ✅ Ambiente: ${process.env.NODE_ENV || 'production'}                      ║
-║  ✅ Padrão: Código EN, Comentários PT-BR                     ║
-║  ✅ Endpoints: /api/users, /api/plans, /api/payments         ║
-║  ✅ Tabelas: users, plans, payments, pops                    ║
-║  ✅ Integração: MikroTik API, Mercado Pago, RADIUS           ║
-║  ✅ Deploy Automático: GitHub Actions → VPS                  ║
-║  ✅ CRON: Remoção automática de acessos expirados            ║
-╚══════════════════════════════════════════════════════════════╝
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  ðŸš€ MS TELECOM - HOTSPOT SYSTEM API                         â•‘
+â•‘  âœ… Servidor rodando em: http://localhost:${PORT}              â•‘
+â•‘  âœ… Ambiente: ${process.env.NODE_ENV || 'production'}                      â•‘
+â•‘  âœ… PadrÃ£o: CÃ³digo EN, ComentÃ¡rios PT-BR                     â•‘
+â•‘  âœ… Endpoints: /api/users, /api/plans, /api/payments         â•‘
+â•‘  âœ… Tabelas: users, plans, payments, pops                    â•‘
+â•‘  âœ… IntegraÃ§Ã£o: MikroTik API, Mercado Pago, RADIUS           â•‘
+â•‘  âœ… Deploy AutomÃ¡tico: GitHub Actions â†’ VPS                  â•‘
+â•‘  âœ… CRON: RemoÃ§Ã£o automÃ¡tica de acessos expirados            â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   `);
 });
