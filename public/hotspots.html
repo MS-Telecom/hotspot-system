@@ -328,10 +328,11 @@ async function viewPopDetails(id) {
   modal.classList.remove('hidden');
   content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
   try {
-    const res = await fetch(`${API_URL}/api/pops`, { headers: authHeaders(false) });
-    let pops = await res.json();
-    if (pops && typeof pops === 'object' && !Array.isArray(pops) && pops.data) pops = pops.data;
-    const pop = pops.find(p => p.id == id);
+    const res = await fetch(`${API_URL}/api/pops/${encodeURIComponent(String(id))}/config`, { headers: authHeaders(false) });
+    if (!res.ok) throw new Error('Erro ao carregar detalhes');
+    const payload = await res.json();
+    const pop = payload.pop;
+    const cfg = payload.config || {};
     if (pop) {
       const isOnline = pop.status === 'online' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
       content.innerHTML = `<div class="space-y-2">
@@ -339,6 +340,15 @@ async function viewPopDetails(id) {
         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${isOnline ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'} rounded-lg text-[10px]">${isOnline ? 'ONLINE' : 'OFFLINE'}</span></p></div>
         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Localização</p><p>${escapeHtml(pop.location) || '-'}</p></div>
         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP</p><p class="font-mono">${escapeHtml(pop.ip) || '0.0.0.0'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Tipo de Instalação</p><p>${escapeHtml(cfg.installation_type || cfg.installation || '-')}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">WAN</p><p>${escapeHtml(cfg.wan_interface || '-')}${cfg.wan_type ? ` (${escapeHtml(cfg.wan_type)})` : ''}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">LAN</p><p>${escapeHtml(cfg.lan_interface || '-')}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">VLAN</p><p>${escapeHtml(cfg.vlan_id || '-')}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Banda</p><p>${cfg.bandwidth ? `${escapeHtml(String(cfg.bandwidth))} Mbps` : '-'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Tempo de Sessão</p><p>${cfg.session_time ? `${escapeHtml(String(cfg.session_time))} min` : '-'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Tempo de Inatividade</p><p>${cfg.idle_timeout ? `${escapeHtml(String(cfg.idle_timeout))} min` : '-'}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Dispositivos Simultâneos</p><p>${escapeHtml(String(cfg.shared_users || '-'))}</p></div>
+        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Modo</p><p>${cfg.mode === 'payments' ? 'Pagamentos (Planos)' : 'Padrão (Cadastro livre)'}</p></div>
         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Último Heartbeat</p><p>${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
       </div>`;
     } else content.innerHTML = '<div class="text-center text-red-500">POP não encontrado</div>';

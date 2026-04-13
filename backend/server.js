@@ -1248,6 +1248,36 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Obter configuracao consolidada de um POP (para modal de detalhes)
+app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: pop, error: popErr } = await supabase
+      .from('pops')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (popErr || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+
+    let config = {};
+    try {
+      const { data: cfg } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', `pop_config_${id}`)
+        .maybeSingle();
+      config = cfg?.value || {};
+    } catch (_e) {}
+
+    // Retorna sempre os dados do POP + o config salvo (quando existir)
+    res.json({ pop, config });
+  } catch (err) {
+    console.error('❌ Erro ao obter config do POP:', err.message);
+    res.status(500).json({ error: 'Erro ao obter config do POP' });
+  }
+});
+
 // Gerar script de configuraÃ§Ã£o para um POP
 app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
   try {
