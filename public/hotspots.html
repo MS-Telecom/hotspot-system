@@ -233,7 +233,28 @@
 <div id="modalScript" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
   <div class="bg-[#0f1119] rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col border border-gray-700">
     <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white">Script MikroTik / RouterOS</h2><button onclick="closeModalScript()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
-    <div class="flex-1 overflow-y-auto p-4"><pre id="scriptContent" class="bg-gray-900 p-4 rounded-xl text-sm text-green-400 overflow-auto whitespace-pre-wrap font-mono"></pre></div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-3">
+      <div id="trunkInfo" class="hidden bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 text-xs text-cyan-200">
+        <div class="font-bold text-cyan-300 mb-1">Modo Trunk (MikroTik separado)</div>
+        <div class="text-cyan-100/90">
+          Estes passos s&atilde;o para o <b>MikroTik principal</b> (rede em produ&ccedil;&atilde;o), para entregar a VLAN do Hotspot via trunk at&eacute; o MikroTik do Hotspot.
+        </div>
+        <div class="mt-2 text-cyan-100/90">
+          <div><b>VLAN do Hotspot:</b> <span id="trunkVlanId">-</span></div>
+          <div><b>Interface trunk (no principal):</b> <span id="trunkUplinkIface">-</span></div>
+        </div>
+        <div class="mt-2">
+          <div class="font-bold text-cyan-300 mb-1">Checklist (manual)</div>
+          <div class="text-cyan-100/90 leading-relaxed">
+            1) Criar a VLAN do Hotspot na porta trunk.<br>
+            2) Garantir que essa VLAN tenha acesso &agrave; internet (rota/NAT no principal).<br>
+            3) Garantir DNS/HTTP liberados para o portal e API (walled-garden conforme necessidade).<br>
+            4) Se j&aacute; existir PPPoE em outra VLAN, manter separado (nao misturar segmentos).
+          </div>
+        </div>
+      </div>
+      <pre id="scriptContent" class="bg-gray-900 p-4 rounded-xl text-sm text-green-400 overflow-auto whitespace-pre-wrap font-mono"></pre>
+    </div>
     <div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="copyScript()" class="px-4 py-2 bg-cyan-600 rounded-lg text-sm font-bold">Copiar Script</button></div>
   </div>
 </div>
@@ -368,6 +389,18 @@ async function generateScript(popId) {
     if (script) {
       document.getElementById('scriptContent').textContent = script;
       document.getElementById('modalScript').classList.remove('hidden');
+      // Info para cenário "MikroTik separado" (trunk) - só exibe se tiver VLAN preenchida no cadastro/config.
+      const trunkBox = document.getElementById('trunkInfo');
+      const trunkVlanId = document.getElementById('trunkVlanId');
+      const trunkUplinkIface = document.getElementById('trunkUplinkIface');
+      if (trunkBox && trunkVlanId && trunkUplinkIface) {
+        const v = (window.__lastPopConfig && (window.__lastPopConfig.vlan_id || window.__lastPopConfig.vlanId)) || '';
+        const upl = (window.__lastPopConfig && (window.__lastPopConfig.wan_interface || window.__lastPopConfig.wanInterface)) || '';
+        const show = !!String(v || '').trim();
+        trunkBox.classList.toggle('hidden', !show);
+        trunkVlanId.textContent = show ? String(v).trim() : '-';
+        trunkUplinkIface.textContent = upl ? String(upl).trim() : '-';
+      }
       navigator.clipboard.writeText(script);
     } else alert('Script não disponível');
   } catch (error) { alert('Não foi possível obter o script deste hotspot'); }
@@ -479,6 +512,8 @@ async function saveNewPop() {
     redirect_url: document.getElementById('redirectUrl').value.trim(),
     modo_pagamentos: document.querySelector('input[name="modoFuncionamento"]:checked')?.value === 'pagamentos'
   };
+  // Guarda config localmente para exibição de informações no modal de script (trunk)
+  window.__lastPopConfig = payload;
 
   if (isNew) {
     payload.wan_type = document.getElementById('wanTipo').value;
