@@ -330,7 +330,8 @@ async function viewPopDetails(id) {
   try {
     const res = await fetch(`${API_URL}/api/pops/${encodeURIComponent(String(id))}/config`, { headers: authHeaders(false) });
     if (!res.ok) throw new Error('Erro ao carregar detalhes');
-    const payload = await res.json();
+    const payloadText = await res.text();
+    const payload = payloadText ? JSON.parse(payloadText) : {};
     const pop = payload.pop;
     const cfg = payload.config || {};
     if (pop) {
@@ -361,7 +362,8 @@ async function generateScript(popId) {
   try {
     const res = await fetch(`${API_URL}/api/pops/${popId}/script`, { headers: authHeaders() });
     if (!res.ok) throw new Error('Erro ao gerar script');
-    const data = await res.json();
+    const dataText = await res.text();
+    const data = dataText ? JSON.parse(dataText) : {};
     const script = data.script || (data.data && data.data.script);
     if (script) {
       document.getElementById('scriptContent').textContent = script;
@@ -494,7 +496,9 @@ async function saveNewPop() {
     } else {
       res = await fetch(`${API_URL}/api/pops`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
     }
-    const data = await res.json();
+    const raw = await res.text();
+    let data = {};
+    try { data = raw ? JSON.parse(raw) : {}; } catch (_e) { data = { error: raw || 'Resposta inválida do servidor' }; }
     const createdPop = data.data || data;
     if (res.ok && (createdPop.id || createdPop.unique_id)) {
       alert(`✅ Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!`);

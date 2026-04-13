@@ -355,6 +355,17 @@ setInterval(async () => {
 // 🔑 ROTAS DE AUTENTICAÇÃO (ADMIN)
 // ============================================================
 
+// Aliases legados (português/curtos) -> padrão novo
+app.post('/api/login', (req, res, next) => {
+  // Encaminha para /api/auth/login
+  req.url = '/api/auth/login';
+  next();
+});
+app.post('/api/logout', authMiddleware, (req, res, next) => {
+  req.url = '/api/auth/logout';
+  next();
+});
+
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -382,6 +393,12 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/logout', authMiddleware, async (req, res) => {
   await registerAuditLog(req.user.username, 'logout', 'auth', 'Logout realizado', getClientIp(req), req.headers['user-agent']);
   res.json({ message: 'Logout realizado com sucesso' });
+});
+
+// Alias legado
+app.get('/api/perfil', authMiddleware, (req, res, next) => {
+  req.url = '/api/profile';
+  next();
 });
 
 // Atualizar perfil do administrador logado
@@ -1246,6 +1263,12 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
     console.error('❌ Erro ao deletar POP:', err.message);
     res.status(500).json({ error: 'Erro ao deletar POP' });
   }
+});
+
+// Alias legado (português)
+app.put('/api/perfil', authMiddleware, (req, res, next) => {
+  req.url = '/api/profile';
+  next();
 });
 
 // Obter configuracao consolidada de um POP (para modal de detalhes)
