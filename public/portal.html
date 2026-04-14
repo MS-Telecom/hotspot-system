@@ -48,9 +48,6 @@
  <code id=dispositivoMac class="bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono text-blue-400">MAC não detectado</code>
  </div>
  <div class="flex gap-3 flex-wrap">
- <button id=liberar5minBtn class="px-5 py-2 bg-amber-600/20 border border-amber-500/50 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-600/30 transition flex items-center gap-2">
- <svg xmlns=http://www.w3.org/2000/svg width=24 height=24 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round data-lucide=clock aria-hidden=true class="lucide lucide-clock w-4 h-4"><circle cx=12 cy=12 r=10></circle><path d="M12 6v6l4 2"></path></svg> Liberar 5 minutos
- </button>
  <button id=testeGratisBtn class="px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
  <i data-lucide=flask class="w-4 h-4"></i> Teste Grátis 15min
  </button>
@@ -101,7 +98,7 @@ const API_URL = 'https://mstelecom-api.duckdns.org';
 
 async function carregarPlanos() {
   try {
-    const res = await fetch(`${API_URL}/api/public/plans`);
+    const res = await fetch(`${API_URL}/api/plans`);
     if (!res.ok) throw new Error();
     const plans = await res.json();
     const container = document.getElementById('planContainer');
@@ -147,22 +144,18 @@ async function carregarPlanos() {
 
 async function carregarConfigTesteGratis() {
   try {
-    const res = await fetch(`${API_URL}/api/public/free-trial-config`);
+    const res = await fetch(`${API_URL}/api/settings/free_trial`);
     if (!res.ok) throw new Error();
     const config = await res.json();
-    const liberar = document.getElementById('liberar5minBtn');
+    console.log('[portal] free trial config', config);
     const teste = document.getElementById('testeGratisBtn');
     if (!config.enabled) {
-      if (liberar) liberar.style.display = 'none';
-      if (teste) teste.style.display = 'none';
+      teste?.remove();
       return;
-    }
-    if (liberar) {
-      liberar.innerHTML = '<i data-lucide="clock" class="w-4 h-4"></i> Liberar ' + (config.duration_minutes || 5) + ' minutos';
-      liberar.style.display = 'flex';
     }
     if (teste) {
       teste.dataset.duration = config.duration_minutes || 15;
+      teste.dataset.cooldown = config.cooldown_hours || 24;
       teste.innerHTML = '<i data-lucide="flask" class="w-4 h-4"></i> Teste Grátis ' + (config.duration_minutes || 15) + 'min';
       teste.style.display = 'flex';
     }
@@ -193,6 +186,120 @@ function atualizarMacNaTela() {
   macEl.textContent = mac || 'MAC não detectado';
 }
 
+function showStatus(message, isError = true) {
+  const el = document.getElementById('statusMessage');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.remove('hidden', 'sf-hidden');
+  el.classList.toggle('toast-error', !!isError);
+  setTimeout(() => el.classList.add('hidden', 'sf-hidden'), 5000);
+}
+
+function renderPixSection(payload, planName, amount) {
+  const section = document.getElementById('paymentSection');
+  if (!section) return;
+  section.classList.remove('hidden', 'sf-hidden');
+  section.innerHTML = `
+    <h4 class="text-xl font-bold text-white mb-2">Pagamento PIX</h4>
+    <p class="text-sm text-gray-400 mb-4">Plano: ${escapeHtml(planName)} | Valor: R$ ${Number(amount).toFixed(2)}</p>
+    ${payload.qr_code_base64 ? `<img alt="QR Code PIX" class="w-48 h-48 rounded-xl border border-gray-800 mb-4" src="data:image/png;base64,${payload.qr_code_base64}">` : ''}
+    <label class="text-xs text-gray-500 block mb-2">Código Copia e Cola</label>
+    <textarea readonly class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-xs text-gray-200 mb-3">${payload.pix_copy_paste || ''}</textarea>
+    <button id="copiarPixBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold transition">Copiar código</button>
+  `;
+  document.getElementById('copiarPixBtn')?.addEventListener('click', async () => {
+    const code = payload.pix_copy_paste || '';
+    try {
+      await navigator.clipboard.writeText(code);
+      showStatus('Código PIX copiado.', false);
+    } catch (_e) {
+      showStatus('Não foi possível copiar o código PIX.');
+    }
+  });
+}
+
+function getLoginUrlFromQuery() {
+  const raw = new URLSearchParams(window.location.search).get('loginUrl') || '';
+  if (!raw) return '';
+  try { return decodeURIComponent(raw); } catch (_e) { return raw; }
+}
+
+function loginNoMikroTik(mac) {
+  const loginUrl = getLoginUrlFromQuery();
+  if (!loginUrl) {
+    showStatus('Parâmetro loginUrl não encontrado. Reconecte ao Wi-Fi e tente novamente.');
+    return;
+  }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = loginUrl;
+  form.style.display = 'none';
+  const userInput = document.createElement('input');
+  userInput.name = 'username';
+  userInput.value = mac;
+  form.appendChild(userInput);
+  const passInput = document.createElement('input');
+  passInput.name = 'password';
+  passInput.value = mac;
+  form.appendChild(passInput);
+  document.body.appendChild(form);
+  form.submit();
+}
+
+async function gerarPix(planName, price) {
+  const mac = obterMacDaUrl();
+  if (!mac) {
+    showStatus('MAC não detectado. Reconecte ao Wi-Fi para continuar.');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/api/payments/generate-pix`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mac_address: mac,
+        plan_name: planName,
+        amount: Number(price),
+        description: `Plano ${planName}`
+      })
+    });
+    if (!res.ok) throw new Error('Falha ao gerar PIX');
+    const payload = await res.json();
+    renderPixSection(payload, planName, price);
+    showStatus('PIX gerado. Após pagar, clique em "Já paguei".', false);
+  } catch (err) {
+    console.error('Erro ao gerar PIX', err);
+    showStatus('Erro ao gerar PIX. Tente novamente.');
+  }
+}
+
+async function verificarPagamento() {
+  const mac = obterMacDaUrl();
+  if (!mac) {
+    showStatus('MAC não detectado. Reconecte ao Wi-Fi para continuar.');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/api/check-payment?mac=${encodeURIComponent(mac)}`);
+    if (!res.ok) throw new Error('Falha na consulta de pagamento');
+    const payment = await res.json();
+    const status = (payment?.status || 'not_found').toString().toLowerCase();
+    if (status === 'approved') {
+      showStatus('Pagamento aprovado. Conectando...', false);
+      loginNoMikroTik(mac);
+      return;
+    }
+    if (status === 'pending' || status === 'in_process') {
+      showStatus('Pagamento ainda não aprovado. Aguarde alguns segundos e tente novamente.');
+      return;
+    }
+    showStatus('Nenhum pagamento aprovado encontrado.');
+  } catch (err) {
+    console.error('Erro ao verificar pagamento', err);
+    showStatus('Erro ao verificar pagamento.');
+  }
+}
+
 document.getElementById('testeGratisBtn')?.addEventListener('click', async () => {
   const mac = obterMacDaUrl();
   const duration = Number(document.getElementById('testeGratisBtn')?.dataset.duration || 15);
@@ -207,6 +314,8 @@ document.getElementById('testeGratisBtn')?.addEventListener('click', async () =>
     console.error('Erro ao liberar teste grátis', err);
   }
 });
+
+document.getElementById('jaPagueiBtn')?.addEventListener('click', verificarPagamento);
 
 window.addEventListener('load', () => {
   atualizarMacNaTela();
