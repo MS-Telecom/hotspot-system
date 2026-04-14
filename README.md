@@ -13,8 +13,8 @@ O sistema é dividido em três camadas principais:
 ### Fluxo de Funcionamento (Hotspot)
 
 1. O cliente conecta no Wi-Fi do MikroTik.
-2. O MikroTik redireciona para o `entrypoint` da API.
-3. A API redireciona para o portal na Vercel com os parâmetros (`mac`, `ip`, `pop`).
+2. O MikroTik serve o `login.html` local do hotspot.
+3. O `login.html` redireciona para o portal externo na Vercel (`portal.html`) com parâmetros do MikroTik (`mac`, `ip`, `hotspot`, `loginUrl`, `orig`, `error`).
 4. O cliente escolhe um plano e paga via PIX (Mercado Pago).
 5. O Webhook do Mercado Pago avisa a API.
 6. A API ativa o usuário e insere as regras de velocidade (`Mikrotik-Rate-Limit`) na tabela `radreply`.
@@ -72,7 +72,7 @@ A API possui mais de 70 rotas. As principais são:
 - `POST /api/free-trial`: Libera acesso cortesia (15 min).
 
 ### Integração MikroTik
-- `POST /api/pops/:id/ping`: Heartbeat do MikroTik (mantém o POP online).
+- `POST /api/pops/:id/heartbeat`: Heartbeat do MikroTik (mantém o POP online).
 - `GET /api/hotspots/:id/script`: Gera script de instalação para o MikroTik.
 - `POST /api/webhooks/mercadopago`: Recebe confirmação de pagamento e libera acesso.
 
@@ -88,7 +88,7 @@ Para adicionar um novo roteador MikroTik ao sistema:
 
 O script fará automaticamente:
 - Configuração do servidor RADIUS apontando para a VPS.
-- Criação do perfil de Hotspot com redirecionamento correto.
+- Criação do perfil de Hotspot com DHCP/IP/hotspot sempre fechando na bridge.
 - Liberação do Walled Garden (Mercado Pago, Vercel, API).
 - Criação do Scheduler de Heartbeat (ping a cada 30s).
 
@@ -97,6 +97,14 @@ O script fará automaticamente:
 - RouterOS 6.47.9: removidos `comment` e `radius-interim-update` do `/ip hotspot profile add` (evita erro de parser e falha ao criar hotspot).
 - Modal de detalhes: `escapeHtml` agora tolera valores nao string.
 - Trunk VLAN: campos LAN/VLAN/Tipo de saida ocultos quando topologia=single.
+- Hotspot core: `/ip dhcp-server add` sem `comment`, `/ip hotspot add` na `ms-bridge-*`, `login-by=http-chap,http-pap` e `html-directory="ms-<ID>"`.
+- HTML do hotspot: `login.html` agora redireciona para `portal.html` com `loginUrl=$(link-login-only)` e `alogin.html` permanece como página local pós-autenticação.
+- Walled Garden: liberados os hosts necessários do portal (`hotspot-system.vercel.app`, `*.vercel.app`, `mstelecom-api.duckdns.org`, Google Fonts, CDN usada pelo portal e Mercado Pago).
+
+## ⚠️ Observacao operacional atual
+
+- Durante os testes de campo, o POP passou a aparecer online e o portal passou a abrir apos um ajuste manual no MikroTik.
+- Esse comportamento ficou operacional, mas a documentacao deve considerar esse ponto como provisório ate o fluxo de heartbeat/portal ficar fechado de ponta a ponta sem ajuste manual.
 
 ## 🔐 Variáveis de Ambiente (.env)
 
