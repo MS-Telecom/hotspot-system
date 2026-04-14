@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -443,7 +443,7 @@ function renderizarClientes(clientes) {
         const planoNome = planoObj ? planoObj.name : (cliente.plan_name || 'N/A');
         const statusClass = getStatusBadgeClass(cliente.status);
         const statusText = getStatusText(cliente.status);
-        const isVip = cliente.is_vip ? 'â­ VIP' : '';
+        const isVip = cliente.is_vip ? '⭐ VIP' : '';
         
         return `
         <div class="glass-card rounded-2xl overflow-hidden border border-gray-800 hover:border-blue-500/50 transition-all cursor-pointer" onclick="openClienteModal(${cliente.id})">

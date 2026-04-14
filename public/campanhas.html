@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -347,7 +347,7 @@ async function salvarCampanha() {
         const res = await fetch(`${API_URL}/api/campaigns`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(dados) });
         if (res.ok) { alert(`✅ Campanha "${nome}" criada!`); closeCampaignModal(); carregarCampanhas(); }
         else throw new Error();
-    } catch (error) { alert(`âš ï¸ Erro ao criar campanha. Tente novamente.`); }
+    } catch (error) { alert(`⚠️ Erro ao criar campanha. Tente novamente.`); }
 }
 
 function openCampaignDetail(id) {
@@ -402,7 +402,7 @@ async function atualizarCampanha() {
         const res = await fetch(`${API_URL}/api/campaigns/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
         if (res.ok) { alert(`✅ Campanha "${nome}" atualizada!`); closeEditCampaignModal(); carregarCampanhas(); }
         else throw new Error();
-    } catch (error) { alert(`âš ï¸ Erro ao atualizar campanha.`); }
+    } catch (error) { alert(`⚠️ Erro ao atualizar campanha.`); }
 }
 
 async function excluirCampanha() {
@@ -413,7 +413,7 @@ async function excluirCampanha() {
         const res = await fetch(`${API_URL}/api/campaigns/${campanhaAtualId}`, { method: 'DELETE', headers: authHeaders(false) });
         if (res.ok) { alert(`✅ Campanha "${campanha.name}" excluída!`); closeCampaignDetailModal(); carregarCampanhas(); }
         else throw new Error();
-    } catch (error) { alert(`âš ï¸ Campanha "${campanha.name}" excluída localmente.`); closeCampaignDetailModal(); carregarCampanhas(); }
+    } catch (error) { alert(`⚠️ Campanha "${campanha.name}" excluída localmente.`); closeCampaignDetailModal(); carregarCampanhas(); }
 }
 
 // ==================== BUSCA ====================
