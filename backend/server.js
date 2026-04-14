@@ -813,8 +813,22 @@ app.post('/api/payments/generate-pix', async (req, res) => {
 // Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
-    const { external_reference, mercado_pago_id } = req.query;
-    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'Referência ou ID do pagamento necessário' });
+    const { external_reference, mercado_pago_id, mac, mac_address } = req.query;
+    const macFilter = (mac || mac_address || '').toString().trim();
+
+    if (macFilter) {
+      const { data: payment, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_mac', macFilter)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return res.json(payment || { status: 'not_found' });
+    }
+
+    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'Referência, ID ou MAC do pagamento necessário' });
 
     let query = supabase.from('payments').select('*');
     if (external_reference) query = query.eq('external_reference', external_reference);
@@ -1101,6 +1115,10 @@ function buildPopInstallScript(pop, config = {}) {
   const vlanId = config.vlan_id ? String(config.vlan_id).trim() : '';
   const idleTimeout = config.idle_timeout ? `${config.idle_timeout}m` : '15m';
   const sessionTime = config.session_time ? `${config.session_time}m` : '';
+  const sharedUsers = parseNumber(config.shared_users, 0);
+  const bandwidthRaw = parseNumber(config.bandwidth, 0);
+  const bandwidthMbps = bandwidthRaw > 1024 ? Math.max(1, Math.round(bandwidthRaw / 1024)) : Math.max(0, Math.round(bandwidthRaw));
+  const rateLimit = bandwidthMbps > 0 ? `${bandwidthMbps}M/${bandwidthMbps}M` : '';
   const redirectUrl = config.redirect_url || '';
 
   const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
@@ -1122,7 +1140,7 @@ function buildPopInstallScript(pop, config = {}) {
     'fonts.gstatic.com'
   ];
 
-  const wgLines = wgHosts.map(h => `/ip hotspot walled-garden add dst-host=${h} action=allow comment="${tag}"`).join('\n');
+  const wgLines = wgHosts.map(h => `/ip hotspot walled-garden ip add action=accept disabled=no dst-host=${h} server="${popName}" comment="${tag}"`).join('\n');
 
   const wanBlock = (() => {
     if (installationType === 'production') {
@@ -1193,7 +1211,9 @@ function buildPopInstallScript(pop, config = {}) {
 
 const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
 
-  const sessionTimeLine = sessionTime ? `/ip hotspot user profile set [find name="default"] session-timeout=${sessionTime}\n` : '';
+  const userProfileTuningLine = (sessionTime || rateLimit || sharedUsers > 0)
+    ? `/ip hotspot user profile set [find name="default"]${sessionTime ? ` session-timeout=${sessionTime}` : ''}${rateLimit ? ` rate-limit=${rateLimit}` : ''}${sharedUsers > 0 ? ` shared-users=${sharedUsers}` : ''}\n`
+    : '';
 
   const redirectLine = redirectUrl ? `# Redirect URL (opcional)\n/ip hotspot profile set [find name="ms-profile-${popId}"] login-by=http-chap,http-pap\n` : '';
 
@@ -1249,11 +1269,13 @@ ${wanBlock}
 /ip dns set allow-remote-requests=yes servers=8.8.8.8,1.1.1.1
 :delay 500ms
 
-/radius add address=${radiusServer} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 comment="${tag}" timeout=1000ms
+/radius add address=${radiusServer} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 domain="${popId}" comment="${tag}" timeout=1000ms
 /radius incoming set accept=yes
 :delay 1s
 
-/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap login-url="${apiUrl}/login?mac=$(mac)" html-directory="ms-${popId}" use-radius=yes radius-default-domain="${popId}"
+:global hotspotDir
+:set hotspotDir "ms-${popId}"
+/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap html-directory=$hotspotDir use-radius=yes radius-default-domain="${popId}" radius-interim-update=10m
 :delay 500ms
 
 ${hotspotLine}:delay 1s
@@ -1265,9 +1287,9 @@ ${wgLines}
 ${hotspotHtmlBlock}
 :delay 1s
 
-${sessionTimeLine}${redirectLine}
+${userProfileTuningLine}${redirectLine}
 
-/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" keep-result=no" start-time=startup comment="${tag}"
+/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" http-method=post keep-result=no" start-time=startup comment="${tag}"
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
@@ -1829,7 +1851,7 @@ app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/settings/free_trial', authMiddleware, async (req, res) => {
+app.get('/api/settings/free_trial', async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
     if (error) throw error;
