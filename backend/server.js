@@ -1191,7 +1191,7 @@ function buildPopInstallScript(pop, config = {}) {
       ? `"ms-vlan-${vlanId}"`
       : lanInterface;
 
-  const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
+const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
 
   const sessionTimeLine = sessionTime ? `/ip hotspot user profile set [find name="default"] session-timeout=${sessionTime}\n` : '';
 
@@ -1253,7 +1253,7 @@ ${wanBlock}
 /radius incoming set accept=yes
 :delay 1s
 
-/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap html-directory="ms-${popId}" use-radius=yes radius-default-domain="${popId}"
+/ip hotspot profile add name="ms-profile-${popId}" hotspot-address=192.168.32.1 login-by=http-chap,http-pap login-url="${apiUrl}/login?mac=$(mac)" html-directory="ms-${popId}" use-radius=yes radius-default-domain="${popId}"
 :delay 500ms
 
 ${hotspotLine}:delay 1s
@@ -1614,6 +1614,36 @@ app.get('/api/health', (_req, res) => {
     uptime: process.uptime(),
     mikrotik_api: !!RouterOSAPI
   });
+});
+
+// Rotas públicas para o portal
+app.get('/api/public/plans', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('active', true)
+      .order('price', { ascending: true });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar planos' });
+  }
+});
+
+app.get('/api/public/free-trial-config', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'free_trial')
+      .maybeSingle();
+    if (error) throw error;
+    const config = data?.value || { enabled: false, duration_minutes: 15, cooldown_hours: 24 };
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar configuração do teste grátis' });
+  }
 });
 
 // Debug: retorna IP real visto pelo backend
