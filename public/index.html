@@ -150,11 +150,12 @@ async function carregarConfigTesteGratis() {
     const res = await fetch(`${API_URL}/api/public/free-trial-config`);
     if (!res.ok) throw new Error();
     const config = await res.json();
+    console.log('[portal] free trial config', config);
     const liberar = document.getElementById('liberar5minBtn');
     const teste = document.getElementById('testeGratisBtn');
     if (!config.enabled) {
-      if (liberar) liberar.style.display = 'none';
-      if (teste) teste.style.display = 'none';
+      liberar?.remove();
+      teste?.remove();
       return;
     }
     if (liberar) {
