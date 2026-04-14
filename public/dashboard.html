@@ -482,52 +482,6 @@
     </div>
 </div>
 
-<!-- MODAL: MEU PERFIL -->
-<div id="profileModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                <i data-lucide="user-cog" class="w-5 h-5 text-blue-500"></i>
-                Meu Perfil
-            </h2>
-            <button onclick="closeProfileModal()" class="p-2 hover:bg-gray-800 rounded-lg">
-                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
-            </button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">UsuÃ¡rio</label>
-                <input type="text" id="editUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label>
-                <input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-            </div>
-            <div class="border-t border-gray-800 pt-4 mt-2">
-                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label>
-                        <input type="password" id="currentPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label>
-                        <input type="password" id="newPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label>
-                        <input type="password" id="confirmPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-            <button onclick="closeProfileModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="saveProfile()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
-        </div>
-    </div>
-</div>
-
 <script>
 // ============================================
 // CONFIGURAÃ‡Ã•ES GLOBAIS
@@ -589,9 +543,12 @@ function loadUserProfile() {
     if (userStr) {
         try {
             const user = JSON.parse(userStr);
-            document.getElementById('editUsername').value = user.username || '';
-            document.getElementById('editEmail').value = user.email || '';
-            document.getElementById('userName').innerText = user.username || 'Administrador';
+            const editUsername = document.getElementById('editUsername');
+            const editEmail = document.getElementById('editEmail');
+            const userName = document.getElementById('userName');
+            if (editUsername) editUsername.value = user.username || '';
+            if (editEmail) editEmail.value = user.email || '';
+            if (userName) userName.innerText = user.username || 'Administrador';
         } catch(e) {}
     }
 }

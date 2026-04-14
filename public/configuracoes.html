@@ -304,32 +304,6 @@
     </div>
 </div>
 
-<!-- Modal Perfil -->
-<div id="modalPerfil" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
-    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
-        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
-            <h3 class="text-lg font-black text-white">Meu Perfil</h3>
-            <button onclick="closeModalPerfil()" class="p-2 hover:bg-gray-800 rounded-xl transition"><i data-lucide="x" class="w-5 h-5 text-gray-500"></i></button>
-        </div>
-        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome Completo</label><input type="text" id="editNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div class="border-t border-gray-800 pt-4 mt-2">
-                <p class="text-xs font-bold text-yellow-500 mb-3">Alterar Senha</p>
-                <div class="space-y-3">
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha Atual</label><input type="password" id="senhaAtual" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova Senha</label><input type="password" id="novaSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Confirmar Nova Senha</label><input type="password" id="confirmarSenha" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-                </div>
-            </div>
-        </div>
-        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-            <button onclick="closeModalPerfil()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarPerfil()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
-        </div>
-    </div>
-</div>
-
 <script>
     // ============================================
     // RESTAURACAO (configuracoes.html)
