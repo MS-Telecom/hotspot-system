@@ -820,7 +820,7 @@ app.get('/api/check-payment', async (req, res) => {
       const { data: payment, error } = await supabase
         .from('payments')
         .select('*')
-        .eq('user_mac', macFilter)
+        .ilike('user_mac', macFilter)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
