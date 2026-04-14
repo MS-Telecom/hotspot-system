@@ -345,9 +345,19 @@ async function salvarCampanha() {
     };
     try {
         const res = await fetch(`${API_URL}/api/campaigns`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(dados) });
-        if (res.ok) { alert(`âœ… Campanha "${nome}" criada!`); closeCampaignModal(); carregarCampanhas(); }
-        else throw new Error();
-    } catch (error) { alert(`âš ï¸ Erro ao criar campanha. Tente novamente.`); }
+        if (res.ok) {
+            alert(`âœ… Campanha "${nome}" criada!`);
+            closeCampaignModal();
+            carregarCampanhas();
+            return;
+        }
+        const errorText = await res.text();
+        console.error('Erro detalhado ao criar campanha:', errorText);
+        alert(`âš ï¸ Erro ao criar campanha: ${errorText || 'Tente novamente'}`);
+    } catch (error) {
+        console.error('Erro de rede ao criar campanha:', error);
+        alert(`âš ï¸ Erro ao criar campanha. Tente novamente.`);
+    }
 }
 
 function openCampaignDetail(id) {
