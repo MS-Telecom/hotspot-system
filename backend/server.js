@@ -316,6 +316,80 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
   return { success: viaApi || viaRadius, viaApi, viaRadius, errors };
 }
 
+// Creates/updates a basic user row for a MAC so the device appears in the admin panel.
+async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName = 'free_trial', status = 'trial', popId = null, expiresAt = null }) {
+  const now = new Date().toISOString();
+  const cleanMac = String(macAddress || '').trim();
+  if (!cleanMac) throw new Error('macAddress is required');
+
+  // `users.hotspot_id` is bigint; only set it when popId is numeric.
+  const hotspotId = popId && /^\d+$/.test(String(popId)) ? parseInt(String(popId), 10) : null;
+
+  const payload = {
+    name: `Device ${cleanMac}`,
+    username: cleanMac,
+    mac_address: cleanMac,
+    status: status || 'trial',
+    plan_name: planName || 'free_trial',
+    ...(hotspotId ? { hotspot_id: hotspotId } : {}),
+    ...(expiresAt ? { expires_at: expiresAt } : {}),
+    updated_at: now,
+    created_at: now
+  };
+
+  const { data, error } = await supabase
+    .from('users')
+    .upsert(payload, { onConflict: 'mac_address' })
+    .select('*')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Failed to create or find user');
+  return data;
+}
+
+async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddress = null, popId = null, popIp = null }) {
+  const cleanMac = String(macAddress || '').trim();
+  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC Ã© obrigatÃ³rio' } };
+
+  const minutes = Number(durationMinutes || 15);
+  const expiresAt = new Date(Date.now() + minutes * 60000).toISOString();
+  const mikrotikIp = popIp || '192.168.32.1';
+
+  // 1) Ensure RADIUS credential (and IP binding when possible).
+  const result = await authorizeAccess(cleanMac, mikrotikIp, null, null, popId, minutes, 5, 'free_trial');
+  if (!result.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar acesso' } };
+
+  // 2) Ensure basic user row exists for this device.
+  const user = await findOrCreateHotspotUser({
+    macAddress: cleanMac,
+    ipAddress,
+    planName: 'free_trial',
+    status: 'trial',
+    popId,
+    expiresAt
+  });
+
+  // 3) Register session linked to the user.
+  const now = new Date().toISOString();
+  const sessionPayload = {
+    user_id: user.id,
+    mac_address: cleanMac,
+    access_granted: true,
+    status: 'active',
+    expires_at: expiresAt,
+    ...(popId ? { pop_id: popId } : {}),
+    ...(popIp ? { pop_ip: popIp } : {}),
+    created_at: now,
+    updated_at: now
+  };
+
+  const { error: sessionErr } = await supabase.from('hotspot_sessions').insert(sessionPayload);
+  if (sessionErr) throw sessionErr;
+
+  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user.id } };
+}
+
 // ============================================================
 // ⏱️ CRON JOB - REMOVER ACESSOS EXPIRADOS
 // ============================================================
@@ -2350,19 +2424,33 @@ app.get('/api/payments', async (req, res, next) => {
 // Rota de Teste Grátis (chamada pelo frontend)
 app.post('/api/users/test-access', async (req, res) => {
   try {
-    const { mac_address, duration_minutes = 15 } = req.body;
-    if (!mac_address) return res.status(400).json({ error: 'MAC é obrigatório' });
-    
-    const result = await authorizeAccess(mac_address, '192.168.32.1', null, null, null, duration_minutes, 5, 'free_trial');
-    if (result.success) {
-      await supabase.from('hotspot_sessions').insert({
-        mac_address, status: 'active', expires_at: new Date(Date.now() + duration_minutes * 60000).toISOString(),
-        created_at: new Date().toISOString()
-      });
-      return res.json({ message: 'Acesso liberado' });
-    }
-    res.status(500).json({ error: 'Erro ao liberar acesso' });
+    const body = req.body || {};
+    const macAddress = body.mac_address;
+    const durationMinutes = body.duration_minutes ?? 15;
+    const ipAddress = body.ip_address ?? body.ip ?? null;
+    const popId = body.pop_id ?? null;
+    const popIp = body.pop_ip ?? null;
+
+    const out = await handleFreeTrialAccess({ macAddress, durationMinutes, ipAddress, popId, popIp });
+    return res.status(out.status).json(out.body);
   } catch (err) {
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// Legacy alias to ease tests / older clients.
+app.post('/api/liberar-teste', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const macAddress = body.mac_address || body.mac;
+    const durationMinutes = body.duration_minutes ?? body.durationMinutes ?? 15;
+    const ipAddress = body.ip_address || body.ip || null;
+    const popId = body.pop_id || null;
+    const popIp = body.pop_ip || null;
+
+    const out = await handleFreeTrialAccess({ macAddress, durationMinutes, ipAddress, popId, popIp });
+    return res.status(out.status).json(out.body);
+  } catch (_err) {
     res.status(500).json({ error: 'Erro interno' });
   }
 });
@@ -2399,11 +2487,26 @@ app.post('/api/free-trial', async (req, res) => {
 
     if (!result.success) return res.status(500).json({ success: false, message: 'Erro ao liberar acesso' });
 
+    const user = await findOrCreateHotspotUser({
+      macAddress: mac_address,
+      ipAddress: req.body?.ip_address ?? req.body?.ip ?? null,
+      planName: 'free_trial',
+      status: 'trial',
+      popId: req.body?.pop_id ?? null,
+      expiresAt
+    });
+
+    const now = new Date().toISOString();
     await supabase.from('hotspot_sessions').insert({
+      user_id: user.id,
       mac_address,
+      access_granted: true,
       status: 'active',
       expires_at: expiresAt,
-      created_at: new Date().toISOString()
+      pop_id: req.body?.pop_id ?? null,
+      pop_ip: req.body?.pop_ip ?? null,
+      created_at: now,
+      updated_at: now
     });
 
     try {
@@ -2412,7 +2515,7 @@ app.post('/api/free-trial', async (req, res) => {
       // ignora se não existir
     }
 
-    res.json({ success: true, expires_at: expiresAt, message: 'Acesso liberado' });
+    res.json({ success: true, expires_at: expiresAt, message: 'Acesso liberado', user_id: user.id });
   } catch (_err) {
     res.status(500).json({ success: false, message: 'Erro interno' });
   }
