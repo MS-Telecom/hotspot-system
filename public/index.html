@@ -1,1 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>MS TELECOM | Wi-Fi Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0c15 0%, #020617 100%); min-height: 100vh; }
+    .glass-card { background: rgba(15, 25, 35, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(59,130,246,0.25); }
+    .plan-card { transition: all 0.2s ease; cursor: pointer; }
+    .plan-card:hover { transform: translateY(-4px); border-color: #3b82f6; box-shadow: 0 20px 35px -12px rgba(59,130,246,0.25); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .toast-warning { border-left-color: #f59e0b; }
+    .toast-success { border-left-color: #10b981; }
+    .toast-error { border-left-color: #ef4444; }
+    .toast-info { border-left-color: #3b82f6; }
+  </style>
+</head>
+<body class="text-gray-200">
 
+<div class="min-h-screen flex flex-col">
+  <header class="border-b border-gray-800 bg-black/30 backdrop-blur-sm sticky top-0 z-20">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+          <i data-lucide="wifi" class="text-white w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+          <p class="text-[9px] text-gray-500 uppercase tracking-wider">Wi-Fi Hotspot</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-full">
+          <span class="status-dot bg-emerald-500"></span>
+          <span class="text-[10px] font-medium text-emerald-500">Rede disponível</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+    <div class="glass-card rounded-3xl p-8 mb-10 text-center border border-blue-500/20">
+      <h2 class="text-3xl md:text-4xl font-black text-white mb-2">Conecte-se agora mesmo!</h2>
+      <p class="text-gray-400 max-w-2xl mx-auto">Escolha o plano ideal e aproveite internet de alta velocidade da MS Telecom.</p>
+    </div>
+
+    <div class="bg-gray-900/50 rounded-2xl p-4 mb-8 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <i data-lucide="smartphone" class="text-blue-500 w-5 h-5"></i>
+        <span class="text-sm text-gray-300">Seu dispositivo:</span>
+        <code id="dispositivoMac" class="bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono text-blue-400">Detectando...</code>
+      </div>
+
+      <div class="flex gap-3 flex-wrap">
+        <button id="liberar5minBtn" class="hidden px-5 py-2 bg-amber-600/20 border border-amber-500/50 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-600/30 transition flex items-center gap-2">
+          <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
+        </button>
+
+        <button id="testeGratisBtn" class="hidden px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
+          <i data-lucide="flask" class="w-4 h-4"></i> Teste grátis
+        </button>
+
+        <button id="jaPagueiBtn" class="px-5 py-2 bg-blue-600/20 border border-blue-500/50 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4"></i> Já paguei
+        </button>
+      </div>
+    </div>
+
+    <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano
+    </h3>
+
+    <div id="plansContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400">
+        Carregando planos...
+      </div>
+    </div>
+
+    <div id="paymentSection" class="hidden glass-card rounded-3xl p-8 border border-blue-500/30 mb-8">
+      <div class="flex flex-col md:flex-row gap-8 items-center">
+        <div class="flex-1 text-center md:text-left">
+          <h3 class="text-2xl font-bold text-white mb-2">Pagamento via PIX</h3>
+          <p class="text-gray-400 mb-4">Escaneie o QR Code ou copie o código para pagar</p>
+          <div class="bg-gray-900/80 rounded-2xl p-4 inline-block">
+            <div id="qrCodeInner" class="w-48 h-48 bg-white rounded-2xl flex items-center justify-center text-gray-800">
+              Gerando...
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-3">QR Code válido por 30 minutos</p>
+        </div>
+
+        <div class="flex-1 space-y-4">
+          <div class="bg-gray-900/50 rounded-2xl p-4">
+            <p class="text-[10px] text-gray-500 uppercase mb-1">Código PIX copia e cola</p>
+            <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">Gerando PIX...</code>
+            <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i> Copiar código
+            </button>
+          </div>
+
+          <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4">
+            <p class="text-xs text-yellow-500 flex items-center gap-2">
+              <i data-lucide="clock" class="w-4 h-4"></i>
+              Após o pagamento, clique em "Já paguei" para liberar seu acesso
+            </p>
+          </div>
+
+          <button id="cancelarPagamentoBtn" class="w-full bg-gray-800 hover:bg-gray-700 py-2 rounded-xl text-sm transition">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="statusMessage" class="hidden fixed bottom-6 right-6 glass-card rounded-2xl p-4 border-l-4 border-emerald-500 shadow-2xl z-50 max-w-sm">
+      <div class="flex items-center gap-3">
+        <i data-lucide="check-circle" class="text-emerald-500 w-6 h-6"></i>
+        <div>
+          <p id="statusMessageText" class="text-sm font-medium text-white">Acesso liberado!</p>
+          <p class="text-[10px] text-gray-500">Você será redirecionado em instantes</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-gray-800 py-6 text-center text-[10px] text-gray-600">
+    <p>MS TELECOM - Internet de qualidade para sua conexão</p>
+    <p class="mt-1">© 2026 - Todos os direitos reservados</p>
+  </footer>
+</div>
+
+<script>
+  const API_BASE = 'https://mstelecom-api.duckdns.org';
+
+  const params = new URLSearchParams(window.location.search);
+  const macAddress = (params.get('mac') || '').toUpperCase();
+  const loginUrl = params.get('loginUrl') || 'http://192.168.32.1/login';
+
+  const macDisplay = document.getElementById('dispositivoMac');
+  macDisplay.textContent = macAddress || 'MAC não detectado';
+
+  const plansContainer = document.getElementById('plansContainer');
+  const testeGratisBtn = document.getElementById('testeGratisBtn');
+  const liberar5minBtn = document.getElementById('liberar5minBtn');
+  const jaPagueiBtn = document.getElementById('jaPagueiBtn');
+  const paymentSection = document.getElementById('paymentSection');
+  const qrCodeInner = document.getElementById('qrCodeInner');
+  const pixCode = document.getElementById('pixCode');
+
+  let selectedPlan = null;
+  let lastFreeTest = localStorage.getItem('last_free_test') || 0;
+
+  function showStatusMessage(message, type = 'success') {
+    const msgDiv = document.getElementById('statusMessage');
+    const msgText = document.getElementById('statusMessageText');
+    const icon = msgDiv.querySelector('i');
+
+    msgText.innerText = message;
+    msgDiv.className = `fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm border-l-4 toast-${type}`;
+    msgDiv.classList.remove('hidden');
+
+    const iconName = {
+      success: 'check-circle',
+      error: 'alert-circle',
+      warning: 'alert-triangle',
+      info: 'info'
+    }[type] || 'info';
+
+    icon.setAttribute('data-lucide', iconName);
+    lucide.createIcons();
+
+    setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+  }
+
+  function redirectToMikrotik(mac) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = loginUrl;
+    form.style.display = 'none';
+
+    const fields = {
+      username: mac,
+      password: mac,
+      dst: window.location.href
+    };
+
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  async function loadPlans() {
+    try {
+      const res = await fetch(`${API_BASE}/api/plans`);
+      if (!res.ok) throw new Error('Falha ao carregar planos');
+
+      const plans = await res.json();
+      const activePlans = (plans || []).filter(p => p.active !== false);
+
+      if (!activePlans.length) {
+        plansContainer.innerHTML = `
+          <div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400 md:col-span-3">
+            Nenhum plano disponível no momento.
+          </div>
+        `;
+        return;
+      }
+
+      plansContainer.innerHTML = activePlans.map(plan => `
+        <div class="plan-card glass-card rounded-2xl p-6 border border-gray-800" data-plan-name="${escapeHtml(plan.name || 'Plano')}" data-price="${Number(plan.price || 0)}">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+              <i data-lucide="wifi" class="text-blue-500 w-6 h-6"></i>
+            </div>
+            <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full">${Number(plan.speed_mbps || 0)} Mbps</span>
+          </div>
+          <h4 class="text-xl font-bold text-white">${escapeHtml(plan.name || 'Plano')}</h4>
+          <p class="text-gray-400 text-sm mt-1">${escapeHtml(plan.description || `${plan.duration_days || 1} dia(s) de acesso`)}</p>
+          <div class="mt-4">
+            <span class="text-3xl font-black text-white">R$ ${Number(plan.price || 0).toFixed(2).replace('.', ',')}</span>
+          </div>
+          <ul class="mt-4 space-y-2 text-sm text-gray-400">
+            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> ${Number(plan.speed_mbps || 0)} Mbps</li>
+            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> ${Number(plan.duration_days || 1)} dia(s)</li>
+          </ul>
+          <button class="btn-plano w-full mt-6 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl text-sm font-bold transition">
+            Escolher plano
+          </button>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+
+      document.querySelectorAll('.btn-plano').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!macAddress) {
+            showStatusMessage('MAC não detectado. Reconecte-se ao Wi-Fi.', 'error');
+            return;
+          }
+
+          const card = btn.closest('.plan-card');
+          selectedPlan = {
+            name: card.dataset.planName,
+            price: Number(card.dataset.price || 0)
+          };
+
+          paymentSection.classList.remove('hidden');
+          paymentSection.scrollIntoView({ behavior: 'smooth' });
+
+          qrCodeInner.innerHTML = 'Gerando QR Code...';
+          pixCode.textContent = 'Aguarde, gerando PIX...';
+
+          try {
+            const response = await fetch(`${API_BASE}/api/payments/generate-pix`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                mac_address: macAddress,
+                plan_name: selectedPlan.name,
+                amount: selectedPlan.price
+              })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Erro ao gerar PIX');
+
+            if (data.qr_code_base64) {
+              qrCodeInner.innerHTML = `<img src="data:image/png;base64,${data.qr_code_base64}" class="w-48 h-48" alt="QR Code PIX">`;
+            } else {
+              qrCodeInner.innerHTML = 'QR indisponível';
+            }
+
+            pixCode.textContent = data.pix_copy_paste || data.pix_code || 'Código PIX não disponível';
+          } catch (error) {
+            paymentSection.classList.add('hidden');
+            selectedPlan = null;
+            showStatusMessage(error.message || 'Erro ao gerar PIX.', 'error');
+          }
+        });
+      });
+    } catch (error) {
+      plansContainer.innerHTML = `
+        <div class="glass-card rounded-2xl p-6 border border-red-500/20 text-center text-red-400 md:col-span-3">
+          Erro ao carregar planos.
+        </div>
+      `;
+    }
+  }
+
+  async function loadFreeTrialSettings() {
+    try {
+      const res = await fetch(`${API_BASE}/api/settings/free_trial`);
+      if (!res.ok) throw new Error('Falha ao carregar config');
+
+      const cfg = await res.json();
+      const enabled = !!cfg.enabled;
+      const duration = Number(cfg.duration_minutes || 15);
+
+      if (enabled) {
+        testeGratisBtn.classList.remove('hidden');
+        testeGratisBtn.innerHTML = `<i data-lucide="flask" class="w-4 h-4"></i> Teste grátis ${duration}min`;
+      } else {
+        testeGratisBtn.classList.add('hidden');
+      }
+
+      lucide.createIcons();
+    } catch (error) {
+      testeGratisBtn.classList.add('hidden');
+    }
+  }
+
+  testeGratisBtn.addEventListener('click', async () => {
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    try {
+      const resCfg = await fetch(`${API_BASE}/api/settings/free_trial`);
+      const cfg = await resCfg.json();
+      const duration = Number(cfg.duration_minutes || 15);
+
+      const res = await fetch(`${API_BASE}/api/users/test-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mac_address: macAddress,
+          duration_minutes: duration
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao liberar teste');
+
+      showStatusMessage(`Teste grátis de ${duration} minutos liberado! Autenticando...`, 'success');
+      setTimeout(() => redirectToMikrotik(macAddress), 1500);
+    } catch (error) {
+      showStatusMessage(error.message || 'Erro ao liberar teste.', 'error');
+    }
+  });
+
+  liberar5minBtn.addEventListener('click', async () => {
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+
+    if (lastFreeTest && (now - lastFreeTest) < oneHour) {
+      const remaining = Math.ceil((oneHour - (now - lastFreeTest)) / 60000);
+      showStatusMessage(`Aguarde ${remaining} minutos para outro teste gratuito.`, 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/users/test-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mac_address: macAddress,
+          duration_minutes: 5
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao liberar teste');
+
+      lastFreeTest = now;
+      localStorage.setItem('last_free_test', String(lastFreeTest));
+
+      showStatusMessage('5 minutos de acesso liberado! Autenticando...', 'success');
+      setTimeout(() => redirectToMikrotik(macAddress), 1500);
+    } catch (error) {
+      showStatusMessage(error.message || 'Erro ao liberar 5 minutos.', 'error');
+    }
+  });
+
+  jaPagueiBtn.addEventListener('click', async () => {
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/check-payment?mac=${encodeURIComponent(macAddress)}`);
+      const data = await res.json();
+
+      if (data && (data.status === 'approved' || data.status === 'paid')) {
+        showStatusMessage('Pagamento confirmado! Acesso liberado. Redirecionando...', 'success');
+        setTimeout(() => redirectToMikrotik(macAddress), 1500);
+      } else {
+        showStatusMessage('Pagamento ainda não encontrado. Faça o PIX e tente novamente.', 'warning');
+        if (selectedPlan) {
+          paymentSection.classList.remove('hidden');
+          paymentSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    } catch (error) {
+      showStatusMessage('Erro ao verificar pagamento.', 'error');
+    }
+  });
+
+  document.getElementById('cancelarPagamentoBtn').addEventListener('click', () => {
+    paymentSection.classList.add('hidden');
+    selectedPlan = null;
+    qrCodeInner.innerHTML = 'Gerando...';
+    pixCode.textContent = 'Gerando PIX...';
+  });
+
+  document.getElementById('copyPixBtn').addEventListener('click', async () => {
+    const code = pixCode.textContent || '';
+    if (!code || code.includes('Gerando')) {
+      showStatusMessage('Aguarde o código PIX ser gerado.', 'warning');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(code);
+      showStatusMessage('Código PIX copiado!', 'info');
+    } catch {
+      showStatusMessage('Erro ao copiar código.', 'error');
+    }
+  });
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  lucide.createIcons();
+  loadPlans();
+  loadFreeTrialSettings();
+</script>
+</body>
+</html>
