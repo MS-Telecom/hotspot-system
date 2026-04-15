@@ -63,7 +63,7 @@
         </button>
 
         <button id="testeGratisBtn" class="hidden px-5 py-2 bg-emerald-600/20 border border-emerald-500/50 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-600/30 transition flex items-center gap-2">
-          <i data-lucide="flask" class="w-4 h-4"></i> Teste grátis
+          <i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis
         </button>
 
         <button id="jaPagueiBtn" class="px-5 py-2 bg-blue-600/20 border border-blue-500/50 rounded-xl text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition flex items-center gap-2">
@@ -320,7 +320,7 @@ function showStatusMessage(message, type = 'success') {
 
       if (enabled) {
         testeGratisBtn.classList.remove('hidden');
-        testeGratisBtn.innerHTML = `<i data-lucide="flask" class="w-4 h-4"></i> Teste grátis ${duration}min`;
+        testeGratisBtn.innerHTML = `<i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis ${duration}min`;
       } else {
         testeGratisBtn.classList.add('hidden');
       }
