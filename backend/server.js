@@ -210,8 +210,12 @@ async function upsertMikrotikCredentials(payload) {
 
 const FREERADIUS_CLIENTS_PATH =
   process.env.FREERADIUS_CLIENTS_PATH || '/etc/freeradius/3.0/clients.d/ms-telecom-pops.conf';
-const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || 'freeradius -C';
-const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || 'systemctl reload freeradius';
+const FREERADIUS_TMP_CLIENTS_PATH =
+  process.env.FREERADIUS_TMP_CLIENTS_PATH || path.join(__dirname, 'tmp', 'ms-telecom-pops.conf');
+const FREERADIUS_MAIN_CLIENTS_CONF = process.env.FREERADIUS_MAIN_CLIENTS_CONF || '/etc/freeradius/3.0/clients.conf';
+const FREERADIUS_INCLUDE_LINE = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
+const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || '/usr/sbin/freeradius -C';
+const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || '/bin/systemctl reload freeradius';
 
 let freeradiusSyncInFlight = null;
 
@@ -281,15 +285,54 @@ async function syncFreeradiusClientsFromDb() {
 
       const conf = buildFreeradiusClientsConf(pops || []);
 
-      fs.mkdirSync(path.dirname(FREERADIUS_CLIENTS_PATH), { recursive: true });
-      fs.writeFileSync(FREERADIUS_CLIENTS_PATH, conf, { encoding: 'utf8' });
+      // Write in a local tmp path first (PM2 runs as ubuntu and cannot write to /etc directly).
+      fs.mkdirSync(path.dirname(FREERADIUS_TMP_CLIENTS_PATH), { recursive: true });
+      fs.writeFileSync(FREERADIUS_TMP_CLIENTS_PATH, conf, { encoding: 'utf8' });
+      console.log(`[FreeRADIUS] tmp clients generated: ${FREERADIUS_TMP_CLIENTS_PATH}`);
 
-      const validate = await execAsync(FREERADIUS_VALIDATE_CMD, 20000);
+      // Ensure clients.d exists and copy tmp file to the final /etc path using sudo.
+      const finalDir = path.dirname(FREERADIUS_CLIENTS_PATH);
+      const mkDir = await execAsync(`sudo /bin/mkdir -p '${finalDir}'`, 20000);
+      if (mkDir.error) {
+        return { ok: false, error: `FreeRADIUS mkdir failed: ${mkDir.stderr || mkDir.stdout}` };
+      }
+
+      const cp = await execAsync(`sudo /bin/cp '${FREERADIUS_TMP_CLIENTS_PATH}' '${FREERADIUS_CLIENTS_PATH}'`, 20000);
+      if (cp.error) {
+        return { ok: false, error: `FreeRADIUS copy failed: ${cp.stderr || cp.stdout}` };
+      }
+      console.log(`[FreeRADIUS] clients copied to: ${FREERADIUS_CLIENTS_PATH}`);
+
+      // Ensure exactly one include line exists in clients.conf (do not overwrite the file).
+      const includeLineForShell = FREERADIUS_INCLUDE_LINE.replace(/'/g, `'\\''`);
+      const grep = await execAsync(
+        `sudo /bin/grep -Fqx '${includeLineForShell}' '${FREERADIUS_MAIN_CLIENTS_CONF}'`,
+        20000
+      );
+      if (grep.error) {
+        // grep returns exit code 1 when not found (this is expected).
+        if (Number(grep.error.code) === 1) {
+          const append = await execAsync(
+            `printf '%s\\n' '${includeLineForShell}' | sudo /usr/bin/tee -a '${FREERADIUS_MAIN_CLIENTS_CONF}'`,
+            20000
+          );
+          if (append.error) {
+            return { ok: false, error: `FreeRADIUS include append failed: ${append.stderr || append.stdout}` };
+          }
+          console.log(`[FreeRADIUS] include inserted into clients.conf: ${FREERADIUS_INCLUDE_LINE}`);
+        } else {
+          return { ok: false, error: `FreeRADIUS include check failed: ${grep.stderr || grep.stdout}` };
+        }
+      } else {
+        console.log('[FreeRADIUS] include already present in clients.conf');
+      }
+
+      const validate = await execAsync(`sudo ${FREERADIUS_VALIDATE_CMD}`, 20000);
       if (validate.error) {
         return { ok: false, error: `FreeRADIUS validation failed: ${validate.stderr || validate.stdout}` };
       }
 
-      const reload = await execAsync(FREERADIUS_RELOAD_CMD, 20000);
+      const reload = await execAsync(`sudo ${FREERADIUS_RELOAD_CMD}`, 20000);
       if (reload.error) {
         return { ok: false, error: `FreeRADIUS reload failed: ${reload.stderr || reload.stdout}` };
       }
