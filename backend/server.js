@@ -288,61 +288,47 @@ async function syncFreeradiusClientsFromDb() {
       // Write in a local tmp path first (PM2 runs as ubuntu and cannot write to /etc directly).
       fs.mkdirSync(path.dirname(FREERADIUS_TMP_CLIENTS_PATH), { recursive: true });
       fs.writeFileSync(FREERADIUS_TMP_CLIENTS_PATH, conf, { encoding: 'utf8' });
-      console.log(`[FreeRADIUS] tmp clients generated: ${FREERADIUS_TMP_CLIENTS_PATH}`);
 
-      // Ensure clients.d exists and copy tmp file to the final /etc path using sudo.
-      const finalDir = path.dirname(FREERADIUS_CLIENTS_PATH);
-      const mkDir = await execAsync(`sudo /bin/mkdir -p '${finalDir}'`, 20000);
-      if (mkDir.error) {
-        return { ok: false, error: `FreeRADIUS mkdir failed: ${mkDir.stderr || mkDir.stdout}` };
+      // 1. Garante que o diretório de destino do FreeRADIUS exista no VPS
+      const { error: mkdirError } = await execAsync(`sudo mkdir -p ${path.dirname(FREERADIUS_CLIENTS_PATH)}`);
+      if (mkdirError) throw new Error(`Erro ao criar diretório FreeRADIUS: ${mkdirError.stderr}`);
+
+      // 2. Copia o arquivo temporário para o destino final no VPS
+      const { error: cpError } = await execAsync(`sudo cp ${FREERADIUS_TMP_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}`);
+      if (cpError) throw new Error(`Erro ao copiar arquivo FreeRADIUS: ${cpError.stderr}`);
+
+      // 3. Garante que o clients.conf principal inclua nosso arquivo
+      // Lê o conteúdo do clients.conf principal do VPS
+      const { stdout: mainClientsConfContent, error: catError } = await execAsync(`sudo cat ${FREERADIUS_MAIN_CLIENTS_CONF}`);
+      if (catError) throw new Error(`Erro ao ler clients.conf: ${catError.stderr}`);
+
+      if (!mainClientsConfContent.includes(FREERADIUS_INCLUDE_LINE)) {
+        // Se a linha de include não existe, adiciona-a
+        const { error: teeError } = await execAsync(`echo "${FREERADIUS_INCLUDE_LINE}" | sudo tee -a ${FREERADIUS_MAIN_CLIENTS_CONF}`);
+        if (teeError) throw new Error(`Erro ao adicionar include: ${teeError.stderr}`);
       }
 
-      const cp = await execAsync(`sudo /bin/cp '${FREERADIUS_TMP_CLIENTS_PATH}' '${FREERADIUS_CLIENTS_PATH}'`, 20000);
-      if (cp.error) {
-        return { ok: false, error: `FreeRADIUS copy failed: ${cp.stderr || cp.stdout}` };
-      }
-      console.log(`[FreeRADIUS] clients copied to: ${FREERADIUS_CLIENTS_PATH}`);
+      // 4. Valida e recarrega FreeRADIUS
+      const { stderr: validateErr } = await execAsync(FREERADIUS_VALIDATE_CMD);
+      if (validateErr) throw new Error(`Validação FreeRADIUS falhou: ${validateErr}`);
 
-      // Ensure exactly one include line exists in clients.conf (do not overwrite the file).
-      const includeLineForShell = FREERADIUS_INCLUDE_LINE.replace(/'/g, `'\\''`);
-      const grep = await execAsync(
-        `sudo /bin/grep -Fqx '${includeLineForShell}' '${FREERADIUS_MAIN_CLIENTS_CONF}'`,
-        20000
+      const { stderr: reloadErr } = await execAsync(FREERADIUS_RELOAD_CMD);
+      if (reloadErr) throw new Error(`Recarga FreeRADIUS falhou: ${reloadErr}`);
+
+    } catch (err) {
+      console.error("❌ Erro ao sincronizar clientes FreeRADIUS:", err.message);
+      await registerSystemLog(
+        "error",
+        "FreeRADIUS Sync",
+        "Erro ao sincronizar clientes FreeRADIUS",
+        { error: err.message, stack: err.stack }
       );
-      if (grep.error) {
-        // grep returns exit code 1 when not found (this is expected).
-        if (Number(grep.error.code) === 1) {
-          const append = await execAsync(
-            `printf '%s\\n' '${includeLineForShell}' | sudo /usr/bin/tee -a '${FREERADIUS_MAIN_CLIENTS_CONF}'`,
-            20000
-          );
-          if (append.error) {
-            return { ok: false, error: `FreeRADIUS include append failed: ${append.stderr || append.stdout}` };
-          }
-          console.log(`[FreeRADIUS] include inserted into clients.conf: ${FREERADIUS_INCLUDE_LINE}`);
-        } else {
-          return { ok: false, error: `FreeRADIUS include check failed: ${grep.stderr || grep.stdout}` };
-        }
-      } else {
-        console.log('[FreeRADIUS] include already present in clients.conf');
-      }
-
-      const validate = await execAsync(`sudo ${FREERADIUS_VALIDATE_CMD}`, 20000);
-      if (validate.error) {
-        return { ok: false, error: `FreeRADIUS validation failed: ${validate.stderr || validate.stdout}` };
-      }
-
-      const reload = await execAsync(`sudo ${FREERADIUS_RELOAD_CMD}`, 20000);
-      if (reload.error) {
-        return { ok: false, error: `FreeRADIUS reload failed: ${reload.stderr || reload.stdout}` };
-      }
-
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: String(e?.message || e) };
+      return { ok: false, error: err.message };
     } finally {
       freeradiusSyncInFlight = null;
     }
+    console.log(`[FreeRADIUS] clients synced successfully.`);
+    return { ok: true };
   })();
 
   return freeradiusSyncInFlight;
