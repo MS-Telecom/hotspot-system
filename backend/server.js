@@ -214,8 +214,8 @@ const FREERADIUS_TMP_CLIENTS_PATH =
   process.env.FREERADIUS_TMP_CLIENTS_PATH || path.join(__dirname, 'tmp', 'ms-telecom-pops.conf');
 const FREERADIUS_MAIN_CLIENTS_CONF = process.env.FREERADIUS_MAIN_CLIENTS_CONF || '/etc/freeradius/3.0/clients.conf';
 const FREERADIUS_INCLUDE_LINE = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
-const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || '/usr/sbin/freeradius -C';
-const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || '/bin/systemctl reload freeradius';
+const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || 'sudo /usr/sbin/freeradius -C';
+const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || 'sudo /usr/bin/systemctl reload freeradius';
 
 let freeradiusSyncInFlight = null;
 
