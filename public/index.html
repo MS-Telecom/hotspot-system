@@ -188,27 +188,14 @@ function showStatusMessage(message, type = 'success') {
 }
 
   function redirectToMikrotik(mac) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = loginUrl;
-    form.style.display = 'none';
-
-    const fields = {
-      username: mac,
-      password: mac,
-      dst: window.location.href
-    };
-
-    Object.entries(fields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
+    const dst = params.get('orig') || 'http://neverssl.com/';
+    const url = new URL(loginUrl);
+    url.searchParams.set('username', mac);
+    url.searchParams.set('password', mac);
+    url.searchParams.set('dst', dst);
+    url.searchParams.set('popup', 'false');
+    
+    window.location.replace(url.toString());
   }
 
   async function loadPlans() {
