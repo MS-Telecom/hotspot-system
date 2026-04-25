@@ -358,6 +358,17 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
 
     const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
     await conn.connect();
+
+    // Best-effort cleanup of local hotspot user created by our backend (MAC as user/pass).
+    try {
+      const users = await conn.write('/ip/hotspot/user/print', [`?name=${macAddress}`]);
+      for (const u of users || []) {
+        await conn.write('/ip/hotspot/user/remove', [`=.id=${u['.id']}`]);
+      }
+    } catch (_e) {
+      // ignore
+    }
+
     const bindings = await conn.write('/ip/hotspot/ip-binding/print', [`?mac-address=${macAddress}`]);
 
     for (const binding of bindings || []) {
@@ -395,6 +406,24 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
       if (username && password) {
         const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
         await conn.connect();
+
+        // 1A) Ensure a local Hotspot user exists (MAC as user/pass). This matches the manual workaround
+        // and makes "Teste gratis" work even when RADIUS is temporarily misconfigured.
+        try {
+          const existingUser = await conn.write('/ip/hotspot/user/print', [`?name=${macAddress}`]);
+          if (!existingUser || existingUser.length === 0) {
+            await conn.write('/ip/hotspot/user/add', [
+              `=name=${macAddress}`,
+              `=password=${macAddress}`,
+              '=profile=default',
+              '=comment=MS-TELECOM-AUTO'
+            ]);
+          }
+        } catch (e) {
+          // Non-fatal; keep going with IP binding + RADIUS.
+          errors.push(`API(hotspot-user): ${e?.message || e}`);
+        }
+
         const existing = await conn.write('/ip/hotspot/ip-binding/print', [`?mac-address=${macAddress}`]);
 
         if (!existing || existing.length === 0) {
