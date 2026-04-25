@@ -32,6 +32,8 @@ const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
 const RADIUS_SERVER_IP = process.env.RADIUS_SERVER_IP || '40.233.118.238';
+const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerCase(); // global|vpn
+const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Constantes do Sistema
@@ -214,8 +216,9 @@ const FREERADIUS_TMP_CLIENTS_PATH =
   process.env.FREERADIUS_TMP_CLIENTS_PATH || path.join(__dirname, 'tmp', 'ms-telecom-pops.conf');
 const FREERADIUS_MAIN_CLIENTS_CONF = process.env.FREERADIUS_MAIN_CLIENTS_CONF || '/etc/freeradius/3.0/clients.conf';
 const FREERADIUS_INCLUDE_LINE = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
-const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || 'sudo /usr/sbin/freeradius -C';
-const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || 'sudo /usr/bin/systemctl reload freeradius';
+const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || '/usr/sbin/freeradius -C';
+const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || '/usr/bin/systemctl reload freeradius';
+const FREERADIUS_RESTART_CMD = process.env.FREERADIUS_RESTART_CMD || '/usr/bin/systemctl restart freeradius';
 
 let freeradiusSyncInFlight = null;
 
@@ -249,14 +252,15 @@ function buildFreeradiusClientsConf(pops) {
   ].join('\n');
 
   const blocks = (pops || [])
-    .filter((p) => p && p.ip && p.radius_secret)
+    .filter((p) => p && (p.vpn_ip || p.radius_client_ip) && p.radius_secret)
     .map((p) => {
       const clientName = sanitizeFreeradiusClientName(`ms_${p.unique_id || p.id || p.name}`);
       const commentName = (p.name || '').replace(/[\r\n]/g, ' ').trim();
+      const clientIp = p.vpn_ip || p.radius_client_ip;
       return [
         `# POP: ${commentName || (p.unique_id || p.id || '')}`,
         `client ${clientName} {`,
-        `  ipaddr = ${p.ip}`,
+        `  ipaddr = ${clientIp}`,
         `  secret = ${p.radius_secret}`,
         '  nas_type = other',
         '}',
@@ -269,66 +273,103 @@ function buildFreeradiusClientsConf(pops) {
 }
 
 async function syncFreeradiusClientsFromDb() {
-  if (!FREERADIUS_CLIENTS_PATH) {
-    return { ok: false, error: 'FREERADIUS_CLIENTS_PATH is not configured' };
-  }
+  if (!FREERADIUS_CLIENTS_PATH) return { ok: false, error: 'FREERADIUS_CLIENTS_PATH is not configured' };
 
   if (freeradiusSyncInFlight) return freeradiusSyncInFlight;
 
   freeradiusSyncInFlight = (async () => {
     try {
+      if (RADIUS_CLIENT_MODE === 'global') {
+        if (!RADIUS_GLOBAL_SECRET) {
+          throw new Error('RADIUS_GLOBAL_SECRET is required when RADIUS_CLIENT_MODE=global');
+        }
+        console.log('[FreeRADIUS] RADIUS_CLIENT_MODE=global, skipping per-POP clients sync.');
+        return { ok: true, skipped: true };
+      }
+
+      if (RADIUS_CLIENT_MODE !== 'vpn') {
+        throw new Error(`Invalid RADIUS_CLIENT_MODE: ${RADIUS_CLIENT_MODE}. Use global|vpn.`);
+      }
+
       const { data: pops, error } = await supabase
         .from('pops')
-        .select('id, unique_id, name, ip, radius_secret, status')
+        .select('id, unique_id, name, vpn_ip, radius_client_ip, radius_secret, status')
         .order('name', { ascending: true });
       if (error) throw error;
 
-      const conf = buildFreeradiusClientsConf(pops || []);
-
-      // Write in a local tmp path first (PM2 runs as ubuntu and cannot write to /etc directly).
-      fs.mkdirSync(path.dirname(FREERADIUS_TMP_CLIENTS_PATH), { recursive: true });
-      fs.writeFileSync(FREERADIUS_TMP_CLIENTS_PATH, conf, { encoding: 'utf8' });
-
-      // 1. Garante que o diretório de destino do FreeRADIUS exista no VPS
-      const { error: mkdirError } = await execAsync(`sudo mkdir -p ${path.dirname(FREERADIUS_CLIENTS_PATH)}`);
-      if (mkdirError) throw new Error(`Erro ao criar diretório FreeRADIUS: ${mkdirError.stderr}`);
-
-      // 2. Copia o arquivo temporário para o destino final no VPS
-      const { error: cpError } = await execAsync(`sudo cp ${FREERADIUS_TMP_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}`);
-      if (cpError) throw new Error(`Erro ao copiar arquivo FreeRADIUS: ${cpError.stderr}`);
-
-      // 3. Garante que o clients.conf principal inclua nosso arquivo
-      // Lê o conteúdo do clients.conf principal do VPS
-      const { stdout: mainClientsConfContent, error: catError } = await execAsync(`sudo cat ${FREERADIUS_MAIN_CLIENTS_CONF}`);
-      if (catError) throw new Error(`Erro ao ler clients.conf: ${catError.stderr}`);
-
-      if (!mainClientsConfContent.includes(FREERADIUS_INCLUDE_LINE)) {
-        // Se a linha de include não existe, adiciona-a
-        const { error: teeError } = await execAsync(`echo "${FREERADIUS_INCLUDE_LINE}" | sudo tee -a ${FREERADIUS_MAIN_CLIENTS_CONF}`);
-        if (teeError) throw new Error(`Erro ao adicionar include: ${teeError.stderr}`);
+      const missingClientIp = (pops || []).filter((p) => p && p.radius_secret && !(p.vpn_ip || p.radius_client_ip));
+      if (missingClientIp.length > 0) {
+        const ids = missingClientIp.map((p) => p.unique_id || p.id).join(', ');
+        throw new Error(`Missing vpn_ip/radius_client_ip for POP(s): ${ids}`);
       }
 
-      // 4. Valida e recarrega FreeRADIUS
-      const { stderr: validateErr } = await execAsync(FREERADIUS_VALIDATE_CMD);
-      if (validateErr) throw new Error(`Validação FreeRADIUS falhou: ${validateErr}`);
+      const conf = buildFreeradiusClientsConf(pops || []);
 
-      const { stderr: reloadErr } = await execAsync(FREERADIUS_RELOAD_CMD);
-      if (reloadErr) throw new Error(`Recarga FreeRADIUS falhou: ${reloadErr}`);
+      fs.mkdirSync(path.dirname(FREERADIUS_TMP_CLIENTS_PATH), { recursive: true });
+      fs.writeFileSync(FREERADIUS_TMP_CLIENTS_PATH, conf, { encoding: 'utf8' });
+      console.log(`[FreeRADIUS] tmp clients file generated at: ${FREERADIUS_TMP_CLIENTS_PATH}`);
 
-    } catch (err) {
-      console.error("❌ Erro ao sincronizar clientes FreeRADIUS:", err.message);
-      await registerSystemLog(
-        "error",
-        "FreeRADIUS Sync",
-        "Erro ao sincronizar clientes FreeRADIUS",
-        { error: err.message, stack: err.stack }
+      const { error: mkdirError, stderr: mkdirStderr } = await execAsync(
+        `sudo mkdir -p ${path.dirname(FREERADIUS_CLIENTS_PATH)}`
       );
+      if (mkdirError) throw new Error(`FreeRADIUS mkdir failed: ${mkdirStderr}`);
+
+      const { error: cpError, stderr: cpStderr } = await execAsync(
+        `sudo cp ${FREERADIUS_TMP_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}`
+      );
+      if (cpError) throw new Error(`FreeRADIUS copy failed: ${cpStderr}`);
+
+      const includeLine = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
+      const includeLineSingleQuoted = `'${includeLine.replace(/'/g, `'\"'\"'`)}'`;
+
+      const { error: grepError } = await execAsync(
+        `sudo /bin/grep -Fqx ${includeLineSingleQuoted} ${FREERADIUS_MAIN_CLIENTS_CONF}`
+      );
+      if (grepError) {
+        const { error: teeError, stderr: teeStderr } = await execAsync(
+          `printf '%s\\n' ${includeLineSingleQuoted} | sudo /usr/bin/tee -a ${FREERADIUS_MAIN_CLIENTS_CONF} >/dev/null`
+        );
+        if (teeError) throw new Error(`FreeRADIUS include insert failed: ${teeStderr}`);
+        console.log('[FreeRADIUS] include line inserted into clients.conf');
+      } else {
+        console.log('[FreeRADIUS] include line already present in clients.conf');
+      }
+
+      const { error: validateError, stdout: validateOut, stderr: validateErr } = await execAsync(
+        `sudo ${FREERADIUS_VALIDATE_CMD}`,
+        60000
+      );
+      if (validateError) throw new Error(`FreeRADIUS validation failed: ${validateErr || validateOut}`);
+      console.log('[FreeRADIUS] validation OK');
+
+      const { error: reloadError, stdout: reloadOut, stderr: reloadErr } = await execAsync(
+        `sudo ${FREERADIUS_RELOAD_CMD}`,
+        60000
+      );
+      if (reloadError) {
+        console.warn(`[FreeRADIUS] reload failed, trying restart. Details: ${reloadErr || reloadOut}`);
+        const { error: restartError, stdout: restartOut, stderr: restartErr } = await execAsync(
+          `sudo ${FREERADIUS_RESTART_CMD}`,
+          60000
+        );
+        if (restartError) throw new Error(`FreeRADIUS restart failed: ${restartErr || restartOut}`);
+        console.log('[FreeRADIUS] restart OK');
+      } else {
+        console.log('[FreeRADIUS] reload OK');
+      }
+
+      console.log('[FreeRADIUS] clients synced successfully.');
+      return { ok: true };
+    } catch (err) {
+      console.error('❌ Erro ao sincronizar clientes FreeRADIUS:', err.message);
+      await registerSystemLog('error', 'FreeRADIUS Sync', 'Erro ao sincronizar clientes FreeRADIUS', {
+        error: err.message,
+        stack: err.stack
+      });
       return { ok: false, error: err.message };
     } finally {
       freeradiusSyncInFlight = null;
     }
-    console.log(`[FreeRADIUS] clients synced successfully.`);
-    return { ok: true };
   })();
 
   return freeradiusSyncInFlight;
@@ -1448,9 +1489,11 @@ function buildPopInstallScript(pop, config = {}) {
 
   const apiUser = pop.api_user;
   const apiPass = pop.api_pass;
-  const radiusSecret = pop.radius_secret;
+  const radiusSecret = (RADIUS_CLIENT_MODE === 'global')
+    ? RADIUS_GLOBAL_SECRET
+    : pop.radius_secret;
   if (!apiUser || !apiPass || !radiusSecret) {
-    throw new Error('Missing persisted POP credentials (api_user, api_pass, radius_secret)');
+    throw new Error('Missing persisted POP credentials (api_user, api_pass, radius_secret/global)');
   }
 
   const wanInterface = config.wan_interface || 'ether1';
