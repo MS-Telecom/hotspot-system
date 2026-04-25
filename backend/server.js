@@ -2049,14 +2049,21 @@ app.get('/api/test-ip', (req, res) => {
 
 app.get('/entrypoint', (req, res) => {
   const q = req.query || {};
-  const mac = (q.mac || q.mac_address || q.called || q['mac-address'] || '').toString();
-  const ip = (q.ip || q.ip_address || q.nasip || '').toString();
-  const pop = (q.pop || q.pop_id || q.hotspot || '').toString();
+
+  const hotspotIdentity = (q.hotspotIdentity || q.hotspot || q['server-name'] || q.server || '').toString();
+  const userMac = (q.userMac || q.mac || q.mac_address || q.called || q['mac-address'] || '').toString();
+  const hostname = (q.hostname || q.ip || q.ip_address || q.nasip || '').toString();
+  const loginUrl = (q.loginUrl || q['link-login-only'] || '').toString();
+  const orig = (q.orig || q.dst || q['link-orig'] || '').toString();
+  const error = (q.error || '').toString();
 
   const url = new URL('/portal.html', FRONTEND_BASE_URL);
-  if (mac) url.searchParams.set('mac', mac);
-  if (ip) url.searchParams.set('ip', ip);
-  if (pop) url.searchParams.set('pop', pop);
+  if (userMac) url.searchParams.set('mac', userMac);
+  if (hostname) url.searchParams.set('ip', hostname);
+  if (hotspotIdentity) url.searchParams.set('hotspot', hotspotIdentity);
+  if (loginUrl) url.searchParams.set('loginUrl', loginUrl);
+  if (orig) url.searchParams.set('orig', orig);
+  if (error) url.searchParams.set('error', error);
 
   return res.redirect(302, url.toString());
 });

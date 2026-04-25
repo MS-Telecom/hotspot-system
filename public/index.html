@@ -188,14 +188,21 @@ function showStatusMessage(message, type = 'success') {
 }
 
   function redirectToMikrotik(mac) {
-    const dst = params.get('orig') || 'http://neverssl.com/';
+    const loginUrl = params.get('loginUrl') || 'http://192.168.32.1/login';
+    const orig = params.get('orig') || 'http://neverssl.com/';
+
+    if (!mac) {
+      showStatusMessage('MAC nao detectado. Reconecte ao Wi-Fi.', 'error');
+      return;
+    }
+
     const url = new URL(loginUrl);
     url.searchParams.set('username', mac);
     url.searchParams.set('password', mac);
-    url.searchParams.set('dst', dst);
+    url.searchParams.set('dst', orig);
     url.searchParams.set('popup', 'false');
-    
-    window.location.replace(url.toString());
+
+    window.location.href = url.toString();
   }
 
   async function loadPlans() {
