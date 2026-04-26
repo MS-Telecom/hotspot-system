@@ -90,6 +90,15 @@ Linha exata:
 $INCLUDE /etc/freeradius/3.0/clients.d/ms-telecom-pops.conf
 ```
 
+## Fallback local (quando RADIUS cair)
+
+Existe um fallback opcional que cria um cache local de usuarios no MikroTik (Hotspot user database).
+Ele **nao substitui** o RADIUS, apenas garante operacao emergencial.
+
+Ver:
+
+- `docs/LOCAL_HOTSPOT_FALLBACK.md`
+
 ## Observacao sobre tabelas SQL (radius_replies vs radcheck/radreply)
 
 O backend **nao** grava em `radcheck`/`radreply`.

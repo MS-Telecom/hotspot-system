@@ -36,6 +36,13 @@ const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerC
 const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Local Hotspot cache fallback (RouterOS pulls local users periodically)
+const LOCAL_CACHE_SCOPE = (process.env.LOCAL_CACHE_SCOPE || 'global').toLowerCase(); // global|pop|group
+const LOCAL_CACHE_PRUNE = parseBoolean(process.env.LOCAL_CACHE_PRUNE, false);
+const LOCAL_CACHE_SYNC_INTERVAL = process.env.LOCAL_CACHE_SYNC_INTERVAL || '00:05:00';
+const LOCAL_CACHE_GROUP_FIELD = process.env.LOCAL_CACHE_GROUP_FIELD || 'group';
+const LOCAL_CACHE_COMMENT_TAG = 'MS-TELECOM-LOCAL-CACHE';
+
 // Constantes do Sistema
 const BACKUP_DIR = path.join(__dirname, 'backups');
 if (!fs.existsSync(BACKUP_DIR)) {
@@ -228,6 +235,152 @@ function execAsync(command, timeoutMs = 15000) {
       resolve({ error, stdout: String(stdout || ''), stderr: String(stderr || '') });
     });
   });
+}
+
+function normalizeMac(value) {
+  const v = String(value || '').trim();
+  if (!v) return '';
+  return v.toUpperCase();
+}
+
+async function findPopByIdOrUniqueId(popValue) {
+  const popStr = String(popValue || '').trim();
+  if (!popStr) return { pop: null, error: 'pop is required' };
+
+  // Try id first
+  let { data, error } = await supabase.from('pops').select('*').eq('id', popStr).maybeSingle();
+  if (!error && data) return { pop: data, error: null };
+
+  // Then unique_id
+  ({ data, error } = await supabase.from('pops').select('*').eq('unique_id', popStr).maybeSingle());
+  if (error) return { pop: null, error: error.message || String(error) };
+  return { pop: data || null, error: null };
+}
+
+async function buildLocalUsersListForPop(popRow) {
+  const nowIso = new Date().toISOString();
+  const macs = new Set();
+
+  // Canonical source: active sessions
+  if (LOCAL_CACHE_SCOPE === 'pop') {
+    const { data, error } = await supabase
+      .from('hotspot_sessions')
+      .select('mac_address')
+      .eq('pop_id', popRow.id)
+      .eq('access_granted', true)
+      .in('status', ['active', 'trial'])
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+    if (error) throw error;
+    for (const row of data || []) {
+      const m = normalizeMac(row.mac_address);
+      if (m) macs.add(m);
+    }
+  } else if (LOCAL_CACHE_SCOPE === 'group') {
+    const groupValue = popRow?.[LOCAL_CACHE_GROUP_FIELD] || null;
+    if (!groupValue) {
+      // fallback to pop scope if group field is missing
+      const { data, error } = await supabase
+        .from('hotspot_sessions')
+        .select('mac_address')
+        .eq('pop_id', popRow.id)
+        .eq('access_granted', true)
+        .in('status', ['active', 'trial'])
+        .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+      if (error) throw error;
+      for (const row of data || []) {
+        const m = normalizeMac(row.mac_address);
+        if (m) macs.add(m);
+      }
+    } else {
+      const { data: groupPops, error: gpErr } = await supabase
+        .from('pops')
+        .select('id')
+        .eq(LOCAL_CACHE_GROUP_FIELD, groupValue);
+      if (gpErr) throw gpErr;
+      const popIds = (groupPops || []).map((p) => p.id).filter(Boolean);
+      if (popIds.length > 0) {
+        const { data, error } = await supabase
+          .from('hotspot_sessions')
+          .select('mac_address')
+          .in('pop_id', popIds)
+          .eq('access_granted', true)
+          .in('status', ['active', 'trial'])
+          .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+        if (error) throw error;
+        for (const row of data || []) {
+          const m = normalizeMac(row.mac_address);
+          if (m) macs.add(m);
+        }
+      }
+    }
+  } else {
+    const { data, error } = await supabase
+      .from('hotspot_sessions')
+      .select('mac_address')
+      .eq('access_granted', true)
+      .in('status', ['active', 'trial'])
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+    if (error) throw error;
+    for (const row of data || []) {
+      const m = normalizeMac(row.mac_address);
+      if (m) macs.add(m);
+    }
+  }
+
+  // Also include any active Cleartext-Password in radius_replies (covers paid/free-trial that wrote radius but not session)
+  const { data: rr, error: rrErr } = await supabase
+    .from('radius_replies')
+    .select('username')
+    .eq('attribute', 'Cleartext-Password')
+    .eq('status', 'active')
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+  if (rrErr) throw rrErr;
+  for (const row of rr || []) {
+    const m = normalizeMac(row.username);
+    if (m) macs.add(m);
+  }
+
+  return Array.from(macs).sort();
+}
+
+function buildLocalUsersRsc(macs) {
+  const safeMacs = (macs || []).map((m) => String(m || '').trim()).filter(Boolean);
+  const allowed = `,${safeMacs.join(',')},`;
+
+  const lines = [];
+  lines.push('# ======================================================================');
+  lines.push('# MS TELECOM - LOCAL HOTSPOT USERS CACHE (AUTO-GENERATED)');
+  lines.push(`# Generated at: ${new Date().toISOString()}`);
+  lines.push(`# Scope: ${LOCAL_CACHE_SCOPE}`);
+  lines.push(`# Prune: ${LOCAL_CACHE_PRUNE ? 'true' : 'false'}`);
+  lines.push('# ======================================================================');
+  lines.push('');
+  lines.push(`:local cacheTag "${LOCAL_CACHE_COMMENT_TAG}"`);
+  lines.push(`:local allowed "${allowed}"`);
+  lines.push('');
+
+  if (LOCAL_CACHE_PRUNE) {
+    lines.push(':foreach u in=[/ip hotspot user find where comment=$cacheTag] do={');
+    lines.push('  :local n [/ip hotspot user get $u name]');
+    lines.push('  :local needle ("," . $n . ",")');
+    lines.push('  :if ([:find $allowed $needle] = -1) do={ /ip hotspot user remove $u }');
+    lines.push('}');
+    lines.push('');
+  }
+
+  for (const mac of safeMacs) {
+    // idempotent upsert
+    lines.push(`:if ([:len [/ip hotspot user find name="${mac}"]] > 0) do={`);
+    lines.push(`  /ip hotspot user set [find name="${mac}"] password="${mac}" profile=default comment=$cacheTag`);
+    lines.push('} else={');
+    lines.push(`  /ip hotspot user add name="${mac}" password="${mac}" profile=default comment=$cacheTag`);
+    lines.push('}');
+  }
+
+  lines.push('');
+  lines.push(`:log info ("MS-LOCAL-CACHE updated: ${safeMacs.length} user(s)")`);
+  lines.push('');
+  return lines.join('\n');
 }
 
 function sanitizeFreeradiusClientName(value) {
@@ -688,6 +841,46 @@ setInterval(async () => {
 // ============================================================
 // 🔑 ROTAS DE AUTENTICAÇÃO (ADMIN)
 // ============================================================
+
+// ============================================================
+// MIKROTIK LOCAL HOTSPOT CACHE (PUBLIC, TOKEN)
+// ============================================================
+
+app.get('/api/mikrotik/local-users.rsc', async (req, res) => {
+  try {
+    const popValue = req.query.pop;
+    const token = String(req.query.token || '').trim();
+
+    if (!popValue || !token) return res.status(400).type('text/plain').send('Missing pop/token');
+
+    const { pop, error } = await findPopByIdOrUniqueId(popValue);
+    if (error) return res.status(500).type('text/plain').send('Lookup error');
+    if (!pop) return res.status(403).type('text/plain').send('Forbidden');
+
+    if (!pop.local_sync_token || token !== pop.local_sync_token) {
+      return res.status(403).type('text/plain').send('Forbidden');
+    }
+
+    const macs = await buildLocalUsersListForPop(pop);
+    const rsc = buildLocalUsersRsc(macs);
+
+    try {
+      await supabase.from('pops').update({
+        last_local_sync_at: new Date().toISOString(),
+        last_local_sync_ip: getClientIp(req),
+        last_local_sync_user_agent: String(req.headers['user-agent'] || '').slice(0, 255),
+        updated_at: new Date().toISOString()
+      }).eq('id', pop.id);
+    } catch (_e) {
+      // ignore
+    }
+
+    res.status(200).type('text/plain').send(rsc);
+  } catch (err) {
+    console.error('local-users.rsc error:', err.message);
+    res.status(500).type('text/plain').send('Internal error');
+  }
+});
 
 // Aliases legados (português/curtos) -> padrão novo
 app.post('/api/login', (req, res, next) => {
@@ -1323,26 +1516,31 @@ async function ensurePopProvisioningMaterial(pop) {
 
   const uniqueId = pop.unique_id || popId;
   const nextRadiusSecret = pop.radius_secret || generateStrongPassword(18);
+  const nextLocalSyncToken = pop.local_sync_token || generateStrongPassword(48);
 
   // Persist POP radius_secret + unique_id as the official source of truth.
-  if (!pop.unique_id || !pop.radius_secret) {
+  if (!pop.unique_id || !pop.radius_secret || !pop.local_sync_token) {
     const { data: updated, error } = await supabase
       .from('pops')
-      .update({ unique_id: uniqueId, radius_secret: nextRadiusSecret, updated_at: now })
+      .update({ unique_id: uniqueId, radius_secret: nextRadiusSecret, local_sync_token: nextLocalSyncToken, updated_at: now })
       .eq('id', popId)
       .select('*')
       .single();
 
     if (error) {
-      if (looksLikeMissingColumnError(error, 'radius_secret', 'pops') || looksLikeMissingColumnError(error, 'unique_id', 'pops')) {
-        throw new Error('Database schema missing required columns in pops (unique_id, radius_secret). Apply SQL migration first.');
+      if (
+        looksLikeMissingColumnError(error, 'radius_secret', 'pops') ||
+        looksLikeMissingColumnError(error, 'unique_id', 'pops') ||
+        looksLikeMissingColumnError(error, 'local_sync_token', 'pops')
+      ) {
+        throw new Error('Database schema missing required columns in pops (unique_id, radius_secret, local_sync_token). Apply SQL migration first.');
       }
       throw error;
     }
 
     pop = updated;
   } else {
-    pop = { ...pop, unique_id: uniqueId, radius_secret: nextRadiusSecret };
+    pop = { ...pop, unique_id: uniqueId, radius_secret: nextRadiusSecret, local_sync_token: nextLocalSyncToken };
   }
 
   // Persist MikroTik API credentials in mikrotik_credentials (official source of truth).
@@ -1378,7 +1576,13 @@ async function ensurePopProvisioningMaterial(pop) {
     }
   }
 
-  return { ...pop, api_user: apiUser, api_pass: apiPass, radius_secret: pop.radius_secret || nextRadiusSecret };
+  return {
+    ...pop,
+    api_user: apiUser,
+    api_pass: apiPass,
+    radius_secret: pop.radius_secret || nextRadiusSecret,
+    local_sync_token: pop.local_sync_token || nextLocalSyncToken
+  };
 }
 
 // Listar POPs (Hotspots)
@@ -1525,6 +1729,10 @@ function buildPopInstallScript(pop, config = {}) {
   const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
   const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
   const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
+  const localSyncToken = pop.local_sync_token;
+  if (!localSyncToken) {
+    throw new Error('Missing persisted POP credential (local_sync_token)');
+  }
 
   const wgHosts = [
     'hotspot-system.vercel.app',
@@ -1648,6 +1856,18 @@ const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no
   :delay 500ms
 }
 
+function buildLocalSyncSchedulerSnippet(popUniqueId, token) {
+  const apiUrl = process.env.API_BASE_URL || API_BASE_URL || 'https://mstelecom-api.duckdns.org';
+  const popId = String(popUniqueId || '').trim();
+  const safeToken = String(token || '').trim();
+  return (
+    `/system scheduler add name="ms-local-users-sync-${popId}" interval=${LOCAL_CACHE_SYNC_INTERVAL} ` +
+    `on-event=":local fn (\\\"ms-local-users-${popId}.rsc\\\"); :do {/file remove \\$fn} on-error={}; ` +
+    `/tool fetch url=\\\"${apiUrl}/api/mikrotik/local-users.rsc?pop=${popId}&token=${safeToken}\\\" mode=https dst-path=\\$fn keep-result=yes; ` +
+    `:delay 1s; /import file-name=\\$fn; :log info \\\"MS-LOCAL-CACHE synced\\\""`
+  );
+}
+
 /user add name="${apiUser}" password="${apiPass}" group=full comment="${tag}"
 :delay 500ms
 
@@ -1689,6 +1909,9 @@ ${hotspotHtmlBlock}
 :delay 1s
 
 ${userProfileTuningLine}${redirectLine}
+
+# Local users cache sync (fallback when RADIUS/VPN/API fail)
+/system scheduler add name="ms-local-users-sync-${popId}" interval=${LOCAL_CACHE_SYNC_INTERVAL} on-event=":local fn (\\\"ms-local-users-${popId}.rsc\\\"); :do {/file remove \\$fn} on-error={}; /tool fetch url=\\\"${apiUrl}/api/mikrotik/local-users.rsc?pop=${popId}&token=${localSyncToken}\\\" mode=https dst-path=\\$fn keep-result=yes; :delay 1s; /import file-name=\\$fn; :log info \\\"MS-LOCAL-CACHE synced\\\"" start-time=startup comment="${tag}"
 
 /system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" http-method=post keep-result=no" start-time=startup comment="${tag}"
 
@@ -1734,6 +1957,53 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao atualizar POP:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar POP' });
+  }
+});
+
+// Get RouterOS snippet to enable local-users cache sync on an already-installed POP
+app.get('/api/pops/:id/local-sync-script', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    if (!pop) return res.status(404).json({ error: 'POP não encontrado' });
+
+    const enriched = await ensurePopProvisioningMaterial(pop);
+    const popId = enriched.unique_id || enriched.id;
+    const token = enriched.local_sync_token;
+    if (!token) return res.status(500).json({ error: 'POP sem local_sync_token' });
+
+    res.json({ pop_id: popId, interval: LOCAL_CACHE_SYNC_INTERVAL, script: buildLocalSyncSchedulerSnippet(popId, token) });
+  } catch (err) {
+    console.error('❌ Erro ao gerar local-sync-script:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar script de sync local' });
+  }
+});
+
+// Rotate local sync token for a POP
+app.post('/api/pops/:id/rotate-local-sync-token', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const newToken = generateStrongPassword(48);
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase.from('pops').update({
+      local_sync_token: newToken,
+      updated_at: now
+    }).eq('id', id).select('*').maybeSingle();
+
+    if (error) {
+      if (looksLikeMissingColumnError(error, 'local_sync_token', 'pops')) {
+        throw new Error('Database schema missing required column pops.local_sync_token. Apply SQL migration first.');
+      }
+      throw error;
+    }
+    if (!data) return res.status(404).json({ error: 'POP não encontrado' });
+
+    res.json({ success: true, pop_id: data.unique_id || data.id, local_sync_token: newToken });
+  } catch (err) {
+    console.error('❌ Erro ao rotacionar token:', err.message);
+    res.status(500).json({ error: 'Erro ao rotacionar token de sync local' });
   }
 });
 // Deletar POP

@@ -67,6 +67,15 @@ O backend grava pelo menos:
 
 Nao usar `radcheck`/`radreply` como fonte (legado). Se existir no banco, deve ser tratado como tabela antiga e nao usada.
 
+## Fallback local (cache de usuarios no MikroTik)
+
+O sistema pode habilitar um fallback opcional de cache local de usuarios Hotspot nos MikroTiks.
+Isso e um **plano B** quando RADIUS/VPN estiverem fora do ar.
+
+Ver:
+
+- `docs/LOCAL_HOTSPOT_FALLBACK.md`
+
 ### Query recomendada (exemplo)
 
 Check (senha):
