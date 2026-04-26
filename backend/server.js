@@ -43,6 +43,12 @@ const LOCAL_CACHE_SYNC_INTERVAL = process.env.LOCAL_CACHE_SYNC_INTERVAL || '00:0
 const LOCAL_CACHE_GROUP_FIELD = process.env.LOCAL_CACHE_GROUP_FIELD || 'group';
 const LOCAL_CACHE_COMMENT_TAG = 'MS-TELECOM-LOCAL-CACHE';
 
+// VPN (RouterOS 6 compatible, SGP-style)
+const VPN_TYPE = (process.env.VPN_TYPE || '').toLowerCase(); // l2tp_ipsec
+const VPN_PUBLIC_ENDPOINT = process.env.VPN_PUBLIC_ENDPOINT || '';
+const VPN_L2TP_IPSEC_PSK = process.env.VPN_L2TP_IPSEC_PSK || '';
+const VPN_RADIUS_SERVER_IP = process.env.VPN_RADIUS_SERVER_IP || '10.250.0.1';
+
 // Constantes do Sistema
 const BACKUP_DIR = path.join(__dirname, 'backups');
 if (!fs.existsSync(BACKUP_DIR)) {
@@ -1517,12 +1523,21 @@ async function ensurePopProvisioningMaterial(pop) {
   const uniqueId = pop.unique_id || popId;
   const nextRadiusSecret = pop.radius_secret || generateStrongPassword(18);
   const nextLocalSyncToken = pop.local_sync_token || generateStrongPassword(48);
+  const nextVpnUsername = pop.vpn_username || `vpn_${String(uniqueId || popId).replace(/[^A-Za-z0-9_]/g, '_')}`.slice(0, 32);
+  const nextVpnPassword = pop.vpn_password || generateStrongPassword(24);
 
   // Persist POP radius_secret + unique_id as the official source of truth.
-  if (!pop.unique_id || !pop.radius_secret || !pop.local_sync_token) {
+  if (!pop.unique_id || !pop.radius_secret || !pop.local_sync_token || !pop.vpn_username || !pop.vpn_password) {
     const { data: updated, error } = await supabase
       .from('pops')
-      .update({ unique_id: uniqueId, radius_secret: nextRadiusSecret, local_sync_token: nextLocalSyncToken, updated_at: now })
+      .update({
+        unique_id: uniqueId,
+        radius_secret: nextRadiusSecret,
+        local_sync_token: nextLocalSyncToken,
+        vpn_username: nextVpnUsername,
+        vpn_password: nextVpnPassword,
+        updated_at: now
+      })
       .eq('id', popId)
       .select('*')
       .single();
@@ -1531,16 +1546,25 @@ async function ensurePopProvisioningMaterial(pop) {
       if (
         looksLikeMissingColumnError(error, 'radius_secret', 'pops') ||
         looksLikeMissingColumnError(error, 'unique_id', 'pops') ||
-        looksLikeMissingColumnError(error, 'local_sync_token', 'pops')
+        looksLikeMissingColumnError(error, 'local_sync_token', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_username', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_password', 'pops')
       ) {
-        throw new Error('Database schema missing required columns in pops (unique_id, radius_secret, local_sync_token). Apply SQL migration first.');
+        throw new Error('Database schema missing required columns in pops (unique_id, radius_secret, local_sync_token, vpn_username, vpn_password). Apply SQL migration first.');
       }
       throw error;
     }
 
     pop = updated;
   } else {
-    pop = { ...pop, unique_id: uniqueId, radius_secret: nextRadiusSecret, local_sync_token: nextLocalSyncToken };
+    pop = {
+      ...pop,
+      unique_id: uniqueId,
+      radius_secret: nextRadiusSecret,
+      local_sync_token: nextLocalSyncToken,
+      vpn_username: nextVpnUsername,
+      vpn_password: nextVpnPassword
+    };
   }
 
   // Persist MikroTik API credentials in mikrotik_credentials (official source of truth).
@@ -1581,7 +1605,9 @@ async function ensurePopProvisioningMaterial(pop) {
     api_user: apiUser,
     api_pass: apiPass,
     radius_secret: pop.radius_secret || nextRadiusSecret,
-    local_sync_token: pop.local_sync_token || nextLocalSyncToken
+    local_sync_token: pop.local_sync_token || nextLocalSyncToken,
+    vpn_username: pop.vpn_username || nextVpnUsername,
+    vpn_password: pop.vpn_password || nextVpnPassword
   };
 }
 
@@ -1733,6 +1759,40 @@ function buildPopInstallScript(pop, config = {}) {
   if (!localSyncToken) {
     throw new Error('Missing persisted POP credential (local_sync_token)');
   }
+
+  const vpnIp = pop.vpn_ip || pop.radius_client_ip || '';
+  const vpnUsername = pop.vpn_username || '';
+  const vpnPassword = pop.vpn_password || '';
+
+  const vpnEnabled = VPN_TYPE === 'l2tp_ipsec';
+  if (vpnEnabled) {
+    if (!VPN_PUBLIC_ENDPOINT || !VPN_L2TP_IPSEC_PSK) {
+      throw new Error('Missing VPN env vars (VPN_PUBLIC_ENDPOINT, VPN_L2TP_IPSEC_PSK)');
+    }
+    if (!vpnIp || !vpnUsername || !vpnPassword) {
+      throw new Error('Missing POP VPN fields (vpn_ip/radius_client_ip, vpn_username, vpn_password)');
+    }
+  }
+
+  const vpnBlock = vpnEnabled
+    ? (
+      `# VPN (L2TP/IPsec - RouterOS 6)\n` +
+      `/ppp profile add name="MS-VPN" use-encryption=yes comment="${tag}"\n` +
+      `/interface l2tp-client add name="ms-vpn-${popId}" connect-to=${VPN_PUBLIC_ENDPOINT} user="${vpnUsername}" password="${vpnPassword}" profile="MS-VPN" use-ipsec=yes ipsec-secret="${VPN_L2TP_IPSEC_PSK}" add-default-route=no keepalive-timeout=30 disabled=no comment="${tag}"\n` +
+      `:delay 2s\n` +
+      `# Restrict API to concentrator/VPN IP\n` +
+      `/ip service set api address=${VPN_RADIUS_SERVER_IP}/32\n` +
+      `:delay 500ms\n`
+    )
+    : '';
+
+  const radiusAddress = vpnEnabled ? VPN_RADIUS_SERVER_IP : radiusServer;
+  const radiusSrcAddress = vpnEnabled ? ` src-address=${vpnIp}` : '';
+
+  const radiusLines =
+    `/radius add address=${radiusAddress}${radiusSrcAddress} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 domain="${popId}" comment="${tag}" timeout=3s\n` +
+    `/radius incoming set accept=yes\n` +
+    `:delay 1s\n`;
 
   const wgHosts = [
     'hotspot-system.vercel.app',
@@ -1890,9 +1950,8 @@ ${wanBlock}
 /ip dns set allow-remote-requests=yes servers=8.8.8.8,1.1.1.1
 :delay 500ms
 
-/radius add address=${radiusServer} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 domain="${popId}" comment="${tag}" timeout=1000ms
-/radius incoming set accept=yes
-:delay 1s
+${vpnBlock}
+${radiusLines}
 
 :global hotspotDir
 :set hotspotDir "ms-${popId}"
@@ -1909,6 +1968,8 @@ ${hotspotHtmlBlock}
 :delay 1s
 
 ${userProfileTuningLine}${redirectLine}
+
+${vpnEnabled ? `# Netwatch (VPN/RADIUS monitor) - disable radius on down, re-enable on up\n/tool netwatch add host=${VPN_RADIUS_SERVER_IP} interval=00:00:30 timeout=2s comment="${tag}" down-script=":log warning \\\"MS-VPN-RADIUS down: disabling radius\\\"; /radius set [find address=${VPN_RADIUS_SERVER_IP}] disabled=yes; /ip hotspot profile set [find name=\\\"ms-profile-${popId}\\\"] use-radius=no" up-script=":log info \\\"MS-VPN-RADIUS up: enabling radius\\\"; /radius set [find address=${VPN_RADIUS_SERVER_IP}] disabled=no; /ip hotspot profile set [find name=\\\"ms-profile-${popId}\\\"] use-radius=yes"\n` : ''}
 
 # Local users cache sync (fallback when RADIUS/VPN/API fail)
 /system scheduler add name="ms-local-users-sync-${popId}" interval=${LOCAL_CACHE_SYNC_INTERVAL} on-event=":local fn (\\\"ms-local-users-${popId}.rsc\\\"); :do {/file remove \\$fn} on-error={}; /tool fetch url=\\\"${apiUrl}/api/mikrotik/local-users.rsc?pop=${popId}&token=${localSyncToken}\\\" mode=https dst-path=\\$fn keep-result=yes; :delay 1s; /import file-name=\\$fn; :log info \\\"MS-LOCAL-CACHE synced\\\"" start-time=startup comment="${tag}"
