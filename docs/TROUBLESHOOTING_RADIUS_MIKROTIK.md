@@ -8,6 +8,11 @@ Cliente Wi-Fi -> Portal -> API -> FreeRADIUS -> MikroTik Hotspot Active
 
 A bancada usada para validar o fluxo foi o POP `MS-44AC67` / `MS-WiFi-POP-01`.
 
+## Modos suportados (backend)
+
+- `RADIUS_CLIENT_MODE=vpn_legacy` (producao): cada POP usa `radius_secret` individual e o FreeRADIUS cadastra clients por `pops.vpn_ip`.
+- `RADIUS_CLIENT_MODE=global` (laboratorio/fallback): um unico secret global (nao recomendado para producao).
+
 ## Fluxo correto do teste gratis
 
 1. Cliente conecta no SSID Hotspot.
@@ -122,6 +127,12 @@ pap: ERROR: Cleartext password does not match "known good" password
 WARNING: Unprintable characters in the password. Double-check the shared secret on the server and the NAS!
 Sent Access-Reject
 ```
+
+### Observacao (radcheck/radreply vs radius_replies)
+
+O backend do hotspot-system grava na tabela canonica `radius_replies`.
+Evite depender de `radcheck`/`radreply` como fonte de verdade.
+Padronize o FreeRADIUS para consultar `radius_replies` diretamente.
 
 ### Causa
 

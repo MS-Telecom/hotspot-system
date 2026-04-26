@@ -32,6 +32,13 @@ const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
 const RADIUS_SERVER_IP = process.env.RADIUS_SERVER_IP || '40.233.118.238';
+const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerCase(); // global | vpn_legacy
+const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
+
+// Legacy VPN (RouterOS v6) - tunnel IP per POP, FreeRADIUS clients matched by vpn_ip.
+const VPN_PUBLIC_ENDPOINT = process.env.VPN_PUBLIC_ENDPOINT || '';
+const VPN_INTERNAL_RADIUS_IP = process.env.VPN_INTERNAL_RADIUS_IP || '10.250.0.1';
+const VPN_L2TP_IPSEC_PSK = process.env.VPN_L2TP_IPSEC_PSK || '';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Constantes do Sistema
@@ -214,8 +221,9 @@ const FREERADIUS_TMP_CLIENTS_PATH =
   process.env.FREERADIUS_TMP_CLIENTS_PATH || path.join(__dirname, 'tmp', 'ms-telecom-pops.conf');
 const FREERADIUS_MAIN_CLIENTS_CONF = process.env.FREERADIUS_MAIN_CLIENTS_CONF || '/etc/freeradius/3.0/clients.conf';
 const FREERADIUS_INCLUDE_LINE = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
-const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || 'sudo /usr/sbin/freeradius -C';
-const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || 'sudo /usr/bin/systemctl reload freeradius';
+const FREERADIUS_VALIDATE_CMD = process.env.FREERADIUS_VALIDATE_CMD || '/usr/sbin/freeradius -C';
+const FREERADIUS_RELOAD_CMD = process.env.FREERADIUS_RELOAD_CMD || '/usr/bin/systemctl reload freeradius';
+const FREERADIUS_RESTART_CMD = process.env.FREERADIUS_RESTART_CMD || '/usr/bin/systemctl restart freeradius';
 
 let freeradiusSyncInFlight = null;
 
@@ -249,16 +257,17 @@ function buildFreeradiusClientsConf(pops) {
   ].join('\n');
 
   const blocks = (pops || [])
-    .filter((p) => p && p.ip && p.radius_secret)
+    .filter((p) => p && p.vpn_ip && p.radius_secret)
     .map((p) => {
       const clientName = sanitizeFreeradiusClientName(`ms_${p.unique_id || p.id || p.name}`);
       const commentName = (p.name || '').replace(/[\r\n]/g, ' ').trim();
       return [
         `# POP: ${commentName || (p.unique_id || p.id || '')}`,
         `client ${clientName} {`,
-        `  ipaddr = ${p.ip}`,
+        `  ipaddr = ${p.vpn_ip}`,
         `  secret = ${p.radius_secret}`,
-        '  nas_type = other',
+        `  shortname = ${sanitizeFreeradiusClientName(p.unique_id || p.id || p.name)}`,
+        '  nastype = mikrotik',
         '}',
         ''
       ].join('\n');
@@ -277,11 +286,26 @@ async function syncFreeradiusClientsFromDb() {
 
   freeradiusSyncInFlight = (async () => {
     try {
+      if (RADIUS_CLIENT_MODE === 'global') {
+        if (!RADIUS_GLOBAL_SECRET) throw new Error('RADIUS_GLOBAL_SECRET is required when RADIUS_CLIENT_MODE=global');
+        return { ok: true, skipped: true };
+      }
+
+      if (RADIUS_CLIENT_MODE !== 'vpn_legacy') {
+        throw new Error(`Invalid RADIUS_CLIENT_MODE: ${RADIUS_CLIENT_MODE}. Use global|vpn_legacy.`);
+      }
+
       const { data: pops, error } = await supabase
         .from('pops')
-        .select('id, unique_id, name, ip, radius_secret, status')
+        .select('id, unique_id, name, vpn_ip, radius_secret, status')
         .order('name', { ascending: true });
       if (error) throw error;
+
+      const missing = (pops || []).filter((p) => p && (!p.vpn_ip || !p.radius_secret));
+      if (missing.length > 0) {
+        const ids = missing.map((p) => p.unique_id || p.id).join(', ');
+        throw new Error(`Missing vpn_ip/radius_secret for POP(s): ${ids}`);
+      }
 
       const conf = buildFreeradiusClientsConf(pops || []);
 
@@ -294,6 +318,7 @@ async function syncFreeradiusClientsFromDb() {
       if (mkdirError) throw new Error(`Erro ao criar diretório FreeRADIUS: ${mkdirError.stderr}`);
 
       // 2. Copia o arquivo temporário para o destino final no VPS
+      await execAsync(`sudo cp ${FREERADIUS_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}.bak 2>/dev/null || true`);
       const { error: cpError } = await execAsync(`sudo cp ${FREERADIUS_TMP_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}`);
       if (cpError) throw new Error(`Erro ao copiar arquivo FreeRADIUS: ${cpError.stderr}`);
 
@@ -304,16 +329,19 @@ async function syncFreeradiusClientsFromDb() {
 
       if (!mainClientsConfContent.includes(FREERADIUS_INCLUDE_LINE)) {
         // Se a linha de include não existe, adiciona-a
-        const { error: teeError } = await execAsync(`echo "${FREERADIUS_INCLUDE_LINE}" | sudo tee -a ${FREERADIUS_MAIN_CLIENTS_CONF}`);
+        const { error: teeError } = await execAsync(`printf '%s\\n' '$INCLUDE ${FREERADIUS_CLIENTS_PATH}' | sudo /usr/bin/tee -a ${FREERADIUS_MAIN_CLIENTS_CONF} >/dev/null`);
         if (teeError) throw new Error(`Erro ao adicionar include: ${teeError.stderr}`);
       }
 
       // 4. Valida e recarrega FreeRADIUS
-      const { stderr: validateErr } = await execAsync(FREERADIUS_VALIDATE_CMD);
-      if (validateErr) throw new Error(`Validação FreeRADIUS falhou: ${validateErr}`);
+      const { error: validateError, stdout: validateOut, stderr: validateErr } = await execAsync(`sudo ${FREERADIUS_VALIDATE_CMD}`, 60000);
+      if (validateError) throw new Error(`Validação FreeRADIUS falhou: ${validateErr || validateOut}`);
 
-      const { stderr: reloadErr } = await execAsync(FREERADIUS_RELOAD_CMD);
-      if (reloadErr) throw new Error(`Recarga FreeRADIUS falhou: ${reloadErr}`);
+      const { error: reloadError, stdout: reloadOut, stderr: reloadErr } = await execAsync(`sudo ${FREERADIUS_RELOAD_CMD}`, 60000);
+      if (reloadError) {
+        const { error: restartError, stdout: restartOut, stderr: restartErr } = await execAsync(`sudo ${FREERADIUS_RESTART_CMD}`, 60000);
+        if (restartError) throw new Error(`Recarga FreeRADIUS falhou: ${restartErr || restartOut || reloadErr || reloadOut}`);
+      }
 
     } catch (err) {
       console.error("❌ Erro ao sincronizar clientes FreeRADIUS:", err.message);
@@ -1419,9 +1447,9 @@ function buildPopInstallScript(pop, config = {}) {
 
   const apiUser = pop.api_user;
   const apiPass = pop.api_pass;
-  const radiusSecret = pop.radius_secret;
+  const radiusSecret = (RADIUS_CLIENT_MODE === 'global') ? RADIUS_GLOBAL_SECRET : pop.radius_secret;
   if (!apiUser || !apiPass || !radiusSecret) {
-    throw new Error('Missing persisted POP credentials (api_user, api_pass, radius_secret)');
+    throw new Error('Missing persisted POP credentials (api_user, api_pass, radius_secret/global)');
   }
 
   const wanInterface = config.wan_interface || 'ether1';
@@ -1453,6 +1481,59 @@ function buildPopInstallScript(pop, config = {}) {
   const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
   const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
   const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
+
+  const vpnEnabled = parseBoolean(pop.vpn_enabled, false) || parseBoolean(config.vpn_enabled, false);
+  const vpnType = String(pop.vpn_type || config.vpn_type || '').toLowerCase();
+  const vpnIp = String(pop.vpn_ip || '').trim();
+  const vpnUsername = String(pop.vpn_username || '').trim();
+  const vpnPassword = String(pop.vpn_password || '').trim();
+
+  if (vpnEnabled) {
+    if (RADIUS_CLIENT_MODE !== 'vpn_legacy') {
+      throw new Error('vpn_enabled=true requires RADIUS_CLIENT_MODE=vpn_legacy');
+    }
+    if (!vpnIp || !vpnUsername || !vpnPassword) {
+      throw new Error('Missing POP VPN fields (vpn_ip, vpn_username, vpn_password)');
+    }
+    if (vpnType !== 'l2tp_ipsec' && vpnType !== 'sstp') {
+      throw new Error('Unsupported vpn_type (use l2tp_ipsec or sstp)');
+    }
+    if (!VPN_PUBLIC_ENDPOINT) {
+      throw new Error('Missing env VPN_PUBLIC_ENDPOINT');
+    }
+    if (vpnType === 'l2tp_ipsec' && !VPN_L2TP_IPSEC_PSK) {
+      throw new Error('Missing env VPN_L2TP_IPSEC_PSK for vpn_type=l2tp_ipsec');
+    }
+  }
+
+  const vpnBlock = vpnEnabled && vpnType === 'l2tp_ipsec'
+    ? (
+      `# VPN (L2TP/IPsec - RouterOS v6)\n` +
+      `/ppp profile add name="MS-VPN" use-encryption=yes comment="${tag}"\n` +
+      `/interface l2tp-client add name="ms-vpn-${popId}" connect-to=${VPN_PUBLIC_ENDPOINT} user="${vpnUsername}" password="${vpnPassword}" profile="MS-VPN" use-ipsec=yes ipsec-secret="${VPN_L2TP_IPSEC_PSK}" add-default-route=no keepalive-timeout=30 disabled=no comment="${tag}"\n` +
+      `:delay 2s\n` +
+      `/ip service set api address=${VPN_INTERNAL_RADIUS_IP}/32\n` +
+      `:delay 500ms\n`
+    )
+    : (vpnEnabled && vpnType === 'sstp'
+      ? (
+        `# VPN (SSTP - RouterOS v6)\n` +
+        `/ppp profile add name="MS-VPN" use-encryption=yes comment="${tag}"\n` +
+        `/interface sstp-client add name="ms-vpn-${popId}" connect-to=${VPN_PUBLIC_ENDPOINT} user="${vpnUsername}" password="${vpnPassword}" profile="MS-VPN" add-default-route=no disabled=no comment="${tag}"\n` +
+        `:delay 2s\n` +
+        `/ip service set api address=${VPN_INTERNAL_RADIUS_IP}/32\n` +
+        `:delay 500ms\n`
+      )
+      : '');
+
+  const radiusAddress = vpnEnabled ? VPN_INTERNAL_RADIUS_IP : radiusServer;
+  const radiusSrcAddress = vpnEnabled ? ` src-address=${vpnIp}` : '';
+  const radiusTimeout = vpnEnabled ? '3s' : '1000ms';
+
+  const radiusBlock =
+    `/radius add address=${radiusAddress}${radiusSrcAddress} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 domain="${popId}" comment="${tag}" timeout=${radiusTimeout}\n` +
+    `/radius incoming set accept=yes\n` +
+    `:delay 1s\n`;
 
   const wgHosts = [
     'hotspot-system.vercel.app',
@@ -1598,9 +1679,7 @@ ${wanBlock}
 /ip dns set allow-remote-requests=yes servers=8.8.8.8,1.1.1.1
 :delay 500ms
 
-/radius add address=${radiusServer} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 domain="${popId}" comment="${tag}" timeout=1000ms
-/radius incoming set accept=yes
-:delay 1s
+${vpnBlock}${radiusBlock}
 
 :global hotspotDir
 :set hotspotDir "ms-${popId}"

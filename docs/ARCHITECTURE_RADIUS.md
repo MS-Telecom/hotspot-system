@@ -50,6 +50,13 @@ Requisito:
 
 - IP fixo de tunel por POP (nao usar IP publico aleatorio).
 
+## VPN legacy (RouterOS v6)
+
+Para producao com RouterOS v6 (sem WireGuard), use o modo `vpn_legacy`.
+Detalhes em:
+
+- `docs/ARCHITECTURE_RADIUS_LEGACY_VPN.md`
+
 ## Fonte canonica de credenciais (SQL)
 
 No MS Telecom Hotspot System, a fonte canonica para autenticacao e atributos de resposta e:
