@@ -50,3 +50,43 @@ Requisito:
 
 - IP fixo de tunel por POP (nao usar IP publico aleatorio).
 
+## Fonte canonica de credenciais (SQL)
+
+No MS Telecom Hotspot System, a fonte canonica para autenticacao e atributos de resposta e:
+
+- `radius_replies`
+
+O backend grava pelo menos:
+
+- `username = <MAC>`
+- `attribute = 'Cleartext-Password'`
+- `value = <MAC>`
+- `op = ':='`
+- `status = 'active'`
+- `expires_at` (quando aplicavel)
+
+Nao usar `radcheck`/`radreply` como fonte (legado). Se existir no banco, deve ser tratado como tabela antiga e nao usada.
+
+### Query recomendada (exemplo)
+
+Check (senha):
+
+```sql
+SELECT id, username, attribute, value, op
+FROM radius_replies
+WHERE username = %{SQL-User-Name}
+  AND attribute = 'Cleartext-Password'
+  AND status = 'active'
+  AND (expires_at IS NULL OR expires_at > NOW());
+```
+
+Reply (atributos, exceto a senha):
+
+```sql
+SELECT id, username, attribute, value, op
+FROM radius_replies
+WHERE username = %{SQL-User-Name}
+  AND attribute <> 'Cleartext-Password'
+  AND status = 'active'
+  AND (expires_at IS NULL OR expires_at > NOW());
+```

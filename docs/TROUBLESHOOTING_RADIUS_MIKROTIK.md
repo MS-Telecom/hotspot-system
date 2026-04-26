@@ -25,6 +25,10 @@ Sem VPN (Starlink/4G/CGNAT/IP dinamico), nao da para depender de IP publico fixo
 No VPS:
 
 ```bash
+## Portas (devem estar liberadas no firewall)
+# - UDP 1812 (auth)
+# - UDP 1813 (accounting)
+
 sudo tcpdump -ni any -vvv 'udp port 1812 or udp port 1813'
 sudo systemctl stop freeradius
 sudo pkill freeradius || true
@@ -86,3 +90,12 @@ Linha exata:
 $INCLUDE /etc/freeradius/3.0/clients.d/ms-telecom-pops.conf
 ```
 
+## Observacao sobre tabelas SQL (radius_replies vs radcheck/radreply)
+
+O backend **nao** grava em `radcheck`/`radreply`.
+A tabela canonica do sistema e:
+
+- `radius_replies`
+
+Se o FreeRADIUS estiver consultando `radcheck`/`radreply`, a autenticacao vai falhar mesmo com o usuario existindo no painel.
+Garanta que o modulo SQL do FreeRADIUS esteja apontando para a tabela `radius_replies` (ver `docs/ARCHITECTURE_RADIUS.md`).
