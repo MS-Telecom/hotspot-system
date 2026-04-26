@@ -358,17 +358,6 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
 
     const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
     await conn.connect();
-
-    // Best-effort cleanup of local hotspot user created by our backend (MAC as user/pass).
-    try {
-      const users = await conn.write('/ip/hotspot/user/print', [`?name=${macAddress}`]);
-      for (const u of users || []) {
-        await conn.write('/ip/hotspot/user/remove', [`=.id=${u['.id']}`]);
-      }
-    } catch (_e) {
-      // ignore
-    }
-
     const bindings = await conn.write('/ip/hotspot/ip-binding/print', [`?mac-address=${macAddress}`]);
 
     for (const binding of bindings || []) {
@@ -406,24 +395,6 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
       if (username && password) {
         const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
         await conn.connect();
-
-        // 1A) Ensure a local Hotspot user exists (MAC as user/pass). This matches the manual workaround
-        // and makes "Teste gratis" work even when RADIUS is temporarily misconfigured.
-        try {
-          const existingUser = await conn.write('/ip/hotspot/user/print', [`?name=${macAddress}`]);
-          if (!existingUser || existingUser.length === 0) {
-            await conn.write('/ip/hotspot/user/add', [
-              `=name=${macAddress}`,
-              `=password=${macAddress}`,
-              '=profile=default',
-              '=comment=MS-TELECOM-AUTO'
-            ]);
-          }
-        } catch (e) {
-          // Non-fatal; keep going with IP binding + RADIUS.
-          errors.push(`API(hotspot-user): ${e?.message || e}`);
-        }
-
         const existing = await conn.write('/ip/hotspot/ip-binding/print', [`?mac-address=${macAddress}`]);
 
         if (!existing || existing.length === 0) {
@@ -2078,21 +2049,14 @@ app.get('/api/test-ip', (req, res) => {
 
 app.get('/entrypoint', (req, res) => {
   const q = req.query || {};
-
-  const hotspotIdentity = (q.hotspotIdentity || q.hotspot || q['server-name'] || q.server || '').toString();
-  const userMac = (q.userMac || q.mac || q.mac_address || q.called || q['mac-address'] || '').toString();
-  const hostname = (q.hostname || q.ip || q.ip_address || q.nasip || '').toString();
-  const loginUrl = (q.loginUrl || q['link-login-only'] || '').toString();
-  const orig = (q.orig || q.dst || q['link-orig'] || '').toString();
-  const error = (q.error || '').toString();
+  const mac = (q.mac || q.mac_address || q.called || q['mac-address'] || '').toString();
+  const ip = (q.ip || q.ip_address || q.nasip || '').toString();
+  const pop = (q.pop || q.pop_id || q.hotspot || '').toString();
 
   const url = new URL('/portal.html', FRONTEND_BASE_URL);
-  if (userMac) url.searchParams.set('mac', userMac);
-  if (hostname) url.searchParams.set('ip', hostname);
-  if (hotspotIdentity) url.searchParams.set('hotspot', hotspotIdentity);
-  if (loginUrl) url.searchParams.set('loginUrl', loginUrl);
-  if (orig) url.searchParams.set('orig', orig);
-  if (error) url.searchParams.set('error', error);
+  if (mac) url.searchParams.set('mac', mac);
+  if (ip) url.searchParams.set('ip', ip);
+  if (pop) url.searchParams.set('pop', pop);
 
   return res.redirect(302, url.toString());
 });
