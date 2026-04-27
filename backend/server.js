@@ -41,6 +41,12 @@ const RADIUS_GLOBAL_FALLBACK_SECRET = process.env.RADIUS_GLOBAL_FALLBACK_SECRET 
 const VPN_PUBLIC_ENDPOINT = process.env.VPN_PUBLIC_ENDPOINT || '';
 const VPN_INTERNAL_RADIUS_IP = process.env.VPN_INTERNAL_RADIUS_IP || '10.250.0.1';
 const VPN_L2TP_IPSEC_PSK = process.env.VPN_L2TP_IPSEC_PSK || '';
+
+// L2TP provisioning (VPS as concentrator)
+const VPN_IP_POOL_START = process.env.VPN_IP_POOL_START || '10.254.1.10';
+const VPN_IP_POOL_END = process.env.VPN_IP_POOL_END || '10.254.1.200';
+const CHAP_SECRETS_PATH = process.env.CHAP_SECRETS_PATH || '/etc/ppp/chap-secrets';
+const XL2TPD_SERVICE_NAME = process.env.XL2TPD_SERVICE_NAME || 'xl2tpd';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Constantes do Sistema
@@ -95,6 +101,26 @@ function slugify(value) {
 // Gera senha forte aleatória
 function generateStrongPassword(length = 20) {
   return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
+}
+
+function generateVpnPassword() {
+  return generateStrongPassword(24);
+}
+
+function ipToInt(ip) {
+  const parts = String(ip || '').trim().split('.').map((p) => Number(p));
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n) || n < 0 || n > 255)) return null;
+  return ((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+}
+
+function intToIp(num) {
+  const n = Number(num) >>> 0;
+  return [
+    (n >>> 24) & 255,
+    (n >>> 16) & 255,
+    (n >>> 8) & 255,
+    n & 255
+  ].join('.');
 }
 
 // Converte para número de forma segura
@@ -1303,6 +1329,117 @@ function buildPopApiUsername(uniqueId) {
   return `API_${String(uniqueId || '').trim()}`.replace(/[^A-Za-z0-9_]/g, '_').slice(0, 32);
 }
 
+function buildL2tpChapSecrets(pops) {
+  const header = [
+    '# ======================================================================',
+    '# AUTO-GENERATED BLOCK - MS TELECOM POPs (DO NOT EDIT INSIDE)',
+    `# Generated at: ${new Date().toISOString()}`,
+    '# ======================================================================',
+  ].join('\n');
+
+  const lines = (pops || [])
+    .filter((p) => p && p.vpn_enabled === true && String(p.vpn_type || '').toLowerCase() === 'l2tp_ipsec')
+    .filter((p) => p.vpn_username && p.vpn_password && (p.vpn_ip || p.radius_client_ip))
+    .map((p) => {
+      const username = String(p.vpn_username).trim();
+      const password = String(p.vpn_password).replace(/"/g, '\\"');
+      const ip = String(p.vpn_ip || p.radius_client_ip).trim();
+      // chap-secrets: client  server  secret  IP
+      return `"${username}"  ms-l2tp  "${password}"  ${ip}`;
+    });
+
+  return [header, ...lines].join('\n') + '\n';
+}
+
+async function syncL2tpChapSecretsFromDb() {
+  try {
+    const { data: pops, error } = await supabase
+      .from('pops')
+      .select('id, unique_id, vpn_enabled, vpn_type, vpn_ip, radius_client_ip, vpn_username, vpn_password')
+      .order('unique_id', { ascending: true });
+
+    if (error) {
+      if (
+        looksLikeMissingColumnError(error, 'vpn_enabled', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_ip', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_username', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_password', 'pops')
+      ) {
+        throw new Error('Database schema missing required VPN columns in pops. Apply migration first.');
+      }
+      throw error;
+    }
+
+    const managedBlock = buildL2tpChapSecrets(pops || []);
+
+    // Read existing chap-secrets (best-effort). Preserve anything outside our managed markers.
+    const beginMarker = '# BEGIN MS-TELECOM POPS';
+    const endMarker = '# END MS-TELECOM POPS';
+
+    let existing = '';
+    const readRes = await execAsync(`sudo cat ${CHAP_SECRETS_PATH}`);
+    if (!readRes.error) existing = readRes.stdout || '';
+
+    const before = existing.split(beginMarker)[0] || '';
+    const afterSplit = existing.split(endMarker);
+    const after = afterSplit.length > 1 ? afterSplit.slice(1).join(endMarker) : '';
+
+    const nextContent =
+      (before.trimEnd() ? before.trimEnd() + '\n' : '') +
+      `${beginMarker}\n` +
+      managedBlock +
+      `${endMarker}\n` +
+      (after.trimStart() ? after.trimStart() : '');
+
+    const tmpPath = path.join(__dirname, 'tmp', 'chap-secrets');
+    fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
+    fs.writeFileSync(tmpPath, nextContent, { encoding: 'utf8' });
+
+    await execAsync(`sudo cp ${CHAP_SECRETS_PATH} ${CHAP_SECRETS_PATH}.bak 2>/dev/null || true`);
+    const { error: cpError, stderr: cpErr } = await execAsync(`sudo cp ${tmpPath} ${CHAP_SECRETS_PATH}`);
+    if (cpError) throw new Error(`chap-secrets copy failed: ${cpErr}`);
+
+    const { error: restartError, stderr: restartErr } = await execAsync(`sudo /usr/bin/systemctl restart ${XL2TPD_SERVICE_NAME}`, 60000);
+    if (restartError) throw new Error(`xl2tpd restart failed: ${restartErr}`);
+
+    console.log('[L2TP] chap-secrets synced successfully.');
+    return { ok: true };
+  } catch (err) {
+    console.error('❌ Erro ao sincronizar chap-secrets:', err.message);
+    await registerSystemLog('error', 'L2TP Sync', 'Erro ao sincronizar chap-secrets', { error: err.message });
+    return { ok: false, error: err.message };
+  }
+}
+
+async function allocateNextVpnIp() {
+  const start = ipToInt(VPN_IP_POOL_START);
+  const end = ipToInt(VPN_IP_POOL_END);
+  if (start === null || end === null || start >= end) {
+    throw new Error('Invalid VPN IP pool range (VPN_IP_POOL_START/VPN_IP_POOL_END)');
+  }
+
+  const { data, error } = await supabase.from('pops').select('vpn_ip');
+  if (error) {
+    if (looksLikeMissingColumnError(error, 'vpn_ip', 'pops')) {
+      throw new Error('Database schema missing required column pops.vpn_ip. Apply migration first.');
+    }
+    throw error;
+  }
+
+  const used = new Set();
+  for (const row of data || []) {
+    const v = String(row?.vpn_ip || '').trim();
+    const n = ipToInt(v);
+    if (n !== null) used.add(n);
+  }
+
+  for (let cur = start; cur <= end; cur++) {
+    if (!used.has(cur)) return intToIp(cur);
+  }
+
+  throw new Error('VPN IP pool exhausted');
+}
+
 async function ensurePopProvisioningMaterial(pop) {
   const now = new Date().toISOString();
 
@@ -1311,26 +1448,52 @@ async function ensurePopProvisioningMaterial(pop) {
 
   const uniqueId = pop.unique_id || popId;
   const nextRadiusSecret = pop.radius_secret || generateStrongPassword(18);
+  let nextVpnIp = pop.vpn_ip || '';
+  const nextVpnEnabled = (pop.vpn_enabled === undefined || pop.vpn_enabled === null) ? true : !!pop.vpn_enabled;
+  const nextVpnType = pop.vpn_type || 'l2tp_ipsec';
+  const nextVpnUsername = pop.vpn_username || uniqueId;
+  const nextVpnPassword = pop.vpn_password || generateVpnPassword();
+
+  if (!nextVpnIp) {
+    nextVpnIp = await allocateNextVpnIp();
+  }
 
   // Persist POP radius_secret + unique_id as the official source of truth.
-  if (!pop.unique_id || !pop.radius_secret) {
+  if (!pop.unique_id || !pop.radius_secret || !pop.vpn_ip || !pop.vpn_username || !pop.vpn_password || pop.vpn_enabled === undefined || pop.vpn_enabled === null || !pop.vpn_type) {
     const { data: updated, error } = await supabase
       .from('pops')
-      .update({ unique_id: uniqueId, radius_secret: nextRadiusSecret, updated_at: now })
+      .update({
+        unique_id: uniqueId,
+        radius_secret: nextRadiusSecret,
+        vpn_enabled: nextVpnEnabled,
+        vpn_type: nextVpnType,
+        vpn_ip: nextVpnIp,
+        vpn_username: nextVpnUsername,
+        vpn_password: nextVpnPassword,
+        updated_at: now
+      })
       .eq('id', popId)
       .select('*')
       .single();
 
     if (error) {
-      if (looksLikeMissingColumnError(error, 'radius_secret', 'pops') || looksLikeMissingColumnError(error, 'unique_id', 'pops')) {
-        throw new Error('Database schema missing required columns in pops (unique_id, radius_secret). Apply SQL migration first.');
+      if (
+        looksLikeMissingColumnError(error, 'radius_secret', 'pops') ||
+        looksLikeMissingColumnError(error, 'unique_id', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_ip', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_username', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_password', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_type', 'pops') ||
+        looksLikeMissingColumnError(error, 'vpn_enabled', 'pops')
+      ) {
+        throw new Error('Database schema missing required VPN columns in pops. Apply migration first.');
       }
       throw error;
     }
 
     pop = updated;
   } else {
-    pop = { ...pop, unique_id: uniqueId, radius_secret: nextRadiusSecret };
+    pop = { ...pop, unique_id: uniqueId, radius_secret: nextRadiusSecret, vpn_ip: nextVpnIp, vpn_username: nextVpnUsername, vpn_password: nextVpnPassword, vpn_type: nextVpnType, vpn_enabled: nextVpnEnabled };
   }
 
   // Persist MikroTik API credentials in mikrotik_credentials (official source of truth).
@@ -1366,7 +1529,17 @@ async function ensurePopProvisioningMaterial(pop) {
     }
   }
 
-  return { ...pop, api_user: apiUser, api_pass: apiPass, radius_secret: pop.radius_secret || nextRadiusSecret };
+  return {
+    ...pop,
+    api_user: apiUser,
+    api_pass: apiPass,
+    radius_secret: pop.radius_secret || nextRadiusSecret,
+    vpn_enabled: pop.vpn_enabled ?? nextVpnEnabled,
+    vpn_type: pop.vpn_type || nextVpnType,
+    vpn_ip: pop.vpn_ip || nextVpnIp,
+    vpn_username: pop.vpn_username || nextVpnUsername,
+    vpn_password: pop.vpn_password || nextVpnPassword
+  };
 }
 
 // Listar POPs (Hotspots)
@@ -1463,7 +1636,12 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       console.error('❌ FreeRADIUS sync failed after POP create:', radiusSync.error);
     }
 
-    res.status(201).json({ ...enrichedPop, script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed' });
+    const l2tpSync = await syncL2tpChapSecretsFromDb();
+    if (!l2tpSync.ok) {
+      console.error('❌ L2TP chap-secrets sync failed after POP create:', l2tpSync.error);
+    }
+
+    res.status(201).json({ ...enrichedPop, script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao criar POP:', err.message);
     res.status(500).json({ error: 'Erro ao criar POP' });
@@ -1778,7 +1956,12 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
       console.error('❌ FreeRADIUS sync failed after POP update:', radiusSync.error);
     }
 
-    res.json({ ...enrichedPop, freeradius_sync: radiusSync.ok ? 'ok' : 'failed' });
+    const l2tpSync = await syncL2tpChapSecretsFromDb();
+    if (!l2tpSync.ok) {
+      console.error('❌ L2TP chap-secrets sync failed after POP update:', l2tpSync.error);
+    }
+
+    res.json({ ...enrichedPop, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao atualizar POP:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar POP' });
@@ -1807,7 +1990,12 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
       console.error('❌ FreeRADIUS sync failed after POP delete:', radiusSync.error);
     }
 
-    res.json({ message: 'POP removido com sucesso', freeradius_sync: radiusSync.ok ? 'ok' : 'failed' });
+    const l2tpSync = await syncL2tpChapSecretsFromDb();
+    if (!l2tpSync.ok) {
+      console.error('❌ L2TP chap-secrets sync failed after POP delete:', l2tpSync.error);
+    }
+
+    res.json({ message: 'POP removido com sucesso', freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao deletar POP:', err.message);
     res.status(500).json({ error: 'Erro ao deletar POP' });
@@ -1870,7 +2058,12 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
       console.error('❌ FreeRADIUS sync failed after script generation:', radiusSync.error);
     }
 
-    res.json({ script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed' });
+    const l2tpSync = await syncL2tpChapSecretsFromDb();
+    if (!l2tpSync.ok) {
+      console.error('❌ L2TP chap-secrets sync failed after script generation:', l2tpSync.error);
+    }
+
+    res.json({ script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao gerar script:', err.message);
     res.status(500).json({ error: 'Erro ao gerar script' });
@@ -1905,6 +2098,44 @@ app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao gerar script de reversão:', err.message);
     res.status(500).json({ error: 'Erro ao gerar script de reversão' });
+  }
+});
+
+// One-time backfill: allocate missing VPN fields for existing POPs (admin only)
+app.post('/api/admin/pops/vpn-backfill', authMiddleware, async (req, res) => {
+  try {
+    const { data: pops, error } = await supabase.from('pops').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+
+    const updated = [];
+    for (const pop of pops || []) {
+      const needs =
+        !pop.vpn_ip ||
+        !pop.vpn_username ||
+        !pop.vpn_password ||
+        !pop.vpn_type ||
+        pop.vpn_enabled === undefined ||
+        pop.vpn_enabled === null;
+
+      if (!needs) continue;
+
+      const enriched = await ensurePopProvisioningMaterial(pop);
+      updated.push({ id: enriched.id, unique_id: enriched.unique_id, vpn_ip: enriched.vpn_ip, vpn_username: enriched.vpn_username });
+    }
+
+    const l2tpSync = await syncL2tpChapSecretsFromDb();
+    const radiusSync = await syncFreeradiusClientsFromDb();
+
+    res.json({
+      success: true,
+      updated_count: updated.length,
+      updated,
+      l2tp_sync: l2tpSync.ok ? 'ok' : 'failed',
+      freeradius_sync: radiusSync.ok ? 'ok' : 'failed'
+    });
+  } catch (err) {
+    console.error('❌ vpn-backfill error:', err.message);
+    res.status(500).json({ error: 'Erro no backfill VPN' });
   }
 });
 
