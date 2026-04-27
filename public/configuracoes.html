@@ -612,7 +612,7 @@
             } else if (key === 'free_trial') {
                 if (document.getElementById('testeGratisEnabled')) document.getElementById('testeGratisEnabled').checked = value.enabled === true;
                 if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_minutes || 15;
-                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.cooldown_hours || value.limit_hours || 24;
+                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.reuse_cooldown_hours || value.cooldown_hours || value.limit_hours || 24;
             } else if (key === 'payment') {
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
@@ -692,7 +692,7 @@
             value = {
                 enabled: document.getElementById('testeGratisEnabled')?.checked || false,
                 duration_minutes: parseInt(document.getElementById('teste_tempo').value, 10),
-                cooldown_hours: parseInt(document.getElementById('teste_limite').value, 10)
+                reuse_cooldown_hours: parseInt(document.getElementById('teste_limite').value, 10)
             };
         } else if (key === 'payment') {
             value = {

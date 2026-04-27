@@ -604,32 +604,119 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
   throw new Error('Failed to create user');
 }
 async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddress = null, popId = null, popIp = null }) {
-  const cleanMac = String(macAddress || '').trim();
+  const normalizeMacAddress = (input) => {
+    const raw = String(input || '').trim();
+    if (!raw) return '';
+    const cleaned = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+    if (cleaned.length !== 12) return raw.toUpperCase();
+    return cleaned.match(/.{1,2}/g).join(':');
+  };
+
+  const cleanMac = normalizeMacAddress(macAddress);
   if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório' } };
 
-  const minutes = Number(durationMinutes || 15);
-  const expiresAt = new Date(Date.now() + minutes * 60000).toISOString();
-  const mikrotikIp = popIp || '192.168.32.1';
+  // Always read config from settings (backend is the authority).
+  const defaults = { enabled: false, duration_minutes: 15, reuse_cooldown_hours: 24 };
+  let cfg = { ...defaults };
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
+    if (error) throw error;
+    const v = data?.value;
+    const obj = v && typeof v === 'object' ? v : {};
+    const enabled = obj.enabled === true;
+    const duration = Number(obj.duration_minutes ?? defaults.duration_minutes);
+    const cooldown = Number(obj.reuse_cooldown_hours ?? obj.cooldown_hours ?? defaults.reuse_cooldown_hours);
+    cfg = {
+      enabled,
+      duration_minutes: Number.isFinite(duration) && duration > 0 ? duration : defaults.duration_minutes,
+      reuse_cooldown_hours: Number.isFinite(cooldown) && cooldown >= 0 ? cooldown : defaults.reuse_cooldown_hours
+    };
+  } catch (_e) {
+    // If settings doesn't exist yet, keep defaults.
+  }
 
-  // 0) Enforce free-trial limit using `free_trials` (best-effort; won't block if the table isn't available).
+  if (!cfg.enabled) {
+    return { ok: false, status: 403, body: { error: 'Teste grátis indisponível no momento' } };
+  }
+
+  const nowIso = new Date().toISOString();
+
+  // 0) If there is an active session, don't create a new one.
+  try {
+    const { data: active, error: activeErr } = await supabase
+      .from('hotspot_sessions')
+      .select('id, expires_at')
+      .eq('mac_address', cleanMac)
+      .eq('status', 'active')
+      .gt('expires_at', nowIso)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (activeErr) throw activeErr;
+    if (active?.expires_at) {
+      return { ok: true, status: 200, body: { message: 'Acesso já está ativo', expires_at: active.expires_at } };
+    }
+  } catch (_e) {
+    // ignore
+  }
+
+  // 1) Cooldown enforcement using `free_trials` (best-effort; won't block if the table isn't available).
   try {
     const { data: ft, error: ftErr } = await supabase
       .from('free_trials')
-      .select('id')
+      .select('mac_address, last_used_at, used_at, cooldown_until')
       .eq('mac_address', cleanMac)
       .maybeSingle();
-
     if (ftErr) throw ftErr;
-    if (ft) return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado para este MAC' } };
+
+    const lastUsed = ft?.last_used_at || ft?.used_at || null;
+    const cooldownUntil = ft?.cooldown_until || null;
+
+    const nowMs = Date.now();
+    const cooldownMs = Math.max(0, cfg.reuse_cooldown_hours) * 60 * 60 * 1000;
+    const computedUntil = lastUsed ? new Date(new Date(lastUsed).getTime() + cooldownMs).toISOString() : null;
+    const effectiveUntil = cooldownUntil || computedUntil;
+
+    if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
+      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
+      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', retry_after_seconds: retryAfterSeconds } };
+    }
   } catch (_e) {
-    // If the table doesn't exist yet, don't block the flow.
+    // Fallback: use the most recent session timestamp to enforce cooldown (prevents abuse if free_trials is missing).
+    try {
+      const { data: lastSession, error: lastErr } = await supabase
+        .from('hotspot_sessions')
+        .select('created_at')
+        .eq('mac_address', cleanMac)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastErr) throw lastErr;
+      const lastAt = lastSession?.created_at ? new Date(lastSession.created_at).getTime() : null;
+      if (lastAt) {
+        const nowMs = Date.now();
+        const cooldownMs = Math.max(0, cfg.reuse_cooldown_hours) * 60 * 60 * 1000;
+        const untilMs = lastAt + cooldownMs;
+        if (untilMs > nowMs) {
+          const retryAfterSeconds = Math.max(1, Math.ceil((untilMs - nowMs) / 1000));
+          return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', retry_after_seconds: retryAfterSeconds } };
+        }
+      }
+    } catch (_e2) {
+      // ignore
+    }
   }
 
-  // 1) Ensure RADIUS credential (and IP binding when possible).
+  // Ignore client-provided duration; use config as the single source of truth.
+  const minutes = Number.isFinite(cfg.duration_minutes) ? cfg.duration_minutes : Number(durationMinutes || 15);
+  const expiresAt = new Date(Date.now() + minutes * 60000).toISOString();
+  const mikrotikIp = popIp || '192.168.32.1';
+
+  // 2) Ensure RADIUS credential (and IP binding when possible).
   const result = await authorizeAccess(cleanMac, mikrotikIp, null, null, popId, minutes, 5, 'free_trial');
   if (!result.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar acesso' } };
 
-  // 2) Ensure basic user row exists for this device.
+  // 3) Ensure basic user row exists for this device.
   const user = await findOrCreateHotspotUser({
     macAddress: cleanMac,
     ipAddress,
@@ -639,8 +726,7 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
     expiresAt
   });
 
-  // 3) Register session linked to the user.
-  const now = new Date().toISOString();
+  // 4) Register session linked to the user.
   const sessionPayload = {
     user_id: user.id,
     mac_address: cleanMac,
@@ -649,21 +735,35 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
     expires_at: expiresAt,
     ...(popId ? { pop_id: popId } : {}),
     ...(popIp ? { pop_ip: popIp } : {}),
-    created_at: now,
-    updated_at: now
+    created_at: nowIso,
+    updated_at: nowIso
   };
 
   const { error: sessionErr } = await supabase.from('hotspot_sessions').insert(sessionPayload);
   if (sessionErr) throw sessionErr;
 
-  // 4) Mark the free-trial as used (best-effort; doesn't fail the session if it can't write).
+  // 5) Mark the free-trial usage + next cooldown window (best-effort).
   try {
-    await supabase.from('free_trials').insert({ mac_address: cleanMac, used_at: now });
+    const cooldownUntil = new Date(Date.now() + Math.max(0, cfg.reuse_cooldown_hours) * 60 * 60 * 1000).toISOString();
+    const payload = {
+      mac_address: cleanMac,
+      first_used_at: nowIso,
+      last_used_at: nowIso,
+      used_at: nowIso,
+      cooldown_until: cooldownUntil,
+      duration_minutes: minutes,
+      expires_at: expiresAt,
+      ...(popId ? { pop_id: popId } : {})
+    };
+    const up = await supabase.from('free_trials').upsert(payload, { onConflict: 'mac_address' });
+    if (up.error) throw up.error;
   } catch (_e) {
-    // ignore
+    try {
+      await supabase.from('free_trials').insert({ mac_address: cleanMac, used_at: nowIso });
+    } catch (_e2) {}
   }
 
-  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user.id } };
+  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user.id, duration_minutes: minutes, reuse_cooldown_hours: cfg.reuse_cooldown_hours } };
 }
 // ============================================================
 // ⏱️ CRON JOB - REMOVER ACESSOS EXPIRADOS
@@ -2581,7 +2681,19 @@ app.get('/api/settings/free_trial', async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
     if (error) throw error;
-    res.json(data?.value || {});
+    const raw = data?.value && typeof data.value === 'object' ? data.value : {};
+    const enabled = raw.enabled === true;
+    const duration = Number(raw.duration_minutes ?? 15);
+    const cooldown = Number(raw.reuse_cooldown_hours ?? raw.cooldown_hours ?? 24);
+    const out = {
+      enabled,
+      duration_minutes: Number.isFinite(duration) && duration > 0 ? duration : 15,
+      reuse_cooldown_hours: Number.isFinite(cooldown) && cooldown >= 0 ? cooldown : 24,
+      // Backward-compat alias
+      cooldown_hours: Number.isFinite(cooldown) && cooldown >= 0 ? cooldown : 24
+    };
+    res.set('Cache-Control', 'no-store');
+    res.json(out);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -2590,12 +2702,26 @@ app.get('/api/settings/free_trial', async (req, res) => {
 // Salvar configurações de teste grátis
 app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   try {
-    const { error } = await supabase.from('settings').upsert({
-      key: 'free_trial',
-      value: req.body,
-      updated_at: new Date().toISOString()
-    });
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const enabled = body.enabled === true;
+    const duration = Number(body.duration_minutes ?? 15);
+    const cooldown = Number(body.reuse_cooldown_hours ?? body.cooldown_hours ?? 24);
+    const value = {
+      enabled,
+      duration_minutes: Number.isFinite(duration) && duration > 0 ? duration : 15,
+      reuse_cooldown_hours: Number.isFinite(cooldown) && cooldown >= 0 ? cooldown : 24
+    };
+
+    const { error } = await supabase.from('settings').upsert(
+      {
+        key: 'free_trial',
+        value,
+        updated_at: new Date().toISOString()
+      },
+      { onConflict: 'key' }
+    );
     if (error) throw error;
+    res.set('Cache-Control', 'no-store');
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3078,12 +3204,11 @@ app.post('/api/users/test-access', async (req, res) => {
   try {
     const body = req.body || {};
     const macAddress = body.mac_address;
-    const durationMinutes = body.duration_minutes ?? 15;
     const ipAddress = body.ip_address ?? body.ip ?? null;
     const popId = body.pop_id ?? null;
     const popIp = body.pop_ip ?? null;
 
-    const out = await handleFreeTrialAccess({ macAddress, durationMinutes, ipAddress, popId, popIp });
+    const out = await handleFreeTrialAccess({ macAddress, durationMinutes: null, ipAddress, popId, popIp });
     return res.status(out.status).json(out.body);
   } catch (err) {
     res.status(500).json({ error: 'Erro interno' });
@@ -3095,12 +3220,11 @@ app.post('/api/liberar-teste', async (req, res) => {
   try {
     const body = req.body || {};
     const macAddress = body.mac_address || body.mac;
-    const durationMinutes = body.duration_minutes ?? body.durationMinutes ?? 15;
     const ipAddress = body.ip_address || body.ip || null;
     const popId = body.pop_id || null;
     const popIp = body.pop_ip || null;
 
-    const out = await handleFreeTrialAccess({ macAddress, durationMinutes, ipAddress, popId, popIp });
+    const out = await handleFreeTrialAccess({ macAddress, durationMinutes: null, ipAddress, popId, popIp });
     return res.status(out.status).json(out.body);
   } catch (_err) {
     res.status(500).json({ error: 'Erro interno' });
@@ -3120,7 +3244,7 @@ app.post('/api/free-trial', async (req, res) => {
 
     const out = await handleFreeTrialAccess({
       macAddress: mac_address,
-      durationMinutes: req.body?.duration_minutes ?? 15,
+      durationMinutes: null,
       ipAddress: req.body?.ip_address ?? req.body?.ip ?? null,
       popId: req.body?.pop_id ?? null,
       popIp: req.body?.pop_ip ?? null

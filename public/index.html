@@ -312,6 +312,7 @@ function showStatusMessage(message, type = 'success') {
       if (!res.ok) throw new Error('Falha ao carregar config');
 
       const cfg = await res.json();
+      window.__freeTrialCfg = cfg || {};
       const enabled = !!cfg.enabled;
       const duration = Number(cfg.duration_minutes || 15);
 
@@ -335,23 +336,30 @@ function showStatusMessage(message, type = 'success') {
     }
 
     try {
-      const resCfg = await fetch(`${API_BASE}/api/settings/free_trial`);
-      const cfg = await resCfg.json();
-      const duration = Number(cfg.duration_minutes || 15);
-
       const res = await fetch(`${API_BASE}/api/users/test-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mac_address: macAddress,
-          duration_minutes: duration
+          mac_address: macAddress
         })
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Falha ao liberar teste');
+      if (!res.ok) {
+        if (res.status === 429 && data && typeof data.retry_after_seconds === 'number') {
+          const sec = Math.max(1, Number(data.retry_after_seconds));
+          const hours = Math.floor(sec / 3600);
+          const minutes = Math.ceil((sec % 3600) / 60);
+          const msg = hours > 0
+            ? `Teste grátis já utilizado. Tente novamente em ${hours}h ${minutes}min.`
+            : `Teste grátis já utilizado. Tente novamente em ${minutes}min.`;
+          throw new Error(msg);
+        }
+        throw new Error(data.error || 'Falha ao liberar teste');
+      }
 
-      showStatusMessage(`Teste grátis de ${duration} minutos liberado! Autenticando...`, 'success');
+      const durationGranted = Number(data.duration_minutes || window.__freeTrialCfg?.duration_minutes || 15);
+      showStatusMessage(`Teste grátis de ${durationGranted} minutos liberado! Autenticando...`, 'success');
       setTimeout(() => redirectToMikrotik(macAddress), 1500);
     } catch (error) {
       showStatusMessage(error.message || 'Erro ao liberar teste.', 'error');
