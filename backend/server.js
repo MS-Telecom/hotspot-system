@@ -1572,6 +1572,10 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     const normalized = { ...(req.body || {}) };
     // Evita erro de schema quando o frontend envia campos não existentes (ex: last_heartbeat)
     delete normalized.last_heartbeat;
+    // Nunca persistir placeholder/marcador como senha real.
+    if (normalized.vpn_password === '' || normalized.vpn_password === null || typeof normalized.vpn_password === 'undefined' || String(normalized.vpn_password).trim() === '********') {
+      delete normalized.vpn_password;
+    }
     for (const k of ['vlan_id', 'radius_auth_port', 'radius_acct_port', 'session_time', 'idle_timeout', 'bandwidth', 'shared_users']) {
       if (Object.prototype.hasOwnProperty.call(normalized, k)) {
         const v = normalized[k];
@@ -1934,7 +1938,12 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
     if (existingErr || !existing) return res.status(404).json({ error: 'POP não encontrado' });
 
     const updateData = { updated_at: new Date().toISOString() };
-    for (const [k, v] of Object.entries(req.body || {})) {
+    const body = { ...(req.body || {}) };
+    // Nunca sobrescrever senha VPN com placeholder/vazio.
+    if (body.vpn_password === '' || body.vpn_password === null || typeof body.vpn_password === 'undefined' || String(body.vpn_password).trim() === '********') {
+      delete body.vpn_password;
+    }
+    for (const [k, v] of Object.entries(body)) {
       if (k === 'id') continue;
       if (Object.prototype.hasOwnProperty.call(existing, k)) updateData[k] = v;
     }
@@ -1944,7 +1953,7 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
 
     // Persist last config snapshot for script generation (best-effort).
     try {
-      const cfg = { ...(req.body || {}) };
+      const cfg = { ...(body || {}) };
       delete cfg.last_heartbeat;
       await supabase.from('settings').upsert({ key: `pop_config_${id}`, value: cfg, updated_at: updateData.updated_at }, { onConflict: 'key' });
     } catch (_e) {}

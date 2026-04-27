@@ -128,12 +128,16 @@
       <!-- Nome, Localização, IP -->
       <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome do Hotspot *</label><input type="text" id="popName" placeholder="MS-WIFI-POP-01" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
       <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Localização</label><input type="text" id="popLocation" placeholder="Bairro, Cidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
-      <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">IP do POP</label><input type="text" id="popIp" placeholder="192.168.1.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">IP público/gerenciamento legado do POP</label>
+        <input type="text" id="popIp" placeholder="0.0.0.0 (recomendado em CGNAT/4G/Starlink)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+        <p class="text-[10px] text-gray-500 mt-1">Use somente se a VPS consegue alcançar diretamente o MikroTik por este IP. Para CGNAT/4G/Starlink, deixe vazio/0.0.0.0 e use a VPN.</p>
+      </div>
 
       <!-- VPN / RADIUS (campos mínimos para produção) -->
       <div class="bg-gray-900/30 border border-gray-700 rounded-2xl p-3 space-y-3">
         <div class="flex items-center justify-between">
-          <label class="text-xs font-bold text-gray-500 uppercase">VPN Enabled</label>
+          <label class="text-xs font-bold text-gray-500 uppercase">VPN (L2TP/IPsec)</label>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="vpnEnabled" class="sr-only peer">
             <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -141,11 +145,13 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN IP (túnel)</label>
-          <input type="text" id="vpnIp" placeholder="10.254.1.11" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <input type="text" id="vpnIp" placeholder="Automático (ex: 10.254.1.11)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <p class="text-[10px] text-gray-500 mt-1">Deixe vazio para gerar automaticamente.</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">RADIUS client IP (alternativo)</label>
-          <input type="text" id="radiusClientIp" placeholder="10.254.1.11" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <input type="text" id="radiusClientIp" placeholder="(opcional) override avançado" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <p class="text-[10px] text-gray-500 mt-1">Normalmente fica vazio. Se preenchido, sobrescreve o uso do VPN IP no FreeRADIUS.</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN Type</label>
@@ -156,11 +162,13 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN Username</label>
-          <input type="text" id="vpnUsername" placeholder="vpn_MS-XXXX" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <input type="text" id="vpnUsername" placeholder="Automático (ex: MS-404C05)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <p class="text-[10px] text-gray-500 mt-1">Deixe vazio para usar o Unique ID do POP.</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN Password</label>
-          <input type="password" id="vpnPassword" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <input type="password" id="vpnPassword" placeholder="Deixe vazio para manter/gerar automaticamente" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+          <p class="text-[10px] text-gray-500 mt-1">Em edição: deixe vazio para manter a senha atual. Em POP novo: vazio gera automaticamente.</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">RADIUS Secret (somente leitura)</label>
@@ -565,7 +573,7 @@ function openNewPopModal(editData = null) {
     const saveBtn = document.getElementById('savePopBtn');
     if (saveBtn) saveBtn.innerText = 'Criar Hotspot';
     ['popName','popLocation','popIp','vlanId','existingVlan','pppoeUsername','pppoePassword','staticIp','staticMask','staticGateway','redirectUrl'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('vpnEnabled').checked = false;
+    document.getElementById('vpnEnabled').checked = true;
     document.getElementById('vpnIp').value = '';
     document.getElementById('radiusClientIp').value = '';
     document.getElementById('vpnType').value = 'l2tp_ipsec';
