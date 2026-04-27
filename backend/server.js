@@ -509,13 +509,22 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
       // Prefer canonical uniqueness per (username, attribute) when available.
       const attempt = await supabase.from('radius_replies').upsert(payload, { onConflict: 'username,attribute' });
       if (!attempt.error) return;
+
       const msg = String(attempt.error.message || '');
-      // Fallback for schemas that only have username unique.
+      // Fallback for schemas without unique(username,attribute): delete+insert per attribute.
       if (msg.includes('no unique or exclusion constraint') || msg.includes('ON CONFLICT')) {
-        const fallback = await supabase.from('radius_replies').upsert(payload, { onConflict: 'username' });
-        if (fallback.error) throw fallback.error;
+        const del = await supabase
+          .from('radius_replies')
+          .delete()
+          .eq('username', payload.username)
+          .eq('attribute', payload.attribute);
+        if (del.error) throw del.error;
+
+        const ins = await supabase.from('radius_replies').insert(payload);
+        if (ins.error) throw ins.error;
         return;
       }
+
       throw attempt.error;
     };
 
@@ -541,6 +550,20 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
       expires_at: expiresAt,
       updated_at: nowIso
     });
+
+    // Ensure RADIUS users land on a POP-specific profile when possible (avoid touching global "default").
+    if (popId) {
+      await upsertRadiusReply({
+        username: macAddress,
+        attribute: 'Mikrotik-Group',
+        op: ':=',
+        value: `ms-user-profile-${popId}`,
+        plan_name: planName,
+        status: 'active',
+        expires_at: expiresAt,
+        updated_at: nowIso
+      });
+    }
 
     viaRadius = true;
 
@@ -1985,9 +2008,24 @@ function buildPopInstallScript(pop, config = {}) {
 
 const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
 
-  const userProfileTuningLine = (sessionTime || rateLimit || sharedUsers > 0)
-    ? `/ip hotspot user profile set [find name="default"]${sessionTime ? ` session-timeout=${sessionTime}` : ''}${rateLimit ? ` rate-limit=${rateLimit}` : ''}${sharedUsers > 0 ? ` shared-users=${sharedUsers}` : ''}\n`
-    : '';
+  const userProfileTuningLine = (() => {
+    const profileName = `ms-user-profile-${popId}`;
+    const setParts = [
+      sessionTime ? ` session-timeout=${sessionTime}` : '',
+      rateLimit ? ` rate-limit=${rateLimit}` : '',
+      sharedUsers > 0 ? ` shared-users=${sharedUsers}` : ''
+    ].join('');
+
+    // Create/update a POP-specific user profile; do NOT touch the global "default" profile.
+    return (
+      `# Perfil de usuario (POP especifico - nao altera o default global)\n` +
+      `:if ([:len [/ip hotspot user profile find name="${profileName}"]] = 0) do={\n` +
+      `  /ip hotspot user profile add name="${profileName}"${setParts} comment="${tag}"\n` +
+      `} else={\n` +
+      `  /ip hotspot user profile set [find name="${profileName}"]${setParts}\n` +
+      `}\n`
+    );
+  })();
 
   const redirectLine = redirectUrl ? `# Redirect URL (opcional)\n/ip hotspot profile set [find name="ms-profile-${popId}"] login-by=http-chap,http-pap\n` : '';
 
@@ -3385,7 +3423,34 @@ app.get('/api/access/status', async (req, res) => {
       return res.json({ allowed: true, reason: 'active_session', expires_at: session.expires_at });
     }
 
-    // 2) Check for an approved payment with a known plan validity.
+    // 2) Check for a manual active user/device (admin panel) with a valid plan/expiry.
+    try {
+      const { data: user } = await supabase
+        .from('users')
+        .select('*')
+        .in('mac_address', [mac, macCompact])
+        .maybeSingle();
+
+      if (user) {
+        const expiresAt = user.expires_at || null;
+        const planName = user.plan_name || null;
+        const status = String(user.status || '').toLowerCase();
+
+        const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > new Date(nowIso).getTime();
+        const looksActive = (status === 'active' || status === 'paid') && planName && String(planName) !== 'free_trial';
+
+        if (hasFutureExpiry || looksActive) {
+          const secondsLeft = hasFutureExpiry ? Math.max(10, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)) : 24 * 60 * 60;
+          const durationMinutes = Math.max(1, Math.ceil(secondsLeft / 60));
+          await authorizeAccess(mac, popIp || '192.168.32.1', null, null, popId, durationMinutes, null, planName || 'manual_plan', secondsLeft);
+          return res.json({ allowed: true, reason: 'manual_plan_active', expires_at: expiresAt });
+        }
+      }
+    } catch (_eUser) {
+      // ignore
+    }
+
+    // 3) Check for an approved payment with a known plan validity.
     // Payment rows in this codebase use user_mac + plan_name.
     const { data: payment } = await supabase
       .from('payments')
