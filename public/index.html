@@ -155,6 +155,7 @@
 
   let selectedPlan = null;
   let lastFreeTest = localStorage.getItem('last_free_test') || 0;
+  let redirectInProgress = false;
 
 function showStatusMessage(message, type = 'success') {
   const msgDiv = document.getElementById('statusMessage');
@@ -337,9 +338,43 @@ function showStatusMessage(message, type = 'success') {
     }
   }
 
+  async function checkFreeTrialEligibility() {
+    if (!macAddress || !window.__freeTrialCfg?.enabled) {
+      testeGratisBtn.classList.add('hidden');
+      return;
+    }
+
+    try {
+      // Try to get eligibility info from access/status or a dedicated endpoint
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
+      if (!res.ok) {
+        // If access/status fails, show button (fallback)
+        testeGratisBtn.classList.remove('hidden');
+        return;
+      }
+
+      const data = await res.json();
+      if (data && data.allowed === true) {
+        // MAC has active plan, hide free trial button
+        testeGratisBtn.classList.add('hidden');
+      } else {
+        // MAC doesn't have active plan, show free trial button
+        testeGratisBtn.classList.remove('hidden');
+      }
+    } catch (error) {
+      // On error, show button (fallback)
+      testeGratisBtn.classList.remove('hidden');
+    }
+  }
+
   testeGratisBtn.addEventListener('click', async () => {
     if (!macAddress) {
       showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    if (redirectInProgress) {
+      showStatusMessage('Redirecionamento em progresso...', 'info');
       return;
     }
 
@@ -354,14 +389,35 @@ function showStatusMessage(message, type = 'success') {
 
       const data = await res.json();
       if (!res.ok) {
-        if (res.status === 429 && data && typeof data.retry_after_seconds === 'number') {
-          const sec = Math.max(1, Number(data.retry_after_seconds));
-          const hours = Math.floor(sec / 3600);
-          const minutes = Math.ceil((sec % 3600) / 60);
-          const msg = hours > 0
-            ? `Teste grátis já utilizado. Tente novamente em ${hours}h ${minutes}min.`
-            : `Teste grátis já utilizado. Tente novamente em ${minutes}min.`;
-          throw new Error(msg);
+        // Handle 403: MAC has active plan or already used
+        if (res.status === 403) {
+          const reason = data?.reason || 'unknown';
+          if (reason === 'manual_plan_active' || reason === 'paid_plan_active') {
+            showStatusMessage('Você já possui um plano ativo.', 'warning');
+            testeGratisBtn.classList.add('hidden');
+          } else {
+            showStatusMessage(data.error || 'Acesso negado.', 'error');
+          }
+          return;
+        }
+        // Handle 429: Cooldown or already used
+        if (res.status === 429) {
+          const reason = data?.reason || 'cooldown';
+          if (reason === 'already_used') {
+            showStatusMessage('Teste grátis já foi utilizado para este dispositivo.', 'warning');
+            testeGratisBtn.classList.add('hidden');
+          } else if (reason === 'cooldown' && typeof data.retry_after_seconds === 'number') {
+            const sec = Math.max(1, Number(data.retry_after_seconds));
+            const hours = Math.floor(sec / 3600);
+            const minutes = Math.ceil((sec % 3600) / 60);
+            const msg = hours > 0
+              ? `Teste grátis em cooldown. Tente novamente em ${hours}h ${minutes}min.`
+              : `Teste grátis em cooldown. Tente novamente em ${minutes}min.`;
+            showStatusMessage(msg, 'warning');
+          } else {
+            showStatusMessage(data.error || 'Teste grátis já utilizado.', 'warning');
+          }
+          return;
         }
         throw new Error(data.error || 'Falha ao liberar teste');
       }
@@ -371,6 +427,7 @@ function showStatusMessage(message, type = 'success') {
         ? `${Math.max(10, Math.floor(durationGrantedSeconds))} segundos`
         : `${Math.max(1, Math.ceil(durationGrantedSeconds / 60))} minutos`;
       showStatusMessage(`Teste grátis de ${msgDuration} liberado! Autenticando...`, 'success');
+      redirectInProgress = true;
       setTimeout(() => redirectToMikrotik(macAddress), 1500);
     } catch (error) {
       showStatusMessage(error.message || 'Erro ao liberar teste.', 'error');
@@ -447,6 +504,13 @@ function showStatusMessage(message, type = 'success') {
     pixCode.textContent = 'Gerando PIX...';
   });
 
+  // Refresh eligibility periodically or on user interaction
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !redirectInProgress) {
+      checkFreeTrialEligibility();
+    }
+  });
+
   document.getElementById('copyPixBtn').addEventListener('click', async () => {
     const code = pixCode.textContent || '';
     if (!code || code.includes('Gerando')) {
@@ -474,20 +538,32 @@ function showStatusMessage(message, type = 'success') {
   async function checkAccessStatus() {
     if (!macAddress) return;
     try {
+      redirectInProgress = true;
       const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        redirectInProgress = false;
+        return;
+      }
       const data = await res.json();
       if (data && data.allowed === true) {
         showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
+        // Hide free trial button since user has active plan
+        testeGratisBtn.classList.add('hidden');
         setTimeout(() => redirectToMikrotik(macAddress), 1000);
+      } else {
+        redirectInProgress = false;
+        // Check free trial eligibility after confirming no active plan
+        checkFreeTrialEligibility();
       }
-    } catch (_e) {}
+    } catch (_e) {
+      redirectInProgress = false;
+    }
   }
 
   lucide.createIcons();
   loadPlans();
-  checkAccessStatus();
   loadFreeTrialSettings();
+  checkAccessStatus();
 </script>
 </body>
 </html>
