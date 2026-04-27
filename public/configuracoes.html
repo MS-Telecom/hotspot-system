@@ -162,14 +162,29 @@
                     <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ãµes do Teste GrÃ¡tis</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-2">Tempo de duraÃ§Ã£o (minutos)</label>
-                            <input type="number" id="teste_tempo" value="15" min="5" max="1440" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
-                            <p class="text-[10px] text-gray-500 mt-1">MÃ­nimo 5 minutos, mÃ¡ximo 24 horas (1440 minutos)</p>
+                            <label class="text-sm text-gray-400 block mb-2">DuraÃ§Ã£o do Teste GrÃ¡tis</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="teste_tempo" value="60" min="10" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
+                                <select id="teste_tempo_unit" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-200">
+                                    <option value="seconds" selected>segundos</option>
+                                    <option value="minutes">minutos</option>
+                                    <option value="hours">horas</option>
+                                </select>
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-1">MÃ­nimo tÃ©cnico: 10 segundos.</p>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-2">Limite entre testes (horas)</label>
-                            <input type="number" id="teste_limite" value="24" min="1" max="168" step="1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
-                            <p class="text-[10px] text-gray-500 mt-1">Quanto tempo o usuÃ¡rio precisa esperar para outro teste</p>
+                            <label class="text-sm text-gray-400 block mb-2">Cooldown / Reuso do Teste GrÃ¡tis</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="teste_limite" value="7200" min="0" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
+                                <select id="teste_limite_unit" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-200">
+                                    <option value="seconds" selected>segundos</option>
+                                    <option value="minutes">minutos</option>
+                                    <option value="hours">horas</option>
+                                    <option value="days">dias</option>
+                                </select>
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-1">Tempo mÃ­nimo para o mesmo MAC usar novamente.</p>
                         </div>
                     </div>
                     <div class="flex items-center justify-between mt-6">
@@ -611,8 +626,10 @@
                 if (document.getElementById('email')) document.getElementById('email').value = value.company_email || '';
             } else if (key === 'free_trial') {
                 if (document.getElementById('testeGratisEnabled')) document.getElementById('testeGratisEnabled').checked = value.enabled === true;
-                if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_minutes || 15;
-                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.reuse_cooldown_hours || value.cooldown_hours || value.limit_hours || 24;
+                if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_seconds ?? (value.duration_minutes ? value.duration_minutes * 60 : 900);
+                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.cooldown_seconds ?? ((value.reuse_cooldown_hours || value.cooldown_hours || value.limit_hours || 24) * 3600);
+                if (document.getElementById('teste_tempo_unit')) document.getElementById('teste_tempo_unit').value = 'seconds';
+                if (document.getElementById('teste_limite_unit')) document.getElementById('teste_limite_unit').value = 'seconds';
             } else if (key === 'payment') {
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
@@ -689,10 +706,24 @@
                 email: document.getElementById('email').value
             };
         } else if (key === 'free_trial') {
+            const durationValue = Number(document.getElementById('teste_tempo')?.value || 0);
+            const durationUnit = document.getElementById('teste_tempo_unit')?.value || 'seconds';
+            const cooldownValue = Number(document.getElementById('teste_limite')?.value || 0);
+            const cooldownUnit = document.getElementById('teste_limite_unit')?.value || 'seconds';
+
+            const unitToSeconds = (value, unit) => {
+                const v = Number(value || 0);
+                if (!Number.isFinite(v)) return 0;
+                if (unit === 'minutes') return Math.floor(v * 60);
+                if (unit === 'hours') return Math.floor(v * 3600);
+                if (unit === 'days') return Math.floor(v * 86400);
+                return Math.floor(v);
+            };
+
             value = {
                 enabled: document.getElementById('testeGratisEnabled')?.checked || false,
-                duration_minutes: parseInt(document.getElementById('teste_tempo').value, 10),
-                reuse_cooldown_hours: parseInt(document.getElementById('teste_limite').value, 10)
+                duration_seconds: unitToSeconds(durationValue, durationUnit),
+                cooldown_seconds: unitToSeconds(cooldownValue, cooldownUnit)
             };
         } else if (key === 'payment') {
             value = {

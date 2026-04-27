@@ -314,11 +314,14 @@ function showStatusMessage(message, type = 'success') {
       const cfg = await res.json();
       window.__freeTrialCfg = cfg || {};
       const enabled = !!cfg.enabled;
-      const duration = Number(cfg.duration_minutes || 15);
+      const durationSeconds = Number(cfg.duration_seconds ?? (cfg.duration_minutes ? cfg.duration_minutes * 60 : 900));
+      const durationLabel = (Number.isFinite(durationSeconds) && durationSeconds < 60)
+        ? `${Math.max(10, Math.floor(durationSeconds))}s`
+        : `${Math.max(1, Math.ceil(durationSeconds / 60))}min`;
 
       if (enabled) {
         testeGratisBtn.classList.remove('hidden');
-        testeGratisBtn.innerHTML = `<i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis ${duration}min`;
+        testeGratisBtn.innerHTML = `<i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis ${durationLabel}`;
       } else {
         testeGratisBtn.classList.add('hidden');
       }
@@ -358,8 +361,11 @@ function showStatusMessage(message, type = 'success') {
         throw new Error(data.error || 'Falha ao liberar teste');
       }
 
-      const durationGranted = Number(data.duration_minutes || window.__freeTrialCfg?.duration_minutes || 15);
-      showStatusMessage(`Teste grátis de ${durationGranted} minutos liberado! Autenticando...`, 'success');
+      const durationGrantedSeconds = Number(data.duration_seconds || window.__freeTrialCfg?.duration_seconds || 900);
+      const msgDuration = (Number.isFinite(durationGrantedSeconds) && durationGrantedSeconds < 60)
+        ? `${Math.max(10, Math.floor(durationGrantedSeconds))} segundos`
+        : `${Math.max(1, Math.ceil(durationGrantedSeconds / 60))} minutos`;
+      showStatusMessage(`Teste grátis de ${msgDuration} liberado! Autenticando...`, 'success');
       setTimeout(() => redirectToMikrotik(macAddress), 1500);
     } catch (error) {
       showStatusMessage(error.message || 'Erro ao liberar teste.', 'error');
@@ -460,8 +466,22 @@ function showStatusMessage(message, type = 'success') {
       .replaceAll("'", '&#039;');
   }
 
+  async function checkAccessStatus() {
+    if (!macAddress) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.allowed === true) {
+        showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
+        setTimeout(() => redirectToMikrotik(macAddress), 1000);
+      }
+    } catch (_e) {}
+  }
+
   lucide.createIcons();
   loadPlans();
+  checkAccessStatus();
   loadFreeTrialSettings();
 </script>
 </body>
