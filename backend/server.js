@@ -723,7 +723,46 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
     // ignore
   }
 
+  // 0b) Reject if MAC has an active manual plan or payment (priority: plano ativo > teste grátis).
+  try {
+    // Check for manual user with active plan
+    const { data: user } = await supabase
+      .from('users')
+      .select('*')
+      .eq('mac_address', cleanMac)
+      .maybeSingle();
+
+    if (user) {
+      const status = String(user.status || '').toLowerCase();
+      const planName = user.plan_name || null;
+      const expiresAt = user.expires_at || null;
+      const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > new Date(nowIso).getTime();
+      const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && String(planName) !== 'free_trial';
+
+      if (hasFutureExpiry || looksActive) {
+        return { ok: false, status: 403, body: { error: 'MAC já possui plano ativo', reason: 'manual_plan_active' } };
+      }
+    }
+
+    // Check for approved payment
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_mac', cleanMac)
+      .eq('status', 'approved')
+      .order('approved_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (payment) {
+      return { ok: false, status: 403, body: { error: 'MAC já possui plano ativo', reason: 'paid_plan_active' } };
+    }
+  } catch (_e) {
+    // ignore
+  }
+
   // 1) Cooldown enforcement using `free_trials` (fallback to hotspot_sessions if unavailable).
+  // Also check if MAC has already used free trial (usage limit enforcement).
   try {
     const { data: ft, error: ftErr } = await supabase
       .from('free_trials')
@@ -740,9 +779,14 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
     const computedUntil = lastUsed ? new Date(new Date(lastUsed).getTime() + cooldownMs).toISOString() : null;
     const effectiveUntil = cooldownUntil || computedUntil;
 
+    // If cooldown_seconds is 0 (no reuse), reject any second attempt
+    if (cfg.cooldown_seconds === 0 && lastUsed) {
+      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'already_used' } };
+    }
+
     if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
-      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', retry_after_seconds: retryAfterSeconds } };
+      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds } };
     }
   } catch (_e) {
     // Fallback: use the most recent session timestamp to enforce cooldown (prevents abuse if free_trials is missing).
@@ -770,6 +814,9 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
     }
   }
 
+  // Ensure default cooldown is at least 24 hours if not explicitly set to 0
+  const effectiveCooldownSeconds = cfg.cooldown_seconds === undefined || cfg.cooldown_seconds === null ? 24 * 60 * 60 : cfg.cooldown_seconds;
+
   // Ignore client-provided duration; use config as the single source of truth.
   const durationSeconds = Math.max(10, Number(cfg.duration_seconds || 0));
   const minutes = durationSeconds / 60;
@@ -791,12 +838,14 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
   });
 
   // 4) Register session linked to the user.
+  // Ensure user is marked as 'trial' status with plan_name 'free_trial'
   const sessionPayload = {
     user_id: user.id,
     mac_address: cleanMac,
     access_granted: true,
     status: 'active',
     expires_at: expiresAt,
+    plan_name: 'free_trial',
     ...(popId ? { pop_id: popId } : {}),
     ...(popIp ? { pop_ip: popIp } : {}),
     created_at: nowIso,
@@ -808,7 +857,7 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
 
   // 5) Mark the free-trial usage + next cooldown window (best-effort).
   try {
-    const cooldownUntil = new Date(Date.now() + Math.max(0, cfg.cooldown_seconds) * 1000).toISOString();
+    const cooldownUntil = new Date(Date.now() + Math.max(0, effectiveCooldownSeconds) * 1000).toISOString();
     const payload = {
       mac_address: cleanMac,
       first_used_at: nowIso,
@@ -827,7 +876,7 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
     } catch (_e2) {}
   }
 
-  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user.id, duration_seconds: Math.floor(durationSeconds), cooldown_seconds: Math.floor(cfg.cooldown_seconds) } };
+  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user.id, duration_seconds: Math.floor(durationSeconds), cooldown_seconds: Math.floor(effectiveCooldownSeconds) } };
 }
 // ============================================================
 // ⏱️ CRON JOB - REMOVER ACESSOS EXPIRADOS
