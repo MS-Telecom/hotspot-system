@@ -69,6 +69,14 @@ Quando `vpn_enabled=true`, o script:
 
 Assim o FreeRADIUS sempre enxerga o POP pelo IP fixo do túnel.
 
+## RADIUS publico (fallback)
+
+Opcionalmente, o script pode adicionar um RADIUS publico de fallback (catch-all no FreeRADIUS) usando:
+
+- `RADIUS_GLOBAL_FALLBACK_SECRET`
+
+Sem essa variavel, o fallback publico nao e gerado.
+
 ## Portas
 
 - UDP 1812 (auth)
@@ -76,4 +84,3 @@ Assim o FreeRADIUS sempre enxerga o POP pelo IP fixo do túnel.
 - Porta da VPN (conforme tipo):
   - L2TP/IPsec: UDP 500, UDP 4500, UDP 1701
   - SSTP: TCP 443 (ou porta configurada)
-

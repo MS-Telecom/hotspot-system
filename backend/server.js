@@ -34,6 +34,8 @@ const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-syst
 const RADIUS_SERVER_IP = process.env.RADIUS_SERVER_IP || '40.233.118.238';
 const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerCase(); // global | vpn_legacy
 const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
+const RADIUS_VPN_SERVER_IP = process.env.RADIUS_VPN_SERVER_IP || process.env.RADIUS_VPN_SERVER_IP || '10.254.1.1';
+const RADIUS_GLOBAL_FALLBACK_SECRET = process.env.RADIUS_GLOBAL_FALLBACK_SECRET || RADIUS_GLOBAL_SECRET || '';
 
 // Legacy VPN (RouterOS v6) - tunnel IP per POP, FreeRADIUS clients matched by vpn_ip.
 const VPN_PUBLIC_ENDPOINT = process.env.VPN_PUBLIC_ENDPOINT || '';
@@ -235,6 +237,10 @@ function execAsync(command, timeoutMs = 15000) {
   });
 }
 
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, `'\\''`)}'`;
+}
+
 function sanitizeFreeradiusClientName(value) {
   return (
     String(value || 'pop')
@@ -257,16 +263,25 @@ function buildFreeradiusClientsConf(pops) {
   ].join('\n');
 
   const blocks = (pops || [])
-    .filter((p) => p && p.vpn_ip && p.radius_secret)
+    .filter((p) => {
+      if (!p) return false;
+      const clientIp = String(p.vpn_ip || p.radius_client_ip || '').trim();
+      if (!clientIp) return false;
+      if (clientIp === '0.0.0.0' || clientIp === '0.0.0.0/0') return false;
+      if (!p.radius_secret) return false;
+      return true;
+    })
     .map((p) => {
-      const clientName = sanitizeFreeradiusClientName(`ms_${p.unique_id || p.id || p.name}`);
+      const baseId = String(p.unique_id || p.id || p.name || '').trim();
+      const clientName = sanitizeFreeradiusClientName(`ms_${baseId}_vpn`);
       const commentName = (p.name || '').replace(/[\r\n]/g, ' ').trim();
+      const clientIp = String(p.vpn_ip || p.radius_client_ip || '').trim();
       return [
         `# POP: ${commentName || (p.unique_id || p.id || '')}`,
         `client ${clientName} {`,
-        `  ipaddr = ${p.vpn_ip}`,
+        `  ipaddr = ${clientIp}`,
         `  secret = ${p.radius_secret}`,
-        `  shortname = ${sanitizeFreeradiusClientName(p.unique_id || p.id || p.name)}`,
+        `  shortname = ${baseId}-vpn`,
         '  nastype = mikrotik',
         '}',
         ''
@@ -287,7 +302,7 @@ async function syncFreeradiusClientsFromDb() {
   freeradiusSyncInFlight = (async () => {
     try {
       if (RADIUS_CLIENT_MODE === 'global') {
-        if (!RADIUS_GLOBAL_SECRET) throw new Error('RADIUS_GLOBAL_SECRET is required when RADIUS_CLIENT_MODE=global');
+        if (!RADIUS_GLOBAL_FALLBACK_SECRET) throw new Error('RADIUS_GLOBAL_FALLBACK_SECRET is required when RADIUS_CLIENT_MODE=global');
         return { ok: true, skipped: true };
       }
 
@@ -297,14 +312,25 @@ async function syncFreeradiusClientsFromDb() {
 
       const { data: pops, error } = await supabase
         .from('pops')
-        .select('id, unique_id, name, vpn_ip, radius_secret, status')
+        .select('id, unique_id, name, ip, vpn_ip, radius_client_ip, radius_secret, status')
         .order('name', { ascending: true });
-      if (error) throw error;
+      if (error) {
+        if (
+          looksLikeMissingColumnError(error, 'vpn_ip', 'pops') ||
+          looksLikeMissingColumnError(error, 'radius_client_ip', 'pops')
+        ) {
+          throw new Error('Database schema missing required VPN columns in pops (vpn_ip, radius_client_ip). Apply migration first.');
+        }
+        throw error;
+      }
 
-      const missing = (pops || []).filter((p) => p && (!p.vpn_ip || !p.radius_secret));
+      const missing = (pops || []).filter((p) => {
+        const clientIp = String(p?.vpn_ip || p?.radius_client_ip || '').trim();
+        return p && (!clientIp || clientIp === '0.0.0.0' || clientIp === '0.0.0.0/0' || !p.radius_secret);
+      });
       if (missing.length > 0) {
         const ids = missing.map((p) => p.unique_id || p.id).join(', ');
-        throw new Error(`Missing vpn_ip/radius_secret for POP(s): ${ids}`);
+        throw new Error(`Missing vpn_ip/radius_client_ip/radius_secret for POP(s): ${ids}`);
       }
 
       const conf = buildFreeradiusClientsConf(pops || []);
@@ -329,8 +355,12 @@ async function syncFreeradiusClientsFromDb() {
 
       if (!mainClientsConfContent.includes(FREERADIUS_INCLUDE_LINE)) {
         // Se a linha de include não existe, adiciona-a
-        const { error: teeError } = await execAsync(`printf '%s\\n' '$INCLUDE ${FREERADIUS_CLIENTS_PATH}' | sudo /usr/bin/tee -a ${FREERADIUS_MAIN_CLIENTS_CONF} >/dev/null`);
-        if (teeError) throw new Error(`Erro ao adicionar include: ${teeError.stderr}`);
+        const includeLine = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
+        const { error: grepError } = await execAsync(`sudo /bin/grep -Fqx ${shellQuote(includeLine)} ${FREERADIUS_MAIN_CLIENTS_CONF}`);
+        if (grepError) {
+          const { error: teeError } = await execAsync(`printf '%s\\n' ${shellQuote(includeLine)} | sudo /usr/bin/tee -a ${FREERADIUS_MAIN_CLIENTS_CONF} >/dev/null`);
+          if (teeError) throw new Error(`Erro ao adicionar include: ${teeError.stderr}`);
+        }
       }
 
       // 4. Valida e recarrega FreeRADIUS
@@ -1526,12 +1556,23 @@ function buildPopInstallScript(pop, config = {}) {
       )
       : '');
 
-  const radiusAddress = vpnEnabled ? VPN_INTERNAL_RADIUS_IP : radiusServer;
-  const radiusSrcAddress = vpnEnabled ? ` src-address=${vpnIp}` : '';
-  const radiusTimeout = vpnEnabled ? '3s' : '1000ms';
+  const radiusClientIp = String(pop.vpn_ip || pop.radius_client_ip || '').trim();
+
+  const radiusVpnBlock = radiusClientIp
+    ? (
+      `/radius add service=hotspot address=${RADIUS_VPN_SERVER_IP} src-address=${radiusClientIp} secret="${radiusSecret}" authentication-port=1812 accounting-port=1813 timeout=3s domain="${popId}" protocol=udp comment="${tag}-radius-vpn"\n`
+    )
+    : `# VPN IP ausente: RADIUS primario via VPN nao gerado\n`;
+
+  const radiusPublicFallbackBlock = RADIUS_GLOBAL_FALLBACK_SECRET
+    ? (
+      `/radius add service=hotspot address=${RADIUS_SERVER_IP} secret="${RADIUS_GLOBAL_FALLBACK_SECRET}" authentication-port=1812 accounting-port=1813 timeout=5s domain="${popId}" protocol=udp comment="${tag}-radius-public-fallback"\n`
+    )
+    : `# RADIUS fallback publico nao gerado: RADIUS_GLOBAL_FALLBACK_SECRET ausente\n`;
 
   const radiusBlock =
-    `/radius add address=${radiusAddress}${radiusSrcAddress} secret=${radiusSecret} service=hotspot authentication-port=1812 accounting-port=1813 domain="${popId}" comment="${tag}" timeout=${radiusTimeout}\n` +
+    radiusVpnBlock +
+    radiusPublicFallbackBlock +
     `/radius incoming set accept=yes\n` +
     `:delay 1s\n`;
 
