@@ -130,6 +130,45 @@
       <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Localização</label><input type="text" id="popLocation" placeholder="Bairro, Cidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
       <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">IP do POP</label><input type="text" id="popIp" placeholder="192.168.1.1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
 
+      <!-- VPN / RADIUS (campos mínimos para produção) -->
+      <div class="bg-gray-900/30 border border-gray-700 rounded-2xl p-3 space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-gray-500 uppercase">VPN Enabled</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="vpnEnabled" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN IP (túnel)</label>
+          <input type="text" id="vpnIp" placeholder="10.254.1.11" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">RADIUS client IP (alternativo)</label>
+          <input type="text" id="radiusClientIp" placeholder="10.254.1.11" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN Type</label>
+          <select id="vpnType" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+            <option value="l2tp_ipsec">L2TP/IPsec</option>
+            <option value="sstp">SSTP</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN Username</label>
+          <input type="text" id="vpnUsername" placeholder="vpn_MS-XXXX" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VPN Password</label>
+          <input type="password" id="vpnPassword" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">RADIUS Secret (somente leitura)</label>
+          <input type="password" id="radiusSecret" readonly class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-400">
+          <p class="text-[10px] text-gray-500 mt-1">Para segurança, o secret não é editável aqui.</p>
+        </div>
+      </div>
+
       <!-- Tipo de Instalação -->
       <div>
         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Instalação</label>
@@ -259,7 +298,7 @@
     </div>
     <div class="p-3 md:p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
       <button onclick="closeNewPopModal()" class="px-3 py-1.5 bg-gray-800 rounded-lg text-xs">Cancelar</button>
-      <button onclick="saveNewPop()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Criar Hotspot</button>
+      <button id="savePopBtn" onclick="saveNewPop()" class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-xs font-bold text-white">Criar Hotspot</button>
     </div>
   </div>
 </div>
@@ -269,7 +308,10 @@
   <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700">
     <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0"><h2 class="text-lg font-bold text-white">Detalhes do POP</h2><button onclick="closePopDetailsModal()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div>
     <div id="popDetailsContent" class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar"></div>
-    <div class="p-4 border-t border-gray-800 flex justify-end"><button onclick="closePopDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button></div>
+    <div class="p-4 border-t border-gray-800 flex justify-end gap-2">
+      <button onclick="editCurrentPopFromDetails()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-bold">Editar</button>
+      <button onclick="closePopDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -351,6 +393,7 @@ async function loadPops() {
           </div>
           <div class="text-xs text-gray-400 space-y-1"><p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p><p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
           <div class="mt-3 pt-3 border-t border-gray-700 flex justify-end gap-2">
+            <button onclick='event.stopPropagation(); openEditPop(${popIdJs})' class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-[10px] font-medium">Editar</button>
             <button onclick='event.stopPropagation(); generateScript(${popIdJs})' class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-[10px] font-medium">Script</button>
             <button onclick='event.stopPropagation(); deletePop(${popIdJs}, ${popNameJs})' class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-[10px] font-medium">Excluir</button>
           </div>
@@ -365,6 +408,8 @@ async function loadPops() {
 async function viewPopDetails(id) {
   const modal = document.getElementById('popDetailsModal');
   const content = document.getElementById('popDetailsContent');
+  currentPopDetailsId = id;
+  currentPopDetailsData = null;
   modal.classList.remove('hidden');
   content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
   try {
@@ -378,6 +423,7 @@ async function viewPopDetails(id) {
     const payload = payloadText ? JSON.parse(payloadText) : {};
     const pop = payload.pop;
     const cfg = payload.config || {};
+    currentPopDetailsData = { pop, cfg };
     if (pop) {
       const isOnline = pop.status === 'online' && pop.updated_at && new Date(pop.updated_at) > new Date(Date.now() - 120000);
       content.innerHTML = `<div class="space-y-2">
@@ -403,6 +449,26 @@ async function viewPopDetails(id) {
   }
 }
 function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
+
+function editCurrentPopFromDetails() {
+  if (!currentPopDetailsId) return;
+  openEditPop(currentPopDetailsId);
+}
+
+async function openEditPop(id) {
+  try {
+    const url = `${API_URL}/api/pops/${encodeURIComponent(String(id))}/config`;
+    const res = await fetch(url, { headers: authHeaders(false) });
+    const raw = await res.text();
+    if (!res.ok) throw new Error(raw || 'Erro ao buscar POP');
+    const payload = raw ? JSON.parse(raw) : {};
+    const pop = payload.pop || {};
+    const cfg = payload.config || {};
+    openNewPopModal({ ...pop, ...cfg });
+  } catch (_e) {
+    alert('Erro ao abrir edição do POP');
+  }
+}
 
 // ==================== SCRIPT ====================
 async function generateScript(popId) {
@@ -446,14 +512,25 @@ async function deletePop(id, nome) {
 
 // ==================== MODAL NOVO / EDITAR ====================
 let editPopId = null;
+let currentPopDetailsId = null;
+let currentPopDetailsData = null;
 
 function openNewPopModal(editData = null) {
   if (editData) {
     editPopId = editData.id;
     document.getElementById('modalPopTitle').innerText = 'Editar Hotspot';
+    const saveBtn = document.getElementById('savePopBtn');
+    if (saveBtn) saveBtn.innerText = 'Salvar Alterações';
     document.getElementById('popName').value = editData.name || '';
     document.getElementById('popLocation').value = editData.location || '';
     document.getElementById('popIp').value = editData.ip || '';
+    document.getElementById('vpnEnabled').checked = !!editData.vpn_enabled;
+    document.getElementById('vpnIp').value = editData.vpn_ip || '';
+    document.getElementById('radiusClientIp').value = editData.radius_client_ip || '';
+    document.getElementById('vpnType').value = editData.vpn_type || 'l2tp_ipsec';
+    document.getElementById('vpnUsername').value = editData.vpn_username || '';
+    document.getElementById('vpnPassword').value = editData.vpn_password || '';
+    document.getElementById('radiusSecret').value = editData.radius_secret || '';
     document.getElementById('installationType').value = editData.installation_type || 'new';
     document.getElementById('wanInterface').value = editData.wan_interface || 'ether1';
     document.getElementById('lanInterface').value = editData.lan_interface || 'ether4';
@@ -472,7 +549,16 @@ function openNewPopModal(editData = null) {
   } else {
     editPopId = null;
     document.getElementById('modalPopTitle').innerText = 'Configurar Novo Hotspot';
+    const saveBtn = document.getElementById('savePopBtn');
+    if (saveBtn) saveBtn.innerText = 'Criar Hotspot';
     ['popName','popLocation','popIp','vlanId','existingVlan','pppoeUsername','pppoePassword','staticIp','staticMask','staticGateway','redirectUrl'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('vpnEnabled').checked = false;
+    document.getElementById('vpnIp').value = '';
+    document.getElementById('radiusClientIp').value = '';
+    document.getElementById('vpnType').value = 'l2tp_ipsec';
+    document.getElementById('vpnUsername').value = '';
+    document.getElementById('vpnPassword').value = '';
+    document.getElementById('radiusSecret').value = '';
     document.getElementById('installationType').value = 'new';
     document.getElementById('wanInterface').value = 'ether1';
     document.getElementById('lanInterface').value = 'ether4';
@@ -578,6 +664,12 @@ async function saveNewPop() {
     name: nome,
     location: document.getElementById('popLocation').value.trim() || 'Localização não definida',
     ip: document.getElementById('popIp').value.trim() || '0.0.0.0',
+    vpn_enabled: !!document.getElementById('vpnEnabled')?.checked,
+    vpn_ip: document.getElementById('vpnIp')?.value.trim() || '',
+    radius_client_ip: document.getElementById('radiusClientIp')?.value.trim() || '',
+    vpn_type: document.getElementById('vpnType')?.value || 'l2tp_ipsec',
+    vpn_username: document.getElementById('vpnUsername')?.value.trim() || '',
+    vpn_password: document.getElementById('vpnPassword')?.value || '',
     installation_type: installationMode,
     wan_interface: (isTrunk ? (document.getElementById('trunkUplinkInterface')?.value || '') : document.getElementById('wanInterface').value),
     lan_interface: document.getElementById('lanInterface').value,
@@ -625,7 +717,8 @@ async function saveNewPop() {
     try { data = raw ? JSON.parse(raw) : {}; } catch (_e) { data = { error: raw || 'Resposta inválida do servidor' }; }
     const createdPop = data.data || data;
     if (res.ok && (createdPop.id || createdPop.unique_id)) {
-      alert(`✅ Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!`);
+      const syncStatus = createdPop.freeradius_sync || data.freeradius_sync || null;
+      alert(`✅ Hotspot "${nome}" ${editPopId ? 'atualizado' : 'criado'}!${syncStatus ? `\nFreeRADIUS Sync: ${syncStatus}` : ''}`);
       if (createdPop.script) navigator.clipboard.writeText(createdPop.script);
       closeNewPopModal();
       loadPops();
