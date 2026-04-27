@@ -3352,7 +3352,17 @@ app.post('/api/access/validate', async (req, res) => {
 // Access status (public): used by captive portal to auto-liberate devices with an active paid plan/session.
 app.get('/api/access/status', async (req, res) => {
   try {
-    const mac = String(req.query.mac || req.query.mac_address || '').trim();
+    const normalizeMacAddress = (input) => {
+      const raw = String(input || '').trim();
+      if (!raw) return '';
+      const cleaned = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+      if (cleaned.length !== 12) return raw.toUpperCase();
+      return cleaned.match(/.{1,2}/g).join(':');
+    };
+
+    const macRaw = String(req.query.mac || req.query.mac_address || '').trim();
+    const mac = normalizeMacAddress(macRaw);
+    const macCompact = mac.replace(/:/g, '');
     const popId = req.query.pop_id ?? null;
     const popIp = req.query.pop_ip ?? null;
     res.set('Cache-Control', 'no-store');
@@ -3364,7 +3374,7 @@ app.get('/api/access/status', async (req, res) => {
     const { data: session } = await supabase
       .from('hotspot_sessions')
       .select('*')
-      .or(`mac_address.eq.${mac},user_mac.eq.${mac}`)
+      .or(`mac_address.eq.${mac},mac_address.eq.${macCompact},user_mac.eq.${mac},user_mac.eq.${macCompact}`)
       .eq('status', 'active')
       .gt('expires_at', nowIso)
       .order('created_at', { ascending: false })
@@ -3381,7 +3391,7 @@ app.get('/api/access/status', async (req, res) => {
       .from('payments')
       .select('*')
       .eq('status', 'approved')
-      .eq('user_mac', mac)
+      .in('user_mac', [mac, macCompact, macRaw])
       .order('approved_at', { ascending: false })
       .limit(1)
       .maybeSingle();

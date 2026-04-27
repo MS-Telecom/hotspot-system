@@ -188,10 +188,15 @@ function showStatusMessage(message, type = 'success') {
 }
 
   function redirectToMikrotik(mac) {
+    const safeDecode = (value) => {
+      if (!value) return '';
+      try { return decodeURIComponent(value); } catch { return String(value); }
+    };
+
     const rawLoginUrl = params.get('loginUrl');
-    const loginUrl = rawLoginUrl ? decodeURIComponent(rawLoginUrl) : 'http://192.168.32.1/login';
+    const loginUrl = rawLoginUrl ? safeDecode(rawLoginUrl) : 'http://192.168.32.1/login';
     const rawOrig = params.get('orig');
-    const origCandidate = rawOrig ? decodeURIComponent(rawOrig) : '';
+    const origCandidate = rawOrig ? safeDecode(rawOrig) : '';
     const orig = origCandidate && origCandidate.toLowerCase().startsWith('http://') ? origCandidate : 'http://neverssl.com/';
 
     if (!mac) {
