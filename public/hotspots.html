@@ -393,7 +393,7 @@ async function loadPops() {
           </div>
           <div class="text-xs text-gray-400 space-y-1"><p>📍 ${escapeHtml(pop.location) || 'Localização não definida'}</p><p>📡 Último heartbeat: ${pop.updated_at ? new Date(pop.updated_at).toLocaleString('pt-BR') : 'Nunca'}</p></div>
           <div class="mt-3 pt-3 border-t border-gray-700 flex justify-end gap-2">
-            <button onclick='event.stopPropagation(); openEditPop(${popIdJs})' class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-[10px] font-medium">Editar</button>
+            <button onclick='openEditPop(${popIdJs}, event)' class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-[10px] font-medium">Editar</button>
             <button onclick='event.stopPropagation(); generateScript(${popIdJs})' class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-[10px] font-medium">Script</button>
             <button onclick='event.stopPropagation(); deletePop(${popIdJs}, ${popNameJs})' class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-[10px] font-medium">Excluir</button>
           </div>
@@ -406,6 +406,8 @@ async function loadPops() {
 
 // ==================== DETALHES DO POP ====================
 async function viewPopDetails(id) {
+  // Nunca deixar modal de edicao e detalhes abertos ao mesmo tempo.
+  closeNewPopModal();
   const modal = document.getElementById('popDetailsModal');
   const content = document.getElementById('popDetailsContent');
   currentPopDetailsId = id;
@@ -448,14 +450,23 @@ async function viewPopDetails(id) {
     content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>';
   }
 }
-function closePopDetailsModal() { document.getElementById('popDetailsModal').classList.add('hidden'); }
+function closePopDetailsModal() {
+  document.getElementById('popDetailsModal').classList.add('hidden');
+  currentPopDetailsId = null;
+  currentPopDetailsData = null;
+}
 
 function editCurrentPopFromDetails() {
   if (!currentPopDetailsId) return;
-  openEditPop(currentPopDetailsId);
+  const id = currentPopDetailsId;
+  closePopDetailsModal();
+  openEditPop(id);
 }
 
-async function openEditPop(id) {
+async function openEditPop(id, evt) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  // Nunca deixar modal de edicao e detalhes abertos ao mesmo tempo.
+  closePopDetailsModal();
   try {
     const url = `${API_URL}/api/pops/${encodeURIComponent(String(id))}/config`;
     const res = await fetch(url, { headers: authHeaders(false) });
@@ -526,10 +537,12 @@ function openNewPopModal(editData = null) {
     document.getElementById('popIp').value = editData.ip || '';
     document.getElementById('vpnEnabled').checked = !!editData.vpn_enabled;
     document.getElementById('vpnIp').value = editData.vpn_ip || '';
-    document.getElementById('radiusClientIp').value = editData.radius_client_ip || '';
+    // radius_client_ip e um override avancado: nao preencher com valores errados.
+    document.getElementById('radiusClientIp').value = editData.radius_client_ip ? String(editData.radius_client_ip) : '';
     document.getElementById('vpnType').value = editData.vpn_type || 'l2tp_ipsec';
     document.getElementById('vpnUsername').value = editData.vpn_username || '';
-    document.getElementById('vpnPassword').value = editData.vpn_password || '';
+    // Nunca exibir/enviar senha mascarada; so enviar se usuario digitar uma nova senha real.
+    document.getElementById('vpnPassword').value = '';
     document.getElementById('radiusSecret').value = editData.radius_secret || '';
     document.getElementById('installationType').value = editData.installation_type || 'new';
     document.getElementById('wanInterface').value = editData.wan_interface || 'ether1';
@@ -685,6 +698,11 @@ async function saveNewPop() {
     redirect_url: document.getElementById('redirectUrl').value.trim(),
     modo_pagamentos: document.querySelector('input[name="modoFuncionamento"]:checked')?.value === 'pagamentos'
   };
+
+  // So enviar vpn_password se o usuario digitou uma senha real (evita enviar "********").
+  if (!payload.vpn_password || String(payload.vpn_password).trim() === '********') {
+    delete payload.vpn_password;
+  }
 
   if (isTrunk) {
     const topology = document.querySelector('input[name="trunkTopology"]:checked')?.value || 'single';
