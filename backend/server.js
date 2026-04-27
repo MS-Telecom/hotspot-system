@@ -888,13 +888,13 @@ setInterval(async () => {
     
     // 1. Limpar sessões expiradas
     const { data: expiredSessions } = await supabase.from('hotspot_sessions')
-      .select('mac_address, pop_ip')
+      .select('id, mac_address, pop_ip')
       .eq('status', 'active')
       .lt('expires_at', now);
 
     for (const session of expiredSessions || []) {
-      await revokeAccess(session.mac_address, session.pop_ip);
-      await supabase.from('hotspot_sessions').update({ status: 'expired', updated_at: now }).eq('mac_address', session.mac_address);
+      if (session.mac_address) await revokeAccess(session.mac_address, session.pop_ip);
+      await supabase.from('hotspot_sessions').update({ status: 'expired', updated_at: now }).eq('id', session.id);
     }
 
     // 2. Limpar RADIUS expirado
@@ -1155,25 +1155,6 @@ app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
   }
 });
 
-// Buscar usuário por ID
-app.get('/api/users/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
-    if (userError || !user) return res.status(404).json({ error: 'Usuário não encontrado' });
-
-    const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
-    const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-
-    const { data: lastSession } = await supabase.from('hotspot_sessions').select('created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-    res.json({ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
-  } catch (err) {
-    console.error('❌ Erro ao buscar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar usuário' });
-  }
-});
-
 // Exportar usuários para CSV
 app.get('/api/users/export', authMiddleware, async (req, res) => {
   try {
@@ -1195,6 +1176,27 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Erro ao exportar usuários' });
   }
 });
+
+// Buscar usuário por ID
+app.get('/api/users/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+    if (userError || !user) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
+    const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    const { data: lastSession } = await supabase.from('hotspot_sessions').select('created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    res.json({ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
+  } catch (err) {
+    console.error('❌ Erro ao buscar usuário:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar usuário' });
+  }
+});
+
+
 
 // ============================================================
 // 📋 ROTAS DE PLANOS
@@ -1290,8 +1292,22 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 // Gerar PIX (Mercado Pago)
 app.post('/api/payments/generate-pix', async (req, res) => {
   try {
-    const { mac_address, plan_name, amount, description, payment_id } = req.body;
-    if (!mac_address || !amount) return res.status(400).json({ error: 'MAC e valor são obrigatórios' });
+    const { mac_address, plan_id, plan_name, description, payment_id } = req.body;
+    if (!mac_address || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
+
+    let planQuery = supabase.from('plans').select('*');
+    planQuery = plan_id ? planQuery.eq('id', plan_id) : planQuery.eq('name', plan_name);
+
+    const { data: plan, error: planError } = await planQuery.limit(1).maybeSingle();
+    if (planError) throw planError;
+    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
+    if (plan.active === false || plan.status === 'inactive') return res.status(400).json({ error: 'Plano indisponível' });
+
+    const planAmount = Number(plan.price);
+    if (!Number.isFinite(planAmount) || planAmount <= 0) return res.status(400).json({ error: 'Plano sem valor válido' });
+
+    const selectedPlanName = plan.name || plan_name || null;
+    const paymentDescription = description || selectedPlanName || 'Plano WiFi';
 
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
     if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
@@ -1306,8 +1322,8 @@ app.post('/api/payments/generate-pix', async (req, res) => {
         'X-Idempotency-Key': externalReference
       },
       body: JSON.stringify({
-        transaction_amount: parseFloat(amount),
-        description: description || plan_name || 'Plano WiFi',
+        transaction_amount: planAmount,
+        description: paymentDescription,
         payment_method_id: 'pix',
         payer: {
           email: 'cliente@hotspot.com',
@@ -1332,9 +1348,9 @@ app.post('/api/payments/generate-pix', async (req, res) => {
 
     const paymentData = {
       user_mac: mac_address,
-      plan_name: plan_name || null,
-      amount: parseFloat(amount),
-      description: description || plan_name || 'Plano WiFi',
+      plan_name: selectedPlanName,
+      amount: planAmount,
+      description: paymentDescription,
       status: 'pending',
       payment_method: 'pix',
       mercado_pago_id: String(mpData.id),
@@ -1370,7 +1386,6 @@ app.post('/api/payments/generate-pix', async (req, res) => {
     res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
   }
 });
-
 // Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
@@ -2883,24 +2898,6 @@ app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 👤 ADMINS
-// ============================================================
-
-app.post('/api/admins', async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-    const { data, error } = await supabase.from('admins').insert([{
-      username, email, password: hashedPassword, role: 'admin'
-    }]).select();
-    if (error) throw error;
-    res.status(201).json({ id: data[0].id, success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================================
 // 🪝 WEBHOOKS
 // ============================================================
 
@@ -2959,11 +2956,12 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
 
           // 4. Registrar sessão
           await supabase.from('hotspot_sessions').insert({
-            user_mac: payment.user_mac,
+            mac_address: payment.user_mac,
             plan_name: payment.plan_name,
             status: 'active',
             expires_at: new Date(Date.now() + durationMinutes * 60000).toISOString(),
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
 
           // 5. Disparar webhooks internos

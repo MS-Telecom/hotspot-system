@@ -594,6 +594,10 @@ function initUsersPerHourChart(dataPoints = []) {
 // ============================================
 // CARREGAR DADOS DO DASHBOARD (CORRIGIDO)
 // ============================================
+function isPaidPayment(payment) {
+    return payment && (payment.status === 'approved' || payment.status === 'confirmed' || payment.status === 'pago');
+}
+
 async function loadDashboard() {
     const token = getAuthToken();
     if (!token) {
@@ -627,17 +631,17 @@ async function loadDashboard() {
         const sixtyDaysAgo = new Date(thirtyDaysAgo);
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30);
 
-        const completedPayments = payments.filter(p => p.status === 'confirmed').length;
+        const completedPayments = payments.filter(isPaidPayment).length;
         const pendingPayments = payments.filter(p => p.status === 'pending').length;
         const canceledPayments = payments.filter(p => p.status === 'canceled').length;
 
         const totalRevenue = payments
-            .filter(p => p.status === 'confirmed' && new Date(p.created_at) >= thirtyDaysAgo)
+            .filter(p => isPaidPayment(p) && new Date(p.created_at) >= thirtyDaysAgo)
             .reduce((sum, p) => sum + (p.amount || 0), 0);
 
         const previousRevenue = payments
             .filter(p => {
-                if (p.status !== 'confirmed') return false;
+                if (!isPaidPayment(p)) return false;
                 const date = new Date(p.created_at);
                 return date >= sixtyDaysAgo && date < thirtyDaysAgo;
             })
@@ -648,7 +652,7 @@ async function loadDashboard() {
         // Faturamento por plano
         let premiumRevenue = 0, dailyRevenue = 0, trialRevenue = 0;
         payments.forEach(p => {
-            if (p.status !== 'confirmed') return;
+            if (!isPaidPayment(p)) return;
             const planName = (p.plan_name || '').toLowerCase();
             const amount = p.amount || 0;
             if (planName.includes('premium')) premiumRevenue += amount;
@@ -690,7 +694,7 @@ async function loadDashboard() {
 
         // Tabela de últimas liberações
         const latestReleases = payments
-            .filter(p => p.status === 'confirmed')
+            .filter(isPaidPayment)
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 5);
 
@@ -780,7 +784,7 @@ async function openAllReleasesModal() {
     try {
         const response = await fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) });
         const payments = await response.json();
-        const releases = payments.filter(p => p.status === 'confirmed');
+        const releases = payments.filter(isPaidPayment);
         if (releases.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberação encontradatd></tr>';
         } else {
