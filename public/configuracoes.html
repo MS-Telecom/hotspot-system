@@ -453,17 +453,17 @@
             return;
         }
         list.innerHTML = planosData.map(p => `
-            <div class="py-4 px-6 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-gray-900/30 transition">
+            <div class="py-4 px-6 grid grid-cols-[1fr_auto_auto] md:grid-cols-[minmax(220px,1.6fr)_auto_80px] items-center gap-4 hover:bg-gray-900/30 transition border-b border-gray-800/50 last:border-0">
                 <div class="min-w-0">
                     <p class="text-sm font-bold text-white truncate">${escapeHtml(p.name || '')}</p>
-                    <p class="text-[10px] text-gray-500 truncate">${escapeHtml(p.description || '')}</p>
+                    <p class="text-[10px] text-gray-500 truncate leading-tight">${escapeHtml(p.description || '')}</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 text-[11px]">
-                    <span class="text-emerald-400 font-bold">R$ ${Number(p.price || 0).toFixed(2)}</span>
-                    <span class="text-gray-400">${p.duration_days || '-'} dias</span>
-                    <span class="text-gray-400">${p.speed_mbps || '-'} Mbps</span>
+                <div class="flex items-center justify-center gap-4 text-[11px] whitespace-nowrap">
+                    <span class="text-emerald-400 font-bold min-w-[60px] text-right">R$ ${Number(p.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span class="text-gray-400 w-16">${p.duration_days || '-'} dias</span>
+                    <span class="text-gray-400 w-16">${p.speed_mbps || '-'} Mbps</span>
                 </div>
-                <div class="flex gap-1 md:justify-end">
+                <div class="flex justify-end gap-1">
                     <button onclick="openEditarPlanoModal('${p.id}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>
                     <button onclick="excluirPlano('${p.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition" title="Excluir"><i data-lucide="trash" class="w-4 h-4 text-red-500"></i></button>
                 </div>
