@@ -205,7 +205,12 @@ function showStatusMessage(message, type = 'success') {
       return;
     }
 
-    const url = new URL(loginUrl);
+    let url;
+    try {
+      url = new URL(loginUrl);
+    } catch {
+      url = new URL('http://192.168.32.1/login');
+    }
     url.searchParams.set('username', mac);
     url.searchParams.set('password', mac);
     url.searchParams.set('dst', orig);
@@ -314,7 +319,7 @@ function showStatusMessage(message, type = 'success') {
 
   async function loadFreeTrialSettings() {
     try {
-      const res = await fetch(`${API_BASE}/api/settings/free_trial`);
+      const res = await fetch(`${API_BASE}/api/settings/free_trial`, { cache: 'no-store' });
       if (!res.ok) throw new Error('Falha ao carregar config');
 
       const cfg = await res.json();
@@ -326,7 +331,6 @@ function showStatusMessage(message, type = 'success') {
         : `${Math.max(1, Math.ceil(durationSeconds / 60))}min`;
 
       if (enabled) {
-        testeGratisBtn.classList.remove('hidden');
         testeGratisBtn.innerHTML = `<i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis ${durationLabel}`;
       } else {
         testeGratisBtn.classList.add('hidden');
@@ -345,23 +349,22 @@ function showStatusMessage(message, type = 'success') {
     }
 
     try {
-      // Check if already used or in cooldown via a trial-specific check or reuse access/status
-      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
       if (!res.ok) {
-        testeGratisBtn.classList.remove('hidden');
+        testeGratisBtn.classList.add('hidden');
         return;
       }
 
       const data = await res.json();
       if (data && data.allowed === true) {
         testeGratisBtn.classList.add('hidden');
-      } else {
-        // Also check if MAC has already used trial to hide button early
-        // This is a placeholder for a more specific eligibility check if needed
+      } else if (data && data.show_free_trial === true) {
         testeGratisBtn.classList.remove('hidden');
+      } else {
+        testeGratisBtn.classList.add('hidden');
       }
     } catch (error) {
-      testeGratisBtn.classList.remove('hidden');
+      testeGratisBtn.classList.add('hidden');
     }
   }
 
@@ -536,7 +539,7 @@ function showStatusMessage(message, type = 'success') {
   async function checkAccessStatus() {
     if (!macAddress) return;
     try {
-      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
       if (!res.ok) return;
       
       const data = await res.json();
@@ -555,8 +558,7 @@ function showStatusMessage(message, type = 'success') {
 
   lucide.createIcons();
   loadPlans();
-  loadFreeTrialSettings();
-  checkAccessStatus();
+  loadFreeTrialSettings().then(() => checkAccessStatus());
 </script>
 </body>
 </html>
