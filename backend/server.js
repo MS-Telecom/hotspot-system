@@ -622,7 +622,10 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
   if (existing) {
     // DO NOT overwrite manual name or active plan status if it's already set
     const isManual = existing.name && !existing.name.startsWith('Device ');
-    const hasActivePlan = (existing.status === 'active' || existing.status === 'paid') && existing.plan_name && existing.plan_name !== 'free_trial';
+    const hasActivePlan = (existing.status === 'active' || existing.status === 'paid' || existing.status === 'vip') && 
+                         existing.plan_name && 
+                         existing.plan_name !== 'free_trial' &&
+                         (!existing.expires_at || new Date(existing.expires_at) > new Date());
 
     let updatePayload = { 
       ...base, 
@@ -749,6 +752,12 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
       if (hasFutureExpiry || looksActive) {
         // Return success but with a message that it's already active. 
         // This allows the frontend to treat it as "liberated" and redirect.
+        
+        // Ensure RADIUS is updated to manual plan attributes (priority over trial)
+        const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
+        const durationMinutes = hasFutureExpiry ? Math.max(1, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 60000)) : 1440;
+        await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, durationMinutes, plan?.speed_mbps || 10, planName, durationMinutes * 60);
+
         return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: expiresAt, reason: 'manual_plan_active' } };
       }
     }
@@ -1065,12 +1074,31 @@ app.post('/api/users', authMiddleware, async (req, res) => {
 app.put('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    const body = req.body || {};
+    const updateData = { ...body, updated_at: new Date().toISOString() };
     delete updateData.id;
     delete updateData.created_at;
 
+    // If plan_id is changed, calculate expires_at and set status to active
+    if (body.plan_id) {
+      const { data: plan } = await supabase.from('plans').select('*').eq('id', body.plan_id).maybeSingle();
+      if (plan) {
+        const days = plan.duration_days || 30;
+        updateData.expires_at = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
+        updateData.status = 'active';
+        updateData.plan_name = plan.name;
+      }
+    }
+
     const { data, error } = await supabase.from('users').update(updateData).eq('id', id).select().single();
     if (error) throw error;
+
+    // If user has a MAC, update RADIUS immediately to reflect new plan
+    if (data.mac_address && data.status === 'active' && data.plan_name !== 'free_trial') {
+      const { data: plan } = await supabase.from('plans').select('*').eq('name', data.plan_name).maybeSingle();
+      const durationMinutes = Math.max(1, Math.ceil((new Date(data.expires_at).getTime() - Date.now()) / 60000));
+      await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, durationMinutes, plan?.speed_mbps || 10, data.plan_name, durationMinutes * 60);
+    }
 
     await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
