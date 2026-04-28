@@ -100,6 +100,28 @@ function getMacVariants(value) {
   return [...new Set([normalized, compact, String(value || '').trim().toUpperCase()].filter(Boolean))];
 }
 
+function normalizeCpf(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw || raw === '-' || raw.toLowerCase() === 'n/a') return null;
+  const digits = raw.replace(/\D/g, '');
+  return digits || null;
+}
+
+function normalizeEmail(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  return raw || null;
+}
+
+async function findDuplicateUserField(field, value, excludeId = null) {
+  if (!value) return null;
+  let query = supabase.from('users').select('id').eq(field, value);
+  if (excludeId) query = query.neq('id', excludeId);
+  query = query.limit(1).maybeSingle();
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || null;
+}
+
 function removeAccents(str) {
   return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -756,6 +778,27 @@ function getTrialCooldownUntil(record, cfg) {
   return new Date(new Date(lastUsed).getTime() + (durationSeconds + cooldownSeconds) * 1000).toISOString();
 }
 
+function isTrialSessionRecord(session) {
+  if (!session) return false;
+  const planName = String(session.plan_name || '').toLowerCase();
+  const status = String(session.status || '').toLowerCase();
+  if (planName && planName !== 'free_trial' && planName !== 'trial') return false;
+  return planName === 'free_trial' || planName === 'trial' || status === 'trial' || session.access_granted === true;
+}
+
+async function getLastTrialSession(macVariants) {
+  const { data, error } = await supabase
+    .from('hotspot_sessions')
+    .select('*')
+    .in('mac_address', macVariants)
+    .or('plan_name.eq.free_trial,plan_name.eq.trial,status.eq.trial,access_granted.eq.true')
+    .order('expires_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw error;
+  return (data || []).find(isTrialSessionRecord) || null;
+}
+
 async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
   const cleanMac = normalizeMac(macAddress);
   if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório', reason: 'missing_mac' } };
@@ -803,6 +846,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   }
 
   let previousTrial = null;
+  let freeTrialLookupFailed = false;
   try {
     const { data: ft } = await supabase
       .from('free_trials')
@@ -818,30 +862,26 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
       await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
-      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
+    freeTrialLookupFailed = true;
     await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grátis', { mac: cleanMac, error: error.message });
   }
 
   try {
-    const { data: lastTrialSession } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .in('mac_address', getMacVariants(cleanMac))
-      .eq('plan_name', 'free_trial')
-      .order('expires_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
+    const lastTrialSession = await getLastTrialSession(getMacVariants(cleanMac));
     const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
     if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - Date.now()) / 1000));
       await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown de sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
-      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
     await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessão', { mac: cleanMac, error: error.message });
+    if (freeTrialLookupFailed) {
+      return { ok: false, status: 503, body: { success: false, error: 'Erro ao verificar cooldown do teste gratis', reason: 'cooldown_check_failed', show_free_trial: false } };
+    }
   }
 
   const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
@@ -1062,13 +1102,22 @@ app.post('/api/users', authMiddleware, async (req, res) => {
       expiresAt = new Date(now.getTime() + Number(plan.duration_days || 30) * 24 * 60 * 60 * 1000).toISOString();
     }
 
+    const normalizedCpf = normalizeCpf(cpf);
+    const normalizedEmail = normalizeEmail(email);
+    if (normalizedCpf && await findDuplicateUserField('cpf', normalizedCpf)) {
+      return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+    }
+    if (normalizedEmail && await findDuplicateUserField('email', normalizedEmail)) {
+      return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+    }
+
     const payload = {
       name,
       username: username || cleanMac || undefined,
       mac_address: cleanMac || null,
       phone,
-      cpf,
-      email,
+      cpf: normalizedCpf,
+      email: normalizedEmail,
       address,
       plan_id: plan ? plan.id : (plan_id || null),
       plan_name: plan ? plan.name : (plan_name || null),
@@ -1092,6 +1141,12 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar usuário:', err.message);
+    if (String(err.message || '').includes('users_cpf_key')) {
+      return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+    }
+    if (String(err.message || '').includes('users_email_key')) {
+      return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+    }
     res.status(500).json({ error: 'Erro ao criar usuário' });
   }
 });
@@ -1112,6 +1167,22 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       const cleanMac = normalizeMac(body.mac_address);
       updateData.mac_address = cleanMac || null;
       if (!body.username && cleanMac) updateData.username = cleanMac;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'cpf')) {
+      const normalizedCpf = normalizeCpf(body.cpf);
+      if (normalizedCpf && await findDuplicateUserField('cpf', normalizedCpf, id)) {
+        return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+      }
+      updateData.cpf = normalizedCpf;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'email')) {
+      const normalizedEmail = normalizeEmail(body.email);
+      if (normalizedEmail && await findDuplicateUserField('email', normalizedEmail, id)) {
+        return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+      }
+      updateData.email = normalizedEmail;
     }
 
     let plan = null;
@@ -1151,6 +1222,12 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('❌ Erro ao atualizar usuário:', err.message);
     await registerSystemLog('error', 'users', 'Erro ao atualizar usuário', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
+    if (String(err.message || '').includes('users_cpf_key')) {
+      return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+    }
+    if (String(err.message || '').includes('users_email_key')) {
+      return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+    }
     res.status(500).json({ error: err.message || 'Erro ao atualizar usuário' });
   }
 });
@@ -3560,38 +3637,38 @@ app.get('/api/access/status', async (req, res) => {
       return res.json({ allowed: false, reason: 'no_access', show_free_trial: false });
     }
 
-    const { data: ft } = await supabase
-      .from('free_trials')
-      .select('*')
-      .in('mac_address', variants)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    try {
+      const { data: ft } = await supabase
+        .from('free_trials')
+        .select('*')
+        .in('mac_address', variants)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (ft) {
-      const effectiveUntil = getTrialCooldownUntil(ft, cfg);
+      if (ft) {
+        const effectiveUntil = getTrialCooldownUntil(ft, cfg);
 
-      if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
-        const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
-        await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
-        return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+        if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
+          const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
+          await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+          return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+        }
       }
+    } catch (error) {
+      await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown em free_trials', { mac: cleanMac, error: error.message });
     }
 
-    const { data: lastTrialSession } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .in('mac_address', variants)
-      .eq('plan_name', 'free_trial')
-      .order('expires_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, cfg);
-    if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > nowMs) {
-      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - nowMs) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown por sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
-      return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+    try {
+      const lastTrialSession = await getLastTrialSession(variants);
+      const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, cfg);
+      if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > nowMs) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - nowMs) / 1000));
+        await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown por sessao', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+        return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+      }
+    } catch (error) {
+      await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessao no status', { mac: cleanMac, error: error.message });
     }
 
     return res.json({ allowed: false, reason: 'trial_available', show_free_trial: true });

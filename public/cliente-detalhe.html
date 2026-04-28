@@ -358,7 +358,10 @@
         }
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || 'Erro na requisição');
+            const err = new Error(error.error || 'Erro na requisição');
+            err.reason = error.reason;
+            err.status = response.status;
+            throw err;
         }
         return response.json();
     }
@@ -607,6 +610,14 @@
             carregarClientes();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
+            if (error.reason === 'duplicate_cpf') {
+                alert('CPF já cadastrado em outro cliente.');
+                return;
+            }
+            if (error.reason === 'duplicate_email') {
+                alert('E-mail já cadastrado em outro cliente.');
+                return;
+            }
             alert(error.message || 'Erro ao atualizar cliente');
         }
     }
