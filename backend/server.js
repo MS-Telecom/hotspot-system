@@ -594,11 +594,8 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
   if (findErr) throw findErr;
 
   const base = {
-    name: `Device ${cleanMac}`,
     username: cleanMac,
     mac_address: cleanMac,
-    status: status || 'trial',
-    plan_name: planName || 'free_trial',
     updated_at: now
   };
 
@@ -623,7 +620,17 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
   };
 
   if (existing) {
-    let updatePayload = { ...base, ...optional };
+    // DO NOT overwrite manual name or active plan status if it's already set
+    const isManual = existing.name && !existing.name.startsWith('Device ');
+    const hasActivePlan = (existing.status === 'active' || existing.status === 'paid') && existing.plan_name && existing.plan_name !== 'free_trial';
+
+    let updatePayload = { 
+      ...base, 
+      ...optional,
+      name: isManual ? existing.name : `Device ${cleanMac}`,
+      status: hasActivePlan ? existing.status : (status || existing.status || 'trial'),
+      plan_name: hasActivePlan ? existing.plan_name : (planName || existing.plan_name || 'free_trial')
+    };
     for (let i = 0; i < 4; i++) {
       const { data, error } = await supabase
         .from('users')
@@ -740,7 +747,9 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
       const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && String(planName) !== 'free_trial';
 
       if (hasFutureExpiry || looksActive) {
-        return { ok: false, status: 403, body: { error: 'MAC já possui plano ativo', reason: 'manual_plan_active' } };
+        // Return success but with a message that it's already active. 
+        // This allows the frontend to treat it as "liberated" and redirect.
+        return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: expiresAt, reason: 'manual_plan_active' } };
       }
     }
 
@@ -755,7 +764,7 @@ async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddre
       .maybeSingle();
 
     if (payment) {
-      return { ok: false, status: 403, body: { error: 'MAC já possui plano ativo', reason: 'paid_plan_active' } };
+      return { ok: true, status: 200, body: { message: 'Pagamento aprovado encontrado. Liberando acesso...', reason: 'paid_plan_active' } };
     }
   } catch (_e) {
     // ignore

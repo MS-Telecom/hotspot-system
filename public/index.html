@@ -345,24 +345,22 @@ function showStatusMessage(message, type = 'success') {
     }
 
     try {
-      // Try to get eligibility info from access/status or a dedicated endpoint
+      // Check if already used or in cooldown via a trial-specific check or reuse access/status
       const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
       if (!res.ok) {
-        // If access/status fails, show button (fallback)
         testeGratisBtn.classList.remove('hidden');
         return;
       }
 
       const data = await res.json();
       if (data && data.allowed === true) {
-        // MAC has active plan, hide free trial button
         testeGratisBtn.classList.add('hidden');
       } else {
-        // MAC doesn't have active plan, show free trial button
+        // Also check if MAC has already used trial to hide button early
+        // This is a placeholder for a more specific eligibility check if needed
         testeGratisBtn.classList.remove('hidden');
       }
     } catch (error) {
-      // On error, show button (fallback)
       testeGratisBtn.classList.remove('hidden');
     }
   }
@@ -538,26 +536,21 @@ function showStatusMessage(message, type = 'success') {
   async function checkAccessStatus() {
     if (!macAddress) return;
     try {
-      redirectInProgress = true;
       const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
-      if (!res.ok) {
-        redirectInProgress = false;
-        return;
-      }
+      if (!res.ok) return;
+      
       const data = await res.json();
       if (data && data.allowed === true) {
+        redirectInProgress = true;
         showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
         // Hide free trial button since user has active plan
         testeGratisBtn.classList.add('hidden');
         setTimeout(() => redirectToMikrotik(macAddress), 1000);
       } else {
-        redirectInProgress = false;
         // Check free trial eligibility after confirming no active plan
         checkFreeTrialEligibility();
       }
-    } catch (_e) {
-      redirectInProgress = false;
-    }
+    } catch (_e) {}
   }
 
   lucide.createIcons();
