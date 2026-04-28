@@ -3031,12 +3031,12 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
     const { user, action, start_date, end_date, search } = req.query;
     let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
 
-    if (user) query = query.ilike('username', `%${user}%`);
-    if (action) query = query.eq('type', action);
+    if (user) query = query.ilike('admin_username', `%${user}%`);
+    if (action) query = query.eq('action', action);
     if (start_date) query = query.gte('created_at', start_date);
     if (end_date) query = query.lte('created_at', end_date);
     if (search) {
-      query = query.or(`username.ilike.%${search}%,type.ilike.%${search}%,object.ilike.%${search}%,action.ilike.%${search}%`);
+      query = query.or(`admin_username.ilike.%${search}%,action.ilike.%${search}%,target_type.ilike.%${search}%,details.ilike.%${search}%`);
     }
 
     const { data, error } = await query;
@@ -3060,11 +3060,11 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
     const { start_date, end_date, search, type } = req.query;
     let query = supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(200);
 
-    if (type) query = query.eq('type', type);
+    if (type) query = query.eq('level', type);
     if (start_date) query = query.gte('created_at', start_date);
     if (end_date) query = query.lte('created_at', end_date);
     if (search) {
-      query = query.or(`message.ilike.%${search}%,type.ilike.%${search}%,ip.ilike.%${search}%`);
+      query = query.or(`message.ilike.%${search}%,level.ilike.%${search}%,source.ilike.%${search}%`);
     }
 
     const { data, error } = await query;

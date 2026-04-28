@@ -296,7 +296,7 @@
                             <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
                             </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste GrÃ¡tis</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
                             <p id="trialRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
                             <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
                         </div>
@@ -304,7 +304,7 @@
                 </div>
             </div>
 
-            <!-- Ãšltimas LiberaÃ§Ãµes -->
+            <!-- Últimas Liberações -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                 <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
                     <h3 class="font-bold text-white">Últimas Liberações (PIX)</h3>
@@ -346,7 +346,7 @@
                                 <th class="px-6 py-3 text-left">Status</th>
                                 <th class="px-6 py-3 text-left">Clientes Ativos</th>
                                 <th class="px-6 py-3 text-left">Última Atividade</th>
-                                <th class="px-6 py-3 text-center">AÃ§Ã£o</th>
+                                <th class="px-6 py-3 text-center">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="hotspotsTable" class="divide-y divide-gray-800/50">
@@ -361,7 +361,7 @@
 
 <!-- ==================== MODAIS ==================== -->
 
-<!-- MODAL: NOVO VOUCHER (redireciona para pÃ¡gina de vouchers) -->
+<!-- MODAL: NOVO VOUCHER (redireciona para página de vouchers) -->
 <div id="newVoucherModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
@@ -387,7 +387,7 @@
                 <input type="number" id="voucherQuantity" value="1" min="1" max="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label>
                 <input type="date" id="voucherExpiration" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div id="voucherResult" class="hidden bg-gray-900/50 rounded-xl p-4">
@@ -403,13 +403,13 @@
     </div>
 </div>
 
-<!-- MODAL: TODAS AS LIBERAÃ‡Ã•ES -->
+<!-- MODAL: TODAS AS LIBERAÇÕESES -->
 <div id="allReleasesModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
         <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
             <h2 class="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
-                Todas as LiberaÃ§Ãµes
+                Todas as Liberações
             </h2>
             <button onclick="closeAllReleasesModal()" class="p-1 sm:p-2 hover:bg-gray-800 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
@@ -484,18 +484,18 @@
 
 <script>
 // ============================================
-// CONFIGURAÃ‡Ã•ES GLOBAIS
+// CONFIGURAÇÕESES GLOBAIS
 // ============================================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let usersPerHourChart = null;
 let currentCustomerId = null;
 
-// FunÃ§Ã£o para obter o token de autenticaÃ§Ã£o
+// Função para obter o token de autenticação
 function getAuthToken() {
     return localStorage.getItem('token') || localStorage.getItem('ms_token');
 }
 
-// FunÃ§Ã£o para construir headers com autenticaÃ§Ã£o
+// Função para construir headers com autenticação
 function buildAuthHeaders(includeJson = true) {
     const headers = {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -774,7 +774,7 @@ async function loadDashboard() {
 }
 
 // ============================================
-// FUNÃ‡Ã•ES DOS MODAIS
+// FUNÇÕESES DOS MODAIS
 // ============================================
 async function openAllReleasesModal() {
     const modal = document.getElementById('allReleasesModal');
@@ -805,7 +805,7 @@ async function openAllReleasesModal() {
         }
     } catch (error) {
         console.error('Erro:', error);
-        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberaÃ§Ãµes</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberações</td></tr>';
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -835,7 +835,7 @@ async function openPlanDetailsModal() {
                         <span class="text-emerald-400 font-bold">R$ ${plan.price}</span>
                     </div>
                     <p class="text-xs text-gray-500">Velocidade: ${plan.speed_mbps} Mbps</p>
-                    <p class="text-xs text-gray-500">DuraÃ§Ã£o: ${plan.duration_days} dias</p>
+                    <p class="text-xs text-gray-500">Duração: ${plan.duration_days} dias</p>
                     <p class="text-xs text-gray-400 mt-2">${plan.description || ''}</p>
                 </div>
             `).join('');
@@ -849,7 +849,7 @@ async function openPlanDetailsModal() {
 function closePlanDetailsModal() { document.getElementById('planDetailsModal').classList.add('hidden'); }
 
 async function viewCustomerDetails(id, name) {
-    if (!id) return alert('ID do cliente nÃ£o informado');
+    if (!id) return alert('ID do cliente não informado');
     currentCustomerId = id;
     const modal = document.getElementById('customerDetailsModal');
     const content = document.getElementById('customerDetailsContent');
@@ -873,12 +873,12 @@ async function viewCustomerDetails(id, name) {
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'NÃ£o informado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'Não informado'}</p></div>
                     <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? 'â— Ativo' : 'â— Bloqueado'}</p></div>
                 </div>
-                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'NÃ£o informado'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
-                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Ãšltimo acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Último acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
             </div>
         `;
         if (customer.status !== 'blocked') blockBtn.classList.remove('hidden');
@@ -891,7 +891,7 @@ function closeCustomerDetailsModal() { document.getElementById('customerDetailsM
 function blockCustomerFromModal() { if (currentCustomerId) blockCustomer(currentCustomerId); }
 
 async function blockCustomer(id) {
-    if (!id) return alert('ID do cliente nÃ£o informado');
+    if (!id) return alert('ID do cliente não informado');
     if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
     try {
         const response = await fetch(`${API_URL}/api/users/${id}/block`, {
@@ -913,7 +913,7 @@ async function blockCustomer(id) {
 }
 
 async function markAsVip(id) {
-    if (!id) return alert('ID do cliente nÃ£o informado');
+    if (!id) return alert('ID do cliente não informado');
     if (!confirm('Deseja marcar este cliente como VIP?')) return;
     try {
         const response = await fetch(`${API_URL}/api/users/${id}/vip`, {
@@ -951,7 +951,7 @@ async function saveProfile() {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas nÃ£o coincidem');
+    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas não coincidem');
     if (newPassword && !currentPassword) return alert('Digite a senha atual para alterar');
     try {
         const response = await fetch(`${API_URL}/api/profile`, {
@@ -997,7 +997,7 @@ async function logout() {
 // ============================================
 function openNewVoucherModal() { window.location.href = 'vouchers.html'; }
 function closeNewVoucherModal() { document.getElementById('newVoucherModal').classList.add('hidden'); }
-function generateVoucher() { alert('A geraÃ§Ã£o de vouchers foi movida para o mÃ³dulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
+function generateVoucher() { alert('A geração de vouchers foi movida para o mÃ³dulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
 function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('CÃ³digo copiado!'); }
 
 // ============================================

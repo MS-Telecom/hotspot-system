@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>MS Telecom | ConfiguraÃ§Ãµes</title>
+    <title>MS Telecom | Configurações</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
 <body class="bg-[#0a0c15] text-gray-200">
 
 <script>
-    // Verificar autenticaÃ§Ã£o
+    // Verificar autenticação
     const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
@@ -50,14 +50,14 @@
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
             <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
             <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
             <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
             <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes</a>
+            <a href="configuracoes.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
             <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
             <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
@@ -74,12 +74,12 @@
         </div>
     </aside>
 
-    <!-- CONTEÃšDO PRINCIPAL -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
             <div class="relative w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" placeholder="Buscar configuraÃ§Ã£o..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" placeholder="Buscar configuração..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
             </div>
             <div class="flex items-center gap-4">
                 <div class="text-right">
@@ -100,19 +100,19 @@
 
         <div class="p-8 space-y-8">
             <div>
-                <h1 class="text-3xl font-black tracking-tight">ConfiguraÃ§Ãµes</h1>
-                <p class="text-gray-500 text-sm mt-1">Gerencie as configuraÃ§Ãµes gerais do sistema</p>
+                <h1 class="text-3xl font-black tracking-tight">Configurações</h1>
+                <p class="text-gray-500 text-sm mt-1">Gerencie as configurações gerais do sistema</p>
             </div>
 
-            <!-- Abas de ConfiguraÃ§Ã£o -->
+            <!-- Abas de Configuração -->
             <div class="flex border-b border-gray-800 gap-6 overflow-x-auto">
                 <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="geral">Geral</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="planos">Planos</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste GrÃ¡tis</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="teste_gratis">Teste Grátis</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">IntegraÃ§Ãµes</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">UsuÃ¡rios Admin</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
             </div>
 
             <!-- Aba Geral -->
@@ -126,43 +126,43 @@
                     </div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">InformaÃ§Ãµes da Empresa</h3>
+                    <h3 class="font-bold text-white mb-4">Informações da Empresa</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">RazÃ£o Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Razão Social</label><input type="text" id="razaoSocial" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">CNPJ</label><input type="text" id="cnpj" value="00.000.000/0001-00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Telefone</label><input type="text" id="telefone" value="(91) 98877-6655" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">E-mail</label><input type="text" id="email" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="salvarGeralBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar AlteraÃ§Ãµes</button></div>
+                <div class="flex justify-end"><button id="salvarGeralBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Alterações</button></div>
             </div>
 
             <!-- Aba Planos -->
             <div id="planos" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                        <h3 class="font-bold text-white">Planos DisponÃ­veis</h3>
+                        <h3 class="font-bold text-white">Planos Disponíveis</h3>
                         <button onclick="openNovoPlanoModal()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="plus" class="w-4 h-4"></i> Novo Plano</button>
                     </div>
                     <div id="listaPlanos" class="divide-y divide-gray-800"></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ãµes Globais</h3>
+                    <h3 class="font-bold text-white mb-4">Configurações Globais</h3>
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Limite mÃ¡ximo de velocidade (Mbps)</span><input type="number" id="velocidadeMaxima" value="100" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
-                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Tempo de sessÃ£o inativa (minutos)</span><input type="number" id="tempoSessao" value="30" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Limite máximo de velocidade (Mbps)</span><input type="number" id="velocidadeMaxima" value="100" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Tempo de sessão inativa (minutos)</span><input type="number" id="tempoSessao" value="30" class="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-right"></div>
                     </div>
                     <div class="flex justify-end mt-4"><button id="salvarConfigGlobaisBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar</button></div>
                 </div>
             </div>
 
-            <!-- Aba Teste GrÃ¡tis -->
+            <!-- Aba Teste Grátis -->
             <div id="teste_gratis" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ãµes do Teste GrÃ¡tis</h3>
+                    <h3 class="font-bold text-white mb-4">Configurações do Teste Grátis</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="text-sm text-gray-400 block mb-2">DuraÃ§Ã£o do Teste GrÃ¡tis</label>
+                            <label class="text-sm text-gray-400 block mb-2">Duração do Teste Grátis</label>
                             <div class="flex gap-2">
                                 <input type="number" id="teste_tempo" value="60" min="10" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
                                 <select id="teste_tempo_unit" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-200">
@@ -171,10 +171,10 @@
                                     <option value="hours">horas</option>
                                 </select>
                             </div>
-                            <p class="text-[10px] text-gray-500 mt-1">MÃ­nimo tÃ©cnico: 10 segundos.</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Mínimo técnico: 10 segundos.</p>
                         </div>
                         <div>
-                            <label class="text-sm text-gray-400 block mb-2">Cooldown / Reuso do Teste GrÃ¡tis</label>
+                            <label class="text-sm text-gray-400 block mb-2">Cooldown / Reuso do Teste Grátis</label>
                             <div class="flex gap-2">
                                 <input type="number" id="teste_limite" value="7200" min="0" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm">
                                 <select id="teste_limite_unit" class="bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-200">
@@ -184,7 +184,7 @@
                                     <option value="days">dias</option>
                                 </select>
                             </div>
-                            <p class="text-[10px] text-gray-500 mt-1">Tempo mÃ­nimo para o mesmo MAC usar novamente.</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Tempo mínimo para o mesmo MAC usar novamente.</p>
                         </div>
                     </div>
                     <div class="flex items-center justify-between mt-6">
@@ -195,7 +195,7 @@
                         </label>
                     </div>
                     <div class="mt-6">
-                        <button id="salvarConfigTesteBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar ConfiguraÃ§Ãµes do Teste</button>
+                        <button id="salvarConfigTesteBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações do Teste</button>
                         <div id="configTesteStatus" class="mt-3 hidden"></div>
                     </div>
                 </div>
@@ -204,17 +204,17 @@
             <!-- Aba Pagamento -->
             <div id="pagamento" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">ConfiguraÃ§Ã£o PIX</h3>
+                    <h3 class="font-bold text-white mb-4">Configuração PIX</h3>
                     <div class="space-y-4">
                         <div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
-                        <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="BelÃ©m/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="Belém/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar ConfiguraÃ§Ãµes</button></div>
+                <div class="flex justify-end"><button id="salvarPagamentoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Salvar Configurações</button></div>
             </div>
 
-            <!-- Aba IntegraÃ§Ã£o -->
+            <!-- Aba Integração -->
             <div id="integracao" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Supabase</h3>
@@ -232,7 +232,7 @@
                         <div><label class="text-sm text-gray-400 block mb-2">Accounting Port</label><input type="text" id="radiusAcctPort" value="1813" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
                 </div>
-                <div class="flex justify-end"><button id="testarConexaoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Testar ConexÃ£o</button></div>
+                <div class="flex justify-end"><button id="testarConexaoBtn" class="bg-blue-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition">Testar Conexão</button></div>
             </div>
 
             <!-- Aba Backup -->
@@ -246,24 +246,24 @@
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Agendamento</h3>
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">FrequÃªncia</span><select id="backupFrequencia" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm"><option>DiÃ¡rio (03:00)</option><option>Semanal (Domingo 03:00)</option><option>Mensal (Dia 1 03:00)</option></select></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-gray-400">Frequência</span><select id="backupFrequencia" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm"><option>Diário (03:00)</option><option>Semanal (Domingo 03:00)</option><option>Mensal (Dia 1 03:00)</option></select></div>
                         <div class="flex items-center gap-2"><input type="checkbox" id="backupManter" class="rounded bg-gray-800"> <span class="text-sm text-gray-400">Manter backups por 30 dias</span></div>
                     </div>
                 </div>
                 <div class="flex justify-between"><button id="gerarBackupBtn" class="bg-emerald-600 px-6 py-2 rounded-xl text-sm font-medium hover:bg-emerald-500 transition">Gerar Backup Agora</button></div>
             </div>
 
-            <!-- Aba UsuÃ¡rios Admin -->
+            <!-- Aba Usuários Admin -->
             <div id="usuarios" class="tab-content hidden space-y-6">
                 <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                     <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                        <h3 class="font-bold text-white">UsuÃ¡rios Administradores</h3>
-                        <button onclick="openModalNovoAdmin()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo UsuÃ¡rio</button>
+                        <h3 class="font-bold text-white">Usuários Administradores</h3>
+                        <button onclick="openModalNovoAdmin()" class="text-sm text-blue-500 hover:text-blue-400 flex items-center gap-1"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo Usuário</button>
                     </div>
                     <div id="listaAdmins" class="divide-y divide-gray-800"></div>
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
-                    <h3 class="font-bold text-white mb-4">SeguranÃ§a da Conta</h3>
+                    <h3 class="font-bold text-white mb-4">Segurança da Conta</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><label class="text-sm text-gray-400 block mb-2">Nova Senha</label><input type="password" id="alterarNovaSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Confirmar Senha</label><input type="password" id="alterarConfirmarSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
@@ -285,10 +285,10 @@
         </div>
         <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="novoPlanoNome" placeholder="Ex: Platinum" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PreÃ§o (R$)</label><input type="number" id="novoPlanoPreco" placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="novoPlanoPreco" placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="novoPlanoVelocidade" placeholder="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃ§Ã£o (Dias)</label><input type="number" id="novoPlanoDuracao" placeholder="30" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DescriÃ§Ã£o</label><textarea id="novoPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (Dias)</label><input type="number" id="novoPlanoDuracao" placeholder="30" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Descrição</label><textarea id="novoPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalNovoPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
@@ -307,14 +307,14 @@
         <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
             <input type="hidden" id="editarPlanoId">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome do Plano</label><input type="text" id="editarPlanoNome" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PreÃ§o (R$)</label><input type="number" id="editarPlanoPreco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Preço (R$)</label><input type="number" id="editarPlanoPreco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Velocidade (Mbps)</label><input type="number" id="editarPlanoVelocidade" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃ§Ã£o (Dias)</label><input type="number" id="editarPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">DescriÃ§Ã£o</label><textarea id="editarPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (Dias)</label><input type="number" id="editarPlanoDuracao" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Descrição</label><textarea id="editarPlanoDescricao" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></textarea></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
             <button onclick="closeModalEditarPlano()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
-            <button onclick="salvarEdicaoPlano()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar AlteraÃ§Ãµes</button>
+            <button onclick="salvarEdicaoPlano()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar Alterações</button>
         </div>
     </div>
 </div>
@@ -325,7 +325,7 @@
     // - Restaurado: layout completo, abas, modais e UX (base old_main2)
     // - Mantido: rotas/payloads/autenticacao do backend atual
     // - Corrigido: backups (tenta /api/backup/list -> fallback /api/backup)
-    // - Removido/Desativado: chamadas antigas /api/configuracoes* (backend atual nao expÃµe)
+    // - Removido/Desativado: chamadas antigas /api/configuracoes* (backend atual nao expõe)
     // ============================================
 
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
@@ -333,7 +333,7 @@
     const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:3000'
         : 'https://mstelecom-api.duckdns.org';
-    // O token jÃ¡ foi verificado e declarado no inÃ­cio do arquivo
+    // O token já foi verificado e declarado no início do arquivo
     if (!token) window.location.href = 'login.html';
 
     function authHeaders(withJson = true) {
@@ -387,7 +387,7 @@
     // ==================== SISTEMA DE ABAS ====================
     function openTab(tabId) {
         console.log('Abrindo aba:', tabId);
-        // Atualizar botÃµes
+        // Atualizar botões
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.classList.remove('active', 'text-white');
             b.classList.add('text-gray-400');
@@ -398,13 +398,13 @@
             activeBtn.classList.remove('text-gray-400');
         }
 
-        // Atualizar conteÃºdos
+        // Atualizar conteúdos
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         const target = document.getElementById(tabId);
         if (target) {
             target.classList.remove('hidden');
         } else {
-            console.error('SeÃ§Ã£o nÃ£o encontrada:', tabId);
+            console.error('Seção não encontrada:', tabId);
         }
 
         // Carregar dados
@@ -496,8 +496,8 @@
             if (!res.ok) throw new Error();
             closeModalNovoPlano();
             await carregarPlanos();
-            alert('âœ… Plano criado!');
-        } catch(e) { alert('âŒ Erro ao criar plano'); }
+            alert('✅ Plano criado!');
+        } catch(e) { alert('❌ Erro ao criar plano'); }
     }
 
     function openEditarPlanoModal(id) {
@@ -528,8 +528,8 @@
             if (!res.ok) throw new Error();
             closeModalEditarPlano();
             await carregarPlanos();
-            alert('âœ… Plano atualizado!');
-        } catch(e) { alert('âŒ Erro ao atualizar plano'); }
+            alert('✅ Plano atualizado!');
+        } catch(e) { alert('❌ Erro ao atualizar plano'); }
     }
 
     async function excluirPlano(id) {
@@ -538,8 +538,8 @@
             const res = await fetch(`${API_URL}/api/plans/${id}`, { method: 'DELETE', headers: authHeaders(false) });
             if (!res.ok) throw new Error();
             await carregarPlanos();
-            alert('âœ… Plano removido!');
-        } catch(e) { alert('âŒ Erro ao remover plano'); }
+            alert('✅ Plano removido!');
+        } catch(e) { alert('❌ Erro ao remover plano'); }
     }
 
     // ==================== BACKUP ====================
@@ -597,14 +597,14 @@
         try {
             const res = await fetch(`${API_URL}/api/backup/create`, { method: 'POST', headers: authHeaders(false) });
             if (!res.ok) throw new Error();
-            alert('âœ… Backup gerado com sucesso!');
+            alert('✅ Backup gerado com sucesso!');
             carregarBackups();
         } catch (e) {
-            alert('âŒ Erro ao gerar backup');
+            alert('❌ Erro ao gerar backup');
         }
     }
 
-    // ==================== CONFIGURAÃ‡Ã•ES (SETTINGS) ====================
+    // ==================== CONFIGURAÇÕESES (SETTINGS) ====================
     async function carregarConfig(key) {
         try {
             let url = '';
@@ -626,10 +626,32 @@
                 if (document.getElementById('email')) document.getElementById('email').value = value.company_email || '';
             } else if (key === 'free_trial') {
                 if (document.getElementById('testeGratisEnabled')) document.getElementById('testeGratisEnabled').checked = value.enabled === true;
-                if (document.getElementById('teste_tempo')) document.getElementById('teste_tempo').value = value.duration_seconds ?? (value.duration_minutes ? value.duration_minutes * 60 : 900);
-                if (document.getElementById('teste_limite')) document.getElementById('teste_limite').value = value.cooldown_seconds ?? ((value.reuse_cooldown_hours || value.cooldown_hours || value.limit_hours || 24) * 3600);
-                if (document.getElementById('teste_tempo_unit')) document.getElementById('teste_tempo_unit').value = 'seconds';
-                if (document.getElementById('teste_limite_unit')) document.getElementById('teste_limite_unit').value = 'seconds';
+                if (document.getElementById('teste_tempo')) {
+                    const ds = value.duration_seconds ?? (value.duration_minutes ? value.duration_minutes * 60 : 900);
+                    if (ds % 3600 === 0) {
+                        document.getElementById('teste_tempo').value = ds / 3600;
+                        document.getElementById('teste_tempo_unit').value = 'hours';
+                    } else if (ds % 60 === 0) {
+                        document.getElementById('teste_tempo').value = ds / 60;
+                        document.getElementById('teste_tempo_unit').value = 'minutes';
+                    } else {
+                        document.getElementById('teste_tempo').value = ds;
+                        document.getElementById('teste_tempo_unit').value = 'seconds';
+                    }
+                }
+                if (document.getElementById('teste_limite')) {
+                    const cs = value.cooldown_seconds ?? ((value.reuse_cooldown_hours || value.cooldown_hours || value.limit_hours || 24) * 3600);
+                    if (cs % 86400 === 0) {
+                        document.getElementById('teste_limite').value = cs / 86400;
+                        document.getElementById('teste_limite_unit').value = 'days';
+                    } else if (cs % 3600 === 0) {
+                        document.getElementById('teste_limite').value = cs / 3600;
+                        document.getElementById('teste_limite_unit').value = 'hours';
+                    } else {
+                        document.getElementById('teste_limite').value = cs;
+                        document.getElementById('teste_limite_unit').value = 'seconds';
+                    }
+                }
             } else if (key === 'payment') {
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
@@ -640,7 +662,7 @@
         }
     }
 
-    // ==================== INTEGRAÃ‡Ã•ES (backend novo: /api/settings/integrations) ====================
+    // ==================== INTEGRAÇÕESES (backend novo: /api/settings/integrations) ====================
     async function carregarIntegracoes() {
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
@@ -676,9 +698,9 @@
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
             if (!res.ok) throw new Error();
-            alert('OK: ConfiguraÃ§Ãµes salvas!');
+            alert('OK: Configurações salvas!');
         } catch (e) {
-            alert('ERRO: Erro ao salvar integraÃ§Ãµes');
+            alert('ERRO: Erro ao salvar integrações');
         }
     }
     window.salvarIntegracoes = salvarIntegracoes;
@@ -687,9 +709,9 @@
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
             if (!res.ok) throw new Error();
-            alert('OK: ConexÃ£o testada!');
+            alert('OK: Conexão testada!');
         } catch (e) {
-            alert('ERRO: Erro ao testar conexÃ£o');
+            alert('ERRO: Erro ao testar conexão');
         }
     }
     window.testarConexao = testarConexao;
@@ -743,9 +765,9 @@
                 body: JSON.stringify(value)
             });
             if (!res.ok) throw new Error();
-            alert('âœ… ConfiguraÃ§Ãµes salvas!');
+            alert('✅ Configurações salvas!');
         } catch (e) {
-            alert('âŒ Erro ao salvar configuraÃ§Ãµes');
+            alert('❌ Erro ao salvar configurações');
         }
     }
 
