@@ -666,184 +666,73 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
 
   throw new Error('Failed to create user');
 }
-async function handleFreeTrialAccess({ macAddress, durationMinutes = 15, ipAddress = null, popId = null, popIp = null }) {
-  const normalizeMacAddress = (input) => {
-    const raw = String(input || '').trim();
-    if (!raw) return '';
-    const cleaned = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
-    if (cleaned.length !== 12) return raw.toUpperCase();
-    return cleaned.match(/.{1,2}/g).join(':');
-  };
-
-  const cleanMac = normalizeMacAddress(macAddress);
+async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
+  const cleanMac = normalizeMac(macAddress);
   if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório' } };
 
-  // Always read config from settings (backend is the authority).
-  // Canonical internal units are seconds.
+  const nowIso = new Date().toISOString();
   const defaults = { enabled: false, duration_seconds: 15 * 60, cooldown_seconds: 24 * 60 * 60 };
   let cfg = { ...defaults };
+  
   try {
-    const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
-    if (error) throw error;
-    const v = data?.value;
-    const obj = v && typeof v === 'object' ? v : {};
-    const enabled = obj.enabled === true;
-    const durationSeconds =
-      obj.duration_seconds !== undefined ? Number(obj.duration_seconds)
-        : obj.duration_minutes !== undefined ? Number(obj.duration_minutes) * 60
-          : defaults.duration_seconds;
-
-    const cooldownSeconds =
-      obj.cooldown_seconds !== undefined ? Number(obj.cooldown_seconds)
-        : obj.reuse_cooldown_hours !== undefined ? Number(obj.reuse_cooldown_hours) * 60 * 60
-          : obj.cooldown_hours !== undefined ? Number(obj.cooldown_hours) * 60 * 60
-            : defaults.cooldown_seconds;
-
+    const { data } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
+    const v = data?.value || {};
     cfg = {
-      enabled,
-      duration_seconds: Number.isFinite(durationSeconds) && durationSeconds >= 10 ? Math.floor(durationSeconds) : defaults.duration_seconds,
-      cooldown_seconds: Number.isFinite(cooldownSeconds) && cooldownSeconds >= 0 ? Math.floor(cooldownSeconds) : defaults.cooldown_seconds
+      enabled: v.enabled === true,
+      duration_seconds: Number(v.duration_seconds || v.duration_minutes * 60 || defaults.duration_seconds),
+      cooldown_seconds: Number(v.cooldown_seconds || v.cooldown_hours * 3600 || v.reuse_cooldown_hours * 3600 || defaults.cooldown_seconds)
     };
-  } catch (_e) {
-    // If settings doesn't exist yet, keep defaults.
-  }
+  } catch (_e) {}
 
-  if (!cfg.enabled) {
-    return { ok: false, status: 403, body: { error: 'Teste grátis indisponível no momento' } };
-  }
+  if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grátis desativado', reason: 'trial_disabled' } };
 
-  const nowIso = new Date().toISOString();
-
-  // 0) If there is an active session, don't create a new one.
+  // 1. Priority: Manual Plan
   try {
-    const { data: active, error: activeErr } = await supabase
-      .from('hotspot_sessions')
-      .select('id, expires_at')
-      .eq('mac_address', cleanMac)
-      .eq('status', 'active')
-      .gt('expires_at', nowIso)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (activeErr) throw activeErr;
-    if (active?.expires_at) {
-      return { ok: true, status: 200, body: { message: 'Acesso já está ativo', expires_at: active.expires_at } };
-    }
-  } catch (_e) {
-    // ignore
-  }
-
-  // 0b) Reject if MAC has an active manual plan or payment (priority: plano ativo > teste grátis).
-  try {
-    // Check for manual user with active plan
-    const { data: user } = await supabase
-      .from('users')
-      .select('*')
-      .eq('mac_address', cleanMac)
-      .maybeSingle();
-
+    const { data: user } = await supabase.from('users').select('*').eq('mac_address', cleanMac).maybeSingle();
     if (user) {
       const status = String(user.status || '').toLowerCase();
       const planName = user.plan_name || null;
       const expiresAt = user.expires_at || null;
-      const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > new Date(nowIso).getTime();
-      const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && String(planName) !== 'free_trial';
+      const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > Date.now();
+      const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && planName !== 'free_trial';
 
       if (hasFutureExpiry || looksActive) {
-        // Return success but with a message that it's already active. 
-        // This allows the frontend to treat it as "liberated" and redirect.
-        
-        // Ensure RADIUS is updated to manual plan attributes (priority over trial)
         const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
         const durationMinutes = hasFutureExpiry ? Math.max(1, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 60000)) : 1440;
         await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, durationMinutes, plan?.speed_mbps || 10, planName, durationMinutes * 60);
-
         return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: expiresAt, reason: 'manual_plan_active' } };
       }
     }
+  } catch (_e) {}
 
-    // Check for approved payment
-    const { data: payment } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('user_mac', cleanMac)
-      .eq('status', 'approved')
-      .order('approved_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (payment) {
-      return { ok: true, status: 200, body: { message: 'Pagamento aprovado encontrado. Liberando acesso...', reason: 'paid_plan_active' } };
-    }
-  } catch (_e) {
-    // ignore
-  }
-
-  // 1) Cooldown enforcement using `free_trials` (fallback to hotspot_sessions if unavailable).
-  // Also check if MAC has already used free trial (usage limit enforcement).
+  // 2. Cooldown Enforcement (Schema-aware)
   try {
-    const { data: ft, error: ftErr } = await supabase
-      .from('free_trials')
-      .select('mac_address, last_used_at, used_at, cooldown_until')
-      .eq('mac_address', cleanMac)
-      .maybeSingle();
-    if (ftErr) throw ftErr;
-
-    const lastUsed = ft?.last_used_at || ft?.used_at || null;
+    const { data: ft } = await supabase.from('free_trials').select('*').or(`mac_address.eq."${cleanMac}",mac.eq."${cleanMac}"`).maybeSingle();
+    const lastUsed = ft?.last_used_at || ft?.used_at || ft?.last_trial || null;
+    const expiresAtOld = ft?.expires_at || null;
     const cooldownUntil = ft?.cooldown_until || null;
 
-    const nowMs = Date.now();
-    const cooldownMs = Math.max(0, cfg.cooldown_seconds) * 1000;
-    const computedUntil = lastUsed ? new Date(new Date(lastUsed).getTime() + cooldownMs).toISOString() : null;
-    const effectiveUntil = cooldownUntil || computedUntil;
+    let effectiveUntil = cooldownUntil;
+    if (!effectiveUntil && lastUsed) {
+      const baseTime = expiresAtOld ? new Date(expiresAtOld).getTime() : new Date(lastUsed).getTime();
+      effectiveUntil = new Date(baseTime + (cfg.cooldown_seconds * 1000)).toISOString();
+    }
 
-    // If cooldown_seconds is 0 (no reuse), reject any second attempt
     if (cfg.cooldown_seconds === 0 && lastUsed) {
       return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'already_used' } };
     }
 
-    if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
-      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
+    if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
+      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
       return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds } };
     }
-  } catch (_e) {
-    // Fallback: use the most recent session timestamp to enforce cooldown (prevents abuse if free_trials is missing).
-    try {
-      const { data: lastSession, error: lastErr } = await supabase
-        .from('hotspot_sessions')
-        .select('created_at')
-        .eq('mac_address', cleanMac)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastErr) throw lastErr;
-      const lastAt = lastSession?.created_at ? new Date(lastSession.created_at).getTime() : null;
-      if (lastAt) {
-        const nowMs = Date.now();
-        const cooldownMs = Math.max(0, cfg.cooldown_seconds) * 1000;
-        const untilMs = lastAt + cooldownMs;
-        if (untilMs > nowMs) {
-          const retryAfterSeconds = Math.max(1, Math.ceil((untilMs - nowMs) / 1000));
-          return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', retry_after_seconds: retryAfterSeconds } };
-        }
-      }
-    } catch (_e2) {
-      // ignore
-    }
-  }
+  } catch (_e) {}
 
-  // Ensure default cooldown is at least 24 hours if not explicitly set to 0
-  const effectiveCooldownSeconds = cfg.cooldown_seconds === undefined || cfg.cooldown_seconds === null ? 24 * 60 * 60 : cfg.cooldown_seconds;
-
-  // Ignore client-provided duration; use config as the single source of truth.
-  const durationSeconds = Math.max(10, Number(cfg.duration_seconds || 0));
-  const minutes = durationSeconds / 60;
+  // 3. Authorize RADIUS
+  const durationSeconds = cfg.duration_seconds;
   const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
-  const mikrotikIp = popIp || '192.168.32.1';
-
-  // 2) Ensure RADIUS credential (and IP binding when possible).
-  const result = await authorizeAccess(cleanMac, mikrotikIp, null, null, popId, minutes, 5, 'free_trial', durationSeconds);
-  if (!result.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar acesso' } };
+  const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, durationSeconds / 60, 5, 'free_trial', durationSeconds);
+  if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS' } };
 
   // 3) Ensure basic user row exists for this device.
   const user = await findOrCreateHotspotUser({
@@ -3473,94 +3362,69 @@ app.post('/api/access/validate', async (req, res) => {
 
 // Access status (public): used by captive portal to auto-liberate devices with an active paid plan/session.
 app.get('/api/access/status', async (req, res) => {
+  const macRaw = String(req.query.mac || req.query.mac_address || '').trim();
+  const cleanMac = normalizeMac(macRaw);
+  if (!cleanMac) return res.status(400).json({ allowed: false, reason: 'missing_mac' });
+  
+  const nowMs = Date.now();
+  const nowIso = new Date(nowMs).toISOString();
+  const popId = req.query.pop_id ?? null;
+  const popIp = req.query.pop_ip ?? null;
+
   try {
-    const normalizeMacAddress = (input) => {
-      const raw = String(input || '').trim();
-      if (!raw) return '';
-      const cleaned = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
-      if (cleaned.length !== 12) return raw.toUpperCase();
-      return cleaned.match(/.{1,2}/g).join(':');
-    };
+    // 1. Check for manual plan (Priority 1)
+    const { data: user } = await supabase.from('users').select('*').eq('mac_address', cleanMac).maybeSingle();
+    if (user) {
+      const status = String(user.status || '').toLowerCase();
+      const planName = user.plan_name || null;
+      const expiresAt = user.expires_at || null;
+      const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > nowMs;
+      const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && planName !== 'free_trial';
 
-    const macRaw = String(req.query.mac || req.query.mac_address || '').trim();
-    const mac = normalizeMacAddress(macRaw);
-    const macCompact = mac.replace(/:/g, '');
-    const popId = req.query.pop_id ?? null;
-    const popIp = req.query.pop_ip ?? null;
-    res.set('Cache-Control', 'no-store');
-    if (!mac) return res.status(400).json({ allowed: false, reason: 'missing_mac' });
-
-    const nowIso = new Date().toISOString();
-
-    // 1) If there's an active session, allow immediately.
-    const { data: session } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .or(`mac_address.eq.${mac},mac_address.eq.${macCompact},user_mac.eq.${mac},user_mac.eq.${macCompact}`)
-      .eq('status', 'active')
-      .gt('expires_at', nowIso)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (session?.expires_at) {
-      return res.json({ allowed: true, reason: 'active_session', expires_at: session.expires_at });
-    }
-
-    // 2) Check for a manual active user/device (admin panel) with a valid plan/expiry.
-    try {
-      const { data: user } = await supabase
-        .from('users')
-        .select('*')
-        .in('mac_address', [mac, macCompact])
-        .maybeSingle();
-
-      if (user) {
-        const expiresAt = user.expires_at || null;
-        const planName = user.plan_name || null;
-        const status = String(user.status || '').toLowerCase();
-
-        const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > new Date(nowIso).getTime();
-        const looksActive = (status === 'active' || status === 'paid') && planName && String(planName) !== 'free_trial';
-
-        if (hasFutureExpiry || looksActive) {
-          const secondsLeft = hasFutureExpiry ? Math.max(10, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)) : 24 * 60 * 60;
-          const durationMinutes = Math.max(1, Math.ceil(secondsLeft / 60));
-          await authorizeAccess(mac, popIp || '192.168.32.1', null, null, popId, durationMinutes, null, planName || 'manual_plan', secondsLeft);
-          return res.json({ allowed: true, reason: 'manual_plan_active', expires_at: expiresAt });
-        }
+      if (hasFutureExpiry || looksActive) {
+        return res.json({ allowed: true, reason: 'manual_plan_active', show_free_trial: false, expires_at: expiresAt });
       }
-    } catch (_eUser) {
-      // ignore
     }
 
-    // 3) Check for an approved payment with a known plan validity.
-    // Payment rows in this codebase use user_mac + plan_name.
-    const { data: payment } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('status', 'approved')
-      .in('user_mac', [mac, macCompact, macRaw])
-      .order('approved_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // 2. Check for active session (Priority 2)
+    const { data: session } = await supabase.from('hotspot_sessions').select('*').eq('mac_address', cleanMac).eq('status', 'active').gt('expires_at', nowIso).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (session) {
+      return res.json({ allowed: true, reason: 'active_session', show_free_trial: false, expires_at: session.expires_at });
+    }
 
-    if (!payment) return res.json({ allowed: false, reason: 'no_active_plan' });
+    // 3. Check for free trial eligibility (Priority 3)
+    const { data: cfgData } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
+    const cfg = cfgData?.value || { enabled: false };
+    
+    if (cfg.enabled) {
+      const { data: ft } = await supabase.from('free_trials').select('*').or(`mac_address.eq."${cleanMac}",mac.eq."${cleanMac}"`).maybeSingle();
+      const lastUsed = ft?.last_used_at || ft?.used_at || ft?.last_trial || null;
+      const expiresAtOld = ft?.expires_at || null;
+      const cooldownUntil = ft?.cooldown_until || null;
+      const cooldownSeconds = Number(cfg.cooldown_seconds || 86400);
 
-    const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
-    const durationMinutes = Math.max(1, (plan?.duration_days || 1) * 24 * 60);
-    const expiresAt = payment.expires_at || new Date(Date.now() + durationMinutes * 60000).toISOString();
+      let effectiveUntil = cooldownUntil;
+      if (!effectiveUntil && lastUsed) {
+        const baseTime = expiresAtOld ? new Date(expiresAtOld).getTime() : new Date(lastUsed).getTime();
+        effectiveUntil = new Date(baseTime + (cooldownSeconds * 1000)).toISOString();
+      }
 
-    // Ensure RADIUS creds (does not consume free trial).
-    await authorizeAccess(mac, popIp || '192.168.32.1', null, null, popId, durationMinutes, plan?.speed_mbps || 10, payment.plan_name, durationMinutes * 60);
+      if (cooldownSeconds === 0 && lastUsed) {
+        return res.json({ allowed: false, reason: 'already_used', show_free_trial: false });
+      }
 
-    return res.json({
-      allowed: true,
-      reason: 'paid_plan_active',
-      plan: { name: payment.plan_name, expires_at: expiresAt }
-    });
-  } catch (_e) {
-    res.status(500).json({ allowed: false, reason: 'error' });
+      if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
+        return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+      }
+
+      return res.json({ allowed: false, reason: 'trial_available', show_free_trial: true });
+    }
+
+    return res.json({ allowed: false, reason: 'no_access', show_free_trial: false });
+  } catch (error) {
+    console.error('Erro ao verificar status de acesso:', error);
+    res.status(500).json({ allowed: false, error: 'Erro interno', show_free_trial: false });
   }
 });
 

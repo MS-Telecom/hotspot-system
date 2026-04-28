@@ -432,9 +432,13 @@
             let badgeHtml = '';
             const s = String(cliente.status || '').toLowerCase();
             const p = String(cliente.plan_name || '').toLowerCase();
+            const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
+            const isExpired = expiresAt > 0 && expiresAt < Date.now();
             
-            if (p !== 'free_trial' && (s === 'active' || s === 'paid' || s === 'vip')) {
+            if (p !== 'free_trial' && (s === 'active' || s === 'paid' || s === 'vip') && !isExpired) {
                 badgeHtml = `<span class="status-badge status-premium">${planoNome} ${isVip}</span>`;
+            } else if (isExpired) {
+                badgeHtml = `<span class="status-badge status-inactive">EXPIRADO</span>`;
             } else if (p === 'free_trial' || s === 'trial') {
                 badgeHtml = `<span class="status-badge status-active">TESTE GRÁTIS</span>`;
             } else {
