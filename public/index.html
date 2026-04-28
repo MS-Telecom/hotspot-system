@@ -188,6 +188,16 @@ function showStatusMessage(message, type = 'success') {
   setTimeout(() => msgDiv.classList.add('hidden'), 5000);
 }
 
+function formatRetryAfter(seconds) {
+  const sec = Math.max(1, Number(seconds || 0));
+  if (sec < 60) return `${Math.ceil(sec)} segundos`;
+  const minutes = Math.ceil(sec / 60);
+  if (minutes < 60) return `${minutes} minutos`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours}h ${rest}min` : `${hours} horas`;
+}
+
   function redirectToMikrotik(mac) {
     const safeDecode = (value) => {
       if (!value) return '';
@@ -360,6 +370,9 @@ function showStatusMessage(message, type = 'success') {
         testeGratisBtn.classList.add('hidden');
       } else if (data && data.show_free_trial === true) {
         testeGratisBtn.classList.remove('hidden');
+      } else if (data && data.reason === 'cooldown') {
+        testeGratisBtn.classList.add('hidden');
+        showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
       } else {
         testeGratisBtn.classList.add('hidden');
       }
@@ -408,13 +421,8 @@ function showStatusMessage(message, type = 'success') {
             showStatusMessage('Teste grátis já foi utilizado para este dispositivo.', 'warning');
             testeGratisBtn.classList.add('hidden');
           } else if (reason === 'cooldown' && typeof data.retry_after_seconds === 'number') {
-            const sec = Math.max(1, Number(data.retry_after_seconds));
-            const hours = Math.floor(sec / 3600);
-            const minutes = Math.ceil((sec % 3600) / 60);
-            const msg = hours > 0
-              ? `Teste grátis em cooldown. Tente novamente em ${hours}h ${minutes}min.`
-              : `Teste grátis em cooldown. Tente novamente em ${minutes}min.`;
-            showStatusMessage(msg, 'warning');
+            showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
+            testeGratisBtn.classList.add('hidden');
           } else {
             showStatusMessage(data.error || 'Teste grátis já utilizado.', 'warning');
           }
