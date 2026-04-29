@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -27,7 +27,7 @@
 
 <script>
     // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
     if (!token) {
         window.location.href = 'login.html';
     }
@@ -202,7 +202,7 @@ const API_URL = 'https://mstelecom-api.duckdns.org';
 let campanhasData = [];
 let campanhaAtualId = null;
 
-function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
+function getToken() { return localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken'); }
 function authHeaders(contentType = true) {
     const headers = { 'Authorization': `Bearer ${getToken()}` };
     if (contentType) headers['Content-Type'] = 'application/json';
@@ -439,7 +439,7 @@ async function salvarPerfil() { if (typeof window.saveProfile === 'function') re
 
 async function sair() {
     try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) {}
-    localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('ms_user'); localStorage.removeItem('user');
+    localStorage.removeItem('adminToken'); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('authToken'); localStorage.removeItem('ms_user'); localStorage.removeItem('user');
     window.location.href = 'login.html';
 }
 
