@@ -228,7 +228,7 @@ function formatRetryAfter(seconds) {
     const loginUrl = rawLoginUrl ? safeDecode(rawLoginUrl) : 'http://192.168.32.1/login';
     const rawOrig = params.get('orig');
     const origCandidate = rawOrig ? safeDecode(rawOrig) : '';
-    const orig = origCandidate && origCandidate.toLowerCase().startsWith('http://') ? origCandidate : 'http://neverssl.com/';
+    const orig = origCandidate && origCandidate.toLowerCase().startsWith('http://') ? origCandidate : 'http://192.168.32.1/';
 
     if (!mac) {
       showStatusMessage('MAC nao detectado. Reconecte ao Wi-Fi.', 'error');
