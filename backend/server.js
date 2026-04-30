@@ -1006,6 +1006,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
 
   try {
     const { data: user } = await supabase.from('users').select('*').in('mac_address', getMacVariants(cleanMac)).limit(1).maybeSingle();
+    if (String(user?.status || '').toLowerCase() === 'blocked') {
+      await registerSystemLog('info', 'free_trial', 'trial_blocked_user_blocked', { mac: cleanMac, user_id: user.id });
+      return { ok: false, status: 403, body: { success: false, error: 'Cliente bloqueado', reason: 'blocked', show_free_trial: false } };
+    }
     if (isActivePaidUser(user)) {
       const planName = user.plan_name || 'Premium';
       const planExpiresAt = user.expires_at || null;
@@ -1129,6 +1133,152 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
 
   await registerSystemLog('info', 'free_trial', 'trial_granted', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
   return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user?.id || null, duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds, cooldown_until: cooldownUntil, show_free_trial: false } };
+}
+
+async function expireRadiusRepliesForMac(cleanMac) {
+  if (!cleanMac) return;
+  const { error } = await supabase
+    .from('radius_replies')
+    .update({ status: 'expired', updated_at: new Date().toISOString() })
+    .in('username', getMacVariants(cleanMac));
+  if (error) throw error;
+}
+
+async function expireActiveSessionsForMac(cleanMac, status = 'expired') {
+  if (!cleanMac) return [];
+  const now = new Date().toISOString();
+  const { data: sessions, error } = await supabase
+    .from('hotspot_sessions')
+    .select('*')
+    .in('mac_address', getMacVariants(cleanMac))
+    .eq('status', 'active');
+  if (error) throw error;
+
+  for (const session of sessions || []) {
+    await revokeAccess(cleanMac, session.pop_ip || '192.168.32.1', null, null, session.pop_id || null);
+    await supabase
+      .from('hotspot_sessions')
+      .update({ status, updated_at: now })
+      .eq('id', session.id);
+  }
+  return sessions || [];
+}
+
+async function revokeUserAccessState(user, status = 'expired') {
+  const cleanMac = normalizeMac(user?.mac_address || user?.username || '');
+  if (!cleanMac) return;
+  await expireRadiusRepliesForMac(cleanMac);
+  await expireActiveSessionsForMac(cleanMac, status);
+}
+
+async function clearFreeTrialState(cleanMac, reason = 'converted') {
+  if (!cleanMac) return;
+  let payload = {
+    status: reason,
+    cooldown_until: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  for (let i = 0; i < 4; i++) {
+    const { error } = await supabase
+      .from('free_trials')
+      .update(payload)
+      .in('mac_address', getMacVariants(cleanMac));
+    if (!error) return;
+    const next = stripUnknownColumnFromPayload(payload, error.message);
+    if (next === payload) {
+      await registerSystemLog('warning', 'free_trial', 'clear_free_trial_state_failed', { mac: cleanMac, error: error.message });
+      return;
+    }
+    payload = next;
+  }
+}
+
+function getSessionLocalIp(session, user) {
+  return session?.ip_address || session?.local_ip || session?.framed_ip_address || session?.framed_ip || user?.last_ip || null;
+}
+
+function getPanelAccessState(user, activeSession, lastSession, trial, cfg) {
+  const status = String(user?.status || '').toLowerCase();
+  const planName = String(user?.plan_name || '').toLowerCase();
+  const now = Date.now();
+  if (status === 'blocked') return { state: 'blocked', label: 'bloqueado' };
+  if (activeSession && (status === 'vip' || user?.is_vip) && planName !== 'free_trial') return { state: 'online', label: 'VIP permanente' };
+  if (activeSession && isActivePaidUser(user)) {
+    const expiresAt = user?.expires_at ? new Date(user.expires_at).getTime() : null;
+    if (!expiresAt) return { state: 'online', label: 'plano ativo' };
+    const days = Math.max(1, Math.ceil((expiresAt - now) / 86400000));
+    return { state: 'online', label: `expira em ${days} dia${days === 1 ? '' : 's'}` };
+  }
+  if (activeSession) {
+    const remaining = Math.max(0, Math.ceil((new Date(activeSession.expires_at).getTime() - now) / 1000));
+    return { state: 'online', label: `restam ${Math.max(1, Math.ceil(remaining / 60))} min`, remaining_seconds: remaining };
+  }
+  if ((status === 'vip' || user?.is_vip) && planName !== 'free_trial') return { state: 'vip', label: 'VIP permanente' };
+  if (isActivePaidUser(user)) {
+    const expiresAt = user?.expires_at ? new Date(user.expires_at).getTime() : null;
+    if (!expiresAt) return { state: 'active_plan', label: 'plano ativo' };
+    const days = Math.max(1, Math.ceil((expiresAt - now) / 86400000));
+    return { state: 'active_plan', label: `expira em ${days} dia${days === 1 ? '' : 's'}` };
+  }
+
+  const cooldownUntil = getTrialCooldownUntil(trial, cfg) || getTrialCooldownUntil(lastSession, cfg);
+  if (cooldownUntil && new Date(cooldownUntil).getTime() > now) {
+    const minutes = Math.max(1, Math.ceil((new Date(cooldownUntil).getTime() - now) / 60000));
+    return { state: 'cooldown', label: `cooldown ${minutes} min`, cooldown_until: cooldownUntil };
+  }
+  if (!user?.name || String(user.name).toLowerCase().startsWith('device ')) return { state: 'lead', label: 'lead sem acesso' };
+  if (user?.expires_at && new Date(user.expires_at).getTime() <= now) return { state: 'expired', label: 'expirado' };
+  return { state: 'inactive', label: 'inativo' };
+}
+
+async function enrichUsersForPanel(users = []) {
+  const cfg = await getFreeTrialConfig();
+  const macValues = [...new Set((users || []).flatMap((u) => getMacVariants(u.mac_address || u.username || '')))];
+  if (!macValues.length) return users || [];
+
+  let sessions = [];
+  let trials = [];
+  try {
+    const { data, error } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .in('mac_address', macValues)
+      .order('created_at', { ascending: false });
+    if (!error) sessions = data || [];
+  } catch (_error) {}
+  try {
+    const { data, error } = await supabase
+      .from('free_trials')
+      .select('*')
+      .in('mac_address', macValues)
+      .order('updated_at', { ascending: false });
+    if (!error) trials = data || [];
+  } catch (_error) {}
+
+  const nowIso = new Date().toISOString();
+  return (users || []).map((user) => {
+    const variants = getMacVariants(user.mac_address || user.username || '');
+    const userSessions = sessions.filter((s) => variants.includes(String(s.mac_address || '').toUpperCase()));
+    const activeSession = userSessions.find((s) => s.status === 'active' && s.expires_at && new Date(s.expires_at) > new Date(nowIso)) || null;
+    const lastSession = userSessions[0] || null;
+    const trial = trials.find((t) => variants.includes(String(t.mac_address || '').toUpperCase())) || null;
+    const access = getPanelAccessState(user, activeSession, lastSession, trial, cfg);
+
+    return {
+      ...user,
+      current_pop_id: activeSession?.pop_id || lastSession?.pop_id || user.pop_id || user.hotspot_id || null,
+      current_pop_ip: activeSession?.pop_ip || lastSession?.pop_ip || null,
+      local_ip: getSessionLocalIp(activeSession || lastSession, user),
+      last_connection_at: activeSession?.created_at || lastSession?.created_at || user.last_seen_at || null,
+      active_session_expires_at: activeSession?.expires_at || null,
+      last_session_expires_at: lastSession?.expires_at || null,
+      cooldown_until: access.cooldown_until || trial?.cooldown_until || null,
+      access_state: access.state,
+      access_label: access.label,
+      access_remaining_seconds: access.remaining_seconds || null,
+      real_status: String(user.status || '').toLowerCase()
+    };
+  });
 }
 // ============================================================
 
@@ -1272,7 +1422,7 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 
     const { data, error } = await query;
     if (error) throw error;
-    res.json(data || []);
+    res.json(await enrichUsersForPanel(data || []));
   } catch (err) {
     console.error('❌ Erro ao listar usuários:', err.message);
     res.status(500).json({ error: 'Erro ao listar usuários' });
@@ -1408,6 +1558,7 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       const durationSeconds = data.expires_at
         ? Math.max(10, Math.ceil((new Date(data.expires_at).getTime() - Date.now()) / 1000))
         : Number(activePlan?.duration_days || 30) * 24 * 60 * 60;
+      await clearFreeTrialState(data.mac_address, 'converted_to_plan');
       await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, Math.ceil(durationSeconds / 60), activePlan?.speed_mbps || 10, data.plan_name, durationSeconds);
     }
 
@@ -1429,6 +1580,11 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
 app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+    const { data: user } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+    if (user) {
+      await revokeUserAccessState(user, 'expired');
+      await supabase.from('hotspot_sessions').update({ user_id: null, updated_at: new Date().toISOString() }).eq('user_id', id);
+    }
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;
 
@@ -1449,6 +1605,10 @@ app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
     const { data: plan, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).single();
     if (planError || !plan) return res.status(400).json({ error: 'Plano não encontrado' });
 
+    const { data: currentUser, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+    if (userError) throw userError;
+    if (!currentUser) return res.status(404).json({ error: 'Usuário não encontrado' });
+
     const days = duration_days || plan.duration_days || 30;
     const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
 
@@ -1458,6 +1618,18 @@ app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
     }).eq('id', id).select().single();
 
     if (error) throw error;
+    const cleanMac = normalizeMac(data.mac_address || currentUser.mac_address);
+    if (cleanMac) {
+      await clearFreeTrialState(cleanMac, 'converted_to_plan');
+      await supabase
+        .from('hotspot_sessions')
+        .update({ status: 'expired', updated_at: new Date().toISOString() })
+        .in('mac_address', getMacVariants(cleanMac))
+        .eq('plan_name', 'free_trial')
+        .eq('status', 'active');
+      const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+      await authorizeAccess(cleanMac, '192.168.32.1', null, null, data.hotspot_id || null, Math.ceil(durationSeconds / 60), plan.speed_mbps || 10, plan.name, durationSeconds);
+    }
     await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
@@ -1472,6 +1644,7 @@ app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'blocked', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
+    await revokeUserAccessState(data, 'blocked');
     await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
@@ -1499,8 +1672,18 @@ app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { is_vip = true } = req.body;
-    const { data, error } = await supabase.from('users').update({ is_vip, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+    const expiresAt = new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString();
+    const updatePayload = is_vip
+      ? { is_vip: true, status: 'vip', plan_name: 'VIP', expires_at: expiresAt, updated_at: new Date().toISOString() }
+      : { is_vip: false, updated_at: new Date().toISOString() };
+    const { data, error } = await supabase.from('users').update(updatePayload).eq('id', id).select().single();
     if (error) throw error;
+    const cleanMac = normalizeMac(data.mac_address);
+    if (cleanMac && is_vip) {
+      await clearFreeTrialState(cleanMac, 'converted_to_vip');
+      const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+      await authorizeAccess(cleanMac, '192.168.32.1', null, null, data.hotspot_id || null, Math.ceil(durationSeconds / 60), 100, 'VIP', durationSeconds);
+    }
     await registerAuditLog(req.user.username, 'update', 'user', `VIP atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
@@ -1541,9 +1724,9 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
     const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
     const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
-    const { data: lastSession } = await supabase.from('hotspot_sessions').select('created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-    res.json({ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
+    const enriched = await enrichUsersForPanel([user]);
+    const enrichedUser = enriched[0] || user;
+    res.json({ ...enrichedUser, total_spent: totalSpent, last_access: enrichedUser.last_connection_at || user.last_seen_at || null });
   } catch (err) {
     console.error('❌ Erro ao buscar usuário:', err.message);
     res.status(500).json({ error: 'Erro ao buscar usuário' });
@@ -1649,6 +1832,16 @@ app.post('/api/payments/generate-pix', async (req, res) => {
     const { mac_address, plan_id, plan_name, description, payment_id } = req.body;
     const cleanMac = normalizeMac(mac_address);
     if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
+
+    const { data: blockedUser } = await supabase
+      .from('users')
+      .select('id, status')
+      .in('mac_address', getMacVariants(cleanMac))
+      .limit(1)
+      .maybeSingle();
+    if (String(blockedUser?.status || '').toLowerCase() === 'blocked') {
+      return res.status(403).json({ error: 'Cliente bloqueado', reason: 'blocked' });
+    }
 
     let planQuery = supabase.from('plans').select('*');
     planQuery = plan_id ? planQuery.eq('id', plan_id) : planQuery.eq('name', plan_name);
@@ -2844,7 +3037,7 @@ app.post('/api/pops/:id/heartbeat', async (req, res) => {
 app.get('/api/stats/summary', authMiddleware, async (req, res) => {
   try {
     const { data: users } = await supabase.from('users').select('id', { count: 'exact' });
-    const { data: activeSessions } = await supabase.from('hotspot_sessions').select('id', { count: 'exact' }).eq('status', 'active');
+    const { data: activeSessions } = await supabase.from('hotspot_sessions').select('id', { count: 'exact' }).eq('status', 'active').gt('expires_at', new Date().toISOString());
     const { data: payments } = await supabase.from('payments').select('amount').eq('status', 'approved');
     
     const totalRevenue = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
@@ -3639,6 +3832,10 @@ app.post('/api/portal/create-pix', async (req, res) => {
     const { mac_address } = req.body || {};
     const cleanMac = normalizeMac(mac_address);
     if (cleanMac) {
+      const { data: blockedUser } = await supabase.from('users').select('status').in('mac_address', getMacVariants(cleanMac)).limit(1).maybeSingle();
+      if (String(blockedUser?.status || '').toLowerCase() === 'blocked') {
+        return res.status(403).json({ error: 'Cliente bloqueado', reason: 'blocked' });
+      }
       // Libera acesso temporario para realizar pagamento (janela curta)
       const durationMinutes = 5;
       const expiresAt = new Date(Date.now() + durationMinutes * 60000).toISOString();
@@ -3815,6 +4012,9 @@ app.post('/api/access/validate', async (req, res) => {
     if (!cleanMac) return res.status(400).json({ authorized: false });
 
     const now = new Date().toISOString();
+    const { data: user } = await supabase.from('users').select('status').in('mac_address', getMacVariants(cleanMac)).limit(1).maybeSingle();
+    if (String(user?.status || '').toLowerCase() === 'blocked') return res.json({ authorized: false, reason: 'blocked' });
+
     const { data: session, error } = await supabase
       .from('hotspot_sessions')
       .select('*')
@@ -3856,6 +4056,11 @@ app.get('/api/access/status', async (req, res) => {
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    if (String(user?.status || '').toLowerCase() === 'blocked') {
+      await registerSystemLog('info', 'access_status', 'blocked_user_detected', { mac: cleanMac, user_id: user.id });
+      return res.json({ allowed: false, reason: 'blocked', show_free_trial: false });
+    }
 
     if (isActivePaidUser(user)) {
       const planName = user.plan_name || 'Premium';
