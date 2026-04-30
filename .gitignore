@@ -1,4 +1,12 @@
 node_modules/
 .env
+.env.*
+!.env.example
 *.log
 .DS_Store
+backend/backups/
+backend/tmp/
+*.bak
+*.zip
+dumps/
+backups/

@@ -10,6 +10,9 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 const fs = require('fs');
@@ -28,6 +31,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Captura IP real quando estiver atrás de proxy (Vercel/Cloudflare/Nginx)
 app.set('trust proxy', true);
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
@@ -101,6 +108,24 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !JWT_SECRET) {
 }
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+function createApiRateLimit({ windowMs = 60 * 1000, max = 60 } = {}) {
+  return rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { trustProxy: false },
+    keyGenerator: (req) => getClientIp(req) || req.ip,
+    message: { error: 'Muitas tentativas. Tente novamente em instantes.' }
+  });
+}
+
+const loginLimiter = createApiRateLimit({ windowMs: 15 * 60 * 1000, max: 8 });
+const paymentLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 12 });
+const portalWriteLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 20 });
+const accessLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 12 });
+const voucherLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 20 });
 
 // ============================================================
 // 🛠️ FUNÇÕES UTILITÁRIAS
@@ -249,7 +274,7 @@ async function registerAuditLog(username, type, objectName, action, ip, userAgen
       action: action || '',
       ip: ip || '',
       user_agent: userAgent || '',
-      details: details ? JSON.stringify(details) : null,
+      details: details ? JSON.stringify(scrubSecretObject(details)) : null,
       created_at: new Date().toISOString()
     });
   } catch (error) {
@@ -264,7 +289,7 @@ async function registerSystemLog(level, source, message, details = null, ip = ''
       level: level || 'info',
       source: source || 'system',
       message,
-      details: details ? JSON.stringify(details) : null,
+      details: details ? JSON.stringify(scrubSecretObject(details)) : null,
       ip,
       user_agent: userAgent,
       created_at: new Date().toISOString()
@@ -292,6 +317,125 @@ function authMiddleware(req, res, next) {
   } catch (err) {
     return res.status(401).json({ error: 'Unauthorized', reason: 'missing_or_invalid_token' });
   }
+}
+
+function requireRole(...roles) {
+  return (req, res, next) => {
+    const role = String(req.user?.role || '').toLowerCase();
+    if (!roles.includes(role)) {
+      return res.status(403).json({ error: 'Forbidden', reason: 'insufficient_role' });
+    }
+    next();
+  };
+}
+
+const ADMIN_ROLES = new Set(['owner', 'admin', 'operator', 'finance']);
+
+function hashPassword(password) {
+  return bcrypt.hashSync(String(password), 12);
+}
+
+function verifyPasswordHash(storedHash, password) {
+  const stored = String(storedHash || '');
+  const plain = String(password || '');
+  if (!stored || !plain) return { ok: false, legacySha256: false };
+  if (stored.startsWith('$2a$') || stored.startsWith('$2b$') || stored.startsWith('$2y$')) {
+    return { ok: bcrypt.compareSync(plain, stored), legacySha256: false };
+  }
+  const legacySha256 = crypto.createHash('sha256').update(plain).digest('hex');
+  return { ok: stored === legacySha256, legacySha256: stored === legacySha256 };
+}
+
+function getBearerOrBodyToken(req) {
+  const authHeader = req.headers.authorization || '';
+  if (authHeader.startsWith('Bearer ')) return authHeader.split(' ')[1];
+  return req.headers['x-pop-token'] || req.query.token || req.body?.token || '';
+}
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex');
+}
+
+function buildPopToken(popId) {
+  return crypto.createHmac('sha256', JWT_SECRET).update(`pop:${popId}`).digest('hex');
+}
+
+function scrubSecretObject(value) {
+  if (!value || typeof value !== 'object') return value;
+  const secretKeys = /(secret|token|key|password|pass|psk|radius|vpn|supabase|mercado|ssh)/i;
+  if (Array.isArray(value)) return value.map(scrubSecretObject);
+  return Object.fromEntries(Object.entries(value).map(([key, val]) => {
+    if (secretKeys.test(key)) return [key, 'configured'];
+    return [key, scrubSecretObject(val)];
+  }));
+}
+
+function stripSecretFields(value) {
+  if (!value || typeof value !== 'object') return value;
+  const secretKeys = /(secret|token|key|password|pass|psk|radius|vpn|supabase|mercado|mercadopago|ssh)/i;
+  if (Array.isArray(value)) return value.map(stripSecretFields);
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !secretKeys.test(key))
+    .map(([key, val]) => [key, stripSecretFields(val)]));
+}
+
+async function getPopTokenRecord(popId) {
+  const { data } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', `pop_token_${popId}`)
+    .maybeSingle();
+  return data?.value || null;
+}
+
+async function ensurePopToken(popId) {
+  const token = buildPopToken(popId);
+  const tokenHash = hashToken(token);
+  const existing = await getPopTokenRecord(popId);
+  if (existing?.token_hash !== tokenHash) {
+    await supabase.from('settings').upsert({
+      key: `pop_token_${popId}`,
+      value: { token_hash: tokenHash, token_hint: token.slice(-6) },
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+  }
+  return token;
+}
+
+async function validatePopToken(req, popId) {
+  const token = String(getBearerOrBodyToken(req) || '');
+  if (!token) return false;
+  const record = await getPopTokenRecord(popId);
+  if (!record) return false;
+  if (record.token_hash) return hashToken(token) === record.token_hash;
+  if (record.token) return token === record.token;
+  return false;
+}
+
+async function requirePopToken(req, res, popId) {
+  const ok = await validatePopToken(req, popId);
+  if (!ok) {
+    res.status(401).json({ error: 'Unauthorized', reason: 'missing_or_invalid_pop_token' });
+    return false;
+  }
+  return true;
+}
+
+function validatePopRegisterToken(req) {
+  const expected = process.env.POP_REGISTER_TOKEN || process.env.POP_SHARED_SECRET || '';
+  const token = String(getBearerOrBodyToken(req) || '');
+  return !!expected && token === expected;
+}
+
+function sanitizeBackupRecord(table, record) {
+  const blockedKeys = /(password|api_pass|radius_secret|vpn_password|token|secret|key|psk|credential)/i;
+  const out = {};
+  for (const [key, value] of Object.entries(record || {})) {
+    if (blockedKeys.test(key)) continue;
+    if (table === 'settings' && /token|secret|key|password|psk|radius|vpn|mercado|supabase|ssh/i.test(String(record.key || ''))) continue;
+    out[key] = value;
+  }
+  return out;
 }
 
 
@@ -1062,7 +1206,7 @@ app.post('/api/logout', authMiddleware, (req, res, next) => {
   next();
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
@@ -1070,16 +1214,23 @@ app.post('/api/auth/login', async (req, res) => {
     const { data: admin, error } = await supabase.from('admins').select('*').eq('username', username).single();
     if (error || !admin) return res.status(401).json({ error: 'Credenciais inválidas' });
 
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-    if (admin.password !== hashedPassword && admin.password !== password) {
+    const passwordCheck = verifyPasswordHash(admin.password, password);
+    if (!passwordCheck.ok) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
+    if (passwordCheck.legacySha256) {
+      await supabase.from('admins').update({
+        password: hashPassword(password),
+        updated_at: new Date().toISOString()
+      }).eq('id', admin.id);
+    }
 
-    const token = jwt.sign({ id: admin.id, username: admin.username, role: admin.role }, JWT_SECRET, { expiresIn: '24h' });
+    const role = admin.role || 'admin';
+    const token = jwt.sign({ id: admin.id, username: admin.username, role }, JWT_SECRET, { expiresIn: '24h' });
     
     await registerAuditLog(username, 'login', 'auth', 'Login realizado', getClientIp(req), req.headers['user-agent']);
     
-    res.json({ token, user: { id: admin.id, username: admin.username, role: admin.role } });
+    res.json({ token, user: { id: admin.id, username: admin.username, role } });
   } catch (err) {
     console.error('❌ Erro no login:', err.message);
     res.status(500).json({ error: 'Erro interno no servidor' });
@@ -1112,16 +1263,16 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 
     if (new_password) {
       if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatória' });
-      const hashedCurrent = crypto.createHash('sha256').update(current_password).digest('hex');
-      if (admin.password !== hashedCurrent && admin.password !== current_password) {
+      const currentCheck = verifyPasswordHash(admin.password, current_password);
+      if (!currentCheck.ok) {
         return res.status(401).json({ error: 'Senha atual incorreta' });
       }
     }
 
     const updateData = { updated_at: new Date().toISOString() };
     if (username) updateData.username = username;
-    if (email) updateData.email = email;
-    if (new_password) updateData.password = crypto.createHash('sha256').update(new_password).digest('hex');
+    if (Object.prototype.hasOwnProperty.call(req.body, 'email')) updateData.email = normalizeEmail(email);
+    if (new_password) updateData.password = hashPassword(new_password);
 
     const { data, error: updateError } = await supabase
       .from('admins')
@@ -1529,7 +1680,7 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 });
 
 // Gerar PIX (Mercado Pago)
-app.post('/api/payments/generate-pix', async (req, res) => {
+app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
   try {
     const { mac_address, plan_id, plan_name, description, payment_id } = req.body;
     const cleanMac = normalizeMac(mac_address);
@@ -1746,7 +1897,7 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
 
 // Validar voucher (público)
 // Alias legado PT
-app.post('/api/vouchers/validate', async (req, res) => {
+app.post('/api/vouchers/validate', voucherLimiter, async (req, res) => {
   try {
     const { code, mac_address } = req.body;
     const cleanMac = normalizeMac(mac_address);
@@ -1999,6 +2150,8 @@ async function ensurePopProvisioningMaterial(pop) {
     }
   }
 
+  const popHeartbeatToken = await ensurePopToken(popId);
+
   return {
     ...pop,
     api_user: apiUser,
@@ -2008,7 +2161,8 @@ async function ensurePopProvisioningMaterial(pop) {
     vpn_type: pop.vpn_type || nextVpnType,
     vpn_ip: pop.vpn_ip || nextVpnIp,
     vpn_username: pop.vpn_username || nextVpnUsername,
-    vpn_password: pop.vpn_password || nextVpnPassword
+    vpn_password: pop.vpn_password || nextVpnPassword,
+    pop_heartbeat_token: popHeartbeatToken
   };
 }
 
@@ -2163,6 +2317,8 @@ function buildPopInstallScript(pop, config = {}) {
   const radiusServer = process.env.RADIUS_SERVER_IP || '40.233.118.238';
   const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
   const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
+  const heartbeatToken = pop.pop_heartbeat_token || '';
+  const heartbeatHeader = heartbeatToken ? ` http-header-field="Authorization: Bearer ${heartbeatToken}"` : '';
 
   const vpnEnabled = parseBoolean(pop.vpn_enabled, false) || parseBoolean(config.vpn_enabled, false);
   const vpnType = String(pop.vpn_type || config.vpn_type || '').toLowerCase();
@@ -2401,7 +2557,7 @@ ${hotspotHtmlBlock}
 
 ${userProfileTuningLine}${redirectLine}
 
-/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" http-method=post keep-result=no" start-time=startup comment="${tag}"
+/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" http-method=post${heartbeatHeader} keep-result=no" start-time=startup comment="${tag}"
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
@@ -2633,6 +2789,7 @@ app.post('/api/admin/pops/vpn-backfill', authMiddleware, async (req, res) => {
 app.post('/api/pops/:id/ping', async (req, res) => {
   try {
     const { id } = req.params;
+    if (!(await requirePopToken(req, res, id))) return;
     const now = new Date().toISOString();
     const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
     if (popErr || !pop) return res.status(404).json({ error: 'POP não encontrado' });
@@ -2676,6 +2833,9 @@ app.get('/api/pops/:id/status', async (req, res) => {
 // Registrar POP via MikroTik (público)
 app.post('/api/pops/register', async (req, res) => {
   try {
+    if (!validatePopRegisterToken(req)) {
+      return res.status(401).json({ error: 'Unauthorized', reason: 'missing_or_invalid_pop_register_token' });
+    }
     const now = new Date().toISOString();
     const { name, ip, location } = req.body || {};
     if (!name || !ip) return res.status(400).json({ error: 'name e ip são obrigatórios' });
@@ -2693,7 +2853,7 @@ app.post('/api/pops/register', async (req, res) => {
     try {
       await supabase.from('settings').upsert({
         key: `pop_token_${data.id}`,
-        value: { token: popToken },
+        value: { token_hash: hashToken(popToken), token_hint: popToken.slice(-6) },
         updated_at: now
       }, { onConflict: 'key' });
     } catch (_e) {}
@@ -2708,6 +2868,7 @@ app.post('/api/pops/register', async (req, res) => {
 app.post('/api/pops/:id/heartbeat', async (req, res) => {
   try {
     const { id } = req.params;
+    if (!(await requirePopToken(req, res, id))) return;
     const now = new Date().toISOString();
     const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
     if (popErr || !pop) return res.sendStatus(404);
@@ -2956,7 +3117,7 @@ async function getPortalRegistrationFields() {
     { field: 'cpf', label: 'CPF', enabled: false, required: false },
     { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
     { field: 'gender', label: 'Gênero', enabled: false, required: false },
-    { field: 'terms', label: 'Aceite dos termos', enabled: true, required: true }
+    { field: 'terms', label: 'Aceite dos termos', enabled: false, required: false }
   ];
 
   const { data, error } = await supabase.from('settings').select('value').eq('key', 'registration_fields').maybeSingle();
@@ -3033,7 +3194,7 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
     if (error) throw error;
-    res.json(data?.value || {});
+    res.json(scrubSecretObject(data?.value || {}));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -3044,7 +3205,7 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
       key: 'system',
-      value: req.body,
+      value: stripSecretFields(req.body),
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
@@ -3059,7 +3220,7 @@ app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
     if (error) throw error;
-    res.json(data?.value || {});
+    res.json(scrubSecretObject(data?.value || {}));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -3070,7 +3231,7 @@ app.put('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
       key: 'system',
-      value: req.body,
+      value: stripSecretFields(req.body),
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
@@ -3085,7 +3246,7 @@ app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'payment').maybeSingle();
     if (error) throw error;
-    res.json(data?.value || {});
+    res.json(scrubSecretObject(data?.value || {}));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -3096,7 +3257,7 @@ app.put('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
       key: 'payment',
-      value: req.body,
+      value: stripSecretFields(req.body),
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
@@ -3112,7 +3273,7 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'integrations').maybeSingle();
     if (error) throw error;
-    res.json(data?.value || {});
+    res.json(scrubSecretObject(data?.value || {}));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -3121,9 +3282,15 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
 // Salvar configurações de integrações
 app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
+    const blockedSecretKeys = /(supabase.*key|radius.*secret|mercado.*token|mercadopago.*token|vpn.*psk|ssh.*key|password|api_pass|secret|token)/i;
+    const sanitized = {};
+    for (const [key, value] of Object.entries(req.body || {})) {
+      if (blockedSecretKeys.test(key)) continue;
+      sanitized[key] = value;
+    }
     const { error } = await supabase.from('settings').upsert({
       key: 'integrations',
-      value: req.body,
+      value: sanitized,
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
@@ -3424,7 +3591,7 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
   }
 });
 // Listar backups
-app.get('/api/backup/list', authMiddleware, async (req, res) => {
+app.get('/api/backup/list', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     if (!fs.existsSync(BACKUP_DIR)) return res.json([]);
     const files = fs.readdirSync(BACKUP_DIR)
@@ -3442,26 +3609,27 @@ app.get('/api/backup/list', authMiddleware, async (req, res) => {
 });
 
 // Download de backup
-app.get('/api/backup/download/:filename', authMiddleware, (req, res) => {
-  const { filename } = req.params;
+app.get('/api/backup/download/:filename', authMiddleware, requireRole('owner'), (req, res) => {
+  const filename = path.basename(req.params.filename || '');
+  if (!/^[\w.-]+\.json$/.test(filename)) return res.status(400).json({ error: 'Nome de arquivo inválido' });
   const filePath = path.join(BACKUP_DIR, filename);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
   res.download(filePath);
 });
 
-app.post('/api/backup/create', authMiddleware, async (req, res) => {
+app.post('/api/backup/create', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `backup-${timestamp}.json`;
     const filePath = path.join(BACKUP_DIR, filename);
 
     // Backup simples das tabelas principais
-    const tables = ['users', 'vouchers', 'payments', 'pops', 'plans', 'settings', 'admins', 'webhooks', 'campaigns'];
+    const tables = ['users', 'vouchers', 'payments', 'pops', 'plans', 'settings', 'admins', 'webhooks', 'campaigns', 'mikrotik_credentials'];
     const backupData = {};
 
     for (const table of tables) {
       const { data } = await supabase.from(table).select('*');
-      backupData[table] = data || [];
+      backupData[table] = (data || []).map((record) => sanitizeBackupRecord(table, record));
     }
 
     fs.writeFileSync(filePath, JSON.stringify(backupData, null, 2));
@@ -3485,7 +3653,7 @@ app.get('/api/portal/plans', async (req, res) => {
   res.json(data || []);
 });
 
-app.post('/api/portal/create-pix', async (req, res) => {
+app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
   try {
     const { mac_address } = req.body || {};
     const cleanMac = normalizeMac(mac_address);
@@ -3591,8 +3759,8 @@ async function handlePortalRegister(req, res) {
   }
 }
 
-app.post('/api/portal/register-device', handlePortalRegister);
-app.post('/api/portal/register', handlePortalRegister);
+app.post('/api/portal/register-device', portalWriteLimiter, handlePortalRegister);
+app.post('/api/portal/register', portalWriteLimiter, handlePortalRegister);
 app.post('/api/portal/voucher', async (req, res) => {
   // Encaminha para a rota oficial de validação de voucher
   req.url = '/api/vouchers/validate';
@@ -3652,7 +3820,7 @@ app.get('/api/payments', async (req, res, next) => {
 });
 
 // Rota de Teste Grátis (chamada pelo frontend)
-app.post('/api/users/test-access', async (req, res) => {
+app.post('/api/users/test-access', accessLimiter, async (req, res) => {
   try {
     const body = req.body || {};
     const macAddress = body.mac_address || body.mac;
@@ -3689,7 +3857,7 @@ app.post('/api/liberar-teste', async (req, res) => {
 
 // Listar todos os administradores
 // Free trial (público) - 1 uso por MAC
-app.post('/api/free-trial', async (req, res) => {
+app.post('/api/free-trial', accessLimiter, async (req, res) => {
   try {
     const { mac_address, mac } = req.body || {};
     if (!mac_address && !mac) return res.status(400).json({ success: false, message: 'MAC é obrigatório' });
@@ -3855,7 +4023,7 @@ app.post('/api/auth/check', (req, res) => {
   return app._router.handle(req, res);
 });
 
-app.get('/api/admins', authMiddleware, async (req, res) => {
+app.get('/api/admins', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('admins')
@@ -3870,21 +4038,25 @@ app.get('/api/admins', authMiddleware, async (req, res) => {
 });
 
 // Criar novo administrador
-app.post('/api/admins', authMiddleware, async (req, res) => {
+app.post('/api/admins', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
-    const { username, email, password, role = 'admin' } = req.body;
+    const { username, email, password } = req.body;
+    const role = String(req.body.role || 'admin').toLowerCase();
     
     if (!username || !password) {
       return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
     }
+    if (!ADMIN_ROLES.has(role) || role === 'owner') {
+      return res.status(403).json({ error: 'Role não permitida', reason: 'role_escalation_blocked' });
+    }
 
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    const hashedPassword = hashPassword(password);
     
     const { data, error } = await supabase
       .from('admins')
       .insert([{ 
         username, 
-        email, 
+        email: normalizeEmail(email),
         password: hashedPassword, 
         role,
         created_at: new Date().toISOString()
@@ -3903,17 +4075,24 @@ app.post('/api/admins', authMiddleware, async (req, res) => {
 });
 
 // Atualizar administrador
-app.put('/api/admins/:id', authMiddleware, async (req, res) => {
+app.put('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     const { id } = req.params;
     const { username, email, password, role } = req.body;
+    const requestedRole = role ? String(role).toLowerCase() : null;
+    if (requestedRole && (!ADMIN_ROLES.has(requestedRole) || requestedRole === 'owner')) {
+      return res.status(403).json({ error: 'Role não permitida', reason: 'role_escalation_blocked' });
+    }
+    if (String(id) === String(req.user.id) && requestedRole) {
+      return res.status(403).json({ error: 'Não é permitido alterar o próprio role', reason: 'self_role_change_blocked' });
+    }
     
     const updateData = {};
     if (username) updateData.username = username;
-    if (email) updateData.email = email;
-    if (role) updateData.role = role;
+    if (Object.prototype.hasOwnProperty.call(req.body, 'email')) updateData.email = normalizeEmail(email);
+    if (requestedRole) updateData.role = requestedRole;
     if (password) {
-      updateData.password = crypto.createHash('sha256').update(password).digest('hex');
+      updateData.password = hashPassword(password);
     }
 
     const { error } = await supabase
@@ -3932,13 +4111,31 @@ app.put('/api/admins/:id', authMiddleware, async (req, res) => {
 });
 
 // Deletar administrador
-app.delete('/api/admins/:id', authMiddleware, async (req, res) => {
+app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     const { id } = req.params;
 
     // Impedir que o admin delete a si mesmo
     if (id == req.user.id) {
       return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
+    }
+
+    const { data: target, error: targetError } = await supabase
+      .from('admins')
+      .select('id, role')
+      .eq('id', id)
+      .maybeSingle();
+    if (targetError) throw targetError;
+    if (!target) return res.status(404).json({ error: 'Administrador não encontrado' });
+    if (target.role === 'owner') {
+      const { count, error: countError } = await supabase
+        .from('admins')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'owner');
+      if (countError) throw countError;
+      if ((count || 0) <= 1) {
+        return res.status(409).json({ error: 'Não é permitido excluir o último owner', reason: 'last_owner_blocked' });
+      }
     }
 
     const { error } = await supabase
