@@ -839,15 +839,21 @@ function isActivePaidUser(user) {
 
 function getTrialCooldownUntil(record, cfg) {
   if (!record) return null;
-  const cooldownSeconds = Math.max(0, Math.floor(Number(record.cooldown_seconds ?? cfg.cooldown_seconds ?? 0)));
+  const configuredCooldown = Math.floor(Number(cfg.cooldown_seconds ?? 0));
+  const storedCooldown = Math.floor(Number(record.cooldown_seconds ?? 0));
+  const cooldownSeconds = Math.max(0, Number.isFinite(configuredCooldown) && configuredCooldown > 0 ? configuredCooldown : storedCooldown);
   if (cooldownSeconds <= 0) return null;
-  if (record.cooldown_until) return record.cooldown_until;
+
+  // Reuso deve seguir a configuração atual do painel. Não use cooldown_until antigo
+  // quando existe expires_at, pois ele pode ter sido gravado com outra configuração.
   if (record.expires_at) return new Date(new Date(record.expires_at).getTime() + cooldownSeconds * 1000).toISOString();
 
   const lastUsed = record.last_used_at || record.used_at || record.first_used_at || record.created_at || null;
-  if (!lastUsed) return null;
+  if (!lastUsed) return record.cooldown_until || null;
 
-  const durationSeconds = Math.max(0, Math.floor(Number(record.duration_seconds ?? cfg.duration_seconds ?? 0)));
+  const configuredDuration = Math.floor(Number(cfg.duration_seconds ?? 0));
+  const storedDuration = Math.floor(Number(record.duration_seconds ?? 0));
+  const durationSeconds = Math.max(0, Number.isFinite(configuredDuration) && configuredDuration > 0 ? configuredDuration : storedDuration);
   return new Date(new Date(lastUsed).getTime() + (durationSeconds + cooldownSeconds) * 1000).toISOString();
 }
 
