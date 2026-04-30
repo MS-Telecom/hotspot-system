@@ -3193,13 +3193,133 @@ app.get('/api/public/free-trial-config', async (req, res) => {
   }
 });
 
-// Debug: retorna IP real visto pelo backend
-app.get('/api/test-ip', (req, res) => {
+// Debug: retorna IP real visto pelo backendapp.get("/api/test-ip", (req, res) => {
   res.json({
     ip: getClientIp(req),
-    x_forwarded_for: req.headers['x-forwarded-for'] || null,
-    remote_address: req.socket?.remoteAddress || null
+    x_forwarded_for: req.headers["x-forwarded-for"] || null,
+    remote_address: req.socket?.remoteAddress || null,
   });
+});
+
+app.post("/api/portal/free-trial", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const { mac, ip, hotspot, loginUrl, orig } = req.body;
+  const clientIp = getClientIp(req);
+  const userAgent = req.headers["user-agent"];
+
+  if (!mac) {
+    await registerSystemLog("warn", "free_trial", "Tentativa de teste grátis sem MAC", { ip: clientIp, userAgent }, clientIp, userAgent);
+    return res.status(400).json({ error: "MAC address é obrigatório." });
+  }
+
+  const cleanMac = normalizeMac(mac);
+  if (!cleanMac) {
+    await registerSystemLog("warn", "free_trial", "Tentativa de teste grátis com MAC inválido", { mac, ip: clientIp, userAgent }, clientIp, userAgent);
+    return res.status(400).json({ error: "MAC address inválido." });
+  }
+
+  try {
+    const { data: config } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "free_trial")
+      .maybeSingle();
+    const freeTrialConfig = config?.value || { enabled: false, duration_minutes: 15, cooldown_hours: 24 };
+
+    if (!freeTrialConfig.enabled) {
+      await registerSystemLog("info", "free_trial", "Teste grátis desabilitado", { mac: cleanMac, ip: clientIp }, clientIp, userAgent);
+      return res.status(403).json({ error: "Teste grátis não está habilitado." });
+    }
+
+    const now = new Date();
+    const { data: existingTrial, error: trialError } = await supabase
+      .from("free_trials")
+      .select("*")
+      .eq("mac_address", cleanMac)
+      .maybeSingle();
+
+    if (trialError && trialError.code !== "PGRST116") throw trialError;
+
+    if (existingTrial) {
+      const lastUsed = new Date(existingTrial.last_used_at);
+      const cooldownEnd = new Date(lastUsed.getTime() + freeTrialConfig.cooldown_hours * 60 * 60 * 1000);
+
+      if (now < cooldownEnd) {
+        const remainingCooldown = Math.ceil((cooldownEnd - now) / (1000 * 60 * 60));
+        await registerSystemLog("info", "free_trial", "Teste grátis em cooldown", { mac: cleanMac, ip: clientIp, remainingCooldown }, clientIp, userAgent);
+        return res.status(429).json({ error: `Você já usou o teste grátis. Tente novamente em ${remainingCooldown} hora(s).` });
+      }
+    }
+
+    const username = `ft_${cleanMac.replace(/:/g, "").toLowerCase()}`;
+    const password = generateStrongPassword(12);
+    const expiresAt = new Date(now.getTime() + freeTrialConfig.duration_minutes * 60 * 1000);
+
+    const { data: upsertedTrial, error: upsertError } = await supabase
+      .from("free_trials")
+      .upsert(
+        {
+          mac_address: cleanMac,
+          username,
+          password,
+          last_used_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+          hotspot_ip: ip,
+          hotspot_name: hotspot,
+          client_ip: clientIp,
+          user_agent: userAgent,
+          uses: (existingTrial?.uses || 0) + 1,
+        },
+        { onConflict: "mac_address" }
+      )
+      .select()
+      .single();
+
+    if (upsertError) throw upsertError;
+
+    // Adicionar usuário ao MikroTik
+    if (RouterOSAPI) {
+      try {
+        const popConfig = await getPopConfig(hotspot);
+        if (popConfig) {
+          const conn = new RouterOSAPI({
+            host: popConfig.ip,
+            user: popConfig.username,
+            password: popConfig.password,
+            port: popConfig.api_port,
+            timeout: 5,
+          });
+          await conn.connect();
+          await conn.write("/ip/hotspot/user/add", [
+            `=name=${username}`,
+            `=password=${password}`,
+            `=mac-address=${cleanMac}`,
+            `=profile=${popConfig.free_trial_profile || "default"}`,
+            `=limit-uptime=${freeTrialConfig.duration_minutes}m`,
+          ]);
+          conn.close();
+          await registerSystemLog("info", "free_trial", "Usuário de teste grátis adicionado ao MikroTik", { mac: cleanMac, hotspot, username }, clientIp, userAgent);
+        }
+      } catch (mikrotikError) {
+        await registerSystemLog("error", "free_trial", "Falha ao adicionar usuário de teste grátis ao MikroTik", { mac: cleanMac, hotspot, username, error: mikrotikError.message }, clientIp, userAgent);
+        console.error("❌ Erro ao adicionar usuário de teste grátis ao MikroTik:", mikrotikError);
+      }
+    }
+
+    await registerSystemLog("info", "free_trial", "Teste grátis concedido", { mac: cleanMac, ip: clientIp, hotspot, username, duration: freeTrialConfig.duration_minutes }, clientIp, userAgent);
+
+    // Redirecionar para a página de login do MikroTik
+    const redirectUrl = new URL(loginUrl);
+    redirectUrl.searchParams.set("username", username);
+    redirectUrl.searchParams.set("password", password);
+    redirectUrl.searchParams.set("dst", orig || "http://neverssl.com");
+
+    res.json({ success: true, redirect_url: redirectUrl.toString() });
+  } catch (error) {
+    await registerSystemLog("error", "free_trial", "Erro no processo de teste grátis", { mac: cleanMac, ip: clientIp, error: error.message }, clientIp, userAgent);
+    console.error("❌ Erro no processo de teste grátis:", error);
+    res.status(500).json({ error: "Erro interno ao processar teste grátis." });
+  }
 });
 
 // ============================================================
