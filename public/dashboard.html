@@ -225,9 +225,9 @@
                         </div>
                         <span id="usersVariation" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">0%</span>
                     </div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Acessos ativos</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Usuários Online</p>
                     <span id="onlineUsers" class="text-3xl font-black mt-1">0</span>
-                    <p class="text-[10px] text-gray-600 mt-2">Fallback por sessão: pico <span id="peakUsers">0</span></p>
+                    <p class="text-[10px] text-gray-600 mt-2">Pico hoje: <span id="peakUsers">0</span></p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -237,8 +237,8 @@
                         </div>
                     </div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Tráfego Total</p>
-                    <span id="totalTraffic" class="text-3xl font-black mt-1">Sem dados</span>
-                    <p class="text-[10px] text-gray-600 mt-2">Somente com accounting ativo</p>
+                    <span id="totalTraffic" class="text-3xl font-black mt-1">0 GB</span>
+                    <p class="text-[10px] text-gray-600 mt-2">Pico: <span id="peakBandwidth">0</span> Mbps</p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -255,13 +255,13 @@
 
             <!-- Gráfico + Faturamento por Plano (2 colunas) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Gráfico de acessos ativos -->
+                <!-- Gráfico de Usuários Online -->
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-white">Acessos ativos (últimas 24h)</h3>
+                        <h3 class="font-bold text-white">Usuários Online (últimas 24h)</h3>
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                            <span class="text-[10px] text-gray-500">Fallback por sessões</span>
+                            <span class="text-[10px] text-gray-500">Tempo real</span>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -280,25 +280,25 @@
                             <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="crown" class="w-6 h-6 text-blue-500"></i>
                             </div>
-                            <p id="planRevenueLabel1" class="text-[10px] text-gray-500 uppercase tracking-wider">-</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Premium</p>
                             <p id="premiumRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p id="planRevenueSub1" class="text-[9px] text-gray-600 mt-1">sem pagamentos</p>
+                            <p class="text-[9px] text-gray-600 mt-1">assinantes premium</p>
                         </div>
                         <div class="bg-gradient-to-br from-cyan-600/20 to-cyan-600/5 rounded-xl p-5 text-center border border-cyan-500/20">
                             <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
                             </div>
-                            <p id="planRevenueLabel2" class="text-[10px] text-gray-500 uppercase tracking-wider">-</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Diário</p>
                             <p id="dailyRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p id="planRevenueSub2" class="text-[9px] text-gray-600 mt-1">sem pagamentos</p>
+                            <p class="text-[9px] text-gray-600 mt-1">acessos diários</p>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
                             <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
                             </div>
-                            <p id="planRevenueLabel3" class="text-[10px] text-gray-500 uppercase tracking-wider">-</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
                             <p id="trialRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p id="planRevenueSub3" class="text-[9px] text-gray-600 mt-1">sem pagamentos</p>
+                            <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
                         </div>
                     </div>
                 </div>
@@ -567,7 +567,7 @@ function initUsersPerHourChart(dataPoints = []) {
         data: {
             labels: hours,
             datasets: [{
-                label: 'Acessos ativos',
+                label: 'Usuários Online',
                 data: dataPoints.length ? dataPoints : Array(24).fill(0),
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59,130,246,0.1)',
@@ -607,22 +607,18 @@ async function loadDashboard() {
 
     try {
         // CORRIGIDO: Endpoints em inglês conforme tabela de mapeamento
-        const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes, activeSessionsRes, trafficRes] = await Promise.all([
+        const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes] = await Promise.all([
             fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/users`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/pops`, { headers: buildAuthHeaders(false) }), // CORRIGIDO: /api/hotspots -> /api/pops
-            fetch(`${API_URL}/api/stats/users-per-hour`, { headers: buildAuthHeaders(false) }).catch(() => ({ ok: false })),
-            fetch(`${API_URL}/api/sessions/active`, { headers: buildAuthHeaders(false) }).catch(() => ({ ok: false })),
-            fetch(`${API_URL}/api/stats/total-traffic`, { headers: buildAuthHeaders(false) }).catch(() => ({ ok: false }))
+            fetch(`${API_URL}/api/stats/users-per-hour`, { headers: buildAuthHeaders(false) }).catch(() => ({ ok: false }))
         ]);
 
         const payments = paymentsRes.ok ? await paymentsRes.json() : [];
         const plans = plansRes.ok ? await plansRes.json() : [];
         const users = usersRes.ok ? await usersRes.json() : [];
         const pops = popsRes.ok ? await popsRes.json() : [];
-        const activeSessions = activeSessionsRes.ok ? await activeSessionsRes.json() : [];
-        const traffic = trafficRes.ok ? await trafficRes.json() : null;
         let usersPerHourData = [];
         if (usersPerHourRes.ok) {
             const result = await usersPerHourRes.json();
@@ -653,26 +649,27 @@ async function loadDashboard() {
 
         const revenueVariation = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : totalRevenue > 0 ? 100 : 0;
 
-        // Faturamento por plano real nos últimos 30 dias.
-        const revenueByPlan = {};
+        // Faturamento por plano
+        let premiumRevenue = 0, dailyRevenue = 0, trialRevenue = 0;
         payments.forEach(p => {
             if (!isPaidPayment(p)) return;
-            if (new Date(p.created_at) < thirtyDaysAgo) return;
-            const planName = p.plan_name || plans.find(plan => String(plan.id) === String(p.plan_id))?.name || 'Plano';
-            revenueByPlan[planName] = (revenueByPlan[planName] || 0) + Number(p.amount || 0);
+            const planName = (p.plan_name || '').toLowerCase();
+            const amount = p.amount || 0;
+            if (planName.includes('premium')) premiumRevenue += amount;
+            else if (planName.includes('diario') || planName.includes('daily')) dailyRevenue += amount;
+            else if (planName.includes('teste') || planName.includes('trial')) trialRevenue += amount;
         });
-        const topPlanRevenue = Object.entries(revenueByPlan).sort((a, b) => b[1] - a[1]).slice(0, 3);
 
         // Métricas de rede
-        const onlineUsers = Array.isArray(activeSessions) && activeSessions.length
-            ? activeSessions.length
-            : users.filter(u => u.access_state === 'online').length;
+        const onlineUsers = users.filter(u => u.status === 'active' || u.status === 'online').length;
         const totalCustomers = users.length;
         const onlinePops = pops.filter(p => p.status === 'online' || p.status === 'active').length;
         const offlinePops = pops.filter(p => p.status !== 'online' && p.status !== 'active').length;
         const peakUsers = usersPerHourData.length ? Math.max(...usersPerHourData) : onlineUsers;
 
-        const totalTrafficBytes = Number(traffic?.total_bytes || traffic?.bytes || 0);
+        // Tráfego (mockado porque endpoint não especificado)
+        const totalTraffic = 0; // Seria substituído por chamada real
+        const peakBandwidth = 0;
 
         // Atualizar DOM
         document.getElementById('totalRevenue').innerHTML = `R$ ${totalRevenue.toFixed(2)}`;
@@ -685,21 +682,13 @@ async function loadDashboard() {
         document.getElementById('offlineHotspots').innerText = offlinePops;
         document.getElementById('onlineUsers').innerText = onlineUsers;
         document.getElementById('peakUsers').innerText = peakUsers;
-        document.getElementById('totalTraffic').innerHTML = totalTrafficBytes > 0
-            ? `${(totalTrafficBytes / 1024 / 1024 / 1024).toFixed(2)} GB`
-            : 'Sem dados';
+        document.getElementById('totalTraffic').innerHTML = `${totalTraffic.toFixed(2)} GB`;
+        document.getElementById('peakBandwidth').innerText = peakBandwidth;
         document.getElementById('totalCustomers').innerText = totalCustomers;
 
-        [
-            { label: 'planRevenueLabel1', amount: 'premiumRevenue', sub: 'planRevenueSub1' },
-            { label: 'planRevenueLabel2', amount: 'dailyRevenue', sub: 'planRevenueSub2' },
-            { label: 'planRevenueLabel3', amount: 'trialRevenue', sub: 'planRevenueSub3' }
-        ].forEach((card, index) => {
-            const item = topPlanRevenue[index];
-            document.getElementById(card.label).innerText = item ? item[0] : '-';
-            document.getElementById(card.amount).innerHTML = item ? `R$ ${Number(item[1]).toFixed(0)}` : 'R$ 0';
-            document.getElementById(card.sub).innerText = item ? 'últimos 30 dias' : 'sem pagamentos';
-        });
+        document.getElementById('premiumRevenue').innerHTML = `R$ ${premiumRevenue.toFixed(0)}`;
+        document.getElementById('dailyRevenue').innerHTML = `R$ ${dailyRevenue.toFixed(0)}`;
+        document.getElementById('trialRevenue').innerHTML = `R$ ${trialRevenue.toFixed(0)}`;
 
         initUsersPerHourChart(usersPerHourData);
 

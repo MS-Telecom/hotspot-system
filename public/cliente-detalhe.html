@@ -163,12 +163,9 @@
 
             <div class="flex gap-3 flex-wrap">
                 <button class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white" data-filter="todos">Todos</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="online">Online</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="plan">Com Plano</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="trial">Teste Grátis</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="expired">Expirados</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="active">Ativos</button>
+                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="inactive">Inativos</button>
                 <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="blocked">Bloqueados</button>
-                <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="lead">Leads</button>
             </div>
 
             <div id="clientesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -427,70 +424,6 @@
         return String(planName || '').toLowerCase() === 'free_trial' ? 'Teste Grátis' : (planName || 'N/A');
     }
 
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
-
-    function formatDateTime(value) {
-        if (!value) return '-';
-        const date = new Date(value);
-        return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('pt-BR');
-    }
-
-    function formatShortTime(cliente) {
-        if (cliente.access_label) return cliente.access_label;
-        const status = String(cliente.status || '').toLowerCase();
-        if (status === 'blocked') return 'bloqueado';
-        const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
-        if (expiresAt > Date.now()) {
-            const minutes = Math.ceil((expiresAt - Date.now()) / 60000);
-            if (minutes < 1440) return `restam ${Math.max(1, minutes)} min`;
-            const days = Math.ceil(minutes / 1440);
-            return `expira em ${days} dia${days === 1 ? '' : 's'}`;
-        }
-        const cooldown = cliente.cooldown_until ? new Date(cliente.cooldown_until).getTime() : 0;
-        if (cooldown > Date.now()) return `cooldown ${Math.max(1, Math.ceil((cooldown - Date.now()) / 60000))} min`;
-        return status === 'trial' ? 'teste expirado' : 'sem acesso';
-    }
-
-    function getPopDisplay(cliente) {
-        const pop = cliente.current_pop_id || cliente.pop_id || cliente.hotspot_id || '-';
-        const popIp = cliente.current_pop_ip ? ` / ${cliente.current_pop_ip}` : '';
-        return `${pop}${popIp}`;
-    }
-
-    function isActiveClient(cliente) {
-        const state = String(cliente.access_state || '').toLowerCase();
-        const status = String(cliente.status || '').toLowerCase();
-        const plan = String(cliente.plan_name || '').toLowerCase();
-        const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
-        return state === 'online' || state === 'active_plan' || state === 'vip' || status === 'vip' ||
-            ((status === 'active' || status === 'paid') && plan !== 'free_trial' && (!expiresAt || expiresAt > Date.now())) ||
-            ((status === 'trial' || plan === 'free_trial') && expiresAt > Date.now());
-    }
-
-    function matchShortcutFilter(cliente, filter) {
-        if (filter === 'todos') return true;
-        const state = String(cliente.access_state || '').toLowerCase();
-        const status = String(cliente.status || '').toLowerCase();
-        const plan = String(cliente.plan_name || '').toLowerCase();
-        const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
-        if (filter === 'online') return state === 'online' || !!cliente.active_session_expires_at;
-        if (filter === 'plan') return (status === 'active' || status === 'paid' || status === 'vip' || state === 'active_plan' || state === 'vip') && plan !== 'free_trial';
-        if (filter === 'trial') return plan === 'free_trial' || status === 'trial';
-        if (filter === 'expired') return state === 'expired' || (expiresAt > 0 && expiresAt <= Date.now()) || state === 'cooldown';
-        if (filter === 'blocked') return status === 'blocked' || state === 'blocked';
-        if (filter === 'lead') return state === 'lead' || (!cliente.plan_name && !expiresAt);
-        if (filter === 'active') return isActiveClient(cliente);
-        if (filter === 'inactive') return !isActiveClient(cliente) && status !== 'blocked';
-        return status === filter;
-    }
-
     function renderizarClientes(clientes) {
         const container = document.getElementById('clientesGrid');
         if (!container) return;
@@ -508,9 +441,6 @@
             const p = String(cliente.plan_name || '').toLowerCase();
             const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
             const isExpired = expiresAt > 0 && expiresAt < Date.now();
-            const popDisplay = getPopDisplay(cliente);
-            const localIp = cliente.local_ip || 'N/A';
-            const timeText = formatShortTime(cliente);
             
             if (p !== 'free_trial' && (s === 'active' || s === 'paid' || s === 'vip') && !isExpired) {
                 badgeHtml = `<span class="status-badge status-premium">${planoNome} ${isVip}</span>`;
@@ -538,12 +468,8 @@
                         <div class="bg-gray-900/50 p-3 rounded-xl text-center"><p class="text-[9px] text-gray-500 uppercase">Telefone</p><p class="text-sm font-medium">${cliente.phone || 'N/A'}</p></div>
                         <div class="bg-gray-900/50 p-3 rounded-xl text-center"><p class="text-[9px] text-gray-500 uppercase">MAC</p><p class="text-xs font-mono text-blue-400">${cliente.mac_address || 'N/A'}</p></div>
                     </div>
-                    <div class="flex justify-between items-center pt-3 border-t border-gray-800 gap-3">
-                        <div class="flex flex-col gap-1 min-w-0">
-                            <span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="radio-tower" class="w-3 h-3"></i> POP ${escapeHtml(popDisplay)}</span>
-                            <span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="monitor" class="w-3 h-3"></i> IP ${escapeHtml(localIp)}</span>
-                            <span class="text-[10px] text-blue-400 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${escapeHtml(timeText)}</span>
-                        </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-gray-800">
+                        <div class="flex gap-2"><span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${cliente.address || 'N/A'}</span></div>
                         <div class="flex gap-2">
                             <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); excluirCliente(${cliente.id})" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
                             <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); editarCliente(${cliente.id})" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>
@@ -573,10 +499,9 @@
                 (c.cpf || '').toLowerCase().includes(searchTerm) ||
                 (c.phone || '').toLowerCase().includes(searchTerm);
             const matchNome = !nome || (c.name || '').toLowerCase().includes(nome);
-            const matchStatus = !status ||
-                (status === 'active' ? isActiveClient(c) : status === 'inactive' ? (!isActiveClient(c) && String(c.status || '').toLowerCase() !== 'blocked') : String(c.status || '').toLowerCase() === status);
+            const matchStatus = !status || c.status === status;
             const matchPlano = !plano || String(c.plan_id) === plano;
-            const matchShortcut = matchShortcutFilter(c, activeShortcut);
+            const matchShortcut = activeShortcut === 'todos' || c.status === activeShortcut;
             return matchSearch && matchNome && matchStatus && matchPlano && matchShortcut;
         });
         renderizarClientes(filtrados);
@@ -652,9 +577,6 @@
                 const planoNome = getPlanDisplayName(planoObj ? planoObj.name : cliente.plan_name);
                 const isTrial = String(cliente.plan_name || '').toLowerCase() === 'free_trial' || String(cliente.status || '').toLowerCase() === 'trial';
                 const statusModalText = isTrial ? 'Teste Grátis' : getStatusText(cliente.status);
-                const popDisplay = getPopDisplay(cliente);
-                const localIp = cliente.local_ip || '-';
-                const timeText = formatShortTime(cliente);
                 content.innerHTML = `
                     <div class="space-y-2">
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium text-sm">${cliente.name || '-'}</p></div>
@@ -665,18 +587,6 @@
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Endereço</p><p class="text-sm">${cliente.address || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Plano</p><p><span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 rounded-lg text-xs">${planoNome}</span></p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${getStatusBadgeClass(cliente.status)} rounded-lg text-xs">${statusModalText}</span></p></div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">POP atual</p><p class="text-sm">${escapeHtml(popDisplay)}</p></div>
-                            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">IP local</p><p class="text-sm">${escapeHtml(localIp)}</p></div>
-                        </div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Última conexão</p><p class="text-xs">${formatDateTime(cliente.last_connection_at)}</p></div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Tempo restante</p><p class="text-sm">${escapeHtml(timeText)}</p></div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">expires_at</p><p class="text-xs">${formatDateTime(cliente.expires_at || cliente.active_session_expires_at || cliente.last_session_expires_at)}</p></div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">cooldown_until</p><p class="text-xs">${formatDateTime(cliente.cooldown_until)}</p></div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status real</p><p class="text-sm">${cliente.real_status || cliente.status || '-'}</p></div>
-                            <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Plano real</p><p class="text-sm">${cliente.plan_name || '-'}</p></div>
-                        </div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Data Cadastro</p><p class="text-xs">${cliente.created_at ? new Date(cliente.created_at).toLocaleString('pt-BR') : '-'}</p></div>
                     </div>`;
             } else {
@@ -696,12 +606,10 @@
         document.getElementById('editNome').value = cliente.name || '';
         document.getElementById('editTelefone').value = cliente.phone || '';
         document.getElementById('editMac').value = cliente.mac_address || '';
-        document.getElementById('editMac').dataset.originalMac = cliente.mac_address || '';
         document.getElementById('editCpf').value = cliente.cpf || '';
         document.getElementById('editEmail').value = cliente.email || '';
         document.getElementById('editEndereco').value = cliente.address || '';
         document.getElementById('editPlano').value = cliente.plan_id || '';
-        document.getElementById('editPlano').dataset.originalPlanId = cliente.plan_id || '';
         document.getElementById('modalEditarCliente').classList.remove('hidden');
     }
     function closeModalEditar() { document.getElementById('modalEditarCliente').classList.add('hidden'); }
@@ -711,17 +619,13 @@
         const dados = {
             name: document.getElementById('editNome').value,
             phone: document.getElementById('editTelefone').value,
+            mac_address: document.getElementById('editMac').value,
             cpf: document.getElementById('editCpf').value,
             email: document.getElementById('editEmail').value,
             address: document.getElementById('editEndereco').value
         };
-        const macInput = document.getElementById('editMac');
-        const macValue = macInput.value.trim();
-        if (macValue && macValue !== (macInput.dataset.originalMac || '')) dados.mac_address = macValue;
-
-        const planSelect = document.getElementById('editPlano');
-        const planValue = planSelect.value;
-        if (planValue && planValue !== (planSelect.dataset.originalPlanId || '')) {
+        const planValue = document.getElementById('editPlano').value;
+        if (planValue) {
             const planId = Number(planValue);
             if (!Number.isFinite(planId)) {
                 alert('Plano inválido');
