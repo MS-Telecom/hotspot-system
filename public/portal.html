@@ -48,18 +48,7 @@
         <h2 class="text-2xl md:text-3xl font-black text-white mb-2">Complete seu cadastro</h2>
         <p class="text-gray-400 text-sm mb-6">Informe seus dados para continuar para os planos e teste grátis.</p>
         <form id="registrationForm" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome completo</label>
-            <input id="registrationName" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Seu nome">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">WhatsApp / telefone</label>
-            <input id="registrationPhone" type="tel" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="(91) 99999-9999">
-          </div>
-          <label class="flex items-start gap-3 text-sm text-gray-300">
-            <input id="registrationTerms" type="checkbox" required class="mt-1">
-            <span>Aceito os termos de uso da rede MS Telecom.</span>
-          </label>
+          <div id="registrationFieldsContainer" class="space-y-4"></div>
           <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 rounded-xl px-5 py-3 font-bold text-white transition">
             Continuar
           </button>
@@ -188,6 +177,7 @@
 
   const registrationGate = document.getElementById('registrationGate');
   const registrationForm = document.getElementById('registrationForm');
+  const registrationFieldsContainer = document.getElementById('registrationFieldsContainer');
   const portalHero = document.getElementById('portalHero');
   const devicePanel = document.getElementById('devicePanel');
   const plansTitle = document.getElementById('plansTitle');
@@ -206,6 +196,7 @@
   let lastFreeTest = localStorage.getItem('last_free_test') || 0;
   let redirectInProgress = false;
   let registrationGateActive = false;
+  let registrationFields = [];
 
 function showStatusMessage(message, type = 'success') {
   const msgDiv = document.getElementById('statusMessage');
@@ -245,6 +236,56 @@ function formatRetryAfter(seconds) {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   return rest ? `${hours}h ${rest}min` : `${hours} horas`;
+}
+
+function fieldInputType(field) {
+  if (field === 'email') return 'email';
+  if (field === 'phone') return 'tel';
+  if (field === 'birth_date') return 'date';
+  return 'text';
+}
+
+function renderRegistrationFields(fields) {
+  registrationFields = Array.isArray(fields) ? fields.filter(f => f.enabled !== false) : [];
+  registrationFieldsContainer.innerHTML = registrationFields.map((field) => {
+    const required = field.required === true ? 'required' : '';
+    const mark = field.required === true ? ' *' : '';
+    if (field.field === 'terms') {
+      return `<label class="flex items-start gap-3 text-sm text-gray-300">
+        <input name="terms" type="checkbox" ${required} class="mt-1">
+        <span>${escapeHtml(field.label || 'Aceite dos termos')}${mark}</span>
+      </label>`;
+    }
+    if (field.field === 'gender') {
+      return `<div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${escapeHtml(field.label || 'Gênero')}${mark}</label>
+        <select name="gender" ${required} class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500">
+          <option value="">Selecione</option>
+          <option value="Feminino">Feminino</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>`;
+    }
+    return `<div>
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${escapeHtml(field.label || field.field)}${mark}</label>
+      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500">
+    </div>`;
+  }).join('');
+}
+
+async function loadRegistrationFields() {
+  try {
+    const res = await fetch(`${API_BASE}/api/portal/registration-fields`, { cache: 'no-store' });
+    const fields = res.ok ? await res.json() : [];
+    renderRegistrationFields(fields);
+  } catch (_e) {
+    renderRegistrationFields([
+      { field: 'name', label: 'Nome completo', enabled: true, required: true },
+      { field: 'phone', label: 'WhatsApp / telefone', enabled: true, required: true },
+      { field: 'terms', label: 'Aceito os termos de uso da rede MS Telecom', enabled: true, required: true }
+    ]);
+  }
 }
 
 function setRegistrationGate(required) {
@@ -298,23 +339,17 @@ async function savePortalRegistration(event) {
     return;
   }
 
-  const name = document.getElementById('registrationName').value.trim();
-  const phone = document.getElementById('registrationPhone').value.trim();
-  const terms = document.getElementById('registrationTerms').checked;
-
-  if (!name || !phone || !terms) {
-    showStatusMessage('Preencha os dados obrigatórios para continuar.', 'warning');
-    return;
-  }
-
+  const formData = new FormData(registrationForm);
   const payload = {
     mac_address: macAddress,
-    name,
-    phone,
-    accepted_terms: true,
+    accepted_terms: formData.get('terms') === 'on',
     password: `portal-${macAddress.replace(/[^A-F0-9]/gi, '') || Date.now()}`
   };
 
+  registrationFields.forEach((field) => {
+    if (field.field === 'terms') return;
+    payload[field.field] = String(formData.get(field.field) || '').trim();
+  });
   try {
     let res = await fetch(`${API_BASE}/api/portal/register-device`, {
       method: 'POST',
@@ -726,6 +761,7 @@ async function savePortalRegistration(event) {
 
   async function initPortal() {
     lucide.createIcons();
+    await loadRegistrationFields();
     await loadFreeTrialSettings();
     await checkAccessStatus({ skipTrialCheck: true });
     if (redirectInProgress) return;

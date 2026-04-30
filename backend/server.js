@@ -2948,6 +2948,80 @@ app.put('/api/settings/fields', authMiddleware, async (req, res) => {
   }
 });
 
+async function getPortalRegistrationFields() {
+  const defaultFields = [
+    { field: 'name', label: 'Nome Completo', enabled: true, required: true },
+    { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true },
+    { field: 'email', label: 'E-mail', enabled: false, required: false },
+    { field: 'cpf', label: 'CPF', enabled: false, required: false },
+    { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
+    { field: 'gender', label: 'Gênero', enabled: false, required: false },
+    { field: 'terms', label: 'Aceite dos termos', enabled: true, required: true }
+  ];
+
+  const { data, error } = await supabase.from('settings').select('value').eq('key', 'registration_fields').maybeSingle();
+  if (error) throw error;
+  return Array.isArray(data?.value) && data.value.length ? data.value : defaultFields;
+}
+
+function sanitizePortalRegistration(body, fields) {
+  const enabled = new Set((fields || []).filter(f => f.enabled !== false).map(f => f.field));
+  const payload = {};
+  if (enabled.has('name') && body.name) payload.name = String(body.name).trim();
+  if (enabled.has('phone') && body.phone) payload.phone = String(body.phone).replace(/[^\d+]/g, '');
+  if (enabled.has('email')) payload.email = String(body.email || '').trim() || null;
+  if (enabled.has('cpf')) payload.cpf = String(body.cpf || '').replace(/\D/g, '') || null;
+  if (enabled.has('birth_date') && body.birth_date) payload.birth_date = body.birth_date;
+  if (enabled.has('gender') && body.gender) payload.gender = String(body.gender).trim();
+  return payload;
+}
+
+function getMissingRegistrationFields(user, fields) {
+  return (fields || [])
+    .filter(f => f.enabled !== false && f.required === true)
+    .map(f => f.field)
+    .filter(field => {
+      if (field === 'terms') return false;
+      const value = user ? user[field] : '';
+      return value === null || value === undefined || String(value).trim() === '';
+    });
+}
+
+app.get('/api/portal/registration-fields', async (_req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const fields = await getPortalRegistrationFields();
+    res.json(fields.filter(f => f.enabled !== false));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/portal/registration-status', async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const cleanMac = normalizeMac(req.query.mac || req.query.mac_address);
+    if (!cleanMac) return res.json({ exists: false, complete: true, missing_fields: [] });
+
+    const fields = await getPortalRegistrationFields();
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .in('mac_address', getMacVariants(cleanMac))
+      .maybeSingle();
+    if (error) throw error;
+
+    const missing = getMissingRegistrationFields(user, fields);
+    res.json({
+      exists: !!user,
+      complete: missing.length === 0,
+      missing_fields: missing,
+      user: user ? { name: user.name || '' } : null
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // ============================================================
 // ⚙️ CONFIGURAÇÕES DO SISTEMA (SETTINGS)
 // ============================================================
@@ -3466,36 +3540,58 @@ app.post('/api/portal/login', async (req, res) => {
   }
 });
 
-app.post('/api/portal/register', async (req, res) => {
+async function handlePortalRegister(req, res) {
   try {
-    const { name, cpf, phone, password, mac_address } = req.body;
+    const cleanMac = normalizeMac(req.body.mac_address || req.body.mac);
+    if (!cleanMac) return res.status(400).json({ error: 'MAC obrigatório' });
 
-    // Se o MAC ja esta associado a algum usuario, evita duplicar cadastro
-    const cleanMac = normalizeMac(mac_address);
-    if (cleanMac) {
-      const { data: existing } = await supabase
-        .from('users')
-        .select('id, username')
-        .in('mac_address', getMacVariants(cleanMac))
-        .maybeSingle();
-      if (existing) return res.json({ user_id: existing.id, username: existing.username, existing: true });
+    const fields = await getPortalRegistrationFields();
+    const missingBody = (fields || [])
+      .filter(f => f.enabled !== false && f.required === true)
+      .map(f => f.field)
+      .filter(field => field !== 'terms' && !String(req.body[field] || '').trim());
+    if (missingBody.length) return res.status(400).json({ error: 'Campos obrigatórios ausentes', missing_fields: missingBody });
+
+    const payload = sanitizePortalRegistration(req.body, fields);
+    const now = new Date().toISOString();
+
+    const { data: existing, error: existingError } = await supabase
+      .from('users')
+      .select('*')
+      .in('mac_address', getMacVariants(cleanMac))
+      .maybeSingle();
+    if (existingError) throw existingError;
+
+    if (existing) {
+      const updatePayload = { ...payload, updated_at: now };
+      const { data, error } = await supabase.from('users').update(updatePayload).eq('id', existing.id).select().single();
+      if (error) throw error;
+      return res.json({ user_id: data.id, username: data.username, existing: true });
     }
 
-    const username = cpf || phone || name.toLowerCase().replace(/\s+/g, '.');
+    const username = cleanMac;
+    const password = req.body.password || `portal-${cleanMac.replace(/:/g, '')}`;
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-    
-    const { data, error } = await supabase.from('users').insert({
-      username, name, cpf: cpf || '', phone: phone || '', password: hashedPassword,
-      mac_address: cleanMac || '', status: 'pending', created_at: new Date().toISOString()
-    }).select().single();
-    
+    const insertPayload = {
+      username,
+      password: hashedPassword,
+      mac_address: cleanMac,
+      status: 'pending',
+      created_at: now,
+      updated_at: now,
+      ...payload
+    };
+
+    const { data, error } = await supabase.from('users').insert(insertPayload).select().single();
     if (error) throw error;
     res.status(201).json({ user_id: data.id, username: data.username });
   } catch (err) {
-    res.status(500).json({ error: 'Erro no cadastro' });
+    res.status(500).json({ error: err.message || 'Erro no cadastro' });
   }
-});
+}
 
+app.post('/api/portal/register-device', handlePortalRegister);
+app.post('/api/portal/register', handlePortalRegister);
 app.post('/api/portal/voucher', async (req, res) => {
   // Encaminha para a rota oficial de validação de voucher
   req.url = '/api/vouchers/validate';
