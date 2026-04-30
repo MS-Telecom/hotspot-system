@@ -38,7 +38,10 @@ const RADIUS_VPN_SERVER_IP = process.env.RADIUS_VPN_SERVER_IP || process.env.RAD
 const RADIUS_GLOBAL_FALLBACK_SECRET = process.env.RADIUS_GLOBAL_FALLBACK_SECRET || RADIUS_GLOBAL_SECRET || '';
 const PRELOGIN_ALLOWED_HOSTS = [
   FRONTEND_BASE_URL,
-  API_BASE_URL
+  API_BASE_URL,
+  'api.mercadopago.com',
+  'mercadopago.com',
+  'www.mercadopago.com'
 ];
 const FORBIDDEN_WALLED_GARDEN_PATTERNS = [
   'gstatic',
