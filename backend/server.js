@@ -36,28 +36,6 @@ const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerC
 const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
 const RADIUS_VPN_SERVER_IP = process.env.RADIUS_VPN_SERVER_IP || process.env.RADIUS_VPN_SERVER_IP || '10.254.1.1';
 const RADIUS_GLOBAL_FALLBACK_SECRET = process.env.RADIUS_GLOBAL_FALLBACK_SECRET || RADIUS_GLOBAL_SECRET || '';
-const PRELOGIN_ALLOWED_HOSTS = [
-  FRONTEND_BASE_URL,
-  API_BASE_URL,
-  'api.mercadopago.com',
-  'mercadopago.com',
-  'www.mercadopago.com'
-];
-const FORBIDDEN_WALLED_GARDEN_PATTERNS = [
-  'gstatic',
-  'googleapis',
-  'connectivitycheck',
-  'generate_204',
-  'generate',
-  'clients3.google',
-  'google.cn',
-  'play.googleapis',
-  'google.com',
-  'cdnjs.cloudflare.com',
-  'unpkg.com',
-  '*.vercel.app',
-  'cdn.vercel.app'
-];
 
 // Legacy VPN (RouterOS v6) - tunnel IP per POP, FreeRADIUS clients matched by vpn_ip.
 const VPN_PUBLIC_ENDPOINT = process.env.VPN_PUBLIC_ENDPOINT || '';
@@ -142,38 +120,6 @@ async function findDuplicateUserField(field, value, excludeId = null) {
   const { data, error } = await query;
   if (error) throw error;
   return data || null;
-}
-
-function getHostnameFromUrl(value) {
-  const raw = String(value || '').trim();
-  if (!raw) return '';
-  try {
-    return new URL(raw.includes('://') ? raw : `https://${raw}`).hostname.toLowerCase();
-  } catch (_error) {
-    return raw.replace(/^https?:\/\//i, '').split(/[/?#:]/)[0].replace(/\/+$/, '').toLowerCase();
-  }
-}
-
-function isForbiddenWalledGardenHost(host) {
-  const normalized = String(host || '').trim().toLowerCase();
-  if (!normalized) return false;
-  return FORBIDDEN_WALLED_GARDEN_PATTERNS.some((pattern) => {
-    const p = String(pattern || '').toLowerCase();
-    if (p.startsWith('*.')) return normalized === p || normalized === p.slice(2);
-    return normalized.includes(p);
-  });
-}
-
-function getPreloginAllowedHosts() {
-  const hosts = PRELOGIN_ALLOWED_HOSTS
-    .map(getHostnameFromUrl)
-    .filter(Boolean);
-  const uniqueHosts = [...new Set(hosts)];
-  const blocked = uniqueHosts.filter(isForbiddenWalledGardenHost);
-  if (blocked.length) {
-    throw new Error(`Forbidden pre-login Walled Garden host(s): ${blocked.join(', ')}`);
-  }
-  return uniqueHosts;
 }
 
 function removeAccents(str) {
@@ -288,20 +234,6 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Token inválido ou expirado' });
   }
 }
-
-
-app.get('/api/system/walled-garden-hosts', authMiddleware, (req, res) => {
-  try {
-    res.json({
-      allowed_hosts: getPreloginAllowedHosts(),
-      forbidden_patterns: FORBIDDEN_WALLED_GARDEN_PATTERNS,
-      frontend_host: getHostnameFromUrl(FRONTEND_BASE_URL),
-      api_host: getHostnameFromUrl(API_BASE_URL)
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // ============================================================
 // 🔧 MIKROTIK CREDENTIALS HELPERS
@@ -2217,16 +2149,21 @@ function buildPopInstallScript(pop, config = {}) {
     `/radius incoming set accept=yes\n` +
     `:delay 1s\n`;
 
-  // Do not allow Google/gstatic/googleapis/connectivitycheck/generate_204 in pre-login Walled Garden.
-  // Android uses these endpoints for captive portal validation. If they return HTTP 204 before authentication,
-  // Android marks the hotspot as VALIDATED and CaptivePortalLogin will not open.
-  const wgHosts = getPreloginAllowedHosts();
-  const wgCleanupPattern = 'gstatic|googleapis|connectivitycheck|generate_204|generate|clients3|google.cn|play.googleapis|google.com|cdnjs.cloudflare.com|unpkg.com|vercel.app|cdn.vercel.app';
-  const wgCleanupLines = [
-    `/ip hotspot walled-garden remove [find where dst-host~"${wgCleanupPattern}"]`,
-    `/ip hotspot walled-garden ip remove [find where dst-host~"${wgCleanupPattern}"]`,
-    `/ip dns cache flush`
-  ].join('\n');
+  const wgHosts = [
+    'hotspot-system.vercel.app',
+    '*.vercel.app',
+    'vercel.app',
+    'cdn.vercel.app',
+    'mstelecom-api.duckdns.org',
+    'api.mercadopago.com',
+    'mercadopago.com',
+    'www.mercadopago.com',
+    'cdnjs.cloudflare.com',
+    'unpkg.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com'
+  ];
+
   const wgLines = wgHosts.map(h => `/ip hotspot walled-garden ip add action=accept disabled=no dst-host=${h} server="${popName}" comment="${tag}"`).join('\n');
 
   const wanBlock = (() => {
@@ -2381,7 +2318,6 @@ ${vpnBlock}${radiusBlock}
 ${hotspotLine}:delay 1s
 
 # Walled Garden (dominios liberados antes do login)
-${wgCleanupLines}
 ${wgLines}
 :delay 1s
 
