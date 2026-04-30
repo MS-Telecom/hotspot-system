@@ -2,11 +2,8 @@
   "version": 2,
   "buildCommand": "",
   "outputDirectory": "public",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "rewrites": [
-    { "source": "/portal", "destination": "/portal.html" },
-    { "source": "/index", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/$1" }
   ],
   "headers": [
     {
