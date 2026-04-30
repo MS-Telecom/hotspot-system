@@ -188,7 +188,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between mt-6">
-                        <span class="text-sm text-gray-400">Ativar Teste Grátis</span>
+                        <span class="text-sm text-gray-400">Ativar Teste Gratis</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="testeGratisEnabled" class="sr-only peer">
                             <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -647,9 +647,6 @@
                     } else if (cs % 3600 === 0) {
                         document.getElementById('teste_limite').value = cs / 3600;
                         document.getElementById('teste_limite_unit').value = 'hours';
-                    } else if (cs % 60 === 0) {
-                        document.getElementById('teste_limite').value = cs / 60;
-                        document.getElementById('teste_limite_unit').value = 'minutes';
                     } else {
                         document.getElementById('teste_limite').value = cs;
                         document.getElementById('teste_limite_unit').value = 'seconds';
