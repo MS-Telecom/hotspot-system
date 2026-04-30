@@ -3014,6 +3014,7 @@ app.get('/api/portal/registration-status', async (req, res) => {
     const missing = getMissingRegistrationFields(user, fields);
     res.json({
       exists: !!user,
+      first_connection: !user,
       complete: missing.length === 0,
       missing_fields: missing,
       user: user ? { name: user.name || '' } : null

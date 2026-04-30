@@ -17,6 +17,10 @@
     .toast-success { border-left-color: #10b981; }
     .toast-error { border-left-color: #ef4444; }
     .toast-info { border-left-color: #3b82f6; }
+    .registration-card { background: radial-gradient(circle at top left, rgba(59,130,246,.18), transparent 42%), rgba(15,25,35,.82); box-shadow: 0 24px 80px rgba(2,6,23,.55); }
+    .registration-input { background: rgba(2,6,23,.58); border: 1px solid rgba(148,163,184,.18); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+    .registration-input:focus { border-color: rgba(59,130,246,.85); box-shadow: 0 0 0 4px rgba(59,130,246,.14); background: rgba(2,6,23,.78); }
+    .registration-pill { background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.28); color: #93c5fd; }
   </style>
 </head>
 <body class="text-gray-200">
@@ -43,15 +47,23 @@
   </header>
 
   <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
-    <section id="registrationGate" class="hidden glass-card rounded-3xl p-6 md:p-8 mb-8 border border-blue-500/30">
+    <section id="registrationGate" class="hidden registration-card rounded-[2rem] p-6 md:p-8 mb-8 border border-blue-500/30">
       <div class="max-w-2xl mx-auto">
-        <h2 class="text-2xl md:text-3xl font-black text-white mb-2">Complete seu cadastro</h2>
-        <p class="text-gray-400 text-sm mb-6">Informe seus dados para continuar para os planos e teste grátis.</p>
+        <div class="mb-7">
+          <span id="registrationModeLabel" class="registration-pill inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-4">Cadastro</span>
+          <h2 id="registrationTitle" class="text-3xl md:text-4xl font-black text-white mb-3">Complete seu cadastro</h2>
+          <p id="registrationSubtitle" class="text-gray-400 text-sm leading-relaxed">Informe seus dados para continuar para os planos e teste grátis.</p>
+        </div>
         <form id="registrationForm" class="space-y-4">
           <div id="registrationFieldsContainer" class="space-y-4"></div>
-          <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 rounded-xl px-5 py-3 font-bold text-white transition">
-            Continuar
-          </button>
+          <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button id="registrationSubmitBtn" type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 rounded-2xl px-5 py-3.5 font-bold text-white transition shadow-lg shadow-blue-950/30">
+              Continuar
+            </button>
+            <button id="skipRegistrationBtn" type="button" class="hidden px-5 py-3.5 rounded-2xl border border-gray-700 text-gray-300 hover:border-blue-500/60 hover:text-white transition">
+              Pular por agora
+            </button>
+          </div>
         </form>
       </div>
     </section>
@@ -178,6 +190,11 @@
   const registrationGate = document.getElementById('registrationGate');
   const registrationForm = document.getElementById('registrationForm');
   const registrationFieldsContainer = document.getElementById('registrationFieldsContainer');
+  const registrationModeLabel = document.getElementById('registrationModeLabel');
+  const registrationTitle = document.getElementById('registrationTitle');
+  const registrationSubtitle = document.getElementById('registrationSubtitle');
+  const registrationSubmitBtn = document.getElementById('registrationSubmitBtn');
+  const skipRegistrationBtn = document.getElementById('skipRegistrationBtn');
   const portalHero = document.getElementById('portalHero');
   const devicePanel = document.getElementById('devicePanel');
   const plansTitle = document.getElementById('plansTitle');
@@ -196,6 +213,7 @@
   let lastFreeTest = localStorage.getItem('last_free_test') || 0;
   let redirectInProgress = false;
   let registrationGateActive = false;
+  let registrationGateMode = 'required';
   let registrationFields = [];
 
 function showStatusMessage(message, type = 'success') {
@@ -245,21 +263,49 @@ function fieldInputType(field) {
   return 'text';
 }
 
+function onlyDigits(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 11);
+}
+
+function formatPhoneBR(value) {
+  const digits = onlyDigits(value);
+  if (!digits) return '';
+  const ddd = digits.slice(0, 2);
+  const first = digits.slice(2, 3);
+  const middle = digits.slice(3, 7);
+  const last = digits.slice(7, 11);
+  let output = ddd ? `(${ddd}` : '';
+  if (ddd.length === 2) output += ')';
+  if (first) output += ` ${first}`;
+  if (middle) output += ` ${middle}`;
+  if (last) output += `-${last}`;
+  return output;
+}
+
+function capitalizeName(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trimStart()
+    .toLocaleLowerCase('pt-BR')
+    .replace(/(^|\s)([^\s])/g, (_, space, char) => `${space}${char.toLocaleUpperCase('pt-BR')}`);
+}
+
 function renderRegistrationFields(fields) {
   registrationFields = Array.isArray(fields) ? fields.filter(f => f.enabled !== false) : [];
   registrationFieldsContainer.innerHTML = registrationFields.map((field) => {
-    const required = field.required === true ? 'required' : '';
+    const isRequired = registrationGateMode === 'required' && field.required === true;
+    const required = isRequired ? 'required' : '';
     const mark = field.required === true ? ' *' : '';
     if (field.field === 'terms') {
-      return `<label class="flex items-start gap-3 text-sm text-gray-300">
-        <input name="terms" type="checkbox" ${required} class="mt-1">
+      return `<label class="flex items-start gap-3 text-sm text-gray-300 bg-gray-950/30 border border-gray-800 rounded-2xl p-4">
+        <input name="terms" type="checkbox" ${required} class="mt-1 accent-blue-500">
         <span>${escapeHtml(field.label || 'Aceite dos termos')}${mark}</span>
       </label>`;
     }
     if (field.field === 'gender') {
       return `<div>
         <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${escapeHtml(field.label || 'Gênero')}${mark}</label>
-        <select name="gender" ${required} class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500">
+        <select name="gender" ${required} class="registration-input w-full rounded-2xl px-4 py-3 text-sm outline-none">
           <option value="">Selecione</option>
           <option value="Feminino">Feminino</option>
           <option value="Masculino">Masculino</option>
@@ -267,13 +313,13 @@ function renderRegistrationFields(fields) {
         </select>
       </div>`;
     }
+    const autocomplete = field.field === 'name' ? 'name' : field.field === 'phone' ? 'tel' : field.field === 'email' ? 'email' : 'off';
     return `<div>
       <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${escapeHtml(field.label || field.field)}${mark}</label>
-      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500">
+      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} data-field="${escapeHtml(field.field)}" autocomplete="${autocomplete}" placeholder="${escapeHtml(field.label || '')}" class="registration-input w-full rounded-2xl px-4 py-3 text-sm outline-none">
     </div>`;
   }).join('');
 }
-
 async function loadRegistrationFields() {
   try {
     const res = await fetch(`${API_BASE}/api/portal/registration-fields`, { cache: 'no-store' });
@@ -288,8 +334,9 @@ async function loadRegistrationFields() {
   }
 }
 
-function setRegistrationGate(required) {
-  registrationGateActive = !!required;
+function setRegistrationGate(mode) {
+  registrationGateActive = !!mode;
+  registrationGateMode = mode || 'required';
   registrationGate.classList.toggle('hidden', !registrationGateActive);
   portalHero.classList.toggle('hidden', registrationGateActive);
   devicePanel.classList.toggle('hidden', registrationGateActive);
@@ -299,6 +346,18 @@ function setRegistrationGate(required) {
   testeGratisBtn.classList.add('hidden');
   liberar5minBtn.classList.add('hidden');
   jaPagueiBtn.classList.toggle('hidden', registrationGateActive);
+  skipRegistrationBtn.classList.toggle('hidden', registrationGateMode !== 'optional');
+
+  if (registrationGateActive) {
+    const requiredMode = registrationGateMode === 'required';
+    registrationModeLabel.textContent = requiredMode ? 'Cadastro obrigatorio' : 'Cadastro recomendado';
+    registrationTitle.textContent = requiredMode ? 'Complete seu cadastro' : 'Quer agilizar seu atendimento?';
+    registrationSubtitle.textContent = requiredMode
+      ? 'Preencha os dados solicitados para continuar para os planos e beneficios disponiveis.'
+      : 'Informe seus dados agora ou pule por enquanto. Isso ajuda nosso atendimento a identificar seu dispositivo.';
+    registrationSubmitBtn.textContent = requiredMode ? 'Salvar e continuar' : 'Continuar';
+    renderRegistrationFields(registrationFields);
+  }
 
   if (registrationGateActive) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -319,8 +378,15 @@ async function checkRegistrationStatus() {
     }
 
     const data = await res.json();
-    if (data && data.complete === false) {
-      setRegistrationGate(true);
+    const hasMissingRequired = data && (data.complete === false || (Array.isArray(data.missing_fields) && data.missing_fields.length > 0));
+    if (hasMissingRequired) {
+      setRegistrationGate('required');
+      return false;
+    }
+
+    const skippedOptional = sessionStorage.getItem(`skip_registration_${macAddress}`) === '1';
+    if (data && data.first_connection === true && !skippedOptional) {
+      setRegistrationGate('optional');
       return false;
     }
 
@@ -348,7 +414,10 @@ async function savePortalRegistration(event) {
 
   registrationFields.forEach((field) => {
     if (field.field === 'terms') return;
-    payload[field.field] = String(formData.get(field.field) || '').trim();
+    let value = String(formData.get(field.field) || '').trim();
+    if (field.field === 'name') value = capitalizeName(value).trim();
+    if (field.field === 'phone') value = formatPhoneBR(value);
+    payload[field.field] = value;
   });
   try {
     let res = await fetch(`${API_BASE}/api/portal/register-device`, {
@@ -377,6 +446,12 @@ async function savePortalRegistration(event) {
   } catch (error) {
     showStatusMessage(error.message || 'Erro ao salvar cadastro.', 'error');
   }
+}
+
+async function continueAfterRegistrationGate() {
+  setRegistrationGate(false);
+  await loadPlans();
+  checkFreeTrialEligibility();
 }
 
   function redirectToMikrotik(mac) {
@@ -757,7 +832,25 @@ async function savePortalRegistration(event) {
     } catch (_e) {}
   }
 
+  registrationFieldsContainer.addEventListener('input', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    if (input.name === 'phone') input.value = formatPhoneBR(input.value);
+    if (input.name === 'name') input.value = capitalizeName(input.value);
+  });
+
+  registrationFieldsContainer.addEventListener('blur', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    if (input.name === 'phone') input.value = formatPhoneBR(input.value);
+    if (input.name === 'name') input.value = capitalizeName(input.value).trim();
+  }, true);
+
   registrationForm.addEventListener('submit', savePortalRegistration);
+  skipRegistrationBtn.addEventListener('click', async () => {
+    sessionStorage.setItem(`skip_registration_${macAddress}`, '1');
+    await continueAfterRegistrationGate();
+  });
 
   async function initPortal() {
     lucide.createIcons();
