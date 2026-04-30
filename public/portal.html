@@ -17,10 +17,18 @@
     .toast-success { border-left-color: #10b981; }
     .toast-error { border-left-color: #ef4444; }
     .toast-info { border-left-color: #3b82f6; }
-    .registration-card { background: radial-gradient(circle at top left, rgba(59,130,246,.18), transparent 42%), rgba(15,25,35,.82); box-shadow: 0 24px 80px rgba(2,6,23,.55); }
-    .registration-input { background: rgba(2,6,23,.58); border: 1px solid rgba(148,163,184,.18); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
-    .registration-input:focus { border-color: rgba(59,130,246,.85); box-shadow: 0 0 0 4px rgba(59,130,246,.14); background: rgba(2,6,23,.78); }
-    .registration-pill { background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.28); color: #93c5fd; }
+    .registration-card { position: relative; overflow: hidden; isolation: isolate; background: radial-gradient(circle at 18% 0%, rgba(56,189,248,.22), transparent 34%), radial-gradient(circle at 100% 18%, rgba(37,99,235,.2), transparent 36%), linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.9)); box-shadow: 0 28px 90px rgba(2,6,23,.68), inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter: blur(24px); }
+    .registration-card::before { content: ""; position: absolute; inset: 1px; border-radius: 1.9rem; border: 1px solid rgba(255,255,255,.07); pointer-events: none; z-index: -1; }
+    .registration-card::after { content: ""; position: absolute; width: 220px; height: 220px; right: -110px; bottom: -120px; background: rgba(59,130,246,.2); filter: blur(70px); pointer-events: none; z-index: -1; }
+    .registration-input { background: rgba(2,6,23,.62); border: 1px solid rgba(148,163,184,.22); color: #f8fafc; box-shadow: inset 0 1px 0 rgba(255,255,255,.03); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease; }
+    .registration-input::placeholder { color: rgba(148,163,184,.55); }
+    .registration-input:focus { border-color: rgba(56,189,248,.9); box-shadow: 0 0 0 4px rgba(56,189,248,.13), 0 12px 35px rgba(2,6,23,.24); background: rgba(2,6,23,.86); transform: translateY(-1px); }
+    .registration-pill { background: linear-gradient(135deg, rgba(59,130,246,.2), rgba(34,211,238,.12)); border: 1px solid rgba(125,211,252,.32); color: #bfdbfe; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .registration-primary-btn { box-shadow: 0 18px 40px rgba(37,99,235,.28), inset 0 1px 0 rgba(255,255,255,.18); }
+    .registration-primary-btn:hover { transform: translateY(-1px); box-shadow: 0 22px 48px rgba(37,99,235,.34), inset 0 1px 0 rgba(255,255,255,.22); }
+    .registration-secondary-btn { background: rgba(15,23,42,.55); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .registration-secondary-btn:hover { background: rgba(30,41,59,.72); }
+    .registration-check-card { background: rgba(2,6,23,.36); border: 1px solid rgba(148,163,184,.18); box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
   </style>
 </head>
 <body class="text-gray-200">
@@ -47,20 +55,20 @@
   </header>
 
   <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
-    <section id="registrationGate" class="hidden registration-card rounded-[2rem] p-6 md:p-8 mb-8 border border-blue-500/30">
+    <section id="registrationGate" class="hidden registration-card rounded-[2rem] p-6 md:p-9 mb-8 border border-blue-400/20">
       <div class="max-w-2xl mx-auto">
-        <div class="mb-7">
-          <span id="registrationModeLabel" class="registration-pill inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider mb-4">Cadastro</span>
-          <h2 id="registrationTitle" class="text-3xl md:text-4xl font-black text-white mb-3">Complete seu cadastro</h2>
-          <p id="registrationSubtitle" class="text-gray-400 text-sm leading-relaxed">Informe seus dados para continuar para os planos e teste grátis.</p>
+        <div class="mb-8">
+          <span id="registrationModeLabel" class="registration-pill inline-flex items-center rounded-full px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] mb-5">Cadastro</span>
+          <h2 id="registrationTitle" class="text-3xl md:text-[2.65rem] md:leading-tight font-black text-white mb-3 tracking-tight">Complete seu cadastro</h2>
+          <p id="registrationSubtitle" class="text-slate-400 text-sm md:text-[15px] leading-relaxed max-w-xl">Informe seus dados para continuar para os planos e teste grátis.</p>
         </div>
-        <form id="registrationForm" class="space-y-4">
+        <form id="registrationForm" class="space-y-5">
           <div id="registrationFieldsContainer" class="space-y-4"></div>
-          <div class="flex flex-col sm:flex-row gap-3 pt-2">
-            <button id="registrationSubmitBtn" type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 rounded-2xl px-5 py-3.5 font-bold text-white transition shadow-lg shadow-blue-950/30">
+          <div class="flex flex-col sm:flex-row gap-3 pt-3">
+            <button id="registrationSubmitBtn" type="submit" class="registration-primary-btn flex-1 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 hover:from-blue-500 hover:via-cyan-500 hover:to-blue-400 rounded-2xl px-5 py-4 font-extrabold text-white transition">
               Continuar
             </button>
-            <button id="skipRegistrationBtn" type="button" class="hidden px-5 py-3.5 rounded-2xl border border-gray-700 text-gray-300 hover:border-blue-500/60 hover:text-white transition">
+            <button id="skipRegistrationBtn" type="button" class="registration-secondary-btn hidden px-5 py-4 rounded-2xl border border-slate-700/80 text-slate-300 hover:border-cyan-400/50 hover:text-white transition">
               Pular por agora
             </button>
           </div>
@@ -297,15 +305,15 @@ function renderRegistrationFields(fields) {
     const required = isRequired ? 'required' : '';
     const mark = field.required === true ? ' *' : '';
     if (field.field === 'terms') {
-      return `<label class="flex items-start gap-3 text-sm text-gray-300 bg-gray-950/30 border border-gray-800 rounded-2xl p-4">
+      return `<label class="registration-check-card flex items-start gap-3 text-sm text-slate-300 rounded-2xl p-4">
         <input name="terms" type="checkbox" ${required} class="mt-1 accent-blue-500">
         <span>${escapeHtml(field.label || 'Aceite dos termos')}${mark}</span>
       </label>`;
     }
     if (field.field === 'gender') {
       return `<div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${escapeHtml(field.label || 'Gênero')}${mark}</label>
-        <select name="gender" ${required} class="registration-input w-full rounded-2xl px-4 py-3 text-sm outline-none">
+        <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-[0.14em] mb-2.5">${escapeHtml(field.label || 'Gênero')}${mark}</label>
+        <select name="gender" ${required} class="registration-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none">
           <option value="">Selecione</option>
           <option value="Feminino">Feminino</option>
           <option value="Masculino">Masculino</option>
@@ -315,8 +323,8 @@ function renderRegistrationFields(fields) {
     }
     const autocomplete = field.field === 'name' ? 'name' : field.field === 'phone' ? 'tel' : field.field === 'email' ? 'email' : 'off';
     return `<div>
-      <label class="block text-xs font-bold text-gray-500 uppercase mb-2">${escapeHtml(field.label || field.field)}${mark}</label>
-      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} data-field="${escapeHtml(field.field)}" autocomplete="${autocomplete}" placeholder="${escapeHtml(field.label || '')}" class="registration-input w-full rounded-2xl px-4 py-3 text-sm outline-none">
+      <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-[0.14em] mb-2.5">${escapeHtml(field.label || field.field)}${mark}</label>
+      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} data-field="${escapeHtml(field.field)}" autocomplete="${autocomplete}" placeholder="${escapeHtml(field.label || '')}" class="registration-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none">
     </div>`;
   }).join('');
 }
