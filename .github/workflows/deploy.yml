@@ -24,24 +24,46 @@ jobs:
             set -e
             APP_DIR=/home/ubuntu/hotspot-system
             TMP_DIR=/home/ubuntu/hotspot-system-temp
+            ENV_BACKUP=/tmp/hotspot-backend.env
 
-            cp "$APP_DIR/backend/.env" /tmp/hotspot-backend.env || true
+            echo "🔐 Preservando backend/.env"
+            if [ -f "$APP_DIR/backend/.env" ]; then
+              cp "$APP_DIR/backend/.env" "$ENV_BACKUP"
+            fi
 
+            if [ ! -s "$ENV_BACKUP" ]; then
+              echo "❌ ERRO: backend/.env não encontrado ou vazio. Abortando deploy para não quebrar a VPS."
+              exit 1
+            fi
+
+            echo "⬇️ Clonando repositório"
             rm -rf "$TMP_DIR"
             git clone https://github.com/${{ github.repository }} "$TMP_DIR"
 
+            echo "🧹 Limpando diretório da aplicação"
+            rm -rf "$APP_DIR"
             mkdir -p "$APP_DIR"
-            find "$APP_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-            cp -r "$TMP_DIR"/* "$APP_DIR"/
+
+            echo "📁 Copiando arquivos novos"
+            cp -a "$TMP_DIR/." "$APP_DIR/"
             rm -rf "$TMP_DIR"
 
+            echo "🔐 Restaurando backend/.env"
             mkdir -p "$APP_DIR/backend"
-            cp /tmp/hotspot-backend.env "$APP_DIR/backend/.env" || true
-            rm -f /tmp/hotspot-backend.env
+            cp "$ENV_BACKUP" "$APP_DIR/backend/.env"
+            rm -f "$ENV_BACKUP"
+            chmod 600 "$APP_DIR/backend/.env"
 
+            echo "📦 Instalando dependências"
             cd "$APP_DIR"
             npm install --omit=dev
 
+            echo "✅ Validando sintaxe do backend"
+            node --check backend/server.js
+
+            echo "🚀 Reiniciando PM2"
             pm2 delete hotspot || true
             pm2 start /home/ubuntu/hotspot-system/backend/server.js --name hotspot --cwd /home/ubuntu/hotspot-system/backend
             pm2 save
+
+            echo "✅ Deploy concluído em $(date)"
