@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
@@ -23,7 +23,7 @@
 
 <script>
     // Verificar autenticação
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
     }
@@ -807,8 +807,8 @@
     }
 
     function sair() {
-        localStorage.removeItem('adminToken'); localStorage.removeItem('token');
-        localStorage.removeItem('ms_token'); localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
         window.location.href = 'login.html';
     }
 

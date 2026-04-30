@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -29,7 +29,7 @@
 
 <script>
     // 🔒 PROTEÇÃO DE ACESSO (padrão)
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
     }
@@ -235,7 +235,7 @@ let plansChart = null;
 let currentPage = 1;
 const itemsPerPage = 10;
 
-function getToken() { return localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken'); }
+function getToken() { return localStorage.getItem('token') || localStorage.getItem('ms_token'); }
 function authHeaders(includeJson = true) {
     const headers = { 'Authorization': `Bearer ${getToken()}` };
     if (includeJson) headers['Content-Type'] = 'application/json';
@@ -463,7 +463,7 @@ async function salvarPerfil() { if (typeof window.saveProfile === 'function') re
 
 async function sair() {
     try { await fetch(`${API_URL}/api/auth/logout`, { method:'POST', headers:authHeaders(true) }); } catch(e) {}
-    localStorage.removeItem('adminToken'); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('authToken'); localStorage.removeItem('user'); localStorage.removeItem('session_start');
+    localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('user'); localStorage.removeItem('session_start');
     window.location.href = 'login.html';
 }
 

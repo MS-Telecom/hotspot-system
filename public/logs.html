@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
   <base href="/">
@@ -29,7 +29,7 @@
 
 <script>
     // Proteção de acesso - verificar token
-const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     if (!token) {
         window.location.href = 'login.html';
     }
@@ -310,7 +310,7 @@ function closeProfileModal() {
 }
 
 async function saveProfile() {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     const username = document.getElementById('editUsername')?.value;
     const email = document.getElementById('editEmail')?.value;
     const currentPassword = document.getElementById('currentPassword')?.value;
@@ -365,7 +365,7 @@ async function saveProfile() {
 // FUNÇÕES DE LOGOUT
 // ============================================
 async function logout() {
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
     const username = localStorage.getItem('ms_user');
     
     try {
@@ -381,8 +381,8 @@ async function logout() {
         }
     } catch(e) {}
     
-    localStorage.removeItem('adminToken'); localStorage.removeItem('token');
-    localStorage.removeItem('ms_token'); localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
     localStorage.removeItem('ms_user');
     localStorage.removeItem('user');
     window.location.href = 'login.html';

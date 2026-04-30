@@ -1,12 +1,8 @@
-(function () {
+﻿(function () {
   window.API_URL = window.API_URL || 'https://mstelecom-api.duckdns.org';
 
   function getToken() {
-    return localStorage.getItem('adminToken') ||
-      localStorage.getItem('token') ||
-      localStorage.getItem('ms_token') ||
-      localStorage.getItem('authToken') ||
-      '';
+    return localStorage.getItem('token') || localStorage.getItem('ms_token') || '';
   }
 
   function authHeaders(contentType) {
@@ -16,53 +12,6 @@
     }
     return headers;
   }
-
-  function isEmptyBearer(value) {
-    return !value || /^Bearer\s*(null|undefined)?$/i.test(String(value).trim());
-  }
-
-  function authenticatedFetch(url, options) {
-    options = options || {};
-    var headers = new Headers(options.headers || {});
-    var token = getToken();
-    if (token && isEmptyBearer(headers.get('Authorization'))) {
-      headers.set('Authorization', 'Bearer ' + token);
-    }
-    return window.__msNativeFetch(url, Object.assign({}, options, { headers: headers }))
-      .then(function (response) {
-        if (response.status === 401) {
-          console.error('API 401 Unauthorized', { url: url, status: response.status });
-          response.clone().text().then(function (body) {
-            console.error('API 401 response', { url: url, status: response.status, body: body });
-          }).catch(function () {});
-          if (!window.__msAuthRedirecting) {
-            window.__msAuthRedirecting = true;
-            alert('Sessão expirada. Faça login novamente.');
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('token');
-            localStorage.removeItem('ms_token');
-            localStorage.removeItem('authToken');
-            setTimeout(function () { window.location.href = 'login.html'; }, 500);
-          }
-        }
-        return response;
-      });
-  }
-
-  if (!window.__msNativeFetch) {
-    window.__msNativeFetch = window.fetch.bind(window);
-    window.fetch = function (url, options) {
-      var target = typeof url === 'string' ? url : (url && url.url) || '';
-      if (target.indexOf(window.API_URL + '/api/') === 0) {
-        return authenticatedFetch(url, options);
-      }
-      return window.__msNativeFetch(url, options);
-    };
-  }
-
-  window.getAdminToken = getToken;
-  window.authenticatedFetch = authenticatedFetch;
-  window.authHeaders = window.authHeaders || authHeaders;
 
   function ensureScrollbarStyle() {
     if (document.getElementById('globalCustomScrollbarStyle')) return;
@@ -337,10 +286,8 @@
         return null;
       })
       .finally(function () {
-        localStorage.removeItem('adminToken');
         localStorage.removeItem('token');
         localStorage.removeItem('ms_token');
-        localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         localStorage.removeItem('session_start');
         window.location.href = 'login.html';
