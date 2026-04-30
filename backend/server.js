@@ -50,18 +50,10 @@ const FORBIDDEN_WALLED_GARDEN_PATTERNS = [
   'google.cn',
   'play.googleapis',
   'google.com',
-  'www.gstatic.com',
-  'cdn.tailwindcss.com',
   'cdnjs.cloudflare.com',
   'unpkg.com',
   '*.vercel.app',
-  'cdn.vercel.app',
-  'neverssl.com',
-  'mercadopago',
-  'mercadopago.com.br',
-  'captive.apple.com',
-  'msftconnecttest.com',
-  'msftncsi.com'
+  'cdn.vercel.app'
 ];
 
 // Legacy VPN (RouterOS v6) - tunnel IP per POP, FreeRADIUS clients matched by vpn_ip.
@@ -2226,7 +2218,7 @@ function buildPopInstallScript(pop, config = {}) {
   // Android uses these endpoints for captive portal validation. If they return HTTP 204 before authentication,
   // Android marks the hotspot as VALIDATED and CaptivePortalLogin will not open.
   const wgHosts = getPreloginAllowedHosts();
-  const wgCleanupPattern = 'gstatic|googleapis|connectivitycheck|generate_204|generate|clients3|google.cn|play.googleapis|google.com|www.gstatic.com|cdn.tailwindcss.com|cdnjs.cloudflare.com|unpkg.com|vercel.app|cdn.vercel.app|neverssl.com|mercadopago|captive.apple.com|msftconnecttest.com|msftncsi.com';
+  const wgCleanupPattern = 'gstatic|googleapis|connectivitycheck|generate_204|generate|clients3|google.cn|play.googleapis|google.com|cdnjs.cloudflare.com|unpkg.com|vercel.app|cdn.vercel.app';
   const wgCleanupLines = [
     `/ip hotspot walled-garden remove [find where dst-host~"${wgCleanupPattern}"]`,
     `/ip hotspot walled-garden ip remove [find where dst-host~"${wgCleanupPattern}"]`,
