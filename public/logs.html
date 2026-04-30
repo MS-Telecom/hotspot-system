@@ -115,7 +115,7 @@ const token = localStorage.getItem('adminToken') || localStorage.getItem('token'
 
             <!-- Filtros Rápidos -->
             <div class="flex gap-2 md:gap-3 flex-wrap">
-                <button class="filter-log-btn active px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-blue-600 text-white" data-filter="all" data-tab-target="todos">Todos</button>
+                <button class="filter-log-btn active px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-blue-600 text-white" data-filter="all">Todos</button>
                 <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="auth">Autenticação</button>
                 <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="payment">Pagamentos</button>
                 <button class="filter-log-btn px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition" data-filter="network">Rede / POPs</button>
@@ -135,103 +135,291 @@ const token = localStorage.getItem('adminToken') || localStorage.getItem('token'
                     </select>
                 </div>
                 <div class="flex-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Data Início</label>
-                    <input type="date" id="filterStart" class="mt-1 w-full bg-gray-900/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Data início</label>
+                    <input id="filterStart" type="date" class="mt-1 w-full bg-gray-900/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 transition" />
                 </div>
                 <div class="flex-1">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Data Fim</label>
-                    <input type="date" id="filterEnd" class="mt-1 w-full bg-gray-900/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Data fim</label>
+                    <input id="filterEnd" type="date" class="mt-1 w-full bg-gray-900/50 border border-gray-700 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 transition" />
                 </div>
                 <div class="flex gap-2">
-                    <button id="applyAdvancedFilters" class="bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-xl text-sm font-medium transition">Filtrar</button>
-                    <button id="clearAdvancedFilters" class="bg-gray-700 hover:bg-gray-600 px-4 py-2.5 rounded-xl text-sm font-medium transition">Limpar</button>
+                    <button id="applyAdvancedFilters" class="px-4 py-2.5 bg-blue-600 rounded-xl text-sm font-bold hover:bg-blue-700 transition">Filtrar</button>
+                    <button id="clearAdvancedFilters" class="px-4 py-2.5 bg-gray-800 rounded-xl text-sm font-bold hover:bg-gray-700 transition">Limpar</button>
                 </div>
             </div>
 
-            <!-- Tabs de Navegação -->
-            <div class="border-b border-gray-800">
-                <nav class="-mb-px flex gap-6" aria-label="Tabs">
-                    <button class="tab-btn active whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-400 hover:text-white" data-tab="todos">Todos</button>
-                    <button class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-400 hover:text-white" data-tab="acessos">Acessos</button>
-                    <button class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-400 hover:text-white" data-tab="eventos">Eventos</button>
-                    <button class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-400 hover:text-white" data-tab="radius">RADIUS</button>
-                    <button class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-400 hover:text-white" data-tab="api">API</button>
-                </nav>
+            <!-- Abas -->
+            <div class="flex border-b border-gray-800 gap-4 md:gap-6 overflow-x-auto">
+                <button class="tab-btn active px-1 py-3 text-sm font-medium transition-all whitespace-nowrap" data-tab="acessos">Acessos ao Painel</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="eventos">Eventos do Sistema</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="api">API / Webhooks</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="radius">RADIUS / Autenticação</button>
             </div>
 
-            <!-- Conteúdo das Tabs -->
-            <div id="todos" class="tab-content"></div>
-            <div id="acessos" class="tab-content"></div>
-            <div id="eventos" class="tab-content"></div>
-            <div id="radius" class="tab-content"></div>
-            <div id="api" class="tab-content"></div>
-
-            <!-- Paginação -->
-            <div class="flex justify-between items-center pt-4 border-t border-gray-800">
-                <span class="text-xs text-gray-500">Mostrando <span id="mostrandoCount">0</span></span>
-                <div class="flex gap-2">
-                    <button id="prevPageBtn" class="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                    <button id="nextPageBtn" class="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            <!-- Aba: Acessos ao Painel -->
+            <div id="acessos" class="tab-content space-y-4">
+                <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/30 flex-wrap gap-2">
+                        <h3 class="font-bold text-white">Histórico de Acessos</h3>
+                        <div class="flex gap-4 text-[10px] text-gray-500"><span id="totalAcessos">Total: 0 registros</span></div>
+                    </div>
+                    <div class="hidden md:grid grid-cols-4 gap-4 px-4 md:px-6 py-3 border-b border-gray-800 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-900/20">
+                        <div>Data/Hora</div>
+                        <div>Nível</div>
+                        <div class="col-span-1">Mensagem</div>
+                        <div class="text-right">IP</div>
+                    </div>
+                    <div id="acessosList" class="divide-y divide-gray-800 min-h-[400px]">
+                        <div class="p-6 text-center text-gray-500">Carregando logs...</div>
+                    </div>
+                    <div class="px-4 md:px-6 py-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+                        <p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoCount">0</span> registros</p>
+                        <div class="flex gap-2">
+                            <button id="prevPageBtn" class="px-3 py-1 bg-gray-800 rounded-lg text-xs disabled:opacity-50" disabled>Anterior</button>
+                            <button id="nextPageBtn" class="px-3 py-1 bg-gray-800 rounded-lg text-xs disabled:opacity-50" disabled>Próximo</button>
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Aba: Eventos do Sistema -->
+            <div id="eventos" class="tab-content hidden space-y-4">
+                <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">Eventos de Rede e Infraestrutura</h3></div>
+                    <div id="eventosList" class="divide-y divide-gray-800 min-h-[400px]">
+                        <div class="p-6 text-center text-gray-500">Carregando logs...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba: API / Webhooks -->
+            <div id="api" class="tab-content hidden space-y-4">
+                <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">Requisições de API e Webhooks</h3></div>
+                    <div id="apiList" class="divide-y divide-gray-800 min-h-[400px]">
+                        <div class="p-6 text-center text-gray-500">Carregando logs...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba: RADIUS / Autenticação -->
+            <div id="radius" class="tab-content hidden space-y-4">
+                <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                    <div class="px-4 md:px-6 py-4 border-b border-gray-800 bg-gray-900/30"><h3 class="font-bold text-white">Autenticações RADIUS</h3></div>
+                    <div id="radiusList" class="divide-y divide-gray-800 min-h-[400px]">
+                        <div class="p-6 text-center text-gray-500">Carregando logs...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estatísticas de Logs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Total Eventos</p><p id="totalEventos" class="text-xl md:text-2xl font-bold text-white">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Erros (24h)</p><p id="totalErros" class="text-xl md:text-2xl font-bold text-red-500">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Acessos Hoje</p><p id="totalAcessosHoje" class="text-xl md:text-2xl font-bold text-emerald-500">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><p class="text-[10px] text-gray-500 uppercase">Autenticações</p><p id="totalAutenticacoes" class="text-xl md:text-2xl font-bold text-blue-500">0</p></div>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Modal Limpar Logs -->
-<div id="modalLimparLogs" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
-    <div class="bg-[#1a1c23] rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-700">
-        <h2 class="text-xl font-bold mb-3">Confirmar Limpeza</h2>
-        <p class="text-gray-400 mb-6">Tem certeza que deseja limpar todos os logs do sistema? Esta ação não pode ser desfeita.</p>
-        <div class="flex justify-end gap-3">
-            <button onclick="closeClearLogsModal()" class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm">Cancelar</button>
-            <button onclick="confirmClearLogs()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">Limpar Logs</button>
+<!-- MODAL: CONFIRMAR LIMPAR LOGS -->
+<div id="modalLimparLogs" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] hidden p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm flex flex-col border border-gray-700">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500"></i>Limpar Logs</h2>
+            <button onclick="closeClearLogsModal()" class="p-2 hover:bg-gray-800 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button>
+        </div>
+        <div class="p-4 space-y-3"><p class="text-gray-300 text-sm">Tem certeza que deseja limpar todos os logs do sistema? Esta ação não pode ser desfeita.</p></div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2">
+            <button onclick="closeClearLogsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="confirmClearLogs()" class="px-4 py-2 bg-red-600 rounded-lg text-sm font-bold">Limpar Logs</button>
         </div>
     </div>
 </div>
 
 <script>
-// ============================================
-// ESTADO E VARIÁVEIS GLOBAIS
-// ============================================
+const API_URL = 'https://mstelecom-api.duckdns.org';
 let systemLogsRaw = [];
 let auditLogsRaw = [];
 let logsData = [];
 let currentPage = 1;
-const itemsPerPage = 15;
-let currentTab = 'todos';
+let currentTab = 'acessos';
 let currentFilter = 'all';
 let currentSearchTerm = '';
 let currentLevel = 'all';
 let currentStartDate = '';
 let currentEndDate = '';
+const itemsPerPage = 10;
 
 // ============================================
-// FUNÇÕES DE CARREGAMENTO DE DADOS
+// FUNÇÕES DE MENU MOBILE
 // ============================================
-async function loadLogs() {
+function initMenuMobile() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => { sidebar.classList.toggle('hidden'); menuOverlay.classList.toggle('hidden'); });
+        menuOverlay.addEventListener('click', () => { sidebar.classList.add('hidden'); menuOverlay.classList.add('hidden'); });
+    }
+}
+
+async function updateSessionIp() {
+    const ipEl = document.getElementById('sessionIp');
+    if (!ipEl) return;
     try {
-        const [systemRes, auditRes] = await Promise.all([
-            fetch('/api/system-logs', { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch('/api/audit-logs', { headers: { 'Authorization': `Bearer ${token}` } })
-        ]);
-        if (systemRes.ok) systemLogsRaw = await systemRes.json();
-        if (auditRes.ok) auditLogsRaw = await auditRes.json();
-        
-        logsData = getTabLogs(currentTab);
-        updateStats();
-        renderLogs();
-    } catch (error) {
-        console.error("Falha ao carregar logs:", error);
+        const res = await fetch(`${API_URL}/api/test-ip`);
+        const data = await res.json();
+        ipEl.textContent = data?.ip || '-';
+    } catch (e) {
+        ipEl.textContent = '-';
     }
 }
 
 // ============================================
-// FUNÇÕES DE NORMALIZAÇÃO E PROCESSAMENTO
+// FUNÇÕES DE PERFIL
 // ============================================
+function loadProfile() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            if (document.getElementById('editUsername')) document.getElementById('editUsername').value = user.username || '';
+            if (document.getElementById('editEmail')) document.getElementById('editEmail').value = user.email || '';
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = user.username || 'Administrador';
+        } catch(e) {}
+    }
+}
+
+function openProfileModal() {
+    loadProfile();
+    const modal = document.getElementById('profileModal');
+    if (modal) modal.classList.remove('hidden');
+    if (document.getElementById('currentPassword')) document.getElementById('currentPassword').value = '';
+    if (document.getElementById('newPassword')) document.getElementById('newPassword').value = '';
+    if (document.getElementById('confirmPassword')) document.getElementById('confirmPassword').value = '';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function saveProfile() {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+    const username = document.getElementById('editUsername')?.value;
+    const email = document.getElementById('editEmail')?.value;
+    const currentPassword = document.getElementById('currentPassword')?.value;
+    const newPassword = document.getElementById('newPassword')?.value;
+    const confirmPassword = document.getElementById('confirmPassword')?.value;
+    
+    if (newPassword && newPassword !== confirmPassword) {
+        alert('As novas senhas não coincidem');
+        return;
+    }
+    
+    if (newPassword && !currentPassword) {
+        alert('Digite a senha atual para alterar');
+        return;
+    }
+    
+    if (!token) {
+        alert('Você precisa estar logado para alterar o perfil');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_URL}/api/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ username, email, current_password: currentPassword || null, new_password: newPassword || null })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            alert('Perfil atualizado com sucesso!');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.username = username;
+            user.email = email;
+            localStorage.setItem('user', JSON.stringify(user));
+            if (document.getElementById('userName')) document.getElementById('userName').innerText = username;
+            closeProfileModal();
+        } else {
+            alert(data.error || 'Erro ao atualizar perfil');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao atualizar perfil.');
+    }
+}
+
+// ============================================
+// FUNÇÕES DE LOGOUT
+// ============================================
+async function logout() {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
+    const username = localStorage.getItem('ms_user');
+    
+    try {
+        if (token) {
+            await fetch(`${API_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ username })
+            });
+        }
+    } catch(e) {}
+    
+    localStorage.removeItem('adminToken'); localStorage.removeItem('token');
+    localStorage.removeItem('ms_token'); localStorage.removeItem('authToken');
+    localStorage.removeItem('ms_user');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+// ============================================
+// FUNÇÕES DE LOGS
+// ============================================
+async function loadLogs() {
+    try {
+        // Busca logs do sistema e logs de auditoria para alimentar as abas
+        const [sysRes, auditRes] = await Promise.all([
+            fetch(`${API_URL}/api/logs`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_URL}/api/audit-logs`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        const sysJson = sysRes.ok ? await sysRes.json() : [];
+        const auditJson = auditRes.ok ? await auditRes.json() : [];
+
+        systemLogsRaw = Array.isArray(sysJson) ? sysJson : (sysJson?.data || []);
+        auditLogsRaw = Array.isArray(auditJson) ? auditJson : (auditJson?.data || []);
+
+        logsData = getTabLogs(currentTab);
+        
+        updateStats();
+        renderLogs();
+    } catch (error) {
+        console.error('Erro ao carregar logs:', error);
+        systemLogsRaw = [];
+        auditLogsRaw = [];
+        logsData = [];
+        updateStats();
+        const container = document.getElementById(`${currentTab}List`);
+        if (container) container.innerHTML = '<div class="p-6 text-center text-red-400">Erro ao carregar logs</div>';
+    }
+}
+
 function normalizeLevel(raw) {
     const v = String(raw || '').toLowerCase();
-    if (!v) return 'info';
     if (v.includes('error') || v.includes('erro')) return 'error';
     if (v.includes('warn') || v.includes('aviso') || v.includes('warning')) return 'warn';
     if (v.includes('debug')) return 'debug';
@@ -247,15 +435,8 @@ function normalizeType(raw) {
     if (v.includes('payment') || v.includes('pix') || v.includes('mercado')) return 'payment';
     if (v.includes('pop') || v.includes('hotspot') || v.includes('network') || v.includes('rede')) return 'network';
     if (v.includes('api') || v.includes('webhook')) return 'api';
-    if (v.includes('free_trial') || v.includes('teste_gratis')) return 'free_trial';
     if (v.includes('system') || v.includes('sistema')) return 'system';
     return v;
-}
-
-function statusForLevel(level) {
-    if (level === 'error') return 'erro';
-    if (level === 'warn') return 'aviso';
-    return 'sucesso';
 }
 
 function iconForType(type, level) {
@@ -266,8 +447,13 @@ function iconForType(type, level) {
     if (type === 'network') return 'router';
     if (type === 'api') return 'webhook';
     if (type === 'radius') return 'shield-check';
-    if (type === 'free_trial') return 'gift';
     return 'file-text';
+}
+
+function statusForLevel(level) {
+    if (level === 'error') return 'erro';
+    if (level === 'warn') return 'aviso';
+    return 'sucesso';
 }
 
 function normalizeSystemLog(l) {
@@ -276,11 +462,12 @@ function normalizeSystemLog(l) {
     const level = normalizeLevel(l.level || l.nivel || l.status);
     const type = normalizeType(l.type || l.source || l.module || l.category || l.tipo);
     const ip = l.ip || l.client_ip || l.address || l.remote_ip || '-';
+    const user = l.username || l.user || l.usuario || l.actor || 'Sistema';
     return {
         data,
-        usuario: l.user || l.username || 'Sistema',
-        mensagem: message,
-        ip,
+        mensagem: String(message || ''),
+        usuario: String(user || 'Sistema'),
+        ip: String(ip || '-'),
         level,
         tipo: type,
         status: statusForLevel(level),
@@ -289,14 +476,19 @@ function normalizeSystemLog(l) {
 }
 
 function normalizeAuditLog(l) {
-    const data = l.created_at || l.timestamp;
-    const level = l.action === 'error' ? 'error' : 'info';
-    const type = normalizeType(l.action);
+    const data = l.created_at || l.timestamp || l.date || l.data || l.time || l.createdAt || null;
+    const action = l.action || l.type || l.event || '';
+    const target = l.target || l.entity || l.object || l.module || l.category || '';
+    const message = l.details || l.message || l.description || `${action}`.trim();
+    const ip = l.ip || l.client_ip || l.address || l.remote_ip || '-';
+    const user = l.username || l.user || l.usuario || 'Sistema';
+    const type = normalizeType(action || target || 'auth');
+    const level = normalizeLevel(l.level || l.nivel || 'info');
     return {
         data,
-        usuario: l.username || 'Admin',
-        mensagem: `${l.action}: ${l.object} - ${l.details}`,
-        ip: l.ip || '-',
+        mensagem: String(message || ''),
+        usuario: String(user || 'Sistema'),
+        ip: String(ip || '-'),
         level,
         tipo: type,
         status: statusForLevel(level),
@@ -305,23 +497,19 @@ function normalizeAuditLog(l) {
 }
 
 function getTabLogs(tab) {
-    let allLogs = [...(systemLogsRaw || []).map(normalizeSystemLog), ...(auditLogsRaw || []).map(normalizeAuditLog)];
-    if (tab === 'todos') {
-        return allLogs;
-    }
     if (tab === 'acessos') {
-        return allLogs.filter(l => l.tipo === 'auth');
+        const normalized = (auditLogsRaw || []).map(normalizeAuditLog);
+        // Mantém acessos (login/logout) como prioridade nesta aba
+        return normalized.filter(l => l.tipo === 'auth');
     }
     if (tab === 'api') {
-        return allLogs.filter(l => l.tipo === 'api');
+        return (systemLogsRaw || []).map(normalizeSystemLog).filter(l => l.tipo === 'api');
     }
     if (tab === 'radius') {
-        return allLogs.filter(l => l.tipo === 'radius' || l.tipo === 'auth');
+        return (systemLogsRaw || []).map(normalizeSystemLog).filter(l => l.tipo === 'radius' || l.tipo === 'auth');
     }
-    if (tab === 'eventos') {
-        return allLogs.filter(l => l.tipo === 'network' || l.tipo === 'system' || l.tipo === 'free_trial');
-    }
-    return allLogs; // Default to all logs if no specific tab is matched
+    // eventos
+    return (systemLogsRaw || []).map(normalizeSystemLog).filter(l => l.tipo === 'network' || l.tipo === 'system');
 }
 
 function updateStats() {
@@ -341,6 +529,13 @@ function updateStats() {
     if (document.getElementById('totalAcessos')) document.getElementById('totalAcessos').innerText = `Total: ${total} registros`;
 }
 
+function dateKey(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toISOString().slice(0, 10);
+}
+
 function applyFilters() {
     let filtrados = logsData;
 
@@ -351,12 +546,10 @@ function applyFilters() {
 
     // Filtro por data
     if (currentStartDate) {
-        const start = new Date(currentStartDate + 'T00:00:00');
-        filtrados = filtrados.filter(l => l.data && new Date(l.data) >= start);
+        filtrados = filtrados.filter(l => dateKey(l.data) >= currentStartDate);
     }
     if (currentEndDate) {
-        const end = new Date(currentEndDate + 'T23:59:59');
-        filtrados = filtrados.filter(l => l.data && new Date(l.data) <= end);
+        filtrados = filtrados.filter(l => dateKey(l.data) <= currentEndDate);
     }
     
     // Filtro por tipo
@@ -414,8 +607,7 @@ function renderLogs() {
                 <div class="text-[10px] text-gray-400 mono">${log.data ? new Date(log.data).toLocaleString('pt-BR') : '-'}</div>
                 <div class="text-[10px] ${log.level === 'error' ? 'text-red-400' : log.level === 'warn' ? 'text-yellow-400' : 'text-emerald-400'} font-bold uppercase">${escapeHtml(log.level || '')}</div>
                 <div class="text-sm text-white md:col-span-1">${escapeHtml(log.mensagem || '')}</div>
-                <div class="text-[10px] text-gray-400 mono md:text-right">${escapeHtml(log.ip || '-')}
-                </div>
+                <div class="text-[10px] text-gray-400 mono md:text-right">${escapeHtml(log.ip || '-')}</div>
             </div>
         `).join('');
     } else {
@@ -474,11 +666,8 @@ function exportCsv() {
 function openClearLogsModal() { document.getElementById('modalLimparLogs').classList.remove('hidden'); }
 function closeClearLogsModal() { document.getElementById('modalLimparLogs').classList.add('hidden'); }
 function confirmClearLogs() { 
-    logsData = [];
-    updateStats();
-    renderLogs();
     closeClearLogsModal();
-    alert('OK: Logs limpos com sucesso!');
+    alert('Limpeza de logs indisponível: rota protegida não implementada.');
 }
 
 // ============================================
@@ -486,7 +675,7 @@ function confirmClearLogs() {
 // ============================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        currentTab = this.getAttribute('data-tab') || 'todos';
+        currentTab = this.getAttribute('data-tab');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-white'));
         this.classList.add('active', 'text-white');
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -501,7 +690,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 document.querySelectorAll('.filter-log-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        currentFilter = this.getAttribute("data-filter");
+        currentFilter = this.getAttribute('data-filter');
         document.querySelectorAll('.filter-log-btn').forEach(b => {
             b.classList.remove('bg-blue-600', 'text-white');
             b.classList.add('bg-gray-800', 'text-gray-300');
@@ -526,6 +715,7 @@ document.getElementById('searchLogs')?.addEventListener('input', function(e) {
 });
 
 document.getElementById('exportLogsBtn')?.addEventListener('click', exportCsv);
+document.getElementById('clearLogsBtn')?.addEventListener('click', openClearLogsModal);
 
 document.getElementById('applyAdvancedFilters')?.addEventListener('click', () => {
     currentLevel = document.getElementById('filterLevel')?.value || 'all';

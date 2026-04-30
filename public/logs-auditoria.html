@@ -129,320 +129,241 @@
             <!-- Estatísticas Rápidas -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 stats-grid">
                 <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="log-in" class="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Logins Hoje</p><p id="statsLogins" class="text-lg md:text-xl font-bold text-white">0</p></div>
-                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="shield-alert" class="w-4 h-4 md:w-5 md:h-5 text-red-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Erros Hoje</p><p id="statsErros" class="text-lg md:text-xl font-bold text-white">0</p></div>
-                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="clipboard-list" class="w-4 h-4 md:w-5 md:h-5 text-blue-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Total Logs</p><p id="statsTotal" class="text-lg md:text-xl font-bold text-white">0</p></div>
-                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="user-check" class="w-4 h-4 md:w-5 md:h-5 text-purple-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Ações Admin</p><p id="statsAdminActions" class="text-lg md:text-xl font-bold text-white">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="alert-triangle" class="w-4 h-4 md:w-5 md:h-5 text-red-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Erros (24h)</p><p id="statsErros" class="text-lg md:text-xl font-bold text-red-500">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="edit" class="w-4 h-4 md:w-5 md:h-5 text-yellow-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Alterações</p><p id="statsAlteracoes" class="text-lg md:text-xl font-bold text-white">0</p></div>
+                <div class="glass-card rounded-xl p-3 md:p-4 text-center"><i data-lucide="users" class="w-4 h-4 md:w-5 md:h-5 text-blue-500 mx-auto mb-1 md:mb-2"></i><p class="text-[9px] md:text-[10px] text-gray-500 uppercase">Usuários Ativos</p><p id="statsUsuarios" class="text-lg md:text-xl font-bold text-white">0</p></div>
             </div>
 
             <!-- Tabela de Logs -->
-            <div class="glass-card rounded-2xl overflow-hidden">
-                <div class="table-responsive">
-                    <table class="min-w-full divide-y divide-gray-800">
-                        <thead class="bg-gray-900/50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Data/Hora</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Usuário</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ação</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Detalhes</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">IP</th>
-                            </tr>
-                        </thead>
-                        <tbody id="logsTableBody" class="divide-y divide-gray-800">
-                            <!-- Logs serão carregados aqui -->
-                        </tbody>
+            <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+                <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gray-900/30"><h3 class="font-bold text-white text-sm md:text-base">Histórico de Ações</h3><div class="flex gap-3 md:gap-4 text-[9px] md:text-[10px] text-gray-500"><span>Total: <span id="totalRegistros">0</span> registros</span><span>Últimas 24h: <span id="ultimas24h">0</span></span></div></div>
+                <div class="overflow-x-auto table-responsive">
+                    <table class="w-full min-w-[800px]">
+                        <thead class="bg-gray-900/50 text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider"><tr><th class="px-4 md:px-6 py-3 text-left">Usuário</th><th class="px-4 md:px-6 py-3 text-left">Objeto / Ação</th><th class="px-4 md:px-6 py-3 text-left">Data/Hora</th><th class="px-4 md:px-6 py-3 text-left">IP</th></tr></thead>
+                        <tbody id="logsTable" class="divide-y divide-gray-800/50"><tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500"><div class="flex flex-col items-center"><div class="loading-spinner mb-2"><i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i></div><p>Carregando logs de auditoria...</p></div></td></tr></tbody>
                     </table>
                 </div>
-                <div id="loadingSpinner" class="p-4 text-center hidden">
-                    <i data-lucide="loader-2" class="w-6 h-6 text-blue-500 mx-auto loading-spinner"></i>
-                    <p class="text-sm text-gray-400 mt-2">Carregando logs...</p>
-                </div>
-                <div id="noLogsMessage" class="p-4 text-center text-gray-500 hidden">
-                    Nenhum log de auditoria encontrado para os filtros aplicados.
-                </div>
-            </div>
-
-            <!-- Paginação -->
-            <div class="flex justify-between items-center pt-4 border-t border-gray-800">
-                <span class="text-xs text-gray-500">Mostrando <span id="mostrandoCount">0</span></span>
-                <div class="flex gap-2">
-                    <button id="prevPageBtn" class="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                    <button id="nextPageBtn" class="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                </div>
+                <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-3"><p class="text-[10px] text-gray-500">Mostrando <span id="mostrandoInicio">0</span> - <span id="mostrandoFim">0</span> de <span id="totalMostrando">0</span> registros</p><div class="flex gap-2"><button id="prevPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button><span id="pageInfo" class="text-xs text-gray-400 px-2 py-1">Página 1</span><button id="nextPageBtn" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed transition">Próximo</button></div></div>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Modal Perfil -->
-<div id="modalPerfil" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
-    <div class="bg-[#1a1c23] rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-700">
-        <h2 class="text-xl font-bold mb-3">Meu Perfil</h2>
-        <p class="text-gray-400 mb-6">Informações do usuário logado.</p>
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-300">Nome de Usuário</label>
-                <input type="text" id="profileUsername" class="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm p-2 text-white" readonly>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-300">Email</label>
-                <input type="email" id="profileEmail" class="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm p-2 text-white" readonly>
-            </div>
-        </div>
-        <div class="flex justify-end gap-3 mt-6">
-            <button onclick="closeModalPerfil()" class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-sm">Fechar</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    // ============================================
-    // ESTADO E VARIÁVEIS GLOBAIS
-    // ============================================
-    let auditLogs = [];
-    let currentPage = 1;
-    const itemsPerPage = 15;
-    let currentSearchTerm = '';
-    let currentFilterUser = '';
-    let currentFilterType = '';
-    let currentFilterStartDate = '';
-    let currentFilterEndDate = '';
+// ==================== CONFIGURAÇÕES GLOBAIS ====================
+const API_URL = 'https://mstelecom-api.duckdns.org';
+let logsData = [];
+let currentPage = 1;
+let currentFilters = { usuario: '', tipo: '', data_inicio: '', data_fim: '', search: '' };
+const itemsPerPage = 15;
+let isLoading = false;
 
-    // ============================================
-    // FUNÇÕES DE CARREGAMENTO DE DADOS
-    // ============================================
-    async function carregarLogs() {
-        document.getElementById('loadingSpinner').classList.remove('hidden');
-        document.getElementById('noLogsMessage').classList.add('hidden');
+function getToken() { return localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken'); }
+function authHeaders(contentType = true) {
+    const headers = { 'Authorization': `Bearer ${getToken()}` };
+    if (contentType) headers['Content-Type'] = 'application/json';
+    return headers;
+}
+
+function updateSessionInfo() {
+    const elUser = document.getElementById('sessionUser');
+    const elStart = document.getElementById('sessionStart');
+    if (!elUser || !elStart) return;
+
+    const rawUser = localStorage.getItem('user');
+    if (!localStorage.getItem('session_start')) localStorage.setItem('session_start', new Date().toISOString());
+
+    if (rawUser) {
         try {
-            const queryParams = new URLSearchParams();
-            if (currentFilterUser) queryParams.append('username', currentFilterUser);
-            if (currentFilterType) queryParams.append('action', currentFilterType);
-            if (currentFilterStartDate) queryParams.append('startDate', currentFilterStartDate);
-            if (currentFilterEndDate) queryParams.append('endDate', currentFilterEndDate);
-
-            const response = await fetch(`/api/audit-logs?${queryParams.toString()}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (!response.ok) throw new Error('Falha ao carregar logs de auditoria');
-            auditLogs = await response.json();
-            aplicarBuscaLocal();
-        } catch (error) {
-            console.error("Erro ao carregar logs de auditoria:", error);
-            document.getElementById('logsTableBody').innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Erro ao carregar logs: ${error.message}</td></tr>`;
-        } finally {
-            document.getElementById('loadingSpinner').classList.add('hidden');
+            const user = JSON.parse(rawUser);
+            elUser.innerText = user.username || 'Administrador';
+        } catch (e) {
+            elUser.innerText = 'Administrador';
         }
     }
 
-    // ============================================
-    // FUNÇÕES DE FILTRAGEM E RENDERIZAÇÃO
-    // ============================================
-    function aplicarBuscaLocal() {
-        let logsFiltrados = auditLogs;
-
-        if (currentSearchTerm) {
-            const term = currentSearchTerm.toLowerCase();
-            logsFiltrados = logsFiltrados.filter(log =>
-                (log.username && log.username.toLowerCase().includes(term)) ||
-                (log.action && log.action.toLowerCase().includes(term)) ||
-                (log.object && log.object.toLowerCase().includes(term)) ||
-                (log.details && log.details.toLowerCase().includes(term)) ||
-                (log.ip && log.ip.toLowerCase().includes(term))
-            );
-        }
-
-        renderizarLogs(logsFiltrados);
-        atualizarEstatisticas(logsFiltrados);
+    try {
+        elStart.innerText = new Date(localStorage.getItem('session_start')).toLocaleTimeString('pt-BR');
+    } catch (e) {
+        elStart.innerText = '-';
     }
+}
 
-    function renderizarLogs(logsParaRenderizar) {
-        const tbody = document.getElementById('logsTableBody');
-        tbody.innerHTML = '';
-
-        const start = (currentPage - 1) * itemsPerPage;
-        const paginados = logsParaRenderizar.slice(start, start + itemsPerPage);
-        const totalItems = logsParaRenderizar.length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-        document.getElementById('mostrandoCount').innerText = totalItems === 0 ? '0' : `${start + 1}-${Math.min(start + itemsPerPage, totalItems)} de ${totalItems}`;
-        document.getElementById('prevPageBtn').disabled = currentPage === 1;
-        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
-
-        if (paginados.length === 0) {
-            document.getElementById('noLogsMessage').classList.remove('hidden');
-            return;
-        }
-
-        paginados.forEach(log => {
-            const row = tbody.insertRow();
-            row.classList.add('log-entry', 'hover:bg-gray-900/30', 'transition');
-            row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 mono">${new Date(log.created_at).toLocaleString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${log.username || 'N/A'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-400">${log.action || 'N/A'}</td>
-                <td class="px-6 py-4 text-sm text-gray-300">${log.object ? `${log.object}: ` : ''}${log.details || 'N/A'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 mono">${log.ip || 'N/A'}</td>
-            `;
-        });
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+async function updateSessionIp() {
+    const el = document.getElementById('sessionIp');
+    if (!el) return;
+    try {
+        const res = await fetch(`${API_URL}/api/test-ip`, { headers: authHeaders(false) });
+        const data = await res.json();
+        el.innerText = data && data.ip ? data.ip : '-';
+    } catch (e) {
+        el.innerText = '-';
     }
+}
 
-    function atualizarEstatisticas(logs) {
-        const hoje = new Date().toLocaleDateString();
-        const loginsHoje = logs.filter(log => new Date(log.created_at).toLocaleDateString() === hoje && log.action === 'login').length;
-        const errosHoje = logs.filter(log => new Date(log.created_at).toLocaleDateString() === hoje && log.action === 'error').length;
-        const totalLogs = logs.length;
-        const adminActions = logs.filter(log => log.username !== 'Sistema').length; // Assumindo que 'Sistema' não é uma ação de admin
-
-        document.getElementById('statsLogins').innerText = loginsHoje;
-        document.getElementById('statsErros').innerText = errosHoje;
-        document.getElementById('statsTotal').innerText = totalLogs;
-        document.getElementById('statsAdminActions').innerText = adminActions;
+// ==================== MENU MOBILE ====================
+function initMenuMobile() {
+    const btn = document.getElementById('menuToggle');
+    const overlay = document.getElementById('menuOverlay');
+    const sidebar = document.getElementById('sidebar');
+    if (btn && sidebar) {
+        btn.addEventListener('click', () => { sidebar.classList.toggle('hidden'); overlay.classList.toggle('hidden'); });
+        overlay.addEventListener('click', () => { sidebar.classList.add('hidden'); overlay.classList.add('hidden'); });
     }
+}
 
-    // ============================================
-    // EVENT LISTENERS
-    // ============================================
-    document.getElementById('searchInput').addEventListener('input', function(e) {
-        currentSearchTerm = e.target.value;
-        currentPage = 1;
+// ==================== LOGS DE AUDITORIA ====================
+async function carregarLogs() {
+    if (isLoading) return;
+    isLoading = true;
+    mostrarLoading(true);
+    try {
+        const params = new URLSearchParams();
+        if (currentFilters.usuario) params.append('user', currentFilters.usuario);
+        if (currentFilters.tipo) params.append('type', currentFilters.tipo);
+        if (currentFilters.data_inicio) params.append('start_date', currentFilters.data_inicio);
+        if (currentFilters.data_fim) params.append('end_date', currentFilters.data_fim);
+        if (currentFilters.search) params.append('search', currentFilters.search);
+        const url = `${API_URL}/api/audit-logs${params.toString() ? '?' + params.toString() : ''}`;
+        const res = await fetch(url, { headers: authHeaders(false) });
+        if (res.status === 401) { window.location.href = 'login.html'; return; }
+        let data = await res.json();
+        logsData = Array.isArray(data) ? data : (data.logs || []);
         aplicarBuscaLocal();
-    });
-
-    document.getElementById('filtroUsuario').addEventListener('input', function(e) {
-        currentFilterUser = e.target.value;
-    });
-
-    document.getElementById('filtroTipo').addEventListener('change', function(e) {
-        currentFilterType = e.target.value;
-    });
-
-    document.getElementById('filtroDataInicio').addEventListener('change', function(e) {
-        currentFilterStartDate = e.target.value;
-    });
-
-    document.getElementById('filtroDataFim').addEventListener('change', function(e) {
-        currentFilterEndDate = e.target.value;
-    });
-
-    document.getElementById('aplicarFiltros').addEventListener('click', () => {
-        currentPage = 1;
-        carregarLogs();
-    });
-
-    document.getElementById('limparFiltros').addEventListener('click', () => {
-        currentFilterUser = '';
-        currentFilterType = '';
-        currentFilterStartDate = '';
-        currentFilterEndDate = '';
-        document.getElementById('filtroUsuario').value = '';
-        document.getElementById('filtroTipo').value = '';
-        document.getElementById('filtroDataInicio').value = '';
-        document.getElementById('filtroDataFim').value = '';
-        currentPage = 1;
-        carregarLogs();
-    });
-
-    document.getElementById('prevPageBtn').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            aplicarBuscaLocal();
-        }
-    });
-
-    document.getElementById('nextPageBtn').addEventListener('click', () => {
-        const totalItems = auditLogs.length; // Assuming auditLogs is the full unfiltered list for pagination logic
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            aplicarBuscaLocal();
-        }
-    });
-
-    document.getElementById('refreshLogsBtn').addEventListener('click', carregarLogs);
-    document.getElementById('exportLogsBtn').addEventListener('click', exportCsv);
-
-    // ============================================
-    // FUNÇÕES DE UTILIDADE
-    // ============================================
-    function exportCsv() {
-        let logsToExport = auditLogs;
-        if (currentSearchTerm || currentFilterUser || currentFilterType || currentFilterStartDate || currentFilterEndDate) {
-            logsToExport = logsToExport.filter(log => {
-                const matchesSearch = currentSearchTerm ? (
-                    (log.username && log.username.toLowerCase().includes(currentSearchTerm.toLowerCase())) ||
-                    (log.action && log.action.toLowerCase().includes(currentSearchTerm.toLowerCase())) ||
-                    (log.object && log.object.toLowerCase().includes(currentSearchTerm.toLowerCase())) ||
-                    (log.details && log.details.toLowerCase().includes(currentSearchTerm.toLowerCase())) ||
-                    (log.ip && log.ip.toLowerCase().includes(currentSearchTerm.toLowerCase()))
-                ) : true;
-                const matchesUser = currentFilterUser ? (log.username && log.username.toLowerCase().includes(currentFilterUser.toLowerCase())) : true;
-                const matchesType = currentFilterType ? (log.action === currentFilterType) : true;
-                const matchesStartDate = currentFilterStartDate ? (new Date(log.created_at) >= new Date(currentFilterStartDate + 'T00:00:00')) : true;
-                const matchesEndDate = currentFilterEndDate ? (new Date(log.created_at) <= new Date(currentFilterEndDate + 'T23:59:59')) : true;
-                return matchesSearch && matchesUser && matchesType && matchesStartDate && matchesEndDate;
-            });
-        }
-
-        const headers = ['Data/Hora', 'Usuário', 'Ação', 'Objeto', 'Detalhes', 'IP'];
-        const rows = logsToExport.map(log => [
-            new Date(log.created_at).toLocaleString('pt-BR'),
-            log.username || 'N/A',
-            log.action || 'N/A',
-            log.object || 'N/A',
-            log.details || 'N/A',
-            log.ip || 'N/A'
-        ]);
-
-        const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `logs_auditoria_${new Date().toISOString().slice(0,19)}.csv`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        alert('OK: Logs de auditoria exportados com sucesso!');
+        atualizarEstatisticas();
+        renderizarLogs();
+    } catch (error) {
+        console.error('Erro ao carregar logs:', error);
+        logsData = [];
+        atualizarEstatisticas();
+        const tbody = document.getElementById('logsTable');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-red-400">Erro ao carregar logs</td></tr>';
     }
+    finally { isLoading = false; mostrarLoading(false); }
+}
+function mostrarLoading(show) {
+    const tbody = document.getElementById('logsTable');
+    if (show) tbody.innerHTML = `<tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500"><div class="flex flex-col items-center"><div class="loading-spinner mb-2"><i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i></div><p>Carregando logs...</p></div></td></tr>`;
+}
+function aplicarBuscaLocal() {
+    if (!currentFilters.search) return;
+    const term = currentFilters.search.toLowerCase();
+    logsData = logsData.filter(log => (log.username || log.user || log.usuario || '').toLowerCase().includes(term) || (log.action || log.tipo || '').toLowerCase().includes(term) || (log.object || log.objeto || '').toLowerCase().includes(term) || (log.details || log.acao || log.mensagem || '').toLowerCase().includes(term) || (log.ip || '').includes(term));
+}
+function atualizarEstatisticas() {
+    const hoje = new Date().toISOString().slice(0,10);
+    const loginsHoje = logsData.filter(l => (l.type === 'login' || l.tipo === 'login') && (l.created_at || '').slice(0,10) === hoje).length;
+    const erros = logsData.filter(l => (l.type === 'erro' || l.type === 'error' || l.tipo === 'erro')).length;
+    const alteracoes = logsData.filter(l => ['alteracao','criacao','exclusao','update','create','delete'].includes(l.type || l.tipo)).length;
+    const usuariosAtivos = new Set(logsData.map(l => l.username || l.user || l.usuario).filter(Boolean)).size;
+    document.getElementById('statsLogins').innerText = loginsHoje;
+    document.getElementById('statsErros').innerText = erros;
+    document.getElementById('statsAlteracoes').innerText = alteracoes;
+    document.getElementById('statsUsuarios').innerText = usuariosAtivos;
+    document.getElementById('totalRegistros').innerText = logsData.length;
+    const ultimas24h = logsData.filter(l => { const data = l.created_at || l.timestamp; return data && (new Date() - new Date(data) < 86400000); }).length;
+    document.getElementById('ultimas24h').innerText = ultimas24h;
+}
+function renderizarLogs() {
+    const start = (currentPage - 1) * itemsPerPage;
+    const paginados = logsData.slice(start, start + itemsPerPage);
+    const totalItems = logsData.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    document.getElementById('mostrandoInicio').innerText = totalItems === 0 ? 0 : start + 1;
+    document.getElementById('mostrandoFim').innerText = Math.min(start + itemsPerPage, totalItems);
+    document.getElementById('totalMostrando').innerText = totalItems;
+    document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages || 1}`;
+    document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+    const tbody = document.getElementById('logsTable');
+    if (paginados.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="px-4 md:px-6 py-8 text-center text-gray-500"><i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i><p>Nenhum log encontrado</p><p class="text-xs mt-1">Tente ajustar os filtros de busca</p></td></tr>`; if(typeof lucide!=='undefined') lucide.createIcons(); return; }
+    const tipoIcon = { 'login':'log-in','logout':'log-out','alteracao':'edit','criacao':'plus-circle','exclusao':'trash-2','update':'edit','create':'plus-circle','delete':'trash-2','liberacao':'unlock','bloqueio':'lock','erro':'alert-triangle','error':'alert-triangle' };
+    const tipoColor = { 'login':'text-emerald-500 bg-emerald-500/10','logout':'text-gray-500 bg-gray-500/10','alteracao':'text-yellow-500 bg-yellow-500/10','criacao':'text-green-500 bg-green-500/10','exclusao':'text-red-500 bg-red-500/10','update':'text-yellow-500 bg-yellow-500/10','create':'text-green-500 bg-green-500/10','delete':'text-red-500 bg-red-500/10','liberacao':'text-blue-500 bg-blue-500/10','bloqueio':'text-orange-500 bg-orange-500/10','erro':'text-red-500 bg-red-500/10','error':'text-red-500 bg-red-500/10' };
+    tbody.innerHTML = paginados.map(log => {
+        const tipo = log.type || log.tipo || 'evento';
+        const usuario = log.username || log.user || log.usuario || 'Sistema';
+        const objeto = log.object || log.objeto || '-';
+        const acao = log.action || log.details || log.acao || log.mensagem || '-';
+        const dataHora = log.created_at || log.timestamp;
+        const ip = log.ip || '-';
+        return `<tr class="hover:bg-gray-900/30 transition log-entry"><td class="px-4 md:px-6 py-3 md:py-4"><div class="flex items-center gap-2"><div class="w-7 h-7 md:w-8 md:h-8 rounded-full ${tipoColor[tipo] || 'bg-gray-500/10'} flex items-center justify-center shrink-0"><i data-lucide="${tipoIcon[tipo] || 'bell'}" class="w-3.5 h-3.5 md:w-4 md:h-4 ${tipoColor[tipo]?.replace('bg','text') || 'text-gray-500'}"></i></div><span class="font-medium text-white text-sm">${escapeHtml(usuario)}</span></div><div class="mt-1 md:hidden"><span class="inline-block px-2 py-0.5 ${tipoColor[tipo] || 'bg-gray-500/10 text-gray-400'} text-[9px] font-bold rounded-full">${tipo.toUpperCase()}</span></div></td><td class="px-4 md:px-6 py-3 md:py-4"><div class="hidden md:block mb-1"><span class="px-2 py-0.5 ${tipoColor[tipo] || 'bg-gray-500/10 text-gray-400'} text-[9px] md:text-[10px] font-bold rounded-full">${tipo.toUpperCase()}</span></div><p class="text-sm font-medium text-gray-200">${escapeHtml(objeto)}</p><p class="text-xs text-gray-400 mt-1 line-clamp-2">${escapeHtml(acao.substring(0,100))}${acao.length>100?'...':''}</p></td><td class="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-400 whitespace-nowrap">${dataHora ? new Date(dataHora).toLocaleString('pt-BR') : '-'}</td><td class="px-4 md:px-6 py-3 md:py-4"><code class="text-[10px] md:text-xs font-mono text-gray-500">${escapeHtml(ip)}</code></td></tr>`;
+    }).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-    function openModalPerfil() {
-        document.getElementById('profileUsername').value = localStorage.getItem('username') || 'Admin';
-        document.getElementById('profileEmail').value = localStorage.getItem('email') || 'admin@example.com';
-        document.getElementById('modalPerfil').classList.remove('hidden');
+// Paginação
+document.getElementById('prevPageBtn')?.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderizarLogs(); } });
+document.getElementById('nextPageBtn')?.addEventListener('click', () => { const totalPages = Math.ceil(logsData.length / itemsPerPage); if (currentPage < totalPages) { currentPage++; renderizarLogs(); } });
+
+// Filtros
+function aplicarFiltros() {
+    currentFilters = { usuario: document.getElementById('filtroUsuario').value, tipo: document.getElementById('filtroTipo').value, data_inicio: document.getElementById('filtroDataInicio').value, data_fim: document.getElementById('filtroDataFim').value, search: document.getElementById('searchInput').value };
+    currentPage = 1;
+    carregarLogs();
+}
+function limparFiltros() {
+    document.getElementById('filtroUsuario').value = '';
+    document.getElementById('filtroTipo').value = '';
+    document.getElementById('filtroDataInicio').value = '';
+    document.getElementById('filtroDataFim').value = '';
+    document.getElementById('searchInput').value = '';
+    currentFilters = { usuario: '', tipo: '', data_inicio: '', data_fim: '', search: '' };
+    currentPage = 1;
+    carregarLogs();
+}
+document.getElementById('aplicarFiltros')?.addEventListener('click', aplicarFiltros);
+document.getElementById('limparFiltros')?.addEventListener('click', limparFiltros);
+document.getElementById('searchInput')?.addEventListener('input', (e) => { currentFilters.search = e.target.value; currentPage = 1; carregarLogs(); });
+document.getElementById('refreshLogsBtn')?.addEventListener('click', carregarLogs);
+
+// Exportar CSV
+document.getElementById('exportLogsBtn')?.addEventListener('click', () => {
+    const headers = ['Data/Hora', 'Usuário', 'Tipo', 'Objeto', 'Ação/Detalhes', 'IP'];
+    const rows = logsData.map(log => [ (log.created_at || log.timestamp) ? new Date(log.created_at || log.timestamp).toLocaleString('pt-BR') : '', log.username || log.user || log.usuario || 'Sistema', log.type || log.tipo || 'evento', log.object || log.objeto || '', (log.action || log.details || log.acao || log.mensagem || '').replace(/\n/g, ' '), log.ip || '' ]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `logs_auditoria_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+});
+
+// ==================== PERFIL E LOGOUT ====================
+function carregarPerfil() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        try { const user = JSON.parse(userStr);
+            const editUsername = document.getElementById('editUsername');
+            const editEmail = document.getElementById('editEmail');
+            const userName = document.getElementById('userName');
+            if (editUsername) editUsername.value = user.username || '';
+            if (editEmail) editEmail.value = user.email || '';
+            if (userName) userName.innerText = user.username || 'Administrador';
+        } catch(e) {}
     }
+}
+function openModalPerfil() { if (typeof window.openProfileModal === 'function') window.openProfileModal(); }
+function closeModalPerfil() { if (typeof window.closeProfileModal === 'function') window.closeProfileModal(); }
+async function salvarPerfil() { if (typeof window.saveProfile === 'function') return window.saveProfile(); }
+async function sair() {
+    try { await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: authHeaders() }); } catch(e) {}
+    localStorage.removeItem('adminToken'); localStorage.removeItem('token'); localStorage.removeItem('ms_token'); localStorage.removeItem('authToken'); localStorage.removeItem('ms_user'); localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
 
-    function closeModalPerfil() {
-        document.getElementById('modalPerfil').classList.add('hidden');
-    }
-
-    function sair() {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('token');
-        localStorage.removeItem('ms_token');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('username');
-        localStorage.removeItem('email');
-        window.location.href = 'login.html';
-    }
-
-    function updateSessionInfo() {
-        document.getElementById('sessionUser').innerText = localStorage.getItem('username') || 'Admin';
-        document.getElementById('sessionStart').innerText = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        // IP será preenchido pelo backend ou por outra lógica, se disponível
-        document.getElementById('sessionIp').innerText = 'N/A'; // Placeholder
-    }
-
-    // ============================================
-    // INICIALIZAÇÃO
-    // ============================================
-    document.addEventListener('DOMContentLoaded', () => {
-        carregarLogs();
-        updateSessionInfo();
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
-
-    setInterval(carregarLogs, 60000); // Atualiza logs a cada 60 segundos
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', () => {
+    initMenuMobile();
+    updateSessionInfo();
+    updateSessionIp();
+    carregarLogs();
+    carregarPerfil();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (!localStorage.getItem('session_start')) localStorage.setItem('session_start', new Date().toISOString());
+});
+setInterval(carregarLogs, 30000);
 </script>
 
 <script src="globals.js"></script>
