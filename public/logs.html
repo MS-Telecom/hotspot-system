@@ -52,19 +52,21 @@ const token = localStorage.getItem('adminToken') || localStorage.getItem('token'
             </div>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-        <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
-        <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
-        <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
-        <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
-        <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
-        <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
-        <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
-        <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
-        <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
-        <a href="logs.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
-        <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs de Auditoria</a>
-        <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro</a>
-    </nav>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+            <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="router" class="w-5 h-5"></i> Hotspots / POPs</a>
+            <a href="cliente-detalhe.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="users" class="w-5 h-5"></i> Clientes / SGP</a>
+            <a href="financeiro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="banknote" class="w-5 h-5"></i> Financeiro</a>
+            <a href="campanhas.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="megaphone" class="w-5 h-5"></i> Campanhas</a>
+            <a href="webhooks.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API</a>
+            <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>
+            <a href="logs.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"><i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema</a>
+            <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs de Auditoria
+            </a>
+            <a href="vouchers.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="ticket" class="w-5 h-5"></i> Vouchers</a>
+            <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all"><i data-lucide="settings" class="w-5 h-5"></i> Perfil de Cadastro</a>
+        </nav>
         <div class="p-4 border-t border-gray-800 bg-black/30">
             <div class="flex items-center justify-between mb-3"><p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p><div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div></div>
             <div class="space-y-2 text-[10px] font-mono"><div class="flex justify-between text-gray-500"><span>Admin Master</span><span id="sessionIp" class="text-cyan-400">-</span></div><div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div></div>
@@ -413,8 +415,7 @@ async function loadLogs() {
         auditLogsRaw = [];
         logsData = [];
         updateStats();
-        const container = document.getElementById(`${currentTab}List`);
-        if (container) container.innerHTML = '<div class="p-6 text-center text-red-400">Erro ao carregar logs</div>';
+        renderLogs();
     }
 }
 
@@ -529,13 +530,6 @@ function updateStats() {
     if (document.getElementById('totalAcessos')) document.getElementById('totalAcessos').innerText = `Total: ${total} registros`;
 }
 
-function dateKey(value) {
-    if (!value) return '';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '';
-    return d.toISOString().slice(0, 10);
-}
-
 function applyFilters() {
     let filtrados = logsData;
 
@@ -546,10 +540,12 @@ function applyFilters() {
 
     // Filtro por data
     if (currentStartDate) {
-        filtrados = filtrados.filter(l => dateKey(l.data) >= currentStartDate);
+        const start = new Date(currentStartDate + 'T00:00:00');
+        filtrados = filtrados.filter(l => l.data && new Date(l.data) >= start);
     }
     if (currentEndDate) {
-        filtrados = filtrados.filter(l => dateKey(l.data) <= currentEndDate);
+        const end = new Date(currentEndDate + 'T23:59:59');
+        filtrados = filtrados.filter(l => l.data && new Date(l.data) <= end);
     }
     
     // Filtro por tipo

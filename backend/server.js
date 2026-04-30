@@ -2001,7 +2001,6 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
         status: 'active', used: false, created_at: new Date().toISOString()
       }).select().single();
       if (error) throw error;
-      await registerAuditLog(req.user.username, 'create', 'voucher', `Voucher criado: ${data.code}`, getClientIp(req), req.headers['user-agent'], { voucher_id: data.id });
       res.status(201).json(data);
     } else {
       // Batch vouchers
@@ -2017,7 +2016,6 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
       }
       const { data, error } = await supabase.from('vouchers').insert(vouchers).select();
       if (error) throw error;
-      await registerAuditLog(req.user.username, 'create', 'voucher', `${data?.length || 0} vouchers criados`, getClientIp(req), req.headers['user-agent']);
       res.status(201).json(data);
     }
   } catch (err) {
@@ -2030,14 +2028,10 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
 app.put('/api/vouchers/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = { updated_at: new Date().toISOString() };
-    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'plan_name')) updateData.plan_name = req.body.plan_name;
-    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'amount')) updateData.amount = parseFloat(req.body.amount) || 0;
-    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'expires_at')) updateData.expires_at = req.body.expires_at ? new Date(req.body.expires_at).toISOString() : null;
-    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'used')) updateData.used = !!req.body.used;
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    delete updateData.id;
     const { data, error } = await supabase.from('vouchers').update(updateData).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'voucher', `Voucher atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { voucher_id: id });
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao atualizar voucher:', err.message);
@@ -2051,7 +2045,6 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { error } = await supabase.from('vouchers').delete().eq('id', id);
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'delete', 'voucher', `Voucher removido: ${id}`, getClientIp(req), req.headers['user-agent'], { voucher_id: id });
     res.json({ message: 'Voucher removido' });
   } catch (err) {
     console.error('❌ Erro ao deletar voucher:', err.message);
@@ -2430,7 +2423,6 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       console.error('❌ L2TP chap-secrets sync failed after POP create:', l2tpSync.error);
     }
 
-    await registerAuditLog(req.user.username, 'create', 'pop', `POP criado: ${enrichedPop.name || enrichedPop.id}`, getClientIp(req), req.headers['user-agent'], { pop_id: enrichedPop.id });
     res.status(201).json({ ...enrichedPop, script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao criar POP:', err.message);
@@ -2767,7 +2759,6 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
       console.error('❌ L2TP chap-secrets sync failed after POP update:', l2tpSync.error);
     }
 
-    await registerAuditLog(req.user.username, 'update', 'pop', `POP atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { pop_id: id });
     res.json({ ...enrichedPop, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao atualizar POP:', err.message);
@@ -2802,7 +2793,6 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
       console.error('❌ L2TP chap-secrets sync failed after POP delete:', l2tpSync.error);
     }
 
-    await registerAuditLog(req.user.username, 'delete', 'pop', `POP removido: ${id}`, getClientIp(req), req.headers['user-agent'], { pop_id: id });
     res.json({ message: 'POP removido com sucesso', freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
     console.error('❌ Erro ao deletar POP:', err.message);
@@ -3261,7 +3251,6 @@ app.put('/api/settings/fields', authMiddleware, async (req, res) => {
       updated_at: new Date().toISOString()
     }, { onConflict: 'key' });
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'settings', 'Perfil de cadastro atualizado', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3399,7 +3388,6 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações gerais atualizadas', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3426,7 +3414,6 @@ app.put('/api/settings/system', authMiddleware, async (req, res) => {
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações do sistema atualizadas', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3453,7 +3440,6 @@ app.put('/api/settings/payment', authMiddleware, async (req, res) => {
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações de pagamento atualizadas', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3481,7 +3467,6 @@ app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações de integração atualizadas', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3520,7 +3505,6 @@ app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
     );
     if (error) throw error;
     res.set('Cache-Control', 'no-store');
-    await registerAuditLog(req.user.username, 'update', 'settings', 'Configurações de teste grátis atualizadas', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true, value });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3697,7 +3681,6 @@ app.post('/api/campaigns', authMiddleware, async (req, res) => {
       name, description, coupon_code, status, min_age, max_age, starts_at, ends_at
     }]).select();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'create', 'campaign', `Campanha criada: ${name}`, getClientIp(req), req.headers['user-agent'], { campaign_id: data?.[0]?.id });
     res.status(201).json(data[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3711,7 +3694,6 @@ app.put('/api/campaigns/:id', authMiddleware, async (req, res) => {
       name, description, coupon_code, status, min_age, max_age, starts_at, ends_at
     }).eq('id', req.params.id).select();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'campaign', `Campanha atualizada: ${req.params.id}`, getClientIp(req), req.headers['user-agent'], { campaign_id: req.params.id });
     res.json(data[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3722,7 +3704,6 @@ app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('campaigns').delete().eq('id', req.params.id);
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'delete', 'campaign', `Campanha removida: ${req.params.id}`, getClientIp(req), req.headers['user-agent'], { campaign_id: req.params.id });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3741,8 +3722,8 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
     if (user) query = query.ilike('username', `%${user}%`);
     if (type) query = query.eq('type', type);
     if (action) query = query.eq('action', action);
-    if (start_date) query = query.gte('created_at', `${start_date}T00:00:00.000Z`);
-    if (end_date) query = query.lte('created_at', `${end_date}T23:59:59.999Z`);
+    if (start_date) query = query.gte('created_at', start_date);
+    if (end_date) query = query.lte('created_at', end_date);
     if (search) {
       query = query.or(`username.ilike.%${search}%,type.ilike.%${search}%,object.ilike.%${search}%,action.ilike.%${search}%,ip.ilike.%${search}%,user_agent.ilike.%${search}%,details.ilike.%${search}%`);
     }
@@ -3770,8 +3751,8 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
 
     if (type) query = query.eq('source', type);
     if (level) query = query.eq('level', level);
-    if (start_date) query = query.gte('created_at', `${start_date}T00:00:00.000Z`);
-    if (end_date) query = query.lte('created_at', `${end_date}T23:59:59.999Z`);
+    if (start_date) query = query.gte('created_at', start_date);
+    if (end_date) query = query.lte('created_at', end_date);
     if (search) {
       query = query.or(`message.ilike.%${search}%,source.ilike.%${search}%,level.ilike.%${search}%,ip.ilike.%${search}%,user_agent.ilike.%${search}%,details.ilike.%${search}%`);
     }
