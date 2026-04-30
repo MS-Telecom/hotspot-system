@@ -5,11 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>MS TELECOM | Wi-Fi Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/portal.css">
   <style>
-    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0c15 0%, #020617 100%); min-height: 100vh; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: linear-gradient(135deg, #0a0c15 0%, #020617 100%); min-height: 100vh; }
     .glass-card { background: rgba(15, 25, 35, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(59,130,246,0.25); }
     .plan-card { transition: all 0.2s ease; cursor: pointer; }
     .plan-card:hover { transform: translateY(-4px); border-color: #3b82f6; box-shadow: 0 20px 35px -12px rgba(59,130,246,0.25); }
@@ -45,38 +43,43 @@
   </header>
 
   <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl">
-    <!-- GATE DE CADASTRO OBRIGATÓRIO -->
-    <div id="registrationGate" class="hidden glass-card rounded-3xl p-8 mb-10 border border-blue-500/30">
-      <div class="max-w-xl mx-auto">
-        <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-          <i data-lucide="user-plus" class="text-blue-500"></i> Complete seu cadastro
-        </h2>
-        <p class="text-gray-400 mb-6 text-sm">Para continuar e liberar seu acesso, informe os dados solicitados pela MS Telecom.</p>
-        
+    <section id="registrationGate" class="hidden glass-card rounded-3xl p-6 md:p-8 mb-8 border border-blue-500/30">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-black text-white mb-2">Complete seu cadastro</h2>
+        <p class="text-gray-400 text-sm mb-6">Informe seus dados para continuar para os planos e teste grátis.</p>
         <form id="registrationForm" class="space-y-4">
-          <div id="dynamicFields" class="space-y-4">
-            <!-- Campos serão carregados dinamicamente -->
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nome completo</label>
+            <input id="registrationName" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Seu nome">
           </div>
-          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-white transition shadow-lg shadow-blue-600/20">
-            Salvar e Continuar
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">WhatsApp / telefone</label>
+            <input id="registrationPhone" type="tel" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="(91) 99999-9999">
+          </div>
+          <label class="flex items-start gap-3 text-sm text-gray-300">
+            <input id="registrationTerms" type="checkbox" required class="mt-1">
+            <span>Aceito os termos de uso da rede MS Telecom.</span>
+          </label>
+          <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 rounded-xl px-5 py-3 font-bold text-white transition">
+            Continuar
           </button>
         </form>
       </div>
-    </div>
+    </section>
 
-    <div id="heroSection" class="glass-card rounded-3xl p-8 mb-10 text-center border border-blue-500/20">
+    <div id="portalHero" class="glass-card rounded-3xl p-8 mb-10 text-center border border-blue-500/20">
       <h2 class="text-3xl md:text-4xl font-black text-white mb-2">Conecte-se agora mesmo!</h2>
       <p class="text-gray-400 max-w-2xl mx-auto">Escolha o plano ideal e aproveite internet de alta velocidade da MS Telecom.</p>
     </div>
 
-    <div id="deviceInfoSection" class="bg-gray-900/50 rounded-2xl p-4 mb-8 flex flex-wrap justify-between items-center gap-4">
+    <div id="devicePanel" class="bg-gray-900/50 rounded-2xl p-4 mb-8 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center gap-3">
         <i data-lucide="smartphone" class="text-blue-500 w-5 h-5"></i>
         <span class="text-sm text-gray-300">Seu dispositivo:</span>
         <code id="dispositivoMac" class="bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono text-blue-400">Detectando...</code>
       </div>
 
-      <div id="actionButtons" class="flex gap-3 flex-wrap">
+      <div class="flex gap-3 flex-wrap">
         <button id="liberar5minBtn" class="hidden px-5 py-2 bg-amber-600/20 border border-amber-500/50 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-600/30 transition flex items-center gap-2">
           <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
         </button>
@@ -91,15 +94,13 @@
       </div>
     </div>
 
-    <div id="plansSection">
-      <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
-        <i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano
-      </h3>
+    <h3 id="plansTitle" class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano
+    </h3>
 
-      <div id="plansContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400">
-          Carregando planos...
-        </div>
+    <div id="plansContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400">
+        Carregando planos...
       </div>
     </div>
 
@@ -158,11 +159,38 @@
 
 <script>
   const API_BASE = 'https://mstelecom-api.duckdns.org';
+  const LOCAL_ICONS = {
+    wifi: '<path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/>',
+    smartphone: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    beaker: '<path d="M4.5 3h15"/><path d="M7 3v7l-3.5 6A3 3 0 0 0 6.1 21h11.8a3 3 0 0 0 2.6-5L17 10V3"/><path d="M8.5 14h7"/>',
+    'check-circle': '<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/>',
+    gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8A2.5 2.5 0 1 1 12 5.5V8"/><path d="M16.5 8A2.5 2.5 0 1 0 12 5.5V8"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    'circle-alert': '<circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/>',
+    'triangle-alert': '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>'
+  };
+
+  function renderIcons() {
+    document.querySelectorAll('[data-lucide]').forEach((el) => {
+      const name = el.getAttribute('data-lucide') || 'info';
+      el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${LOCAL_ICONS[name] || LOCAL_ICONS.info}</svg>`;
+    });
+  }
+
+  const lucide = { createIcons: renderIcons };
 
   const params = new URLSearchParams(window.location.search);
   const macAddress = (params.get('mac') || '').toUpperCase();
   const loginUrl = params.get('loginUrl') || 'http://192.168.32.1/login';
 
+  const registrationGate = document.getElementById('registrationGate');
+  const registrationForm = document.getElementById('registrationForm');
+  const portalHero = document.getElementById('portalHero');
+  const devicePanel = document.getElementById('devicePanel');
+  const plansTitle = document.getElementById('plansTitle');
   const macDisplay = document.getElementById('dispositivoMac');
   macDisplay.textContent = macAddress || 'MAC não detectado';
 
@@ -177,37 +205,144 @@
   let selectedPlan = null;
   let lastFreeTest = localStorage.getItem('last_free_test') || 0;
   let redirectInProgress = false;
+  let registrationGateActive = false;
 
-  function showStatusMessage(message, type = 'success') {
-    const msgDiv = document.getElementById('statusMessage');
-    const msgText = document.getElementById('statusMessageText');
+function showStatusMessage(message, type = 'success') {
+  const msgDiv = document.getElementById('statusMessage');
+  const msgText = document.getElementById('statusMessageText');
 
-    msgText.innerText = message;
-    msgDiv.className = `fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm border-l-4 toast-${type}`;
-    msgDiv.classList.remove('hidden');
+  msgText.innerText = message;
+  msgDiv.className = `fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm border-l-4 toast-${type}`;
+  msgDiv.classList.remove('hidden');
 
-    const iconNameMap = {
-      success: 'check-circle',
-      error: 'circle-alert',
-      warning: 'triangle-alert',
-      info: 'info'
-    };
+  const iconNameMap = {
+    success: 'check-circle',
+    error: 'circle-alert',
+    warning: 'triangle-alert',
+    info: 'info'
+  };
 
-    const iconName = iconNameMap[type] || 'info';
+  const iconName = iconNameMap[type] || 'info';
 
-    msgDiv.innerHTML = `
-      <div class="flex items-center gap-3">
-        <i data-lucide="${iconName}" class="w-6 h-6 ${type === 'success' ? 'text-emerald-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-amber-500' : 'text-blue-500'}"></i>
-        <div>
-          <p id="statusMessageText" class="text-sm font-medium text-white">${message}</p>
-          <p class="text-[10px] text-gray-500">Verifique o status da operação</p>
-        </div>
+  msgDiv.innerHTML = `
+    <div class="flex items-center gap-3">
+      <i data-lucide="${iconName}" class="w-6 h-6 ${type === 'success' ? 'text-emerald-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-amber-500' : 'text-blue-500'}"></i>
+      <div>
+        <p id="statusMessageText" class="text-sm font-medium text-white">${message}</p>
+        <p class="text-[10px] text-gray-500">Verifique o status da operação</p>
       </div>
-    `;
+    </div>
+  `;
 
-    lucide.createIcons();
-    setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+  lucide.createIcons();
+  setTimeout(() => msgDiv.classList.add('hidden'), 5000);
+}
+
+function formatRetryAfter(seconds) {
+  const sec = Math.max(1, Number(seconds || 0));
+  if (sec < 60) return `${Math.ceil(sec)} segundos`;
+  const minutes = Math.ceil(sec / 60);
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours}h ${rest}min` : `${hours} horas`;
+}
+
+function setRegistrationGate(required) {
+  registrationGateActive = !!required;
+  registrationGate.classList.toggle('hidden', !registrationGateActive);
+  portalHero.classList.toggle('hidden', registrationGateActive);
+  devicePanel.classList.toggle('hidden', registrationGateActive);
+  plansTitle.classList.toggle('hidden', registrationGateActive);
+  plansContainer.classList.toggle('hidden', registrationGateActive);
+  paymentSection.classList.add('hidden');
+  testeGratisBtn.classList.add('hidden');
+  liberar5minBtn.classList.add('hidden');
+  jaPagueiBtn.classList.toggle('hidden', registrationGateActive);
+
+  if (registrationGateActive) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+}
+
+async function checkRegistrationStatus() {
+  if (!macAddress || redirectInProgress) {
+    setRegistrationGate(false);
+    return true;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/portal/registration-status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
+    if (!res.ok) {
+      setRegistrationGate(false);
+      return true;
+    }
+
+    const data = await res.json();
+    if (data && data.complete === false) {
+      setRegistrationGate(true);
+      return false;
+    }
+
+    setRegistrationGate(false);
+    return true;
+  } catch (_e) {
+    setRegistrationGate(false);
+    return true;
+  }
+}
+
+async function savePortalRegistration(event) {
+  event.preventDefault();
+  if (!macAddress) {
+    showStatusMessage('MAC não detectado.', 'error');
+    return;
+  }
+
+  const name = document.getElementById('registrationName').value.trim();
+  const phone = document.getElementById('registrationPhone').value.trim();
+  const terms = document.getElementById('registrationTerms').checked;
+
+  if (!name || !phone || !terms) {
+    showStatusMessage('Preencha os dados obrigatórios para continuar.', 'warning');
+    return;
+  }
+
+  const payload = {
+    mac_address: macAddress,
+    name,
+    phone,
+    accepted_terms: true,
+    password: `portal-${macAddress.replace(/[^A-F0-9]/gi, '') || Date.now()}`
+  };
+
+  try {
+    let res = await fetch(`${API_BASE}/api/portal/register-device`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE}/api/portal/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Erro ao salvar cadastro');
+
+    showStatusMessage('Cadastro salvo. Carregando portal...', 'success');
+    const complete = await checkRegistrationStatus();
+    if (complete) {
+      await loadPlans();
+      await checkAccessStatus();
+    }
+  } catch (error) {
+    showStatusMessage(error.message || 'Erro ao salvar cadastro.', 'error');
+  }
+}
 
   function redirectToMikrotik(mac) {
     const safeDecode = (value) => {
@@ -219,14 +354,19 @@
     const loginUrl = rawLoginUrl ? safeDecode(rawLoginUrl) : 'http://192.168.32.1/login';
     const rawOrig = params.get('orig');
     const origCandidate = rawOrig ? safeDecode(rawOrig) : '';
-    const orig = origCandidate && origCandidate.toLowerCase().startsWith('http://') ? origCandidate : 'http://neverssl.com/';
+    const orig = origCandidate && origCandidate.toLowerCase().startsWith('http://') ? origCandidate : 'http://192.168.32.1/';
 
     if (!mac) {
       showStatusMessage('MAC nao detectado. Reconecte ao Wi-Fi.', 'error');
       return;
     }
 
-    const url = new URL(loginUrl);
+    let url;
+    try {
+      url = new URL(loginUrl);
+    } catch {
+      url = new URL('http://192.168.32.1/login');
+    }
     url.searchParams.set('username', mac);
     url.searchParams.set('password', mac);
     url.searchParams.set('dst', orig);
@@ -235,127 +375,93 @@
     window.location.href = url.toString();
   }
 
-  async function checkRegistrationStatus() {
-    if (!macAddress) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/portal/registration-status?mac=${encodeURIComponent(macAddress)}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      
-      if (data.complete === false) {
-        // GATE VISUAL ATIVO
-        document.getElementById('registrationGate').classList.remove('hidden');
-        document.getElementById('heroSection').classList.add('hidden');
-        document.getElementById('plansSection').classList.add('hidden');
-        document.getElementById('actionButtons').classList.add('hidden');
-        
-        // Reduzir bloco do dispositivo
-        document.getElementById('deviceInfoSection').classList.add('py-2');
-        document.getElementById('deviceInfoSection').classList.remove('mb-8');
-        document.getElementById('deviceInfoSection').classList.add('mb-4');
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        renderDynamicFields(data.fields || []);
-      } else {
-        // CADASTRO COMPLETO
-        document.getElementById('registrationGate').classList.add('hidden');
-        document.getElementById('heroSection').classList.remove('hidden');
-        document.getElementById('plansSection').classList.remove('hidden');
-        document.getElementById('actionButtons').classList.remove('hidden');
-        document.getElementById('deviceInfoSection').classList.remove('py-2');
-        document.getElementById('deviceInfoSection').classList.add('mb-8');
-        
-        loadPlans();
-        loadFreeTrialSettings();
-        checkAccessStatus();
-      }
-    } catch (e) {
-      console.error('Erro ao verificar status de cadastro:', e);
-      loadPlans();
-    }
-  }
-
-  function renderDynamicFields(fields) {
-    const container = document.getElementById('dynamicFields');
-    container.innerHTML = fields.map(f => `
-      <div>
-        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">${f.label}${f.required ? ' *' : ''}</label>
-        <input type="${f.type || 'text'}" name="${f.field}" ${f.required ? 'required' : ''} 
-          class="w-full bg-gray-900/50 border border-gray-700 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition text-white"
-          placeholder="Informe seu ${f.label.toLowerCase()}">
-      </div>
-    `).join('');
-  }
-
-  document.getElementById('registrationForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const payload = { mac_address: macAddress };
-    formData.forEach((value, key) => payload[key] = value);
-
-    try {
-      const res = await fetch(`${API_BASE}/api/portal/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('Erro ao salvar cadastro');
-      showStatusMessage('Cadastro realizado com sucesso!', 'success');
-      checkRegistrationStatus();
-    } catch (err) {
-      showStatusMessage(err.message, 'error');
-    }
-  });
-
   async function loadPlans() {
     try {
       const res = await fetch(`${API_BASE}/api/plans`);
       if (!res.ok) throw new Error('Falha ao carregar planos');
+
       const plans = await res.json();
       const activePlans = (plans || []).filter(p => p.active !== false);
 
       if (!activePlans.length) {
-        plansContainer.innerHTML = `<div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400 md:col-span-3">Nenhum plano disponível no momento.</div>`;
+        plansContainer.innerHTML = `
+          <div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400 md:col-span-3">
+            Nenhum plano disponível no momento.
+          </div>
+        `;
         return;
       }
 
       plansContainer.innerHTML = activePlans.map(plan => `
-        <div class="plan-card glass-card rounded-2xl p-6 border border-gray-800 flex flex-col" data-plan-name="${plan.name}" data-price="${plan.price}">
+        <div class="plan-card glass-card rounded-2xl p-6 border border-gray-800" data-plan-name="${escapeHtml(plan.name || 'Plano')}" data-price="${Number(plan.price || 0)}">
           <div class="flex justify-between items-start mb-4">
-            <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center"><i data-lucide="wifi" class="text-blue-500 w-6 h-6"></i></div>
+            <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+              <i data-lucide="wifi" class="text-blue-500 w-6 h-6"></i>
+            </div>
             <span class="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-full">${Number(plan.speed_mbps || 0)} Mbps</span>
           </div>
           <h4 class="text-xl font-bold text-white">${escapeHtml(plan.name || 'Plano')}</h4>
           <p class="text-gray-400 text-sm mt-1">${escapeHtml(plan.description || `${plan.duration_days || 1} dia(s) de acesso`)}</p>
-          <div class="mt-4"><span class="text-3xl font-black text-white">R$ ${Number(plan.price || 0).toFixed(2).replace('.', ',')}</span></div>
+          <div class="mt-4">
+            <span class="text-3xl font-black text-white">R$ ${Number(plan.price || 0).toFixed(2).replace('.', ',')}</span>
+          </div>
           <ul class="mt-4 space-y-2 text-sm text-gray-400">
             <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> ${Number(plan.speed_mbps || 0)} Mbps</li>
             <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> ${Number(plan.duration_days || 1)} dia(s)</li>
           </ul>
-          <button class="btn-plano w-full mt-6 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl text-sm font-bold transition">Escolher plano</button>
+          <button class="btn-plano w-full mt-6 bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl text-sm font-bold transition">
+            Escolher plano
+          </button>
         </div>
       `).join('');
 
       lucide.createIcons();
+
       document.querySelectorAll('.btn-plano').forEach(btn => {
         btn.addEventListener('click', async () => {
-          if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
+          if (registrationGateActive) {
+            showStatusMessage('Complete seu cadastro para continuar.', 'warning');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+
+          if (!macAddress) {
+            showStatusMessage('MAC não detectado. Reconecte-se ao Wi-Fi.', 'error');
+            return;
+          }
+
           const card = btn.closest('.plan-card');
-          selectedPlan = { name: card.dataset.planName, price: Number(card.dataset.price || 0) };
+          selectedPlan = {
+            name: card.dataset.planName,
+            price: Number(card.dataset.price || 0)
+          };
+
           paymentSection.classList.remove('hidden');
           paymentSection.scrollIntoView({ behavior: 'smooth' });
+
           qrCodeInner.innerHTML = 'Gerando QR Code...';
           pixCode.textContent = 'Aguarde, gerando PIX...';
+
           try {
             const response = await fetch(`${API_BASE}/api/payments/generate-pix`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mac_address: macAddress, plan_name: selectedPlan.name, amount: selectedPlan.price })
+              body: JSON.stringify({
+                mac_address: macAddress,
+                plan_name: selectedPlan.name,
+                amount: selectedPlan.price
+              })
             });
+
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Erro ao gerar PIX');
-            if (data.qr_code_base64) { qrCodeInner.innerHTML = `<img src="data:image/png;base64,${data.qr_code_base64}" class="w-48 h-48" alt="QR Code PIX">`; }
-            else { qrCodeInner.innerHTML = 'QR indisponível'; }
+
+            if (data.qr_code_base64) {
+              qrCodeInner.innerHTML = `<img src="data:image/png;base64,${data.qr_code_base64}" class="w-48 h-48" alt="QR Code PIX">`;
+            } else {
+              qrCodeInner.innerHTML = 'QR indisponível';
+            }
+
             pixCode.textContent = data.pix_copy_paste || data.pix_code || 'Código PIX não disponível';
           } catch (error) {
             paymentSection.classList.add('hidden');
@@ -365,110 +471,197 @@
         });
       });
     } catch (error) {
-      plansContainer.innerHTML = `<div class="glass-card rounded-2xl p-6 border border-red-500/20 text-center text-red-400 md:col-span-3">Erro ao carregar planos.</div>`;
+      plansContainer.innerHTML = `
+        <div class="glass-card rounded-2xl p-6 border border-red-500/20 text-center text-red-400 md:col-span-3">
+          Erro ao carregar planos.
+        </div>
+      `;
     }
   }
 
   async function loadFreeTrialSettings() {
     try {
-      const res = await fetch(`${API_BASE}/api/settings/free_trial`);
+      const res = await fetch(`${API_BASE}/api/settings/free_trial`, { cache: 'no-store' });
       if (!res.ok) throw new Error('Falha ao carregar config');
+
       const cfg = await res.json();
       window.__freeTrialCfg = cfg || {};
-      if (!!cfg.enabled) {
-        testeGratisBtn.classList.remove('hidden');
-        const durationSeconds = Number(cfg.duration_seconds ?? (cfg.duration_minutes ? cfg.duration_minutes * 60 : 900));
-        const durationLabel = (durationSeconds < 60) ? `${Math.max(10, Math.floor(durationSeconds))}s` : `${Math.max(1, Math.ceil(durationSeconds / 60))}min`;
+      const enabled = !!cfg.enabled;
+      const durationSeconds = Number(cfg.duration_seconds ?? (cfg.duration_minutes ? cfg.duration_minutes * 60 : 900));
+      const durationLabel = (Number.isFinite(durationSeconds) && durationSeconds < 60)
+        ? `${Math.max(10, Math.floor(durationSeconds))}s`
+        : `${Math.max(1, Math.ceil(durationSeconds / 60))}min`;
+
+      if (enabled) {
         testeGratisBtn.innerHTML = `<i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis ${durationLabel}`;
-      } else { testeGratisBtn.classList.add('hidden'); }
+      } else {
+        testeGratisBtn.classList.add('hidden');
+      }
+
       lucide.createIcons();
-    } catch (error) { testeGratisBtn.classList.add('hidden'); }
+    } catch (error) {
+      testeGratisBtn.classList.add('hidden');
+    }
   }
 
   async function checkFreeTrialEligibility() {
-    if (!macAddress || !window.__freeTrialCfg?.enabled) { testeGratisBtn.classList.add('hidden'); return; }
+    if (registrationGateActive || !macAddress || !window.__freeTrialCfg?.enabled) {
+      testeGratisBtn.classList.add('hidden');
+      return;
+    }
+
     try {
-      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
-      if (!res.ok) { testeGratisBtn.classList.remove('hidden'); return; }
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
+      if (!res.ok) {
+        testeGratisBtn.classList.add('hidden');
+        return;
+      }
+
       const data = await res.json();
-      if (data && data.allowed === true) { testeGratisBtn.classList.add('hidden'); }
-      else { testeGratisBtn.classList.remove('hidden'); }
-    } catch (error) { testeGratisBtn.classList.remove('hidden'); }
+      if (data && data.allowed === true) {
+        testeGratisBtn.classList.add('hidden');
+      } else if (data && data.show_free_trial === true) {
+        testeGratisBtn.classList.remove('hidden');
+      } else if (data && data.reason === 'cooldown') {
+        testeGratisBtn.classList.add('hidden');
+        showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
+      } else {
+        testeGratisBtn.classList.add('hidden');
+      }
+    } catch (error) {
+      testeGratisBtn.classList.add('hidden');
+    }
   }
 
   testeGratisBtn.addEventListener('click', async () => {
-    if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
-    if (redirectInProgress) { showStatusMessage('Redirecionamento em progresso...', 'info'); return; }
+    if (registrationGateActive) {
+      showStatusMessage('Complete seu cadastro para continuar.', 'warning');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    if (redirectInProgress) {
+      showStatusMessage('Redirecionamento em progresso...', 'info');
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/users/test-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mac_address: macAddress })
+        body: JSON.stringify({
+          mac_address: macAddress
+        })
       });
+
       const data = await res.json();
       if (!res.ok) {
+        // Handle 403: MAC has active plan or already used
         if (res.status === 403) {
           const reason = data?.reason || 'unknown';
-          if (reason === 'manual_plan_active' || reason === 'paid_plan_active') { showStatusMessage('Você já possui um plano ativo.', 'warning'); testeGratisBtn.classList.add('hidden'); }
-          else { showStatusMessage(data.error || 'Acesso negado.', 'error'); }
+          if (reason === 'manual_plan_active' || reason === 'paid_plan_active') {
+            showStatusMessage('Você já possui um plano ativo.', 'warning');
+            testeGratisBtn.classList.add('hidden');
+          } else {
+            showStatusMessage(data.error || 'Acesso negado.', 'error');
+          }
           return;
         }
+        // Handle 429: Cooldown or already used
         if (res.status === 429) {
           const reason = data?.reason || 'cooldown';
-          if (reason === 'already_used') { showStatusMessage('Teste grátis já foi utilizado.', 'warning'); testeGratisBtn.classList.add('hidden'); }
-          else if (reason === 'cooldown' && typeof data.retry_after_seconds === 'number') {
-            const sec = Math.max(1, Number(data.retry_after_seconds));
-            const hours = Math.floor(sec / 3600);
-            const minutes = Math.ceil((sec % 3600) / 60);
-            showStatusMessage(hours > 0 ? `Aguarde ${hours}h ${minutes}min.` : `Aguarde ${minutes}min.`, 'warning');
-          } else { showStatusMessage(data.error || 'Teste grátis já utilizado.', 'warning'); }
+          if (reason === 'already_used') {
+            showStatusMessage('Teste grátis já foi utilizado para este dispositivo.', 'warning');
+            testeGratisBtn.classList.add('hidden');
+          } else if (reason === 'cooldown' && typeof data.retry_after_seconds === 'number') {
+            showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
+            testeGratisBtn.classList.add('hidden');
+          } else {
+            showStatusMessage(data.error || 'Teste grátis já utilizado.', 'warning');
+          }
           return;
         }
         throw new Error(data.error || 'Falha ao liberar teste');
       }
-      showStatusMessage(`Teste grátis liberado! Autenticando...`, 'success');
+
+      const durationGrantedSeconds = Number(data.duration_seconds || window.__freeTrialCfg?.duration_seconds || 900);
+      const msgDuration = (Number.isFinite(durationGrantedSeconds) && durationGrantedSeconds < 60)
+        ? `${Math.max(10, Math.floor(durationGrantedSeconds))} segundos`
+        : `${Math.max(1, Math.ceil(durationGrantedSeconds / 60))} minutos`;
+      showStatusMessage(`Teste grátis de ${msgDuration} liberado! Autenticando...`, 'success');
       redirectInProgress = true;
       setTimeout(() => redirectToMikrotik(macAddress), 1500);
-    } catch (error) { showStatusMessage(error.message || 'Erro ao liberar teste.', 'error'); }
+    } catch (error) {
+      showStatusMessage(error.message || 'Erro ao liberar teste.', 'error');
+    }
   });
 
   liberar5minBtn.addEventListener('click', async () => {
-    if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
-    const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
-    if (lastFreeTest && (now - lastFreeTest) < oneHour) {
-      const remaining = Math.ceil((oneHour - (now - lastFreeTest)) / 60000);
-      showStatusMessage(`Aguarde ${remaining} minutos.`, 'warning');
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
       return;
     }
+
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+
+    if (lastFreeTest && (now - lastFreeTest) < oneHour) {
+      const remaining = Math.ceil((oneHour - (now - lastFreeTest)) / 60000);
+      showStatusMessage(`Aguarde ${remaining} minutos para outro teste gratuito.`, 'warning');
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/users/test-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mac_address: macAddress, duration_minutes: 5 })
+        body: JSON.stringify({
+          mac_address: macAddress,
+          duration_minutes: 5
+        })
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Falha ao liberar teste');
+
       lastFreeTest = now;
       localStorage.setItem('last_free_test', String(lastFreeTest));
-      showStatusMessage('5 minutos liberados! Autenticando...', 'success');
+
+      showStatusMessage('5 minutos de acesso liberado! Autenticando...', 'success');
       setTimeout(() => redirectToMikrotik(macAddress), 1500);
-    } catch (error) { showStatusMessage(error.message || 'Erro ao liberar 5 minutos.', 'error'); }
+    } catch (error) {
+      showStatusMessage(error.message || 'Erro ao liberar 5 minutos.', 'error');
+    }
   });
 
   jaPagueiBtn.addEventListener('click', async () => {
-    if (!macAddress) { showStatusMessage('MAC não detectado.', 'error'); return; }
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/check-payment?mac=${encodeURIComponent(macAddress)}`);
       const data = await res.json();
+
       if (data && (data.status === 'approved' || data.status === 'paid')) {
-        showStatusMessage('Pagamento confirmado! Redirecionando...', 'success');
+        showStatusMessage('Pagamento confirmado! Acesso liberado. Redirecionando...', 'success');
         setTimeout(() => redirectToMikrotik(macAddress), 1500);
       } else {
-        showStatusMessage('Pagamento não encontrado.', 'warning');
-        if (selectedPlan) { paymentSection.classList.remove('hidden'); paymentSection.scrollIntoView({ behavior: 'smooth' }); }
+        showStatusMessage('Pagamento ainda não encontrado. Faça o PIX e tente novamente.', 'warning');
+        if (selectedPlan) {
+          paymentSection.classList.remove('hidden');
+          paymentSection.scrollIntoView({ behavior: 'smooth' });
+        }
       }
-    } catch (error) { showStatusMessage('Erro ao verificar pagamento.', 'error'); }
+    } catch (error) {
+      showStatusMessage('Erro ao verificar pagamento.', 'error');
+    }
   });
 
   document.getElementById('cancelarPagamentoBtn').addEventListener('click', () => {
@@ -478,34 +671,73 @@
     pixCode.textContent = 'Gerando PIX...';
   });
 
+  // Refresh eligibility periodically or on user interaction
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !redirectInProgress) {
+      checkFreeTrialEligibility();
+    }
+  });
+
   document.getElementById('copyPixBtn').addEventListener('click', async () => {
     const code = pixCode.textContent || '';
-    if (!code || code.includes('Gerando')) { showStatusMessage('Aguarde o código PIX.', 'warning'); return; }
-    try { await navigator.clipboard.writeText(code); showStatusMessage('Código PIX copiado!', 'info'); }
-    catch { showStatusMessage('Erro ao copiar código.', 'error'); }
+    if (!code || code.includes('Gerando')) {
+      showStatusMessage('Aguarde o código PIX ser gerado.', 'warning');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(code);
+      showStatusMessage('Código PIX copiado!', 'info');
+    } catch {
+      showStatusMessage('Erro ao copiar código.', 'error');
+    }
   });
 
   function escapeHtml(str) {
-    return String(str).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+    return String(str)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 
-  async function checkAccessStatus() {
+  async function checkAccessStatus(options = {}) {
     if (!macAddress) return;
     try {
-      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`);
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
       if (!res.ok) return;
+      
       const data = await res.json();
       if (data && data.allowed === true) {
         redirectInProgress = true;
-        showStatusMessage('Plano ativo encontrado. Liberando...', 'info');
+        showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
+        // Hide free trial button since user has active plan
         testeGratisBtn.classList.add('hidden');
         setTimeout(() => redirectToMikrotik(macAddress), 1000);
-      } else { checkFreeTrialEligibility(); }
+      } else if (!options.skipTrialCheck) {
+        // Check free trial eligibility after confirming no active plan
+        checkFreeTrialEligibility();
+      }
     } catch (_e) {}
   }
 
-  lucide.createIcons();
-  checkRegistrationStatus();
+  registrationForm.addEventListener('submit', savePortalRegistration);
+
+  async function initPortal() {
+    lucide.createIcons();
+    await loadFreeTrialSettings();
+    await checkAccessStatus({ skipTrialCheck: true });
+    if (redirectInProgress) return;
+
+    const complete = await checkRegistrationStatus();
+    if (!complete) return;
+
+    await loadPlans();
+    checkFreeTrialEligibility();
+  }
+
+  initPortal();
 </script>
 </body>
 </html>

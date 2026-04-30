@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
 <body class="bg-[#0a0c15] text-gray-200">
 
 <script>
-    const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
     if (!token) window.location.href = 'login.html';
 </script>
 
@@ -210,8 +210,8 @@
     }
 
     function sair() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('ms_token');
+        localStorage.removeItem('adminToken'); localStorage.removeItem('token');
+        localStorage.removeItem('ms_token'); localStorage.removeItem('authToken');
         window.location.href = 'login.html';
     }
 
