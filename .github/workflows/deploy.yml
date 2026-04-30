@@ -25,6 +25,8 @@ jobs:
             APP_DIR=/home/ubuntu/hotspot-system
             TMP_DIR=/home/ubuntu/hotspot-system-temp
 
+            cp "$APP_DIR/backend/.env" /tmp/hotspot-backend.env || true
+
             rm -rf "$TMP_DIR"
             git clone https://github.com/${{ github.repository }} "$TMP_DIR"
 
@@ -33,9 +35,13 @@ jobs:
             cp -r "$TMP_DIR"/* "$APP_DIR"/
             rm -rf "$TMP_DIR"
 
+            mkdir -p "$APP_DIR/backend"
+            cp /tmp/hotspot-backend.env "$APP_DIR/backend/.env" || true
+            rm -f /tmp/hotspot-backend.env
+
             cd "$APP_DIR"
             npm install --omit=dev
 
             pm2 delete hotspot || true
-            pm2 start backend/server.js --name hotspot
+            pm2 start /home/ubuntu/hotspot-system/backend/server.js --name hotspot --cwd /home/ubuntu/hotspot-system/backend
             pm2 save
