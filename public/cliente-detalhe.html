@@ -82,7 +82,7 @@
                 <i data-lucide="settings" class="w-5 h-5"></i> Configurações
             </a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs de Auditoria
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs do Sistema
             </a>
             <a href="perfil-cadastro.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro
@@ -386,7 +386,7 @@
     async function carregarClientes() {
         try {
             clientesData = await apiRequest('/api/users');
-            aplicarFiltrosAtuais();
+            renderizarClientes(clientesData);
         } catch (error) {
             console.error('Erro ao carregar clientes:', error);
         }
@@ -485,28 +485,6 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
-    function aplicarFiltrosAtuais() {
-        const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
-        const nome = (document.getElementById('filtroNome')?.value || '').toLowerCase();
-        const status = document.getElementById('filtroStatus')?.value || '';
-        const plano = document.getElementById('filtroPlano')?.value || '';
-        const activeShortcut = document.querySelector('.filter-btn.active')?.dataset.filter || 'todos';
-
-        const filtrados = clientesData.filter(c => {
-            const matchSearch = !searchTerm ||
-                (c.name || '').toLowerCase().includes(searchTerm) ||
-                (c.mac_address || '').toLowerCase().includes(searchTerm) ||
-                (c.cpf || '').toLowerCase().includes(searchTerm) ||
-                (c.phone || '').toLowerCase().includes(searchTerm);
-            const matchNome = !nome || (c.name || '').toLowerCase().includes(nome);
-            const matchStatus = !status || c.status === status;
-            const matchPlano = !plano || String(c.plan_id) === plano;
-            const matchShortcut = activeShortcut === 'todos' || c.status === activeShortcut;
-            return matchSearch && matchNome && matchStatus && matchPlano && matchShortcut;
-        });
-        renderizarClientes(filtrados);
-    }
-
     function openModalNovoUsuario() {
         document.getElementById('modalNovoUsuario').classList.remove('hidden');
         if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -541,15 +519,7 @@
             carregarClientes();
         } catch (error) {
             console.error(error);
-            if (error.reason === 'duplicate_cpf') {
-                alert('CPF já cadastrado em outro cliente');
-                return;
-            }
-            if (error.reason === 'duplicate_email') {
-                alert('E-mail já cadastrado em outro cliente');
-                return;
-            }
-            alert(error.message || 'Erro ao cadastrar cliente');
+            alert('Erro ao cadastrar cliente');
         }
     }
 
@@ -704,18 +674,35 @@
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
-        aplicarFiltrosAtuais();
+        const term = e.target.value.toLowerCase();
+        const filtrados = clientesData.filter(c => 
+            (c.name || '').toLowerCase().includes(term) || 
+            (c.mac_address || '').toLowerCase().includes(term) || 
+            (c.cpf || '').toLowerCase().includes(term) || 
+            (c.phone || '').toLowerCase().includes(term)
+        );
+        renderizarClientes(filtrados);
     });
 
     document.getElementById('aplicarFiltros').addEventListener('click', () => {
-        aplicarFiltrosAtuais();
+        const nome = document.getElementById('filtroNome').value.toLowerCase();
+        const status = document.getElementById('filtroStatus').value;
+        const plano = document.getElementById('filtroPlano').value;
+        
+        const filtrados = clientesData.filter(c => {
+            const matchNome = !nome || (c.name || '').toLowerCase().includes(nome);
+            const matchStatus = !status || c.status === status;
+            const matchPlano = !plano || String(c.plan_id) === plano;
+            return matchNome && matchStatus && matchPlano;
+        });
+        renderizarClientes(filtrados);
     });
 
     document.getElementById('limparFiltros').addEventListener('click', () => {
         document.getElementById('filtroNome').value = '';
         document.getElementById('filtroStatus').value = '';
         document.getElementById('filtroPlano').value = '';
-        aplicarFiltrosAtuais();
+        renderizarClientes(clientesData);
     });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -726,16 +713,13 @@
             btn.classList.remove('bg-gray-800', 'text-gray-300');
             
             const filter = btn.dataset.filter;
-            aplicarFiltrosAtuais();
+            if (filter === 'todos') {
+                renderizarClientes(clientesData);
+            } else {
+                renderizarClientes(clientesData.filter(c => c.status === filter));
+            }
         });
     });
-
-    function iniciarPollingClientes() {
-        setInterval(() => {
-            if (document.hidden) return;
-            carregarClientes();
-        }, 15000);
-    }
 
     window.onload = async () => {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -745,7 +729,6 @@
         
         await carregarPlanos();
         await carregarClientes();
-        iniciarPollingClientes();
         if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 </script>

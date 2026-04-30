@@ -775,27 +775,6 @@
     }
 
     // ==================== ADMINS ====================
-    async function openModalNovoAdmin() {
-        const username = prompt('Usuário do novo administrador:');
-        if (!username) return;
-        const email = prompt('E-mail do novo administrador (opcional):') || '';
-        const password = prompt('Senha inicial do novo administrador:');
-        if (!password) { alert('Senha obrigatória'); return; }
-        try {
-            const res = await fetch(`${API_URL}/api/admins`, {
-                method: 'POST',
-                headers: authHeaders(),
-                body: JSON.stringify({ username, email, password, role: 'admin' })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || 'Erro ao criar administrador');
-            alert('Administrador criado com sucesso!');
-            carregarAdmins();
-        } catch (error) {
-            alert(error.message || 'Erro ao criar administrador');
-        }
-    }
-
     async function carregarAdmins() {
         const container = document.getElementById('listaAdmins');
         if (!container) return;
@@ -806,7 +785,7 @@
             container.innerHTML = admins.map(a => `
                 <div class="py-4 px-6 flex justify-between items-center hover:bg-gray-900/30 transition">
                     <div>
-                        <p class="text-sm font-bold text-white">${escapeHtml(a.username || a.full_name || '')}</p>
+                        <p class="text-sm font-bold text-white">${escapeHtml(a.full_name || '')}</p>
                         <p class="text-xs text-gray-500">${escapeHtml(a.email || '')}</p>
                     </div>
                     <div class="flex gap-2">
@@ -875,3 +854,4 @@
 <script src="globals.js"></script>
 </body>
 </html>
+

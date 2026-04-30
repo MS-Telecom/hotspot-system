@@ -139,13 +139,6 @@ function normalizeEmail(value) {
   return raw || null;
 }
 
-function normalizePhone(value) {
-  const raw = String(value ?? '').trim();
-  if (!raw) return null;
-  const digits = raw.replace(/\D/g, '');
-  return digits || null;
-}
-
 async function findDuplicateUserField(field, value, excludeId = null) {
   if (!value) return null;
   let query = supabase.from('users').select('id').eq(field, value);
@@ -154,13 +147,6 @@ async function findDuplicateUserField(field, value, excludeId = null) {
   const { data, error } = await query;
   if (error) throw error;
   return data || null;
-}
-
-function stripUnknownColumnFromPayload(payload, message) {
-  const match = String(message || '').match(/column "([^"]+)"/i) || String(message || '').match(/Could not find the '([^']+)' column/i);
-  if (!match || !Object.prototype.hasOwnProperty.call(payload, match[1])) return payload;
-  const { [match[1]]: _removed, ...rest } = payload;
-  return rest;
 }
 
 function getHostnameFromUrl(value) {
@@ -840,104 +826,6 @@ async function getFreeTrialConfig() {
   }
 }
 
-const DEFAULT_PORTAL_REGISTRATION_FIELDS = [
-  { field: 'name', label: 'Nome completo', enabled: true, required: true, type: 'text' },
-  { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true, type: 'tel' },
-  { field: 'terms', label: 'Aceite dos termos', enabled: true, required: true, type: 'checkbox' }
-];
-
-const REGISTRATION_FIELD_META = {
-  name: { label: 'Nome completo', type: 'text' },
-  phone: { label: 'Telefone/WhatsApp', type: 'tel' },
-  email: { label: 'E-mail', type: 'email' },
-  cpf: { label: 'CPF', type: 'text' },
-  birth_date: { label: 'Data de nascimento', type: 'date' },
-  gender: { label: 'Gênero', type: 'select', options: ['Feminino', 'Masculino', 'Outro'] },
-  terms: { label: 'Aceite dos termos', type: 'checkbox' }
-};
-
-function normalizeRegistrationFields(fields) {
-  const source = Array.isArray(fields) && fields.length ? fields : DEFAULT_PORTAL_REGISTRATION_FIELDS;
-  return source
-    .filter((field) => field && REGISTRATION_FIELD_META[field.field])
-    .map((field) => {
-      const meta = REGISTRATION_FIELD_META[field.field];
-      return {
-        field: field.field,
-        label: field.label || meta.label,
-        enabled: field.enabled !== false,
-        required: field.required === true,
-        type: field.type || meta.type,
-        ...(meta.options ? { options: meta.options } : {})
-      };
-    });
-}
-
-async function getRegistrationFieldsConfig() {
-  try {
-    const { data, error } = await supabase.from('settings').select('value').eq('key', 'registration_fields').maybeSingle();
-    if (error) throw error;
-    return normalizeRegistrationFields(data?.value);
-  } catch (error) {
-    await registerSystemLog('error', 'portal_registration', 'registration_fields_error', { error: error.message });
-    return normalizeRegistrationFields();
-  }
-}
-
-function hasPortalRegistrationComplete(user, fields) {
-  const requiredFields = (fields || []).filter((field) => field.enabled !== false && field.required === true && field.field !== 'terms');
-  if (!requiredFields.length) return true;
-  if (!user) return false;
-  return requiredFields.every((field) => {
-    if (field.field === 'name') {
-      const name = String(user.name || '').trim();
-      return !!name && !name.toLowerCase().startsWith('device ');
-    }
-    if (field.field === 'phone') return !!normalizePhone(user.phone);
-    if (field.field === 'email') return !!normalizeEmail(user.email);
-    if (field.field === 'cpf') return !!normalizeCpf(user.cpf);
-    return String(user[field.field] || '').trim().length > 0;
-  });
-}
-
-function buildSafeRegistrationUser(user) {
-  if (!user) return null;
-  return { name: user.name || null };
-}
-
-function buildPortalRegistrationPayload(body, fields, cleanMac, existing = null) {
-  const payload = {
-    username: existing?.username || cleanMac,
-    mac_address: cleanMac,
-    updated_at: new Date().toISOString()
-  };
-
-  for (const field of (fields || []).filter((f) => f.enabled !== false)) {
-    if (!Object.prototype.hasOwnProperty.call(body, field.field) || field.field === 'terms') continue;
-    if (field.field === 'name') {
-      const value = String(body.name || '').trim();
-      if (value) payload.name = value;
-    } else if (field.field === 'phone') {
-      payload.phone = normalizePhone(body.phone);
-    } else if (field.field === 'email') {
-      payload.email = normalizeEmail(body.email);
-    } else if (field.field === 'cpf') {
-      payload.cpf = normalizeCpf(body.cpf);
-    } else if (field.field === 'birth_date') {
-      payload.birth_date = String(body.birth_date || '').trim() || null;
-    } else if (field.field === 'gender') {
-      payload.gender = String(body.gender || '').trim() || null;
-    }
-  }
-
-  if (!existing) {
-    if (!payload.name) payload.name = `Device ${cleanMac}`;
-    payload.status = 'inactive';
-    payload.created_at = payload.updated_at;
-  }
-  return payload;
-}
-
 function isActivePaidUser(user) {
   if (!user) return false;
   const status = String(user.status || '').toLowerCase();
@@ -951,28 +839,30 @@ function isActivePaidUser(user) {
 
 function getTrialCooldownUntil(record, cfg) {
   if (!record) return null;
-  if (record.cooldown_until) return record.cooldown_until;
-
   const configuredCooldown = Math.floor(Number(cfg.cooldown_seconds ?? 0));
   const storedCooldown = Math.floor(Number(record.cooldown_seconds ?? 0));
-  const cooldownSeconds = Math.max(0, Number.isFinite(configuredCooldown) ? configuredCooldown : storedCooldown);
+  const cooldownSeconds = Math.max(0, Number.isFinite(configuredCooldown) && configuredCooldown > 0 ? configuredCooldown : storedCooldown);
   if (cooldownSeconds <= 0) return null;
 
+  // Reuso deve seguir a configuração atual do painel. Não use cooldown_until antigo
+  // quando existe expires_at, pois ele pode ter sido gravado com outra configuração.
   if (record.expires_at) return new Date(new Date(record.expires_at).getTime() + cooldownSeconds * 1000).toISOString();
 
   const lastUsed = record.last_used_at || record.used_at || record.first_used_at || record.created_at || null;
-  if (!lastUsed) return null;
+  if (!lastUsed) return record.cooldown_until || null;
 
   const configuredDuration = Math.floor(Number(cfg.duration_seconds ?? 0));
   const storedDuration = Math.floor(Number(record.duration_seconds ?? 0));
-  const durationSeconds = Math.max(0, Number.isFinite(configuredDuration) ? configuredDuration : storedDuration);
+  const durationSeconds = Math.max(0, Number.isFinite(configuredDuration) && configuredDuration > 0 ? configuredDuration : storedDuration);
   return new Date(new Date(lastUsed).getTime() + (durationSeconds + cooldownSeconds) * 1000).toISOString();
 }
 
 function isTrialSessionRecord(session) {
   if (!session) return false;
   const planName = String(session.plan_name || '').toLowerCase();
-  return planName === 'free_trial' && session.access_granted === true && !!session.expires_at;
+  const status = String(session.status || '').toLowerCase();
+  if (planName && planName !== 'free_trial' && planName !== 'trial') return false;
+  return planName === 'free_trial' || planName === 'trial' || status === 'trial' || session.access_granted === true;
 }
 
 async function getLastTrialSession(macVariants) {
@@ -980,11 +870,9 @@ async function getLastTrialSession(macVariants) {
     .from('hotspot_sessions')
     .select('*')
     .in('mac_address', macVariants)
-    .eq('plan_name', 'free_trial')
-    .eq('access_granted', true)
-    .not('expires_at', 'is', null)
+    .or('plan_name.eq.free_trial,plan_name.eq.trial,status.eq.trial,access_granted.eq.true')
     .order('expires_at', { ascending: false })
-    .limit(1);
+    .limit(10);
 
   if (error) throw error;
   return (data || []).find(isTrialSessionRecord) || null;
@@ -1049,11 +937,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     previousTrial = ft || null;
 
     const effectiveUntil = getTrialCooldownUntil(previousTrial, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
-    await registerSystemLog('info', 'free_trial', 'cooldown_checked', { mac: cleanMac, source: 'free_trials', cooldown_until: effectiveUntil || null });
 
     if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'cooldown_blocked', { mac: cleanMac, source: 'free_trials', retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
       return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
@@ -1064,10 +951,9 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   try {
     const lastTrialSession = await getLastTrialSession(getMacVariants(cleanMac));
     const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
-    await registerSystemLog('info', 'free_trial', 'cooldown_checked', { mac: cleanMac, source: 'hotspot_sessions', cooldown_until: sessionCooldownUntil || null });
     if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'cooldown_blocked', { mac: cleanMac, source: 'hotspot_sessions', retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown de sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
       return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
@@ -1077,7 +963,6 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     }
   }
 
-  await registerSystemLog('info', 'free_trial', 'trial_available', { mac: cleanMac, duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
   const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
   if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS', reason: 'radius_error', details: auth.errors } };
 
@@ -1127,7 +1012,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar histórico de teste grátis', { mac: cleanMac, error: error.message });
   }
 
-  await registerSystemLog('info', 'free_trial', 'trial_granted', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
+  await registerSystemLog('info', 'free_trial', 'Teste grátis liberado', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
   return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user?.id || null, duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds, cooldown_until: cooldownUntil, show_free_trial: false } };
 }
 // ============================================================
@@ -3039,8 +2924,7 @@ app.get('/api/settings/fields', authMiddleware, async (req, res) => {
       { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true },
       { field: 'cpf', label: 'CPF', enabled: false, required: false },
       { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
-      { field: 'gender', label: 'Gênero', enabled: false, required: false },
-      { field: 'terms', label: 'Aceite dos termos', enabled: true, required: true }
+      { field: 'gender', label: 'Gênero', enabled: false, required: false }
     ];
 
     res.json(data ? data.value : defaultFields);
@@ -3063,112 +2947,6 @@ app.put('/api/settings/fields', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-app.get('/api/portal/registration-fields', async (_req, res) => {
-  res.set('Cache-Control', 'no-store');
-  const fields = await getRegistrationFieldsConfig();
-  res.json(fields.filter((field) => field.enabled !== false));
-});
-
-app.get('/api/portal/registration-status', async (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  const cleanMac = normalizeMac(req.query.mac || req.query.mac_address || '');
-  if (!cleanMac) return res.status(400).json({ exists: false, complete: false, missing_fields: [], user: null, reason: 'missing_mac' });
-
-  try {
-    const fields = await getRegistrationFieldsConfig();
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .in('mac_address', getMacVariants(cleanMac))
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw error;
-
-    const enabledFields = fields.filter((field) => field.enabled !== false);
-    const missingFields = enabledFields
-      .filter((field) => field.required === true && field.field !== 'terms')
-      .filter((field) => !hasPortalRegistrationComplete(user, [field]))
-      .map((field) => field.field);
-
-    res.json({
-      exists: !!user,
-      complete: hasPortalRegistrationComplete(user, enabledFields),
-      missing_fields: missingFields,
-      fields: enabledFields,
-      user: buildSafeRegistrationUser(user)
-    });
-  } catch (error) {
-    await registerSystemLog('error', 'portal_registration', 'registration_status_error', { mac: cleanMac, error: error.message });
-    res.status(500).json({ exists: false, complete: false, missing_fields: [], user: null, error: 'Erro ao verificar cadastro' });
-  }
-});
-
-async function handlePortalRegister(req, res) {
-  res.set('Cache-Control', 'no-store');
-  const cleanMac = normalizeMac(req.body?.mac_address || req.body?.mac || '');
-  if (!cleanMac) return res.status(400).json({ success: false, error: 'MAC obrigatorio', reason: 'missing_mac' });
-
-  try {
-    const fields = (await getRegistrationFieldsConfig()).filter((field) => field.enabled !== false);
-    const missing = fields
-      .filter((field) => field.required === true)
-      .filter((field) => {
-        if (field.field === 'terms') return req.body?.terms_accepted !== true;
-        if (field.field === 'phone') return !normalizePhone(req.body?.phone);
-        if (field.field === 'email') return !normalizeEmail(req.body?.email);
-        if (field.field === 'cpf') return !normalizeCpf(req.body?.cpf);
-        return !String(req.body?.[field.field] || '').trim();
-      });
-    if (missing.length) return res.status(400).json({ success: false, error: 'Campos obrigatorios pendentes', reason: 'required_fields', fields: missing.map((field) => field.field) });
-
-    const { data: existing, error: findErr } = await supabase
-      .from('users')
-      .select('*')
-      .in('mac_address', getMacVariants(cleanMac))
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (findErr) throw findErr;
-
-    const payload = buildPortalRegistrationPayload(req.body || {}, fields, cleanMac, existing);
-    if (payload.cpf && await findDuplicateUserField('cpf', payload.cpf, existing?.id || null)) {
-      return res.status(409).json({ success: false, error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
-    }
-    if (payload.email && await findDuplicateUserField('email', payload.email, existing?.id || null)) {
-      return res.status(409).json({ success: false, error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
-    }
-
-    let writePayload = payload;
-    let result = null;
-    for (let i = 0; i < 4; i++) {
-      const query = existing
-        ? supabase.from('users').update(writePayload).eq('id', existing.id).select('*').maybeSingle()
-        : supabase.from('users').insert(writePayload).select('*').maybeSingle();
-      const { data, error } = await query;
-      if (!error) {
-        result = data;
-        break;
-      }
-      const next = stripUnknownColumnFromPayload(writePayload, error.message);
-      if (next === writePayload) throw error;
-      writePayload = next;
-    }
-
-    if (!result) throw new Error('Falha ao salvar cadastro');
-    if (req.body?.terms_accepted === true) {
-      await registerSystemLog('info', 'portal_registration', 'registration_terms_accepted', { mac: cleanMac, user_id: result.id });
-    }
-    await registerSystemLog('info', 'portal_registration', 'registration_saved', { mac: cleanMac, user_id: result.id });
-    res.json({ success: true, exists: true, complete: true, user: buildSafeRegistrationUser(result) });
-  } catch (error) {
-    await registerSystemLog('error', 'portal_registration', 'registration_save_error', { mac: cleanMac, error: error.message });
-    res.status(500).json({ success: false, error: error.message || 'Erro ao salvar cadastro', reason: 'registration_save_error' });
-  }
-}
-
-app.post('/api/portal/register-device', handlePortalRegister);
 
 // ============================================================
 // ⚙️ CONFIGURAÇÕES DO SISTEMA (SETTINGS)
@@ -3483,9 +3261,9 @@ app.get('/api/campaigns', authMiddleware, async (req, res) => {
 
 app.post('/api/campaigns', authMiddleware, async (req, res) => {
   try {
-    const { name, description, coupon_code, status, min_age, max_age, starts_at, ends_at } = req.body;
+    const { name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at } = req.body;
     const { data, error } = await supabase.from('campaigns').insert([{
-      name, description, coupon_code, status, min_age, max_age, starts_at, ends_at
+      name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at
     }]).select();
     if (error) throw error;
     res.status(201).json(data[0]);
@@ -3496,9 +3274,9 @@ app.post('/api/campaigns', authMiddleware, async (req, res) => {
 
 app.put('/api/campaigns/:id', authMiddleware, async (req, res) => {
   try {
-    const { name, description, coupon_code, status, min_age, max_age, starts_at, ends_at } = req.body;
+    const { name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at } = req.body;
     const { data, error } = await supabase.from('campaigns').update({
-      name, description, coupon_code, status, min_age, max_age, starts_at, ends_at
+      name, description, coupon_code, status, gender, min_age, max_age, starts_at, ends_at
     }).eq('id', req.params.id).select();
     if (error) throw error;
     res.json(data[0]);
@@ -3539,7 +3317,6 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (error) {
-    await registerSystemLog('error', 'audit_logs', 'audit_logs_query_error', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });
@@ -3568,7 +3345,6 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (error) {
-    await registerSystemLog('error', 'logs', 'logs_query_error', { error: error.message });
     res.status(500).json({ error: error.message });
   }
 });
@@ -3690,7 +3466,35 @@ app.post('/api/portal/login', async (req, res) => {
   }
 });
 
-app.post('/api/portal/register', handlePortalRegister);
+app.post('/api/portal/register', async (req, res) => {
+  try {
+    const { name, cpf, phone, password, mac_address } = req.body;
+
+    // Se o MAC ja esta associado a algum usuario, evita duplicar cadastro
+    const cleanMac = normalizeMac(mac_address);
+    if (cleanMac) {
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id, username')
+        .in('mac_address', getMacVariants(cleanMac))
+        .maybeSingle();
+      if (existing) return res.json({ user_id: existing.id, username: existing.username, existing: true });
+    }
+
+    const username = cpf || phone || name.toLowerCase().replace(/\s+/g, '.');
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    
+    const { data, error } = await supabase.from('users').insert({
+      username, name, cpf: cpf || '', phone: phone || '', password: hashedPassword,
+      mac_address: cleanMac || '', status: 'pending', created_at: new Date().toISOString()
+    }).select().single();
+    
+    if (error) throw error;
+    res.status(201).json({ user_id: data.id, username: data.username });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro no cadastro' });
+  }
+});
 
 app.post('/api/portal/voucher', async (req, res) => {
   // Encaminha para a rota oficial de validação de voucher
@@ -3864,7 +3668,6 @@ app.get('/api/access/status', async (req, res) => {
         : 30 * 24 * 60 * 60;
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
       await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
-      await registerSystemLog('info', 'access_status', 'active_plan_detected', { mac: cleanMac, user_id: user.id, plan_name: planName });
       return res.json({ allowed: true, reason: 'manual_plan_active', show_free_trial: false, expires_at: user.expires_at || null });
     }
 
@@ -3920,11 +3723,10 @@ app.get('/api/access/status', async (req, res) => {
 
       if (ft) {
         const effectiveUntil = getTrialCooldownUntil(ft, cfg);
-        await registerSystemLog('info', 'free_trial', 'cooldown_checked', { mac: cleanMac, source: 'free_trials', cooldown_until: effectiveUntil || null });
 
         if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
           const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
-          await registerSystemLog('info', 'free_trial', 'cooldown_blocked', { mac: cleanMac, source: 'free_trials', retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+          await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
           return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
         }
       }
@@ -3935,17 +3737,15 @@ app.get('/api/access/status', async (req, res) => {
     try {
       const lastTrialSession = await getLastTrialSession(variants);
       const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, cfg);
-      await registerSystemLog('info', 'free_trial', 'cooldown_checked', { mac: cleanMac, source: 'hotspot_sessions', cooldown_until: sessionCooldownUntil || null });
       if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > nowMs) {
         const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - nowMs) / 1000));
-        await registerSystemLog('info', 'free_trial', 'cooldown_blocked', { mac: cleanMac, source: 'hotspot_sessions', retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+        await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown por sessao', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
         return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
       }
     } catch (error) {
       await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessao no status', { mac: cleanMac, error: error.message });
     }
 
-    await registerSystemLog('info', 'free_trial', 'trial_available', { mac: cleanMac });
     return res.json({ allowed: false, reason: 'trial_available', show_free_trial: true });
   } catch (error) {
     console.error('Erro ao verificar status de acesso:', error);

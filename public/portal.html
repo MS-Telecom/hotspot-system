@@ -17,10 +17,6 @@
     .toast-success { border-left-color: #10b981; }
     .toast-error { border-left-color: #ef4444; }
     .toast-info { border-left-color: #3b82f6; }
-    .block { display: block; }
-    .portal-input { width: 100%; background: rgba(17,24,39,.8); border: 1px solid #374151; color: #fff; border-radius: .75rem; padding: .75rem 1rem; outline: none; }
-    .portal-input:focus { border-color: #3b82f6; }
-    .whatsapp-link { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: 1px solid rgba(16,185,129,.45); background: rgba(5,150,105,.15); color: #34d399; border-radius: .75rem; padding: .75rem 1rem; font-size: .875rem; font-weight: 700; text-decoration: none; }
   </style>
 </head>
 <body class="text-gray-200">
@@ -59,7 +55,7 @@
         <code id="dispositivoMac" class="bg-gray-800 px-3 py-1.5 rounded-lg text-xs font-mono text-blue-400">Detectando...</code>
       </div>
 
-      <div id="portalActions" class="flex gap-3 flex-wrap">
+      <div class="flex gap-3 flex-wrap">
         <button id="liberar5minBtn" class="hidden px-5 py-2 bg-amber-600/20 border border-amber-500/50 rounded-xl text-sm font-medium text-amber-400 hover:bg-amber-600/30 transition flex items-center gap-2">
           <i data-lucide="clock" class="w-4 h-4"></i> Liberar 5 minutos
         </button>
@@ -74,26 +70,7 @@
       </div>
     </div>
 
-    <section id="registrationSection" class="hidden glass-card rounded-3xl p-8 border border-blue-500/30 mb-8">
-      <div class="max-w-2xl mx-auto">
-        <div class="text-center mb-6">
-          <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <i data-lucide="user-plus" class="text-blue-500 w-6 h-6"></i>
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-2">Complete seu cadastro</h3>
-          <p class="text-sm text-gray-400">Antes de mostrar planos e Teste grátis, informe os dados solicitados pela MS Telecom.</p>
-        </div>
-        <form id="registrationForm" class="space-y-4"></form>
-        <div class="mt-6 text-center">
-          <p class="text-sm text-gray-400 mb-3">Dúvidas? Fale com atendimento: (91) 9 9921-8635</p>
-          <a class="whatsapp-link" href="https://wa.me/5591999218635?text=Ol%C3%A1%2C%20quero%20informa%C3%A7%C3%B5es%20sobre%20os%20planos%20de%20internet%20Wi-Fi." target="_blank" rel="noopener">
-            <i data-lucide="message-circle" class="w-4 h-4"></i> Falar com atendimento
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <h3 id="planTitle" class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
       <i data-lucide="gift" class="w-6 h-6 text-blue-500"></i> Escolha seu plano
     </h3>
 
@@ -101,14 +78,6 @@
       <div class="glass-card rounded-2xl p-6 border border-gray-800 text-center text-gray-400">
         Carregando planos...
       </div>
-    </div>
-
-    <div id="whatsappMain" class="hidden text-center mb-8">
-      <p id="whatsappContextText" class="text-sm text-gray-400 mb-2">Quer contratar ou falar conosco?</p>
-      <p class="text-sm text-gray-300 mb-4">(91) 9 9921-8635</p>
-      <a class="whatsapp-link" href="https://wa.me/5591999218635?text=Ol%C3%A1%2C%20quero%20informa%C3%A7%C3%B5es%20sobre%20os%20planos%20de%20internet%20Wi-Fi." target="_blank" rel="noopener">
-        <i data-lucide="message-circle" class="w-4 h-4"></i> Falar no WhatsApp
-      </a>
     </div>
 
     <div id="paymentSection" class="hidden glass-card rounded-3xl p-8 border border-blue-500/30 mb-8">
@@ -177,9 +146,7 @@
     'circle-alert': '<circle cx="12" cy="12" r="10"/><path d="M12 8v5"/><path d="M12 16h.01"/>',
     'triangle-alert': '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
     info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
-    check: '<path d="M20 6 9 17l-5-5"/>',
-    'user-plus': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>',
-    'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'
+    check: '<path d="M20 6 9 17l-5-5"/>'
   };
 
   function renderIcons() {
@@ -198,13 +165,7 @@
   const macDisplay = document.getElementById('dispositivoMac');
   macDisplay.textContent = macAddress || 'MAC não detectado';
 
-  const portalActions = document.getElementById('portalActions');
-  const registrationSection = document.getElementById('registrationSection');
-  const registrationForm = document.getElementById('registrationForm');
-  const planTitle = document.getElementById('planTitle');
   const plansContainer = document.getElementById('plansContainer');
-  const whatsappMain = document.getElementById('whatsappMain');
-  const whatsappContextText = document.getElementById('whatsappContextText');
   const testeGratisBtn = document.getElementById('testeGratisBtn');
   const liberar5minBtn = document.getElementById('liberar5minBtn');
   const jaPagueiBtn = document.getElementById('jaPagueiBtn');
@@ -219,7 +180,6 @@
 function showStatusMessage(message, type = 'success') {
   const msgDiv = document.getElementById('statusMessage');
   const msgText = document.getElementById('statusMessageText');
-  const safeMessage = escapeHtml(message);
 
   msgText.innerText = message;
   msgDiv.className = `fixed bottom-6 right-6 glass-card rounded-2xl p-4 shadow-2xl z-50 max-w-sm border-l-4 toast-${type}`;
@@ -238,7 +198,7 @@ function showStatusMessage(message, type = 'success') {
     <div class="flex items-center gap-3">
       <i data-lucide="${iconName}" class="w-6 h-6 ${type === 'success' ? 'text-emerald-500' : type === 'error' ? 'text-red-500' : type === 'warning' ? 'text-amber-500' : 'text-blue-500'}"></i>
       <div>
-        <p id="statusMessageText" class="text-sm font-medium text-white">${safeMessage}</p>
+        <p id="statusMessageText" class="text-sm font-medium text-white">${message}</p>
         <p class="text-[10px] text-gray-500">Verifique o status da operação</p>
       </div>
     </div>
@@ -248,23 +208,13 @@ function showStatusMessage(message, type = 'success') {
   setTimeout(() => msgDiv.classList.add('hidden'), 5000);
 }
 
-function plural(value, singular, pluralText) {
-  return `${value} ${value === 1 ? singular : pluralText}`;
-}
-
-function formatDuration(seconds, compact = false) {
-  const sec = Math.max(1, Math.ceil(Number(seconds || 0)));
-  if (sec < 60) return compact ? `${sec}s` : plural(sec, 'segundo', 'segundos');
+function formatRetryAfter(seconds) {
+  const sec = Math.max(1, Number(seconds || 0));
+  if (sec < 60) return `${Math.ceil(sec)} segundos`;
   const minutes = Math.ceil(sec / 60);
-  if (minutes < 60) return compact ? `${minutes}min` : plural(minutes, 'minuto', 'minutos');
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (compact) return rest ? `${hours}h ${rest}min` : `${hours}h`;
-  return rest ? `${plural(hours, 'hora', 'horas')} e ${plural(rest, 'minuto', 'minutos')}` : plural(hours, 'hora', 'horas');
-}
-
-function formatRetryAfter(seconds) {
-  return formatDuration(seconds);
+  return rest ? `${hours}h ${rest}min` : `${hours} horas`;
 }
 
   function redirectToMikrotik(mac) {
@@ -296,119 +246,6 @@ function formatRetryAfter(seconds) {
     url.searchParams.set('popup', 'false');
 
     window.location.href = url.toString();
-  }
-
-  function setPortalContentVisible(visible) {
-    [portalActions, planTitle, plansContainer, whatsappMain].forEach((el) => {
-      if (el) el.classList.toggle('hidden', !visible);
-    });
-    if (!visible) {
-      testeGratisBtn.classList.add('hidden');
-      paymentSection.classList.add('hidden');
-    }
-  }
-
-  function normalizePhoneInput(value) {
-    return String(value || '').replace(/\D/g, '');
-  }
-
-  function renderRegistrationField(field, user = {}) {
-    const required = field.required ? 'required' : '';
-    const label = escapeHtml(field.label || field.field);
-    const value = user[field.field] || '';
-    if (field.field === 'terms' || field.type === 'checkbox') {
-      return `
-        <label class="flex items-start gap-3 text-sm text-gray-300">
-          <input name="terms" type="checkbox" ${required} class="mt-1">
-          <span>${label}</span>
-        </label>
-      `;
-    }
-    if (field.type === 'select') {
-      const options = (field.options || []).map((option) => `<option value="${escapeHtml(option)}" ${String(value) === String(option) ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('');
-      return `
-        <label class="block">
-          <span class="block text-xs text-gray-400 mb-2">${label}${field.required ? ' *' : ''}</span>
-          <select name="${escapeHtml(field.field)}" ${required} class="portal-input">
-            <option value="">Selecione</option>
-            ${options}
-          </select>
-        </label>
-      `;
-    }
-    return `
-      <label class="block">
-        <span class="block text-xs text-gray-400 mb-2">${label}${field.required ? ' *' : ''}</span>
-        <input name="${escapeHtml(field.field)}" type="${escapeHtml(field.type || 'text')}" value="${escapeHtml(value)}" ${required} class="portal-input">
-      </label>
-    `;
-  }
-
-  function showRegistrationForm(fields, user = {}) {
-    setPortalContentVisible(false);
-    const enabledFields = (fields || []).filter(field => field.enabled !== false);
-    registrationForm.innerHTML = `
-      ${enabledFields.map(field => renderRegistrationField(field, user || {})).join('')}
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-xl text-sm font-bold transition">
-        Salvar cadastro
-      </button>
-    `;
-    registrationForm.onsubmit = submitRegistrationForm;
-    registrationSection.classList.remove('hidden');
-    lucide.createIcons();
-  }
-
-  async function loadRegistrationStatus() {
-    if (!macAddress) return { complete: true, fields: [], user: null };
-    try {
-      const res = await fetch(`${API_BASE}/api/portal/registration-status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('Falha ao verificar cadastro');
-      return res.json();
-    } catch (error) {
-      console.error('registration-status', error);
-      return { complete: true, fields: [], user: null };
-    }
-  }
-
-  async function loadRegistrationFields() {
-    try {
-      const res = await fetch(`${API_BASE}/api/portal/registration-fields`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('Falha ao carregar campos de cadastro');
-      return res.json();
-    } catch (error) {
-      console.error('registration-fields', error);
-      return [];
-    }
-  }
-
-  async function submitRegistrationForm(event) {
-    event.preventDefault();
-    const formData = new FormData(registrationForm);
-    const payload = { mac_address: macAddress };
-    for (const [key, value] of formData.entries()) {
-      if (key === 'terms') continue;
-      payload[key] = key === 'phone' ? normalizePhoneInput(value) : String(value || '').trim();
-    }
-    payload.terms_accepted = !!registrationForm.querySelector('input[name="terms"]')?.checked;
-
-    try {
-      const res = await fetch(`${API_BASE}/api/portal/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Erro ao salvar cadastro');
-
-      registrationSection.classList.add('hidden');
-      setPortalContentVisible(true);
-      showStatusMessage('Cadastro salvo. Escolha seu plano ou use o Teste grátis se disponível.', 'success');
-      await loadPlans();
-      await loadFreeTrialSettings();
-      await checkAccessStatus();
-    } catch (error) {
-      showStatusMessage(error.message || 'Erro ao salvar cadastro.', 'error');
-    }
   }
 
   async function loadPlans() {
@@ -518,7 +355,9 @@ function formatRetryAfter(seconds) {
       window.__freeTrialCfg = cfg || {};
       const enabled = !!cfg.enabled;
       const durationSeconds = Number(cfg.duration_seconds ?? (cfg.duration_minutes ? cfg.duration_minutes * 60 : 900));
-      const durationLabel = formatDuration(durationSeconds, true);
+      const durationLabel = (Number.isFinite(durationSeconds) && durationSeconds < 60)
+        ? `${Math.max(10, Math.floor(durationSeconds))}s`
+        : `${Math.max(1, Math.ceil(durationSeconds / 60))}min`;
 
       if (enabled) {
         testeGratisBtn.innerHTML = `<i data-lucide="beaker" class="w-4 h-4"></i> Teste grátis ${durationLabel}`;
@@ -612,7 +451,9 @@ function formatRetryAfter(seconds) {
       }
 
       const durationGrantedSeconds = Number(data.duration_seconds || window.__freeTrialCfg?.duration_seconds || 900);
-      const msgDuration = formatDuration(durationGrantedSeconds);
+      const msgDuration = (Number.isFinite(durationGrantedSeconds) && durationGrantedSeconds < 60)
+        ? `${Math.max(10, Math.floor(durationGrantedSeconds))} segundos`
+        : `${Math.max(1, Math.ceil(durationGrantedSeconds / 60))} minutos`;
       showStatusMessage(`Teste grátis de ${msgDuration} liberado! Autenticando...`, 'success');
       redirectInProgress = true;
       setTimeout(() => redirectToMikrotik(macAddress), 1500);
@@ -694,7 +535,6 @@ function formatRetryAfter(seconds) {
   // Refresh eligibility periodically or on user interaction
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && !redirectInProgress) {
-      if (!registrationSection.classList.contains('hidden')) return;
       checkFreeTrialEligibility();
     }
   });
@@ -723,80 +563,29 @@ function formatRetryAfter(seconds) {
       .replaceAll("'", '&#039;');
   }
 
-  async function fetchAccessStatus() {
-    if (!macAddress) return null;
-    const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return res.json();
-  }
-
-  function applyAccessStatus(data) {
-    if (!data) return false;
-    if (data.allowed === true) {
-      redirectInProgress = true;
-      showStatusMessage(data.reason === 'active_session' ? 'Acesso ativo encontrado. Liberando...' : 'Plano ativo encontrado. Liberando acesso...', 'info');
-      testeGratisBtn.classList.add('hidden');
-      setTimeout(() => redirectToMikrotik(macAddress), 1000);
-      return true;
-    }
-    if (data.reason === 'cooldown') {
-      testeGratisBtn.classList.add('hidden');
-      if (whatsappContextText) whatsappContextText.textContent = 'Seu teste grátis já foi usado. Para contratar agora, fale conosco.';
-      showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
-      return true;
-    }
-    if (data.show_free_trial === true && window.__freeTrialCfg?.enabled) {
-      testeGratisBtn.classList.remove('hidden');
-      return true;
-    }
-    testeGratisBtn.classList.add('hidden');
-    return false;
-  }
-
   async function checkAccessStatus() {
+    if (!macAddress) return;
     try {
-      const data = await fetchAccessStatus();
-      if (!applyAccessStatus(data)) await checkFreeTrialEligibility();
+      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      
+      const data = await res.json();
+      if (data && data.allowed === true) {
+        redirectInProgress = true;
+        showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
+        // Hide free trial button since user has active plan
+        testeGratisBtn.classList.add('hidden');
+        setTimeout(() => redirectToMikrotik(macAddress), 1000);
+      } else {
+        // Check free trial eligibility after confirming no active plan
+        checkFreeTrialEligibility();
+      }
     } catch (_e) {}
   }
 
-  async function bootstrapPortal() {
-    lucide.createIcons();
-    setPortalContentVisible(false);
-    await loadFreeTrialSettings();
-
-    if (!macAddress) {
-      setPortalContentVisible(true);
-      await loadPlans();
-      return;
-    }
-
-    const accessData = await fetchAccessStatus();
-    if (accessData?.allowed === true) {
-      applyAccessStatus(accessData);
-      return;
-    }
-
-    const [registration, registrationFields] = await Promise.all([
-      loadRegistrationStatus(),
-      loadRegistrationFields()
-    ]);
-    if (registration && registration.complete === false) {
-      showRegistrationForm(registrationFields.length ? registrationFields : (registration.fields || []), registration.user || {});
-      return;
-    }
-
-    registrationSection.classList.add('hidden');
-    setPortalContentVisible(true);
-    const name = String(registration?.user?.name || '').trim();
-    if (name && !name.toLowerCase().startsWith('device ')) {
-      showStatusMessage(`Bem-vindo, ${name}.`, 'info');
-    }
-    await loadPlans();
-    applyAccessStatus(accessData) || await checkFreeTrialEligibility();
-  }
-
-  bootstrapPortal();
+  lucide.createIcons();
+  loadPlans();
+  loadFreeTrialSettings().then(() => checkAccessStatus());
 </script>
 </body>
 </html>

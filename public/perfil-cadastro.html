@@ -78,7 +78,7 @@
                 <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
             </a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs de Auditoria
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
             </a>
             <a href="perfil-cadastro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro
@@ -185,9 +185,9 @@
                 headers: authHeaders(),
                 body: JSON.stringify(fieldsToSave)
             });
-            if (res.ok) alert('Configurações salvas!'); else alert('Erro ao salvar configurações');
+            if (res.ok) alert('âœ… Configurações salvas!'); else alert('âŒ Erro ao salvar');
         } catch (error) {
-            alert('Erro na conexão');
+            alert('âŒ Erro na conexão');
         }
     }
 
@@ -225,3 +225,4 @@
 <script src="globals.js"></script>
 </body>
 </html>
+
