@@ -417,17 +417,13 @@
         }
     }
 
-    function getPlanDisplayName(planName) {
-        return String(planName || '').toLowerCase() === 'free_trial' ? 'Teste Grátis' : (planName || 'N/A');
-    }
-
     function renderizarClientes(clientes) {
         const container = document.getElementById('clientesGrid');
         if (!container) return;
         
         const html = clientes.map(cliente => {
             const planoObj = plansData.find(p => p.id === cliente.plan_id);
-            const planoNome = getPlanDisplayName(planoObj ? planoObj.name : cliente.plan_name);
+            const planoNome = planoObj ? planoObj.name : (cliente.plan_name || 'N/A');
             const statusClass = getStatusBadgeClass(cliente.status);
             const statusText = getStatusText(cliente.status);
             const isVip = (cliente.is_vip || String(cliente.status).toLowerCase() === 'vip') ? '⭐ VIP' : '';
@@ -541,9 +537,7 @@
             const cliente = clientesData.find(c => c.id === id);
             if (cliente) {
                 const planoObj = plansData.find(p => p.id === cliente.plan_id);
-                const planoNome = getPlanDisplayName(planoObj ? planoObj.name : cliente.plan_name);
-                const isTrial = String(cliente.plan_name || '').toLowerCase() === 'free_trial' || String(cliente.status || '').toLowerCase() === 'trial';
-                const statusModalText = isTrial ? 'Teste Grátis' : getStatusText(cliente.status);
+                const planoNome = planoObj ? planoObj.name : (cliente.plan_name || 'N/A');
                 content.innerHTML = `
                     <div class="space-y-2">
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium text-sm">${cliente.name || '-'}</p></div>
@@ -553,7 +547,7 @@
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">E-mail</p><p class="text-sm break-all">${cliente.email || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Endereço</p><p class="text-sm">${cliente.address || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Plano</p><p><span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 rounded-lg text-xs">${planoNome}</span></p></div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${getStatusBadgeClass(cliente.status)} rounded-lg text-xs">${statusModalText}</span></p></div>
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${getStatusBadgeClass(cliente.status)} rounded-lg text-xs">${getStatusText(cliente.status)}</span></p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Data Cadastro</p><p class="text-xs">${cliente.created_at ? new Date(cliente.created_at).toLocaleString('pt-BR') : '-'}</p></div>
                     </div>`;
             } else {
@@ -589,25 +583,16 @@
             mac_address: document.getElementById('editMac').value,
             cpf: document.getElementById('editCpf').value,
             email: document.getElementById('editEmail').value,
-            address: document.getElementById('editEndereco').value
+            address: document.getElementById('editEndereco').value,
+            plan_id: parseInt(document.getElementById('editPlano').value)
         };
-        const planValue = document.getElementById('editPlano').value;
-        if (planValue) {
-            const planId = Number(planValue);
-            if (!Number.isFinite(planId)) {
-                alert('Plano inválido');
-                return;
-            }
-            dados.plan_id = planId;
-        }
         try {
             await apiRequest(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
             alert('Cliente atualizado com sucesso!');
             closeModalEditar();
             carregarClientes();
         } catch (error) {
-            console.error('Erro ao atualizar cliente:', error);
-            alert(error.message || 'Erro ao atualizar cliente');
+            alert('Erro ao atualizar cliente');
         }
     }
 

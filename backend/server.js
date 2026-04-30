@@ -742,20 +742,6 @@ function isActivePaidUser(user) {
   return (hasFutureExpiry || activeStatus) && paidPlan;
 }
 
-function getTrialCooldownUntil(record, cfg) {
-  if (!record) return null;
-  const cooldownSeconds = Math.max(0, Math.floor(Number(record.cooldown_seconds ?? cfg.cooldown_seconds ?? 0)));
-  if (cooldownSeconds <= 0) return null;
-  if (record.cooldown_until) return record.cooldown_until;
-  if (record.expires_at) return new Date(new Date(record.expires_at).getTime() + cooldownSeconds * 1000).toISOString();
-
-  const lastUsed = record.last_used_at || record.used_at || record.first_used_at || record.created_at || null;
-  if (!lastUsed) return null;
-
-  const durationSeconds = Math.max(0, Math.floor(Number(record.duration_seconds ?? cfg.duration_seconds ?? 0)));
-  return new Date(new Date(lastUsed).getTime() + (durationSeconds + cooldownSeconds) * 1000).toISOString();
-}
-
 async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
   const cleanMac = normalizeMac(macAddress);
   if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório', reason: 'missing_mac' } };
@@ -813,35 +799,21 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       .maybeSingle();
     previousTrial = ft || null;
 
-    const effectiveUntil = getTrialCooldownUntil(previousTrial, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
+    const lastUsed = previousTrial?.last_used_at || previousTrial?.used_at || previousTrial?.first_used_at || null;
+    const previousExpiresAt = previousTrial?.expires_at || null;
+    let effectiveUntil = previousTrial?.cooldown_until || null;
+
+    if (!effectiveUntil && lastUsed && cooldownSeconds > 0) {
+      const baseTime = previousExpiresAt ? new Date(previousExpiresAt).getTime() : new Date(lastUsed).getTime();
+      effectiveUntil = new Date(baseTime + cooldownSeconds * 1000).toISOString();
+    }
 
     if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
       return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
     await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grátis', { mac: cleanMac, error: error.message });
-  }
-
-  try {
-    const { data: lastTrialSession } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .in('mac_address', getMacVariants(cleanMac))
-      .eq('plan_name', 'free_trial')
-      .order('expires_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
-    if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > Date.now()) {
-      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown de sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
-      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
-    }
-  } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessão', { mac: cleanMac, error: error.message });
   }
 
   const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
@@ -1104,9 +1076,6 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     const updateData = { ...body, updated_at: new Date().toISOString() };
     delete updateData.id;
     delete updateData.created_at;
-    Object.keys(updateData).forEach((key) => {
-      if (updateData[key] === undefined || Number.isNaN(updateData[key])) delete updateData[key];
-    });
 
     if (Object.prototype.hasOwnProperty.call(body, 'mac_address')) {
       const cleanMac = normalizeMac(body.mac_address);
@@ -1115,11 +1084,8 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     }
 
     let plan = null;
-    if (Object.prototype.hasOwnProperty.call(body, 'plan_id') && body.plan_id !== '' && body.plan_id !== null && body.plan_id !== undefined) {
-      const planId = Number(body.plan_id);
-      if (!Number.isFinite(planId)) return res.status(400).json({ error: 'Plano inválido' });
-
-      const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', planId).maybeSingle();
+    if (body.plan_id) {
+      const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', body.plan_id).maybeSingle();
       if (planError) throw planError;
       if (!planData) return res.status(404).json({ error: 'Plano não encontrado' });
       plan = planData;
@@ -1128,11 +1094,6 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       updateData.status = 'active';
       updateData.plan_name = plan.name;
       updateData.plan_id = plan.id;
-    } else {
-      delete updateData.plan_id;
-      if (updateData.plan_name === '' || updateData.plan_name === null) delete updateData.plan_name;
-      if (updateData.status === '' || updateData.status === null) delete updateData.status;
-      if (updateData.expires_at === '' || updateData.expires_at === null) delete updateData.expires_at;
     }
 
     const { data, error } = await supabase.from('users').update(updateData).eq('id', id).select().single();
@@ -1150,8 +1111,7 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao atualizar usuário:', err.message);
-    await registerSystemLog('error', 'users', 'Erro ao atualizar usuário', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
-    res.status(500).json({ error: err.message || 'Erro ao atualizar usuário' });
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
 });
 // Deletar usuário
@@ -3569,29 +3529,19 @@ app.get('/api/access/status', async (req, res) => {
       .maybeSingle();
 
     if (ft) {
-      const effectiveUntil = getTrialCooldownUntil(ft, cfg);
+      const lastUsed = ft.last_used_at || ft.used_at || ft.first_used_at || null;
+      const previousExpiresAt = ft.expires_at || null;
+      let effectiveUntil = ft.cooldown_until || null;
+
+      if (!effectiveUntil && lastUsed && cfg.cooldown_seconds > 0) {
+        const baseTime = previousExpiresAt ? new Date(previousExpiresAt).getTime() : new Date(lastUsed).getTime();
+        effectiveUntil = new Date(baseTime + cfg.cooldown_seconds * 1000).toISOString();
+      }
 
       if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
         const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
-        await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
         return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
       }
-    }
-
-    const { data: lastTrialSession } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .in('mac_address', variants)
-      .eq('plan_name', 'free_trial')
-      .order('expires_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, cfg);
-    if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > nowMs) {
-      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - nowMs) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown por sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
-      return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
     }
 
     return res.json({ allowed: false, reason: 'trial_available', show_free_trial: true });
