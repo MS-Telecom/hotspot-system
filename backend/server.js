@@ -36,6 +36,33 @@ const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerC
 const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
 const RADIUS_VPN_SERVER_IP = process.env.RADIUS_VPN_SERVER_IP || process.env.RADIUS_VPN_SERVER_IP || '10.254.1.1';
 const RADIUS_GLOBAL_FALLBACK_SECRET = process.env.RADIUS_GLOBAL_FALLBACK_SECRET || RADIUS_GLOBAL_SECRET || '';
+const PRELOGIN_ALLOWED_HOSTS = [
+  FRONTEND_BASE_URL,
+  API_BASE_URL
+];
+const FORBIDDEN_WALLED_GARDEN_PATTERNS = [
+  'gstatic',
+  'googleapis',
+  'connectivitycheck',
+  'generate_204',
+  'generate',
+  'clients3.google',
+  'google.cn',
+  'play.googleapis',
+  'google.com',
+  'www.gstatic.com',
+  'cdn.tailwindcss.com',
+  'cdnjs.cloudflare.com',
+  'unpkg.com',
+  '*.vercel.app',
+  'cdn.vercel.app',
+  'neverssl.com',
+  'mercadopago',
+  'mercadopago.com.br',
+  'captive.apple.com',
+  'msftconnecttest.com',
+  'msftncsi.com'
+];
 
 // Legacy VPN (RouterOS v6) - tunnel IP per POP, FreeRADIUS clients matched by vpn_ip.
 const VPN_PUBLIC_ENDPOINT = process.env.VPN_PUBLIC_ENDPOINT || '';
@@ -84,6 +111,74 @@ function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return String(forwarded).split(',')[0].trim();
   return req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || null;
+}
+
+function normalizeMac(value) {
+  const raw = String(value || '').trim().toUpperCase();
+  if (!raw) return '';
+  const hex = raw.replace(/[^A-F0-9]/g, '');
+  if (hex.length !== 12) return raw;
+  return hex.match(/.{1,2}/g).join(':');
+}
+
+function getMacVariants(value) {
+  const normalized = normalizeMac(value);
+  const compact = normalized ? normalized.replace(/:/g, '') : '';
+  return [...new Set([normalized, compact, String(value || '').trim().toUpperCase()].filter(Boolean))];
+}
+
+function normalizeCpf(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw || raw === '-' || raw.toLowerCase() === 'n/a') return null;
+  const digits = raw.replace(/\D/g, '');
+  return digits || null;
+}
+
+function normalizeEmail(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  return raw || null;
+}
+
+async function findDuplicateUserField(field, value, excludeId = null) {
+  if (!value) return null;
+  let query = supabase.from('users').select('id').eq(field, value);
+  if (excludeId) query = query.neq('id', excludeId);
+  query = query.limit(1).maybeSingle();
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || null;
+}
+
+function getHostnameFromUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    return new URL(raw.includes('://') ? raw : `https://${raw}`).hostname.toLowerCase();
+  } catch (_error) {
+    return raw.replace(/^https?:\/\//i, '').split(/[/?#:]/)[0].replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+function isForbiddenWalledGardenHost(host) {
+  const normalized = String(host || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return FORBIDDEN_WALLED_GARDEN_PATTERNS.some((pattern) => {
+    const p = String(pattern || '').toLowerCase();
+    if (p.startsWith('*.')) return normalized === p || normalized === p.slice(2);
+    return normalized.includes(p);
+  });
+}
+
+function getPreloginAllowedHosts() {
+  const hosts = PRELOGIN_ALLOWED_HOSTS
+    .map(getHostnameFromUrl)
+    .filter(Boolean);
+  const uniqueHosts = [...new Set(hosts)];
+  const blocked = uniqueHosts.filter(isForbiddenWalledGardenHost);
+  if (blocked.length) {
+    throw new Error(`Forbidden pre-login Walled Garden host(s): ${blocked.join(', ')}`);
+  }
+  return uniqueHosts;
 }
 
 function removeAccents(str) {
@@ -188,16 +283,30 @@ function authMiddleware(req, res, next) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
   
   if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' });
+    return res.status(401).json({ error: 'Unauthorized', reason: 'missing_or_invalid_token' });
   }
 
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (err) {
-    return res.status(401).json({ error: 'Token inválido ou expirado' });
+    return res.status(401).json({ error: 'Unauthorized', reason: 'missing_or_invalid_token' });
   }
 }
+
+
+app.get('/api/system/walled-garden-hosts', authMiddleware, (req, res) => {
+  try {
+    res.json({
+      allowed_hosts: getPreloginAllowedHosts(),
+      forbidden_patterns: FORBIDDEN_WALLED_GARDEN_PATTERNS,
+      frontend_host: getHostnameFromUrl(FRONTEND_BASE_URL),
+      api_host: getHostnameFromUrl(API_BASE_URL)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ============================================================
 // 🔧 MIKROTIK CREDENTIALS HELPERS
@@ -458,6 +567,9 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
 
 // Autorizar acesso - IP Binding com type=bypassed + RADIUS
 async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null, durationMinutes = 15, speedMbps = null, planName = 'free_trial', durationSeconds = null) {
+  macAddress = normalizeMac(macAddress);
+  if (!macAddress) return { success: false, viaApi: false, viaRadius: false, errors: ['MAC inválido'] };
+
   let viaApi = false;
   let viaRadius = false;
   const errors = [];
@@ -499,11 +611,11 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
 
   // Tentativa 2: via RADIUS (radius_replies)
   try {
-    const expiresAt = new Date(Date.now() + Number(durationMinutes || 0) * 60 * 1000).toISOString();
     const nowIso = new Date().toISOString();
     const sessionTimeoutSeconds = Number.isFinite(Number(durationSeconds)) && Number(durationSeconds) > 0
       ? Math.floor(Number(durationSeconds))
       : Math.max(10, Math.floor(Number(durationMinutes || 0) * 60));
+    const expiresAt = new Date(Date.now() + sessionTimeoutSeconds * 1000).toISOString();
 
     const upsertRadiusReply = async (payload) => {
       // Prefer canonical uniqueness per (username, attribute) when available.
@@ -579,7 +691,7 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
 // Creates/updates a basic user row for a MAC so the device appears in the admin panel.
 async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName = 'free_trial', status = 'trial', popId = null, expiresAt = null }) {
   const now = new Date().toISOString();
-  const cleanMac = String(macAddress || '').trim();
+  const cleanMac = normalizeMac(macAddress);
   if (!cleanMac) throw new Error('macAddress is required');
 
   // `users.hotspot_id` is bigint in some deployments; only set it when popId is numeric.
@@ -588,7 +700,8 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
   const { data: existing, error: findErr } = await supabase
     .from('users')
     .select('*')
-    .eq('mac_address', cleanMac)
+    .in('mac_address', getMacVariants(cleanMac))
+    .limit(1)
     .maybeSingle();
 
   if (findErr) throw findErr;
@@ -650,7 +763,14 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
     throw new Error('Failed to update user');
   }
 
-  let insertPayload = { ...base, ...optional, created_at: now };
+  let insertPayload = {
+    ...base,
+    ...optional,
+    name: `Device ${cleanMac}`,
+    status: status || 'trial',
+    plan_name: planName || 'free_trial',
+    created_at: now
+  };
   for (let i = 0; i < 4; i++) {
     const { data, error } = await supabase
       .from('users')
@@ -666,127 +786,235 @@ async function findOrCreateHotspotUser({ macAddress, ipAddress = null, planName 
 
   throw new Error('Failed to create user');
 }
+function firstFiniteNumber(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function normalizeFreeTrialConfig(value = {}) {
+  const durationRaw = firstFiniteNumber(
+    value.duration_seconds,
+    value.duration_minutes !== undefined ? Number(value.duration_minutes) * 60 : undefined,
+    900
+  );
+  const cooldownRaw = firstFiniteNumber(
+    value.cooldown_seconds,
+    value.cooldown_minutes !== undefined ? Number(value.cooldown_minutes) * 60 : undefined,
+    value.cooldown_hours !== undefined ? Number(value.cooldown_hours) * 3600 : undefined,
+    value.reuse_cooldown_hours !== undefined ? Number(value.reuse_cooldown_hours) * 3600 : undefined,
+    86400
+  );
+
+  return {
+    enabled: value.enabled === true,
+    duration_seconds: Math.max(10, Math.floor(durationRaw || 900)),
+    cooldown_seconds: Math.max(0, Math.floor(cooldownRaw || 0))
+  };
+}
+
+async function getFreeTrialConfig() {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
+    if (error) throw error;
+    return normalizeFreeTrialConfig(data?.value || {});
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'Erro ao carregar configuração de teste grátis', { error: error.message });
+    return normalizeFreeTrialConfig({ enabled: false });
+  }
+}
+
+function isActivePaidUser(user) {
+  if (!user) return false;
+  const status = String(user.status || '').toLowerCase();
+  const planName = String(user.plan_name || '').toLowerCase();
+  const expiresAt = user.expires_at ? new Date(user.expires_at).getTime() : null;
+  const hasFutureExpiry = expiresAt && expiresAt > Date.now();
+  const activeStatus = ['active', 'paid', 'vip'].includes(status);
+  const paidPlan = planName && planName !== 'free_trial' && planName !== 'trial' && planName !== 'teste grátis';
+  return (hasFutureExpiry || activeStatus) && paidPlan;
+}
+
+function getTrialCooldownUntil(record, cfg) {
+  if (!record) return null;
+  const configuredCooldown = Math.floor(Number(cfg.cooldown_seconds ?? 0));
+  const storedCooldown = Math.floor(Number(record.cooldown_seconds ?? 0));
+  const cooldownSeconds = Math.max(0, Number.isFinite(configuredCooldown) && configuredCooldown > 0 ? configuredCooldown : storedCooldown);
+  if (cooldownSeconds <= 0) return null;
+
+  // Reuso deve seguir a configuração atual do painel. Não use cooldown_until antigo
+  // quando existe expires_at, pois ele pode ter sido gravado com outra configuração.
+  if (record.expires_at) return new Date(new Date(record.expires_at).getTime() + cooldownSeconds * 1000).toISOString();
+
+  const lastUsed = record.last_used_at || record.used_at || record.first_used_at || record.created_at || null;
+  if (!lastUsed) return record.cooldown_until || null;
+
+  const configuredDuration = Math.floor(Number(cfg.duration_seconds ?? 0));
+  const storedDuration = Math.floor(Number(record.duration_seconds ?? 0));
+  const durationSeconds = Math.max(0, Number.isFinite(configuredDuration) && configuredDuration > 0 ? configuredDuration : storedDuration);
+  return new Date(new Date(lastUsed).getTime() + (durationSeconds + cooldownSeconds) * 1000).toISOString();
+}
+
+function isTrialSessionRecord(session) {
+  if (!session) return false;
+  const planName = String(session.plan_name || '').toLowerCase();
+  const status = String(session.status || '').toLowerCase();
+  if (planName && planName !== 'free_trial' && planName !== 'trial') return false;
+  return planName === 'free_trial' || planName === 'trial' || status === 'trial' || session.access_granted === true;
+}
+
+async function getLastTrialSession(macVariants) {
+  const { data, error } = await supabase
+    .from('hotspot_sessions')
+    .select('*')
+    .in('mac_address', macVariants)
+    .or('plan_name.eq.free_trial,plan_name.eq.trial,status.eq.trial,access_granted.eq.true')
+    .order('expires_at', { ascending: false })
+    .limit(10);
+
+  if (error) throw error;
+  return (data || []).find(isTrialSessionRecord) || null;
+}
+
 async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
   const cleanMac = normalizeMac(macAddress);
-  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório' } };
+  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório', reason: 'missing_mac' } };
 
   const nowIso = new Date().toISOString();
-  const defaults = { enabled: false, duration_seconds: 15 * 60, cooldown_seconds: 24 * 60 * 60 };
-  let cfg = { ...defaults };
-  
-  try {
-    const { data } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
-    const v = data?.value || {};
-    cfg = {
-      enabled: v.enabled === true,
-      duration_seconds: Number(v.duration_seconds || v.duration_minutes * 60 || defaults.duration_seconds),
-      cooldown_seconds: Number(v.cooldown_seconds || v.cooldown_hours * 3600 || v.reuse_cooldown_hours * 3600 || defaults.cooldown_seconds)
-    };
-  } catch (_e) {}
+  const cfg = await getFreeTrialConfig();
+  const durationSeconds = Math.max(10, Math.floor(Number(cfg.duration_seconds || 900)));
+  const cooldownSeconds = Math.max(0, Math.floor(Number(cfg.cooldown_seconds || 0)));
+  const expiresAtDate = new Date(Date.now() + durationSeconds * 1000);
+  const expiresAt = expiresAtDate.toISOString();
+  const cooldownUntil = new Date(expiresAtDate.getTime() + cooldownSeconds * 1000).toISOString();
 
   if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grátis desativado', reason: 'trial_disabled' } };
 
-  // 1. Priority: Manual Plan
   try {
-    const { data: user } = await supabase.from('users').select('*').eq('mac_address', cleanMac).maybeSingle();
-    if (user) {
-      const status = String(user.status || '').toLowerCase();
-      const planName = user.plan_name || null;
-      const expiresAt = user.expires_at || null;
-      const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > Date.now();
-      const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && planName !== 'free_trial';
-
-      if (hasFutureExpiry || looksActive) {
-        const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
-        const durationMinutes = hasFutureExpiry ? Math.max(1, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 60000)) : 1440;
-        await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, durationMinutes, plan?.speed_mbps || 10, planName, durationMinutes * 60);
-        return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: expiresAt, reason: 'manual_plan_active' } };
-      }
+    const { data: user } = await supabase.from('users').select('*').in('mac_address', getMacVariants(cleanMac)).limit(1).maybeSingle();
+    if (isActivePaidUser(user)) {
+      const planName = user.plan_name || 'Premium';
+      const planExpiresAt = user.expires_at || null;
+      const durationForPlan = planExpiresAt ? Math.max(10, Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / 1000)) : 30 * 24 * 60 * 60;
+      const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
+      await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
+      return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: planExpiresAt, reason: 'manual_plan_active', show_free_trial: false } };
     }
-  } catch (_e) {}
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar plano ativo antes do teste grátis', { mac: cleanMac, error: error.message });
+  }
 
-  // 2. Cooldown Enforcement (Schema-aware)
   try {
-    const { data: ft } = await supabase.from('free_trials').select('*').or(`mac_address.eq."${cleanMac}",mac.eq."${cleanMac}"`).maybeSingle();
-    const lastUsed = ft?.last_used_at || ft?.used_at || ft?.last_trial || null;
-    const expiresAtOld = ft?.expires_at || null;
-    const cooldownUntil = ft?.cooldown_until || null;
+    const { data: session } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .in('mac_address', getMacVariants(cleanMac))
+      .eq('status', 'active')
+      .gt('expires_at', nowIso)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    let effectiveUntil = cooldownUntil;
-    if (!effectiveUntil && lastUsed) {
-      const baseTime = expiresAtOld ? new Date(expiresAtOld).getTime() : new Date(lastUsed).getTime();
-      effectiveUntil = new Date(baseTime + (cfg.cooldown_seconds * 1000)).toISOString();
+    if (session) {
+      return { ok: true, status: 200, body: { message: 'Acesso já ativo', expires_at: session.expires_at, reason: 'active_session', show_free_trial: false } };
     }
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar sessão ativa de teste grátis', { mac: cleanMac, error: error.message });
+  }
 
-    if (cfg.cooldown_seconds === 0 && lastUsed) {
-      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'already_used' } };
-    }
+  let previousTrial = null;
+  let freeTrialLookupFailed = false;
+  try {
+    const { data: ft } = await supabase
+      .from('free_trials')
+      .select('*')
+      .in('mac_address', getMacVariants(cleanMac))
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    previousTrial = ft || null;
+
+    const effectiveUntil = getTrialCooldownUntil(previousTrial, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
 
     if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
-      return { ok: false, status: 429, body: { error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds } };
+      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
-  } catch (_e) {}
+  } catch (error) {
+    freeTrialLookupFailed = true;
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grátis', { mac: cleanMac, error: error.message });
+  }
 
-  // 3. Authorize RADIUS
-  const durationSeconds = cfg.duration_seconds;
-  const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
-  const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, durationSeconds / 60, 5, 'free_trial', durationSeconds);
-  if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS' } };
-
-  // 3) Ensure basic user row exists for this device.
-  const user = await findOrCreateHotspotUser({
-    macAddress: cleanMac,
-    ipAddress,
-    planName: 'free_trial',
-    status: 'trial',
-    popId,
-    expiresAt
-  });
-
-  // 4) Register session linked to the user.
-  // Ensure user is marked as 'trial' status with plan_name 'free_trial'
-  const sessionPayload = {
-    user_id: user.id,
-    mac_address: cleanMac,
-    access_granted: true,
-    status: 'active',
-    expires_at: expiresAt,
-    plan_name: 'free_trial',
-    ...(popId ? { pop_id: popId } : {}),
-    ...(popIp ? { pop_ip: popIp } : {}),
-    created_at: nowIso,
-    updated_at: nowIso
-  };
-
-  const { error: sessionErr } = await supabase.from('hotspot_sessions').insert(sessionPayload);
-  if (sessionErr) throw sessionErr;
-
-  // 5) Mark the free-trial usage + next cooldown window (best-effort).
   try {
-    const cooldownUntil = new Date(Date.now() + Math.max(0, effectiveCooldownSeconds) * 1000).toISOString();
+    const lastTrialSession = await getLastTrialSession(getMacVariants(cleanMac));
+    const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
+    if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > Date.now()) {
+      const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - Date.now()) / 1000));
+      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown de sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+    }
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessão', { mac: cleanMac, error: error.message });
+    if (freeTrialLookupFailed) {
+      return { ok: false, status: 503, body: { success: false, error: 'Erro ao verificar cooldown do teste gratis', reason: 'cooldown_check_failed', show_free_trial: false } };
+    }
+  }
+
+  const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
+  if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS', reason: 'radius_error', details: auth.errors } };
+
+  let user = null;
+  try {
+    user = await findOrCreateHotspotUser({ macAddress: cleanMac, ipAddress, planName: 'free_trial', status: 'trial', popId, expiresAt });
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao criar/atualizar usuário', { mac: cleanMac, error: error.message });
+  }
+
+  try {
+    const sessionPayload = {
+      ...(user?.id ? { user_id: user.id } : {}),
+      mac_address: cleanMac,
+      access_granted: true,
+      status: 'active',
+      expires_at: expiresAt,
+      plan_name: 'free_trial',
+      ...(popId ? { pop_id: popId } : {}),
+      ...(popIp ? { pop_ip: popIp } : {}),
+      created_at: nowIso,
+      updated_at: nowIso
+    };
+    const { error: sessionErr } = await supabase.from('hotspot_sessions').insert(sessionPayload);
+    if (sessionErr) throw sessionErr;
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar sessão', { mac: cleanMac, error: error.message });
+  }
+
+  try {
     const payload = {
       mac_address: cleanMac,
-      first_used_at: nowIso,
+      first_used_at: previousTrial?.first_used_at || nowIso,
       last_used_at: nowIso,
       used_at: nowIso,
       cooldown_until: cooldownUntil,
-      duration_seconds: Math.floor(durationSeconds),
+      duration_seconds: durationSeconds,
+      cooldown_seconds: cooldownSeconds,
+      attempts: Number(previousTrial?.attempts || 0) + 1,
       expires_at: expiresAt,
+      updated_at: nowIso,
       ...(popId ? { pop_id: popId } : {})
     };
     const up = await supabase.from('free_trials').upsert(payload, { onConflict: 'mac_address' });
     if (up.error) throw up.error;
-  } catch (_e) {
-    try {
-      await supabase.from('free_trials').insert({ mac_address: cleanMac, used_at: nowIso });
-    } catch (_e2) {}
+  } catch (error) {
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar histórico de teste grátis', { mac: cleanMac, error: error.message });
   }
 
-  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user.id, duration_seconds: Math.floor(durationSeconds), cooldown_seconds: Math.floor(effectiveCooldownSeconds) } };
+  await registerSystemLog('info', 'free_trial', 'Teste grátis liberado', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
+  return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user?.id || null, duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds, cooldown_until: cooldownUntil, show_free_trial: false } };
 }
-// ============================================================
-// ⏱️ CRON JOB - REMOVER ACESSOS EXPIRADOS
 // ============================================================
 
 setInterval(async () => {
@@ -940,21 +1168,64 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 app.post('/api/users', authMiddleware, async (req, res) => {
   try {
     const { name, username, mac_address, phone, cpf, email, address, plan_id, plan_name, hotspot_id, status, is_vip } = req.body;
+    const cleanMac = normalizeMac(mac_address);
+    const now = new Date();
+    let plan = null;
+    let expiresAt = null;
 
-    const { data, error } = await supabase.from('users').insert({
-      name, username, mac_address, phone, cpf, email, address,
-      plan_id, plan_name, hotspot_id,
-      status: status || 'inactive',
+    if (plan_id) {
+      const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).maybeSingle();
+      if (planError) throw planError;
+      if (!planData) return res.status(404).json({ error: 'Plano não encontrado' });
+      plan = planData;
+      expiresAt = new Date(now.getTime() + Number(plan.duration_days || 30) * 24 * 60 * 60 * 1000).toISOString();
+    }
+
+    const normalizedCpf = normalizeCpf(cpf);
+    const normalizedEmail = normalizeEmail(email);
+    if (normalizedCpf && await findDuplicateUserField('cpf', normalizedCpf)) {
+      return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+    }
+    if (normalizedEmail && await findDuplicateUserField('email', normalizedEmail)) {
+      return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+    }
+
+    const payload = {
+      name,
+      username: username || cleanMac || undefined,
+      mac_address: cleanMac || null,
+      phone,
+      cpf: normalizedCpf,
+      email: normalizedEmail,
+      address,
+      plan_id: plan ? plan.id : (plan_id || null),
+      plan_name: plan ? plan.name : (plan_name || null),
+      hotspot_id,
+      status: plan ? 'active' : (status || 'inactive'),
       is_vip: is_vip || false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }).select().single();
+      ...(expiresAt ? { expires_at: expiresAt } : {}),
+      created_at: now.toISOString(),
+      updated_at: now.toISOString()
+    };
 
+    const { data, error } = await supabase.from('users').insert(payload).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name}`, getClientIp(req), req.headers['user-agent']);
+
+    if (cleanMac && plan) {
+      const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+      await authorizeAccess(cleanMac, '192.168.32.1', null, null, hotspot_id, Math.ceil(durationSeconds / 60), plan.speed_mbps || 10, plan.name, durationSeconds);
+    }
+
+    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name || cleanMac || data.id}`, getClientIp(req), req.headers['user-agent'], { user_id: data.id, plan_id: plan?.id || null });
     res.status(201).json(data);
   } catch (err) {
     console.error('❌ Erro ao criar usuário:', err.message);
+    if (String(err.message || '').includes('users_cpf_key')) {
+      return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+    }
+    if (String(err.message || '').includes('users_email_key')) {
+      return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+    }
     res.status(500).json({ error: 'Erro ao criar usuário' });
   }
 });
@@ -967,36 +1238,78 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     const updateData = { ...body, updated_at: new Date().toISOString() };
     delete updateData.id;
     delete updateData.created_at;
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined || Number.isNaN(updateData[key])) delete updateData[key];
+    });
 
-    // If plan_id is changed, calculate expires_at and set status to active
-    if (body.plan_id) {
-      const { data: plan } = await supabase.from('plans').select('*').eq('id', body.plan_id).maybeSingle();
-      if (plan) {
-        const days = plan.duration_days || 30;
-        updateData.expires_at = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
-        updateData.status = 'active';
-        updateData.plan_name = plan.name;
+    if (Object.prototype.hasOwnProperty.call(body, 'mac_address')) {
+      const cleanMac = normalizeMac(body.mac_address);
+      updateData.mac_address = cleanMac || null;
+      if (!body.username && cleanMac) updateData.username = cleanMac;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'cpf')) {
+      const normalizedCpf = normalizeCpf(body.cpf);
+      if (normalizedCpf && await findDuplicateUserField('cpf', normalizedCpf, id)) {
+        return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
       }
+      updateData.cpf = normalizedCpf;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, 'email')) {
+      const normalizedEmail = normalizeEmail(body.email);
+      if (normalizedEmail && await findDuplicateUserField('email', normalizedEmail, id)) {
+        return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+      }
+      updateData.email = normalizedEmail;
+    }
+
+    let plan = null;
+    if (Object.prototype.hasOwnProperty.call(body, 'plan_id') && body.plan_id !== '' && body.plan_id !== null && body.plan_id !== undefined) {
+      const planId = Number(body.plan_id);
+      if (!Number.isFinite(planId)) return res.status(400).json({ error: 'Plano inválido' });
+
+      const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', planId).maybeSingle();
+      if (planError) throw planError;
+      if (!planData) return res.status(404).json({ error: 'Plano não encontrado' });
+      plan = planData;
+      const days = Number(plan.duration_days || 30);
+      updateData.expires_at = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+      updateData.status = 'active';
+      updateData.plan_name = plan.name;
+      updateData.plan_id = plan.id;
+    } else {
+      delete updateData.plan_id;
+      if (updateData.plan_name === '' || updateData.plan_name === null) delete updateData.plan_name;
+      if (updateData.status === '' || updateData.status === null) delete updateData.status;
+      if (updateData.expires_at === '' || updateData.expires_at === null) delete updateData.expires_at;
     }
 
     const { data, error } = await supabase.from('users').update(updateData).eq('id', id).select().single();
     if (error) throw error;
 
-    // If user has a MAC, update RADIUS immediately to reflect new plan
-    if (data.mac_address && data.status === 'active' && data.plan_name !== 'free_trial') {
-      const { data: plan } = await supabase.from('plans').select('*').eq('name', data.plan_name).maybeSingle();
-      const durationMinutes = Math.max(1, Math.ceil((new Date(data.expires_at).getTime() - Date.now()) / 60000));
-      await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, durationMinutes, plan?.speed_mbps || 10, data.plan_name, durationMinutes * 60);
+    if (data.mac_address && data.status === 'active' && data.plan_name && data.plan_name !== 'free_trial') {
+      const activePlan = plan || (await supabase.from('plans').select('*').eq('name', data.plan_name).maybeSingle()).data;
+      const durationSeconds = data.expires_at
+        ? Math.max(10, Math.ceil((new Date(data.expires_at).getTime() - Date.now()) / 1000))
+        : Number(activePlan?.duration_days || 30) * 24 * 60 * 60;
+      await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, Math.ceil(durationSeconds / 60), activePlan?.speed_mbps || 10, data.plan_name, durationSeconds);
     }
 
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, plan_id: data.plan_id || null });
     res.json(data);
   } catch (err) {
     console.error('❌ Erro ao atualizar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+    await registerSystemLog('error', 'users', 'Erro ao atualizar usuário', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
+    if (String(err.message || '').includes('users_cpf_key')) {
+      return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
+    }
+    if (String(err.message || '').includes('users_email_key')) {
+      return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
+    }
+    res.status(500).json({ error: err.message || 'Erro ao atualizar usuário' });
   }
 });
-
 // Deletar usuário
 app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   try {
@@ -1204,7 +1517,7 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 
     if (status) query = query.eq('status', status);
     if (user_id) query = query.eq('user_id', user_id);
-    if (mac_address) query = query.eq('user_mac', mac_address);
+    if (mac_address) query = query.in('user_mac', getMacVariants(mac_address));
 
     const { data, error } = await query;
     if (error) throw error;
@@ -1219,7 +1532,8 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 app.post('/api/payments/generate-pix', async (req, res) => {
   try {
     const { mac_address, plan_id, plan_name, description, payment_id } = req.body;
-    if (!mac_address || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
+    const cleanMac = normalizeMac(mac_address);
+    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
 
     let planQuery = supabase.from('plans').select('*');
     planQuery = plan_id ? planQuery.eq('id', plan_id) : planQuery.eq('name', plan_name);
@@ -1273,7 +1587,7 @@ app.post('/api/payments/generate-pix', async (req, res) => {
     let error;
 
     const paymentData = {
-      user_mac: mac_address,
+      user_mac: cleanMac,
       plan_name: selectedPlanName,
       amount: planAmount,
       description: paymentDescription,
@@ -1315,14 +1629,15 @@ app.post('/api/payments/generate-pix', async (req, res) => {
 // Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const { external_reference, mercado_pago_id, mac, mac_address } = req.query;
-    const macFilter = (mac || mac_address || '').toString().trim();
+    const macFilter = normalizeMac(mac || mac_address || '');
 
     if (macFilter) {
       const { data: payment, error } = await supabase
         .from('payments')
         .select('*')
-        .ilike('user_mac', macFilter)
+        .in('user_mac', getMacVariants(macFilter))
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -1434,12 +1749,13 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
 app.post('/api/vouchers/validate', async (req, res) => {
   try {
     const { code, mac_address } = req.body;
+    const cleanMac = normalizeMac(mac_address);
     const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', String(code).toUpperCase()).eq('status', 'active').maybeSingle();
     if (error || !voucher) return res.status(404).json({ error: 'Voucher inválido ou já utilizado' });
 
     await supabase.from('vouchers').update({
       status: 'used', used: true, used_at: new Date().toISOString(),
-      mac_address: mac_address || null, updated_at: new Date().toISOString()
+      mac_address: cleanMac || null, updated_at: new Date().toISOString()
     }).eq('id', voucher.id);
 
     res.json({ valid: true, plan_name: voucher.plan_name, duration_hours: voucher.duration_hours });
@@ -1912,21 +2228,16 @@ function buildPopInstallScript(pop, config = {}) {
     `/radius incoming set accept=yes\n` +
     `:delay 1s\n`;
 
-  const wgHosts = [
-    'hotspot-system.vercel.app',
-    '*.vercel.app',
-    'vercel.app',
-    'cdn.vercel.app',
-    'mstelecom-api.duckdns.org',
-    'api.mercadopago.com',
-    'mercadopago.com',
-    'www.mercadopago.com',
-    'cdnjs.cloudflare.com',
-    'unpkg.com',
-    'fonts.googleapis.com',
-    'fonts.gstatic.com'
-  ];
-
+  // Do not allow Google/gstatic/googleapis/connectivitycheck/generate_204 in pre-login Walled Garden.
+  // Android uses these endpoints for captive portal validation. If they return HTTP 204 before authentication,
+  // Android marks the hotspot as VALIDATED and CaptivePortalLogin will not open.
+  const wgHosts = getPreloginAllowedHosts();
+  const wgCleanupPattern = 'gstatic|googleapis|connectivitycheck|generate_204|generate|clients3|google.cn|play.googleapis|google.com|www.gstatic.com|cdn.tailwindcss.com|cdnjs.cloudflare.com|unpkg.com|vercel.app|cdn.vercel.app|neverssl.com|mercadopago|captive.apple.com|msftconnecttest.com|msftncsi.com';
+  const wgCleanupLines = [
+    `/ip hotspot walled-garden remove [find where dst-host~"${wgCleanupPattern}"]`,
+    `/ip hotspot walled-garden ip remove [find where dst-host~"${wgCleanupPattern}"]`,
+    `/ip dns cache flush`
+  ].join('\n');
   const wgLines = wgHosts.map(h => `/ip hotspot walled-garden ip add action=accept disabled=no dst-host=${h} server="${popName}" comment="${tag}"`).join('\n');
 
   const wanBlock = (() => {
@@ -2081,6 +2392,7 @@ ${vpnBlock}${radiusBlock}
 ${hotspotLine}:delay 1s
 
 # Walled Garden (dominios liberados antes do login)
+${wgCleanupLines}
 ${wgLines}
 :delay 1s
 
@@ -2748,31 +3060,14 @@ app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
 
 app.get('/api/settings/free_trial', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
-    if (error) throw error;
-    const raw = data?.value && typeof data.value === 'object' ? data.value : {};
-    const enabled = raw.enabled === true;
-    const durationSeconds =
-      raw.duration_seconds !== undefined ? Number(raw.duration_seconds)
-        : raw.duration_minutes !== undefined ? Number(raw.duration_minutes) * 60
-          : 15 * 60;
-    const cooldownSeconds =
-      raw.cooldown_seconds !== undefined ? Number(raw.cooldown_seconds)
-        : raw.reuse_cooldown_hours !== undefined ? Number(raw.reuse_cooldown_hours) * 60 * 60
-          : raw.cooldown_hours !== undefined ? Number(raw.cooldown_hours) * 60 * 60
-            : 24 * 60 * 60;
-
-    const duration_seconds = Number.isFinite(durationSeconds) && durationSeconds >= 10 ? Math.floor(durationSeconds) : 15 * 60;
-    const cooldown_seconds = Number.isFinite(cooldownSeconds) && cooldownSeconds >= 0 ? Math.floor(cooldownSeconds) : 24 * 60 * 60;
-
+    const cfg = await getFreeTrialConfig();
     const out = {
-      enabled,
-      duration_seconds,
-      cooldown_seconds,
-      // Compat / UI helpers
-      duration_minutes: Math.max(1, Math.ceil(duration_seconds / 60)),
-      reuse_cooldown_hours: Math.ceil(cooldown_seconds / 3600),
-      cooldown_hours: Math.ceil(cooldown_seconds / 3600)
+      enabled: cfg.enabled,
+      duration_seconds: cfg.duration_seconds,
+      cooldown_seconds: cfg.cooldown_seconds,
+      duration_minutes: Math.max(1, Math.ceil(cfg.duration_seconds / 60)),
+      reuse_cooldown_hours: Math.ceil(cfg.cooldown_seconds / 3600),
+      cooldown_hours: Math.ceil(cfg.cooldown_seconds / 3600)
     };
     res.set('Cache-Control', 'no-store');
     res.json(out);
@@ -2780,32 +3075,10 @@ app.get('/api/settings/free_trial', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Salvar configurações de teste grátis
 app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   try {
-    const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const enabled = body.enabled === true;
-    const durationSeconds =
-      body.duration_seconds !== undefined ? Number(body.duration_seconds)
-        : body.duration_minutes !== undefined ? Number(body.duration_minutes) * 60
-          : 15 * 60;
-    const cooldownSeconds =
-      body.cooldown_seconds !== undefined ? Number(body.cooldown_seconds)
-        : body.reuse_cooldown_hours !== undefined ? Number(body.reuse_cooldown_hours) * 60 * 60
-          : body.cooldown_hours !== undefined ? Number(body.cooldown_hours) * 60 * 60
-            : 24 * 60 * 60;
-
-    const duration_seconds = Number.isFinite(durationSeconds) ? Math.floor(durationSeconds) : 15 * 60;
-    const cooldown_seconds = Number.isFinite(cooldownSeconds) ? Math.floor(cooldownSeconds) : 24 * 60 * 60;
-    const safeDuration = Math.max(10, duration_seconds);
-    const safeCooldown = Math.max(0, cooldown_seconds);
-
-    const value = {
-      enabled,
-      duration_seconds: safeDuration,
-      cooldown_seconds: safeCooldown
-    };
+    const value = normalizeFreeTrialConfig(req.body && typeof req.body === 'object' ? req.body : {});
 
     const { error } = await supabase.from('settings').upsert(
       {
@@ -2817,12 +3090,11 @@ app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
     );
     if (error) throw error;
     res.set('Cache-Control', 'no-store');
-    res.json({ success: true });
+    res.json({ success: true, value });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 // ============================================================
 // 🪝 WEBHOOKS
 // ============================================================
@@ -2870,9 +3142,10 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
           // Buscamos a duração do plano
           const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
           const durationMinutes = (plan?.duration_days || 1) * 24 * 60;
+          const cleanMac = normalizeMac(payment.user_mac);
           
           await authorizeAccess(
-            payment.user_mac, 
+            cleanMac,
             '192.168.32.1', 
             null, null, null, 
             durationMinutes, 
@@ -2882,7 +3155,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
 
           // 4. Registrar sessão
           await supabase.from('hotspot_sessions').insert({
-            mac_address: payment.user_mac,
+            mac_address: cleanMac,
             plan_name: payment.plan_name,
             status: 'active',
             expires_at: new Date(Date.now() + durationMinutes * 60000).toISOString(),
@@ -3028,15 +3301,16 @@ app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
 
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   try {
-    const { user, action, start_date, end_date, search } = req.query;
-    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
+    const { user, type, action, start_date, end_date, search } = req.query;
+    let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(300);
 
-    if (user) query = query.ilike('admin_username', `%${user}%`);
+    if (user) query = query.ilike('username', `%${user}%`);
+    if (type) query = query.eq('type', type);
     if (action) query = query.eq('action', action);
     if (start_date) query = query.gte('created_at', start_date);
     if (end_date) query = query.lte('created_at', end_date);
     if (search) {
-      query = query.or(`admin_username.ilike.%${search}%,action.ilike.%${search}%,target_type.ilike.%${search}%,details.ilike.%${search}%`);
+      query = query.or(`username.ilike.%${search}%,type.ilike.%${search}%,object.ilike.%${search}%,action.ilike.%${search}%,ip.ilike.%${search}%,user_agent.ilike.%${search}%,details.ilike.%${search}%`);
     }
 
     const { data, error } = await query;
@@ -3046,7 +3320,6 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // ============================================================
 // 💾 BACKUP
 // ============================================================
@@ -3057,14 +3330,15 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
   try {
-    const { start_date, end_date, search, type } = req.query;
+    const { start_date, end_date, search, type, level } = req.query;
     let query = supabase.from('logs').select('*').order('created_at', { ascending: false }).limit(200);
 
-    if (type) query = query.eq('level', type);
+    if (type) query = query.eq('source', type);
+    if (level) query = query.eq('level', level);
     if (start_date) query = query.gte('created_at', start_date);
     if (end_date) query = query.lte('created_at', end_date);
     if (search) {
-      query = query.or(`message.ilike.%${search}%,level.ilike.%${search}%,source.ilike.%${search}%`);
+      query = query.or(`message.ilike.%${search}%,source.ilike.%${search}%,level.ilike.%${search}%,ip.ilike.%${search}%,user_agent.ilike.%${search}%,details.ilike.%${search}%`);
     }
 
     const { data, error } = await query;
@@ -3074,7 +3348,6 @@ app.get('/api/logs', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Listar backups
 app.get('/api/backup/list', authMiddleware, async (req, res) => {
   try {
@@ -3140,15 +3413,16 @@ app.get('/api/portal/plans', async (req, res) => {
 app.post('/api/portal/create-pix', async (req, res) => {
   try {
     const { mac_address } = req.body || {};
-    if (mac_address) {
+    const cleanMac = normalizeMac(mac_address);
+    if (cleanMac) {
       // Libera acesso temporario para realizar pagamento (janela curta)
       const durationMinutes = 5;
       const expiresAt = new Date(Date.now() + durationMinutes * 60000).toISOString();
 
-      const result = await authorizeAccess(mac_address, '192.168.32.1', null, null, null, durationMinutes, 5, 'payment_window');
+      const result = await authorizeAccess(cleanMac, '192.168.32.1', null, null, null, durationMinutes, 5, 'payment_window');
       if (result?.success) {
         await supabase.from('hotspot_sessions').insert({
-          mac_address,
+          mac_address: cleanMac,
           status: 'active',
           expires_at: expiresAt,
           created_at: new Date().toISOString()
@@ -3182,7 +3456,8 @@ app.post('/api/portal/login', async (req, res) => {
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     if (user.password !== hashedPassword && user.password !== password) return res.status(401).json({ error: 'Senha incorreta' });
 
-    if (mac_address) await supabase.from('users').update({ mac_address, updated_at: new Date().toISOString() }).eq('id', user.id);
+    const cleanMac = normalizeMac(mac_address);
+    if (cleanMac) await supabase.from('users').update({ mac_address: cleanMac, updated_at: new Date().toISOString() }).eq('id', user.id);
     
     const status = (user.status === 'active' && user.expires_at && new Date(user.expires_at) > new Date()) ? 'active' : 'expired';
     res.json({ user_id: user.id, username: user.username, status, plan_id: user.plan_id });
@@ -3196,11 +3471,12 @@ app.post('/api/portal/register', async (req, res) => {
     const { name, cpf, phone, password, mac_address } = req.body;
 
     // Se o MAC ja esta associado a algum usuario, evita duplicar cadastro
-    if (mac_address) {
+    const cleanMac = normalizeMac(mac_address);
+    if (cleanMac) {
       const { data: existing } = await supabase
         .from('users')
         .select('id, username')
-        .eq('mac_address', mac_address)
+        .in('mac_address', getMacVariants(cleanMac))
         .maybeSingle();
       if (existing) return res.json({ user_id: existing.id, username: existing.username, existing: true });
     }
@@ -3210,7 +3486,7 @@ app.post('/api/portal/register', async (req, res) => {
     
     const { data, error } = await supabase.from('users').insert({
       username, name, cpf: cpf || '', phone: phone || '', password: hashedPassword,
-      mac_address: mac_address || '', status: 'pending', created_at: new Date().toISOString()
+      mac_address: cleanMac || '', status: 'pending', created_at: new Date().toISOString()
     }).select().single();
     
     if (error) throw error;
@@ -3228,11 +3504,12 @@ app.post('/api/portal/voucher', async (req, res) => {
 
 app.get('/api/portal/status', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const { mac, mac_address } = req.query;
-    const targetMac = mac || mac_address;
+    const targetMac = normalizeMac(mac || mac_address);
     if (!targetMac) return res.json({ connected: false });
     
-    const { data: session } = await supabase.from('hotspot_sessions').select('*').eq('mac_address', targetMac).eq('status', 'active').maybeSingle();
+    const { data: session } = await supabase.from('hotspot_sessions').select('*').in('mac_address', getMacVariants(targetMac)).eq('status', 'active').maybeSingle();
     if (session && new Date(session.expires_at) > new Date()) {
       return res.json({ connected: true, expires_at: session.expires_at });
     }
@@ -3241,16 +3518,17 @@ app.get('/api/portal/status', async (req, res) => {
     res.status(500).json({ error: 'Erro ao verificar status' });
   }
 });
-
 // Rota pública para verificar status de pagamento por MAC (usada pelo portal)
 app.get('/api/portal/payment-status', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const { mac_address } = req.query;
-    if (!mac_address) return res.status(400).json({ error: 'MAC é obrigatório' });
+    const cleanMac = normalizeMac(mac_address);
+    if (!cleanMac) return res.status(400).json({ error: 'MAC é obrigatório' });
 
     const { data, error } = await supabase.from('payments')
       .select('*')
-      .eq('user_mac', mac_address)
+      .in('user_mac', getMacVariants(cleanMac))
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -3261,7 +3539,6 @@ app.get('/api/portal/payment-status', async (req, res) => {
     res.status(500).json({ error: 'Erro ao verificar status de pagamento' });
   }
 });
-
 // Rota de compatibilidade para o portal público que chama /api/payments sem token
 app.get('/api/payments', async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -3281,7 +3558,7 @@ app.get('/api/payments', async (req, res, next) => {
 app.post('/api/users/test-access', async (req, res) => {
   try {
     const body = req.body || {};
-    const macAddress = body.mac_address;
+    const macAddress = body.mac_address || body.mac;
     const ipAddress = body.ip_address ?? body.ip ?? null;
     const popId = body.pop_id ?? null;
     const popIp = body.pop_ip ?? null;
@@ -3317,19 +3594,19 @@ app.post('/api/liberar-teste', async (req, res) => {
 // Free trial (público) - 1 uso por MAC
 app.post('/api/free-trial', async (req, res) => {
   try {
-    const { mac_address } = req.body || {};
-    if (!mac_address) return res.status(400).json({ success: false, message: 'MAC é obrigatório' });
+    const { mac_address, mac } = req.body || {};
+    if (!mac_address && !mac) return res.status(400).json({ success: false, message: 'MAC é obrigatório' });
 
     const out = await handleFreeTrialAccess({
-      macAddress: mac_address,
+      macAddress: mac_address || mac,
       durationMinutes: null,
       ipAddress: req.body?.ip_address ?? req.body?.ip ?? null,
       popId: req.body?.pop_id ?? null,
       popIp: req.body?.pop_ip ?? null
     });
 
-    if (!out.ok) return res.status(out.status).json({ success: false, message: out.body?.error || 'Erro ao liberar acesso' });
-    res.json({ success: true, expires_at: out.body?.expires_at, message: out.body?.message || 'Acesso liberado', user_id: out.body?.user_id });
+    if (!out.ok) return res.status(out.status).json({ success: false, message: out.body?.error || 'Erro ao liberar acesso', ...out.body });
+    res.json({ success: true, expires_at: out.body?.expires_at, message: out.body?.message || 'Acesso liberado', user_id: out.body?.user_id, ...out.body });
   } catch (_err) {
     res.status(500).json({ success: false, message: 'Erro interno' });
   }
@@ -3338,13 +3615,14 @@ app.post('/api/free-trial', async (req, res) => {
 app.post('/api/access/validate', async (req, res) => {
   try {
     const { mac_address } = req.body || {};
-    if (!mac_address) return res.status(400).json({ authorized: false });
+    const cleanMac = normalizeMac(mac_address);
+    if (!cleanMac) return res.status(400).json({ authorized: false });
 
     const now = new Date().toISOString();
     const { data: session, error } = await supabase
       .from('hotspot_sessions')
       .select('*')
-      .eq('mac_address', mac_address)
+      .in('mac_address', getMacVariants(cleanMac))
       .eq('status', 'active')
       .gt('expires_at', now)
       .order('created_at', { ascending: false })
@@ -3362,72 +3640,119 @@ app.post('/api/access/validate', async (req, res) => {
 
 // Access status (public): used by captive portal to auto-liberate devices with an active paid plan/session.
 app.get('/api/access/status', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const macRaw = String(req.query.mac || req.query.mac_address || '').trim();
   const cleanMac = normalizeMac(macRaw);
-  if (!cleanMac) return res.status(400).json({ allowed: false, reason: 'missing_mac' });
-  
+  if (!cleanMac) return res.status(400).json({ allowed: false, reason: 'missing_mac', show_free_trial: false });
+
   const nowMs = Date.now();
   const nowIso = new Date(nowMs).toISOString();
   const popId = req.query.pop_id ?? null;
   const popIp = req.query.pop_ip ?? null;
 
   try {
-    // 1. Check for manual plan (Priority 1)
-    const { data: user } = await supabase.from('users').select('*').eq('mac_address', cleanMac).maybeSingle();
-    if (user) {
-      const status = String(user.status || '').toLowerCase();
-      const planName = user.plan_name || null;
-      const expiresAt = user.expires_at || null;
-      const hasFutureExpiry = expiresAt && new Date(expiresAt).getTime() > nowMs;
-      const looksActive = (status === 'active' || status === 'paid' || status === 'vip') && planName && planName !== 'free_trial';
+    const variants = getMacVariants(cleanMac);
 
-      if (hasFutureExpiry || looksActive) {
-        return res.json({ allowed: true, reason: 'manual_plan_active', show_free_trial: false, expires_at: expiresAt });
+    const { data: user } = await supabase
+      .from('users')
+      .select('*')
+      .in('mac_address', variants)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (isActivePaidUser(user)) {
+      const planName = user.plan_name || 'Premium';
+      const durationForPlan = user.expires_at
+        ? Math.max(10, Math.ceil((new Date(user.expires_at).getTime() - nowMs) / 1000))
+        : 30 * 24 * 60 * 60;
+      const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
+      await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
+      return res.json({ allowed: true, reason: 'manual_plan_active', show_free_trial: false, expires_at: user.expires_at || null });
+    }
+
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('*')
+      .in('user_mac', variants)
+      .in('status', ['approved', 'confirmed', 'pago', 'paid'])
+      .order('approved_at', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (payment) {
+      const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
+      const approvedAt = new Date(payment.approved_at || payment.updated_at || payment.created_at || nowIso).getTime();
+      const durationDays = Number(plan?.duration_days || 1);
+      const expiresAt = new Date(approvedAt + durationDays * 24 * 60 * 60 * 1000).toISOString();
+      if (new Date(expiresAt).getTime() > nowMs) {
+        const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - nowMs) / 1000));
+        await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);
+        return res.json({ allowed: true, reason: 'paid_plan_active', show_free_trial: false, expires_at: expiresAt });
       }
     }
 
-    // 2. Check for active session (Priority 2)
-    const { data: session } = await supabase.from('hotspot_sessions').select('*').eq('mac_address', cleanMac).eq('status', 'active').gt('expires_at', nowIso).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const { data: session } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .in('mac_address', variants)
+      .eq('status', 'active')
+      .gt('expires_at', nowIso)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     if (session) {
       return res.json({ allowed: true, reason: 'active_session', show_free_trial: false, expires_at: session.expires_at });
     }
 
-    // 3. Check for free trial eligibility (Priority 3)
-    const { data: cfgData } = await supabase.from('settings').select('value').eq('key', 'free_trial').maybeSingle();
-    const cfg = cfgData?.value || { enabled: false };
-    
-    if (cfg.enabled) {
-      const { data: ft } = await supabase.from('free_trials').select('*').or(`mac_address.eq."${cleanMac}",mac.eq."${cleanMac}"`).maybeSingle();
-      const lastUsed = ft?.last_used_at || ft?.used_at || ft?.last_trial || null;
-      const expiresAtOld = ft?.expires_at || null;
-      const cooldownUntil = ft?.cooldown_until || null;
-      const cooldownSeconds = Number(cfg.cooldown_seconds || 86400);
-
-      let effectiveUntil = cooldownUntil;
-      if (!effectiveUntil && lastUsed) {
-        const baseTime = expiresAtOld ? new Date(expiresAtOld).getTime() : new Date(lastUsed).getTime();
-        effectiveUntil = new Date(baseTime + (cooldownSeconds * 1000)).toISOString();
-      }
-
-      if (cooldownSeconds === 0 && lastUsed) {
-        return res.json({ allowed: false, reason: 'already_used', show_free_trial: false });
-      }
-
-      if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
-        const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
-        return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
-      }
-
-      return res.json({ allowed: false, reason: 'trial_available', show_free_trial: true });
+    const cfg = await getFreeTrialConfig();
+    if (!cfg.enabled) {
+      return res.json({ allowed: false, reason: 'no_access', show_free_trial: false });
     }
 
-    return res.json({ allowed: false, reason: 'no_access', show_free_trial: false });
+    try {
+      const { data: ft } = await supabase
+        .from('free_trials')
+        .select('*')
+        .in('mac_address', variants)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (ft) {
+        const effectiveUntil = getTrialCooldownUntil(ft, cfg);
+
+        if (effectiveUntil && new Date(effectiveUntil).getTime() > nowMs) {
+          const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - nowMs) / 1000));
+          await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+          return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+        }
+      }
+    } catch (error) {
+      await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown em free_trials', { mac: cleanMac, error: error.message });
+    }
+
+    try {
+      const lastTrialSession = await getLastTrialSession(variants);
+      const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, cfg);
+      if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > nowMs) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - nowMs) / 1000));
+        await registerSystemLog('info', 'free_trial', 'Status de acesso em cooldown por sessao', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+        return res.json({ allowed: false, reason: 'cooldown', show_free_trial: false, retry_after_seconds: retryAfterSeconds });
+      }
+    } catch (error) {
+      await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessao no status', { mac: cleanMac, error: error.message });
+    }
+
+    return res.json({ allowed: false, reason: 'trial_available', show_free_trial: true });
   } catch (error) {
     console.error('Erro ao verificar status de acesso:', error);
-    res.status(500).json({ allowed: false, error: 'Erro interno', show_free_trial: false });
+    await registerSystemLog('error', 'access_status', 'Erro ao verificar status de acesso', { mac: cleanMac, error: error.message });
+    res.status(500).json({ allowed: false, reason: 'internal_error', show_free_trial: false });
   }
 });
-
 app.post('/api/auth/check', (req, res) => {
   req.url = '/api/access/validate';
   return app._router.handle(req, res);
