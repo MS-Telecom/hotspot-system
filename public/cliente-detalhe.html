@@ -1,4 +1,4 @@
-<html lang="pt-br" class="dark">
+﻿<html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
@@ -25,7 +25,7 @@
 </head>
 <body class="bg-[#0a0c15] text-gray-200">
 
-<!-- PROTEÇÃO DE ACESSO -->
+<!-- PROTEÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DE ACESSO -->
 <script>
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
     if (!token) {
@@ -56,7 +56,7 @@
         </div>
 
         <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes</p>
             <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
             </a>
@@ -79,7 +79,7 @@
                 <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
             </a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                <i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
             </a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs do Sistema
@@ -91,16 +91,16 @@
 
         <div class="p-4 border-t border-gray-800 bg-black/30">
             <div class="flex items-center justify-between mb-3">
-                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Sessão Atual</p>
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">SessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Atual</p>
                 <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
             </div>
             <div class="space-y-2 text-[10px] font-mono">
                 <div class="flex justify-between text-gray-500">
-                    <span>Usuário</span>
+                    <span>UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio</span>
                     <span id="sessionUser" class="text-cyan-400">-</span>
                 </div>
                 <div class="flex justify-between text-gray-500">
-                    <span>Início</span>
+                    <span>InÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­cio</span>
                     <span id="sessionStart" class="text-gray-600">-</span>
                 </div>
                 <div class="flex justify-between text-gray-500">
@@ -111,7 +111,7 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡DO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-8 py-4 flex justify-between items-center">
@@ -136,7 +136,7 @@
         <div class="p-8 space-y-8">
 
             <div class="flex justify-between items-end flex-wrap gap-4">
-                <div><h1 class="text-3xl font-black tracking-tight">Clientes / SGP Intelligence</h1><p class="text-gray-500 text-sm mt-1">Consulta e gestão de assinantes, histórico de conexões e status financeiro</p></div>
+                <div><h1 class="text-3xl font-black tracking-tight">Clientes / SGP Intelligence</h1><p class="text-gray-500 text-sm mt-1">Consulta e gestÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de assinantes, histÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rico de conexÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes e status financeiro</p></div>
                 <div class="flex gap-3">
                     <button id="exportarClientesBtn" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition">
                         <i data-lucide="download" class="w-4 h-4"></i> Baixar leads (CSV)
@@ -145,7 +145,7 @@
                 </div>
             </div>
 
-            <!-- Filtros Avançados -->
+            <!-- Filtros AvanÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ados -->
             <div class="flex flex-wrap gap-4 mb-6">
                 <input type="text" id="filtroNome" placeholder="Buscar por nome..." class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
                 <select id="filtroStatus" class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm">
@@ -175,13 +175,13 @@
     </main>
 </div>
 
-<!-- MODAL: NOVO USUÁRIO -->
+<!-- MODAL: NOVO USUÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂRIO -->
 <div id="modalNovoUsuario" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] md:max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
             <h2 class="text-base sm:text-lg md:text-xl font-bold text-white flex items-center gap-2">
                 <i data-lucide="user-plus" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
-                Novo Usuário
+                Novo UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
             </h2>
             <button onclick="closeModalNovoUsuario()" class="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
@@ -210,8 +210,8 @@
                 <input type="email" id="novoEmail" placeholder="cliente@email.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Endereço</label>
-                <input type="text" id="novoEndereco" placeholder="Rua, Número, Bairro" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">EndereÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§o</label>
+                <input type="text" id="novoEndereco" placeholder="Rua, NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero, Bairro" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano Inicial *</label>
@@ -288,7 +288,7 @@
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Endereço</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">EndereÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§o</label>
                 <input type="text" id="editEndereco" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
@@ -300,7 +300,7 @@
         </div>
         <div class="p-6 border-t border-gray-800 flex justify-end gap-3 shrink-0">
             <button onclick="closeModalEditar()" class="px-6 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 transition">Cancelar</button>
-            <button onclick="salvarEdicaoCliente()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 transition">Salvar Alterações</button>
+            <button onclick="salvarEdicaoCliente()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 transition">Salvar AlteraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes</button>
         </div>
     </div>
 </div>
@@ -326,13 +326,13 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Duração (Dias)</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">DuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o (Dias)</label>
                 <input type="number" id="renovarDias" value="30" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
         </div>
         <div class="p-6 border-t border-gray-800 bg-black/20 flex justify-end gap-3">
             <button onclick="closeModalRenovar()" class="px-6 py-2 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800 transition">Cancelar</button>
-            <button onclick="confirmarRenovacao()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-xl text-sm font-bold transition">Confirmar Renovação</button>
+            <button onclick="confirmarRenovacao()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-xl text-sm font-bold transition">Confirmar RenovaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o</button>
         </div>
     </div>
 </div>
@@ -358,7 +358,7 @@
         }
         if (!response.ok) {
             const error = await response.json();
-            const err = new Error(error.error || 'Erro na requisição');
+            const err = new Error(error.error || 'Erro na requisiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o');
             err.reason = error.reason;
             err.status = response.status;
             throw err;
@@ -392,12 +392,22 @@
         }
     }
 
+    function deriveClientOperationalStatus(cliente) {
+        const s = String(cliente.status || '').toLowerCase();
+        if (s === 'blocked' || cliente.blocked === true) return 'blocked';
+        if (cliente.is_vip === true || s === 'vip') return 'vip';
+        const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
+        if ((expiresAt > 0 && expiresAt < Date.now()) || s === 'inactive' || s === 'expired') return 'inactive';
+        if (['active', 'paid', 'trial'].includes(s)) return 'active';
+        return 'inactive';
+    }
+
     function getStatusBadgeClass(status) {
         const s = String(status || '').toLowerCase();
         switch(s) {
             case 'active':
             case 'paid':
-            case 'vip': return 'status-active';
+            case 'vip': return 'status-premium';
             case 'trial': return 'status-premium';
             case 'blocked': return 'status-blocked';
             case 'expired':
@@ -411,17 +421,28 @@
         switch(s) {
             case 'active': return 'Ativo';
             case 'paid': return 'Pago';
-            case 'trial': return 'Teste Grátis';
+            case 'trial': return 'Teste GrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis';
             case 'expired': return 'Expirado';
             case 'inactive': return 'Inativo';
             case 'blocked': return 'Bloqueado';
-            case 'vip': return 'VIP';
+            case 'vip': return 'Acesso Prime';
             default: return status || 'Desconhecido';
         }
     }
 
     function getPlanDisplayName(planName) {
-        return String(planName || '').toLowerCase() === 'free_trial' ? 'Teste Grátis' : (planName || 'N/A');
+        return String(planName || '').toLowerCase() === 'free_trial' ? 'Teste GrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis' : (planName || 'N/A');
+    }
+    function getClientPopLine(cliente) {
+        const popName = cliente.pop_name || cliente.last_pop_name || '';
+        const popLocation = cliente.pop_location || cliente.last_pop_location || '';
+        if (popName && popLocation) return `&#128205; ${popName} &middot; ${popLocation}`;
+        if (popName) return `&#128205; Atendido por: ${popName}`;
+        return '&#128205; Sem POP vinculado';
+    }
+
+    function formatDateTime(value) {
+        return value ? new Date(value).toLocaleString('pt-BR') : '-';
     }
 
     function renderizarClientes(clientes) {
@@ -433,21 +454,26 @@
             const planoNome = getPlanDisplayName(planoObj ? planoObj.name : cliente.plan_name);
             const statusClass = getStatusBadgeClass(cliente.status);
             const statusText = getStatusText(cliente.status);
-            const isVip = (cliente.is_vip || String(cliente.status).toLowerCase() === 'vip') ? '⭐ VIP' : '';
+            const isPrime = cliente.is_vip === true || String(cliente.status).toLowerCase() === 'vip';
+            const popLine = getClientPopLine(cliente);
             
-            // Lógica de prioridade de badge única
+            // LÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³gica de prioridade de badge ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºnica
             let badgeHtml = '';
             const s = String(cliente.status || '').toLowerCase();
             const p = String(cliente.plan_name || '').toLowerCase();
             const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
             const isExpired = expiresAt > 0 && expiresAt < Date.now();
             
-            if (p !== 'free_trial' && (s === 'active' || s === 'paid' || s === 'vip') && !isExpired) {
-                badgeHtml = `<span class="status-badge status-premium">${planoNome} ${isVip}</span>`;
+            if (s === 'blocked') {
+                badgeHtml = `<span class="status-badge status-blocked">BLOQUEADO</span>${isPrime ? ' <span class="status-badge status-premium">&#11088; Acesso Prime</span>' : ''}`;
+            } else if (isPrime) {
+                badgeHtml = `<span class="status-badge status-premium">&#11088; Acesso Prime</span><span class="text-[10px] text-emerald-400 ml-2">Sem expira&ccedil;&atilde;o</span>`;
+            } else if (p !== 'free_trial' && (s === 'active' || s === 'paid') && !isExpired) {
+                badgeHtml = `<span class="status-badge status-premium">${planoNome}</span>`;
+            } else if (p === 'free_trial' || s === 'trial') {
+                badgeHtml = `<span class="status-badge status-active">TESTE GRÃTIS</span>`;
             } else if (isExpired) {
                 badgeHtml = `<span class="status-badge status-inactive">EXPIRADO</span>`;
-            } else if (p === 'free_trial' || s === 'trial') {
-                badgeHtml = `<span class="status-badge status-active">TESTE GRÁTIS</span>`;
             } else {
                 badgeHtml = `<span class="status-badge ${statusClass}">${statusText}</span>`;
             }
@@ -469,12 +495,12 @@
                         <div class="bg-gray-900/50 p-3 rounded-xl text-center"><p class="text-[9px] text-gray-500 uppercase">MAC</p><p class="text-xs font-mono text-blue-400">${cliente.mac_address || 'N/A'}</p></div>
                     </div>
                     <div class="flex justify-between items-center pt-3 border-t border-gray-800">
-                        <div class="flex gap-2"><span class="text-[10px] text-gray-500 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${cliente.address || 'N/A'}</span></div>
+                        <div class="flex gap-2"><span class="text-[10px] text-gray-500 flex items-center gap-1">${popLine}</span></div>
                         <div class="flex gap-2">
                             <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); excluirCliente(${cliente.id})" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
                             <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); editarCliente(${cliente.id})" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>
                             <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); bloquearCliente(${cliente.id})" title="Bloquear"><i data-lucide="ban" class="w-4 h-4 text-red-500"></i></button>
-                            <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); marcarVIP(${cliente.id})" title="Marcar VIP"><i data-lucide="crown" class="w-4 h-4 text-yellow-500"></i></button>
+                            <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); marcarVIP(${cliente.id})" title="Acesso Prime"><i data-lucide="crown" class="w-4 h-4 text-yellow-500"></i></button>
                             <button class="p-1.5 hover:bg-gray-800 rounded-lg transition" onclick="event.stopPropagation(); renovarPlano(${cliente.id})" title="Renovar"><i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500"></i></button>
                         </div>
                     </div>
@@ -523,14 +549,29 @@
         }
     }
 
-    function excluirCliente(id) {
-        if (confirm('Tem certeza que deseja excluir este cliente?')) {
-            apiRequest(`/api/users/${id}`, { method: 'DELETE' })
-                .then(() => {
-                    alert('Cliente excluído com sucesso!');
-                    carregarClientes();
-                })
-                .catch(err => alert('Erro ao excluir cliente'));
+    function getDisconnectMessage(action, result) {
+        const status = result?.disconnect_status;
+        if (action === 'block') {
+            if (status === 'done') return 'Cliente bloqueado e desconectado do hotspot.';
+            if (status === 'queued') return 'Cliente bloqueado. DesconexÃƒÆ’Ã‚Â£o enviada ao POP.';
+            if (status === 'failed') return `Cliente bloqueado no painel, mas falhou ao desconectar do MikroTik: ${result?.error || 'verifique o POP'}`;
+            return 'Cliente bloqueado.';
+        }
+        if (status === 'done') return 'Cliente excluÃƒÆ’Ã‚Â­do e desconectado do hotspot.';
+        if (status === 'queued') return 'Cliente excluÃƒÆ’Ã‚Â­do. DesconexÃƒÆ’Ã‚Â£o enviada ao POP.';
+        if (status === 'failed') return `Cliente excluÃƒÆ’Ã‚Â­do do painel, mas falhou ao desconectar do MikroTik: ${result?.error || 'verifique o POP'}`;
+        return 'Cliente excluÃƒÆ’Ã‚Â­do com sucesso!';
+    }
+
+    async function excluirCliente(id) {
+        if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
+        try {
+            const result = await apiRequest(`/api/users/${id}`, { method: 'DELETE' });
+            clientesData = clientesData.filter(c => String(c.id) !== String(id));
+            renderizarClientes(clientesData);
+            alert(getDisconnectMessage('delete', result));
+        } catch (err) {
+            alert(err.message || 'Erro ao excluir cliente');
         }
     }
 
@@ -546,21 +587,29 @@
                 const planoObj = plansData.find(p => p.id === cliente.plan_id);
                 const planoNome = getPlanDisplayName(planoObj ? planoObj.name : cliente.plan_name);
                 const isTrial = String(cliente.plan_name || '').toLowerCase() === 'free_trial' || String(cliente.status || '').toLowerCase() === 'trial';
-                const statusModalText = isTrial ? 'Teste Grátis' : getStatusText(cliente.status);
+                const statusModalText = isTrial ? 'Teste GrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis' : getStatusText(cliente.status);
+                const popName = cliente.pop_name || cliente.last_pop_name || '-';
+                const popLocation = cliente.pop_location || cliente.last_pop_location || '-';
+                const lastStatus = getStatusText(cliente.operational_status || cliente.status);
                 content.innerHTML = `
                     <div class="space-y-2">
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium text-sm">${cliente.name || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">MAC Address</p><p class="font-mono text-blue-400 text-xs">${cliente.mac_address || '-'}</p></div>
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">POP atual</p><p class="text-sm">${popName}</p></div>
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Local do POP</p><p class="text-sm">${popLocation}</p></div>
+                        ${cliente.is_vip === true ? `<div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3"><p class="text-[10px] text-emerald-400">Tipo de acesso</p><p class="text-sm text-white">Acesso Prime</p><p class="text-xs text-gray-400 mt-1">Validade: Sem expira&ccedil;&atilde;o &middot; Permiss&atilde;o: Todos os POPs</p><p class="text-xs text-gray-500 mt-1">Desde: ${formatDateTime(cliente.vip_since)}</p></div>` : ''}
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡ltima sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o</p><p class="text-xs">${formatDateTime(cliente.last_connection_at || cliente.last_access)}</p></div>
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡ltimo status</p><p class="text-sm">${lastStatus}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Telefone</p><p class="text-sm">${cliente.phone || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">CPF</p><p class="text-sm">${cliente.cpf || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">E-mail</p><p class="text-sm break-all">${cliente.email || '-'}</p></div>
-                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Endereço</p><p class="text-sm">${cliente.address || '-'}</p></div>
+                        <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">EndereÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§o</p><p class="text-sm">${cliente.address || '-'}</p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Plano</p><p><span class="px-2 py-1 bg-emerald-500/20 text-emerald-500 rounded-lg text-xs">${planoNome}</span></p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p><span class="px-2 py-1 ${getStatusBadgeClass(cliente.status)} rounded-lg text-xs">${statusModalText}</span></p></div>
                         <div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Data Cadastro</p><p class="text-xs">${cliente.created_at ? new Date(cliente.created_at).toLocaleString('pt-BR') : '-'}</p></div>
                     </div>`;
             } else {
-                content.innerHTML = '<div class="text-center text-red-500">Cliente não encontrado</div>';
+                content.innerHTML = '<div class="text-center text-red-500">Cliente nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado</div>';
             }
         } catch (error) {
             content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar detalhes</div>';
@@ -571,7 +620,7 @@
 
     async function editarCliente(id) {
         const cliente = clientesData.find(c => c.id === id);
-        if (!cliente) { alert('Cliente não encontrado'); return; }
+        if (!cliente) { alert('Cliente nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado'); return; }
         document.getElementById('editClienteId').value = id;
         document.getElementById('editNome').value = cliente.name || '';
         document.getElementById('editTelefone').value = cliente.phone || '';
@@ -598,7 +647,7 @@
         if (planValue) {
             const planId = Number(planValue);
             if (!Number.isFinite(planId)) {
-                alert('Plano inválido');
+                alert('Plano invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido');
                 return;
             }
             dados.plan_id = planId;
@@ -611,11 +660,11 @@
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             if (error.reason === 'duplicate_cpf') {
-                alert('CPF já cadastrado em outro cliente.');
+                alert('CPF jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ cadastrado em outro cliente.');
                 return;
             }
             if (error.reason === 'duplicate_email') {
-                alert('E-mail já cadastrado em outro cliente.');
+                alert('E-mail jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ cadastrado em outro cliente.');
                 return;
             }
             alert(error.message || 'Erro ao atualizar cliente');
@@ -625,22 +674,29 @@
     async function bloquearCliente(id) {
         if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
         try {
-            await apiRequest(`/api/users/${id}/block`, { method: 'POST' });
-            alert('Cliente bloqueado');
-            carregarClientes();
+            const result = await apiRequest(`/api/users/${id}/block`, { method: 'POST' });
+            const updated = result.user || { id, status: 'blocked' };
+            clientesData = clientesData.map(c => String(c.id) === String(id) ? { ...c, ...updated, status: 'blocked' } : c);
+            renderizarClientes(clientesData);
+            alert(getDisconnectMessage('block', result));
         } catch (error) {
-            alert('Erro ao bloquear cliente');
+            alert(error.message || 'Erro ao bloquear cliente');
         }
     }
 
     async function marcarVIP(id) {
-        if (!confirm('Marcar este cliente como VIP?')) return;
+        const cliente = clientesData.find(c => String(c.id) === String(id));
+        const isPrime = cliente && (cliente.is_vip === true || String(cliente.status).toLowerCase() === 'vip');
+        if (!confirm(isPrime ? 'Remover Acesso Prime deste cliente?' : 'Marcar este cliente como Acesso Prime?')) return;
         try {
-            await apiRequest(`/api/users/${id}/vip`, { method: 'POST', body: JSON.stringify({ is_vip: true }) });
-            alert('Cliente marcado como VIP');
-            carregarClientes();
+            const result = await apiRequest(`/api/users/${id}/prime-access`, { method: 'PATCH', body: JSON.stringify({ enabled: !isPrime }) });
+            const updated = result.user || result;
+            if (!result.success && !updated?.id) throw new Error('Falha ao atualizar Acesso Prime');
+            clientesData = clientesData.map(c => String(c.id) === String(id) ? { ...c, ...updated, is_vip: !isPrime, expires_at: !isPrime ? null : updated.expires_at, operational_status: !isPrime ? 'vip' : deriveClientOperationalStatus(updated) } : c);
+            renderizarClientes(clientesData);
+            alert(!isPrime ? 'Cliente marcado como Acesso Prime' : 'Acesso Prime removido deste cliente');
         } catch (error) {
-            alert('Erro ao marcar VIP');
+            alert(error.message || 'Erro ao atualizar Acesso Prime');
         }
     }
 
@@ -691,7 +747,7 @@
         
         const filtrados = clientesData.filter(c => {
             const matchNome = !nome || (c.name || '').toLowerCase().includes(nome);
-            const matchStatus = !status || c.status === status;
+            const matchStatus = !status || deriveClientOperationalStatus(c) === status || (status === 'active' && deriveClientOperationalStatus(c) === 'vip');
             const matchPlano = !plano || String(c.plan_id) === plano;
             return matchNome && matchStatus && matchPlano;
         });
@@ -716,7 +772,7 @@
             if (filter === 'todos') {
                 renderizarClientes(clientesData);
             } else {
-                renderizarClientes(clientesData.filter(c => c.status === filter));
+                renderizarClientes(clientesData.filter(c => deriveClientOperationalStatus(c) === filter || (filter === 'active' && deriveClientOperationalStatus(c) === 'vip')));
             }
         });
     });

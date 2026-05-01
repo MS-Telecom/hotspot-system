@@ -1,7 +1,7 @@
 // ============================================================
-// 🚀 HOTSPOT SYSTEM - MS TELECOM
-// Backend principal (server.js) - VERSÃO DEFINITIVA
-// Código interno em inglês, comentários em português
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ HOTSPOT SYSTEM - MS TELECOM
+// Backend principal (server.js) - VERSÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DEFINITIVA
+// CÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³digo interno em inglÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs, comentÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios em portuguÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs
 // ============================================================
 
 require('dotenv').config();
@@ -23,13 +23,13 @@ let RouterOSAPI = null;
 try {
   RouterOSAPI = require('node-routeros').RouterOSAPI;
 } catch (e) {
-  console.warn('⚠️ node-routeros não instalado - recursos de API MikroTik desabilitados');
+  console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â node-routeros nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o instalado - recursos de API MikroTik desabilitados');
 }
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Captura IP real quando estiver atrás de proxy (Vercel/Cloudflare/Nginx)
+// Captura IP real quando estiver atrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡s de proxy (Vercel/Cloudflare/Nginx)
 app.set('trust proxy', true);
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -89,7 +89,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-// CORS configurado para aceitar requisições do frontend no Vercel
+// CORS configurado para aceitar requisiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes do frontend no Vercel
 app.use(cors({
     origin: [
         'https://hotspot-system.vercel.app',
@@ -101,9 +101,9 @@ app.use(cors({
     credentials: true
 }));
 
-// Validação de variáveis de ambiente
+// ValidaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de variÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡veis de ambiente
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !JWT_SECRET) {
-  console.error('❌ FATAL: Variáveis de ambiente obrigatórias faltando: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
+  console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FATAL: VariÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡veis de ambiente obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rias faltando: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
   process.exit(1);
 }
 
@@ -128,10 +128,10 @@ const accessLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 12 });
 const voucherLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 20 });
 
 // ============================================================
-// 🛠️ FUNÇÕES UTILITÁRIAS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â FUNÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES UTILITÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂRIAS
 // ============================================================
 
-// Remove acentos de uma string (útil para slugs)
+// Remove acentos de uma string (ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºtil para slugs)
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return String(forwarded).split(',')[0].trim();
@@ -218,7 +218,7 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-// Gera senha forte aleatória
+// Gera senha forte aleatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ria
 function generateStrongPassword(length = 20) {
   return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
@@ -243,7 +243,7 @@ function intToIp(num) {
   ].join('.');
 }
 
-// Converte para número de forma segura
+// Converte para nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero de forma segura
 function parseNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -261,10 +261,10 @@ function generatePopId() {
 }
 
 // ============================================================
-// 📝 LOGS DE AUDITORIA E SISTEMA
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â LOGS DE AUDITORIA E SISTEMA
 // ============================================================
 
-// Registrar log de auditoria (ações de usuários)
+// Registrar log de auditoria (aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios)
 async function registerAuditLog(username, type, objectName, action, ip, userAgent, details = null) {
   try {
     await supabase.from('audit_logs').insert({
@@ -278,7 +278,7 @@ async function registerAuditLog(username, type, objectName, action, ip, userAgen
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ Erro ao registrar log de auditoria:', error.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao registrar log de auditoria:', error.message);
   }
 }
 
@@ -295,12 +295,12 @@ async function registerSystemLog(level, source, message, details = null, ip = ''
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ Erro ao registrar log do sistema:', error.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao registrar log do sistema:', error.message);
   }
 }
 
 // ============================================================
-// 🔐 MIDDLEWARE DE AUTENTICAÇÃO
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â MIDDLEWARE DE AUTENTICAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O
 // ============================================================
 
 function authMiddleware(req, res, next) {
@@ -453,7 +453,7 @@ app.get('/api/system/walled-garden-hosts', authMiddleware, (req, res) => {
 });
 
 // ============================================================
-// 🔧 MIKROTIK CREDENTIALS HELPERS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â§ MIKROTIK CREDENTIALS HELPERS
 // ============================================================
 
 // Buscar credenciais MikroTik
@@ -489,7 +489,7 @@ async function upsertMikrotikCredentials(payload) {
 }
 
 // ============================================================
-// 🔓 MIKROTIK ACCESS CONTROL
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ MIKROTIK ACCESS CONTROL
 // ============================================================
 
 // ============================================================
@@ -618,22 +618,22 @@ async function syncFreeradiusClientsFromDb() {
       fs.mkdirSync(path.dirname(FREERADIUS_TMP_CLIENTS_PATH), { recursive: true });
       fs.writeFileSync(FREERADIUS_TMP_CLIENTS_PATH, conf, { encoding: 'utf8' });
 
-      // 1. Garante que o diretório de destino do FreeRADIUS exista no VPS
+      // 1. Garante que o diretÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio de destino do FreeRADIUS exista no VPS
       const { error: mkdirError } = await execAsync(`sudo mkdir -p ${path.dirname(FREERADIUS_CLIENTS_PATH)}`);
-      if (mkdirError) throw new Error(`Erro ao criar diretório FreeRADIUS: ${mkdirError.stderr}`);
+      if (mkdirError) throw new Error(`Erro ao criar diretÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio FreeRADIUS: ${mkdirError.stderr}`);
 
-      // 2. Copia o arquivo temporário para o destino final no VPS
+      // 2. Copia o arquivo temporÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio para o destino final no VPS
       await execAsync(`sudo cp ${FREERADIUS_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}.bak 2>/dev/null || true`);
       const { error: cpError } = await execAsync(`sudo cp ${FREERADIUS_TMP_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}`);
       if (cpError) throw new Error(`Erro ao copiar arquivo FreeRADIUS: ${cpError.stderr}`);
 
       // 3. Garante que o clients.conf principal inclua nosso arquivo
-      // Lê o conteúdo do clients.conf principal do VPS
+      // LÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª o conteÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºdo do clients.conf principal do VPS
       const { stdout: mainClientsConfContent, error: catError } = await execAsync(`sudo cat ${FREERADIUS_MAIN_CLIENTS_CONF}`);
       if (catError) throw new Error(`Erro ao ler clients.conf: ${catError.stderr}`);
 
       if (!mainClientsConfContent.includes(FREERADIUS_INCLUDE_LINE)) {
-        // Se a linha de include não existe, adiciona-a
+        // Se a linha de include nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe, adiciona-a
         const includeLine = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
         const { error: grepError } = await execAsync(`sudo /bin/grep -Fqx ${shellQuote(includeLine)} ${FREERADIUS_MAIN_CLIENTS_CONF}`);
         if (grepError) {
@@ -644,7 +644,7 @@ async function syncFreeradiusClientsFromDb() {
 
       // 4. Valida e recarrega FreeRADIUS
       const { error: validateError, stdout: validateOut, stderr: validateErr } = await execAsync(`sudo ${FREERADIUS_VALIDATE_CMD}`, 60000);
-      if (validateError) throw new Error(`Validação FreeRADIUS falhou: ${validateErr || validateOut}`);
+      if (validateError) throw new Error(`ValidaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o FreeRADIUS falhou: ${validateErr || validateOut}`);
 
       const { error: reloadError, stdout: reloadOut, stderr: reloadErr } = await execAsync(`sudo ${FREERADIUS_RELOAD_CMD}`, 60000);
       if (reloadError) {
@@ -653,7 +653,7 @@ async function syncFreeradiusClientsFromDb() {
       }
 
     } catch (err) {
-      console.error("❌ Erro ao sincronizar clientes FreeRADIUS:", err.message);
+      console.error("ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao sincronizar clientes FreeRADIUS:", err.message);
       await registerSystemLog(
         "error",
         "FreeRADIUS Sync",
@@ -673,7 +673,7 @@ async function syncFreeradiusClientsFromDb() {
 // Revogar acesso - remove IP Binding do MikroTik
 async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null) {
   if (!RouterOSAPI) {
-    console.warn('⚠️ revokeAccess: node-routeros não disponível');
+    console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â revokeAccess: node-routeros nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o disponÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel');
     return false;
   }
 
@@ -690,7 +690,7 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
     }
 
     if (!username || !password) {
-      throw new Error('Credenciais da API MikroTik não disponíveis');
+      throw new Error('Credenciais da API MikroTik nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o disponÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­veis');
     }
 
     const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
@@ -701,10 +701,28 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
       await conn.write('/ip/hotspot/ip-binding/remove', [`=.id=${binding['.id']}`]);
     }
 
+    const removeRows = async (printPath, removePath, query = [`?mac-address=${macAddress}`], onlyAutoUser = false) => {
+      try {
+        const rows = await conn.write(printPath, query);
+        for (const row of rows || []) {
+          if (onlyAutoUser) {
+            const comment = String(row.comment || '');
+            if (row.name !== macAddress && !comment.includes('MS-TELECOM-AUTO')) continue;
+          }
+          await conn.write(removePath, [`=.id=${row['.id']}`]);
+        }
+      } catch (_err) {}
+    };
+
+    await removeRows('/ip/hotspot/active/print', '/ip/hotspot/active/remove');
+    await removeRows('/ip/hotspot/cookie/print', '/ip/hotspot/cookie/remove');
+    await removeRows('/ip/hotspot/host/print', '/ip/hotspot/host/remove');
+    await removeRows('/ip/hotspot/user/print', '/ip/hotspot/user/remove', [`?name=${macAddress}`], true);
+
     await conn.close();
     return true;
   } catch (error) {
-    console.error(`❌ Falha ao revogar acesso para ${macAddress}:`, error.message);
+    console.error(`ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Falha ao revogar acesso para ${macAddress}:`, error.message);
     return false;
   }
 }
@@ -712,13 +730,14 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
 // Autorizar acesso - IP Binding com type=bypassed + RADIUS
 async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null, durationMinutes = 15, speedMbps = null, planName = 'free_trial', durationSeconds = null) {
   macAddress = normalizeMac(macAddress);
-  if (!macAddress) return { success: false, viaApi: false, viaRadius: false, errors: ['MAC inválido'] };
+  if (!macAddress) return { success: false, viaApi: false, viaRadius: false, errors: ['MAC invalido'] };
 
+  const accessPlan = String(planName || '').toLowerCase();
+  const isVipAccess = accessPlan === 'vip' || accessPlan === 'prime_access';
   let viaApi = false;
   let viaRadius = false;
   const errors = [];
 
-  // Tentativa 1: via API MikroTik (IP Binding)
   if (RouterOSAPI) {
     try {
       let username = apiUser;
@@ -753,21 +772,20 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
     }
   }
 
-  // Tentativa 2: via RADIUS (radius_replies)
   try {
     const nowIso = new Date().toISOString();
-    const sessionTimeoutSeconds = Number.isFinite(Number(durationSeconds)) && Number(durationSeconds) > 0
-      ? Math.floor(Number(durationSeconds))
-      : Math.max(10, Math.floor(Number(durationMinutes || 0) * 60));
-    const expiresAt = new Date(Date.now() + sessionTimeoutSeconds * 1000).toISOString();
+    const sessionTimeoutSeconds = isVipAccess ? null : (
+      Number.isFinite(Number(durationSeconds)) && Number(durationSeconds) > 0
+        ? Math.floor(Number(durationSeconds))
+        : Math.max(10, Math.floor(Number(durationMinutes || 0) * 60))
+    );
+    const expiresAt = isVipAccess ? null : new Date(Date.now() + sessionTimeoutSeconds * 1000).toISOString();
 
     const upsertRadiusReply = async (payload) => {
-      // Prefer canonical uniqueness per (username, attribute) when available.
       const attempt = await supabase.from('radius_replies').upsert(payload, { onConflict: 'username,attribute' });
       if (!attempt.error) return;
 
       const msg = String(attempt.error.message || '');
-      // Fallback for schemas without unique(username,attribute): delete+insert per attribute.
       if (msg.includes('no unique or exclusion constraint') || msg.includes('ON CONFLICT')) {
         const del = await supabase
           .from('radius_replies')
@@ -795,35 +813,36 @@ async function authorizeAccess(macAddress, popIp = '192.168.32.1', apiUser = nul
       updated_at: nowIso
     });
 
-    // Provide Session-Timeout so RouterOS doesn't fall back to local profile defaults (e.g. 10m).
-    await upsertRadiusReply({
-      username: macAddress,
-      attribute: 'Session-Timeout',
-      op: ':=',
-      value: String(sessionTimeoutSeconds),
-      plan_name: planName,
-      status: 'active',
-      expires_at: expiresAt,
-      updated_at: nowIso
-    });
-
-    // Ensure RADIUS users land on a POP-specific profile when possible (avoid touching global "default").
-    if (popId) {
+    if (isVipAccess) {
+      await supabase.from('radius_replies').delete().eq('username', macAddress).eq('attribute', 'Session-Timeout');
+      await supabase.from('radius_replies').delete().eq('username', macAddress).eq('attribute', 'Mikrotik-Group');
+    } else {
       await upsertRadiusReply({
         username: macAddress,
-        attribute: 'Mikrotik-Group',
+        attribute: 'Session-Timeout',
         op: ':=',
-        value: `ms-user-profile-${popId}`,
+        value: String(sessionTimeoutSeconds),
         plan_name: planName,
         status: 'active',
         expires_at: expiresAt,
         updated_at: nowIso
       });
+
+      if (popId) {
+        await upsertRadiusReply({
+          username: macAddress,
+          attribute: 'Mikrotik-Group',
+          op: ':=',
+          value: `ms-user-profile-${popId}`,
+          plan_name: planName,
+          status: 'active',
+          expires_at: expiresAt,
+          updated_at: nowIso
+        });
+      }
     }
 
     viaRadius = true;
-
-
   } catch (error) {
     errors.push(`RADIUS: ${error.message}`);
   }
@@ -965,7 +984,7 @@ async function getFreeTrialConfig() {
     if (error) throw error;
     return normalizeFreeTrialConfig(data?.value || {});
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao carregar configuração de teste grátis', { error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao carregar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { error: error.message });
     return normalizeFreeTrialConfig({ enabled: false });
   }
 }
@@ -977,7 +996,7 @@ function isActivePaidUser(user) {
   const expiresAt = user.expires_at ? new Date(user.expires_at).getTime() : null;
   const hasFutureExpiry = expiresAt && expiresAt > Date.now();
   const activeStatus = ['active', 'paid', 'vip'].includes(status);
-  const paidPlan = planName && planName !== 'free_trial' && planName !== 'trial' && planName !== 'teste grátis';
+  const paidPlan = planName && planName !== 'free_trial' && planName !== 'trial' && planName !== 'teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis';
   return (hasFutureExpiry || activeStatus) && paidPlan;
 }
 
@@ -988,8 +1007,8 @@ function getTrialCooldownUntil(record, cfg) {
   const cooldownSeconds = Math.max(0, Number.isFinite(configuredCooldown) && configuredCooldown > 0 ? configuredCooldown : storedCooldown);
   if (cooldownSeconds <= 0) return null;
 
-  // Reuso deve seguir a configuração atual do painel. Não use cooldown_until antigo
-  // quando existe expires_at, pois ele pode ter sido gravado com outra configuração.
+  // Reuso deve seguir a configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o atual do painel. NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o use cooldown_until antigo
+  // quando existe expires_at, pois ele pode ter sido gravado com outra configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o.
   if (record.expires_at) return new Date(new Date(record.expires_at).getTime() + cooldownSeconds * 1000).toISOString();
 
   const lastUsed = record.last_used_at || record.used_at || record.first_used_at || record.created_at || null;
@@ -1024,7 +1043,7 @@ async function getLastTrialSession(macVariants) {
 
 async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
   const cleanMac = normalizeMac(macAddress);
-  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC é obrigatório', reason: 'missing_mac' } };
+  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio', reason: 'missing_mac' } };
 
   const nowIso = new Date().toISOString();
   const cfg = await getFreeTrialConfig();
@@ -1034,7 +1053,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   const expiresAt = expiresAtDate.toISOString();
   const cooldownUntil = new Date(expiresAtDate.getTime() + cooldownSeconds * 1000).toISOString();
 
-  if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grátis desativado', reason: 'trial_disabled' } };
+  if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis desativado', reason: 'trial_disabled' } };
 
   try {
     const { data: user } = await supabase.from('users').select('*').in('mac_address', getMacVariants(cleanMac)).limit(1).maybeSingle();
@@ -1047,7 +1066,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: planExpiresAt, reason: 'manual_plan_active', show_free_trial: false } };
     }
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar plano ativo antes do teste grátis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar plano ativo antes do teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1062,10 +1081,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       .maybeSingle();
 
     if (session) {
-      return { ok: true, status: 200, body: { message: 'Acesso já ativo', expires_at: session.expires_at, reason: 'active_session', show_free_trial: false } };
+      return { ok: true, status: 200, body: { message: 'Acesso jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ ativo', expires_at: session.expires_at, reason: 'active_session', show_free_trial: false } };
     }
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar sessão ativa de teste grátis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ativa de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
   let previousTrial = null;
@@ -1084,12 +1103,12 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
 
     if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
-      return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+      await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
     freeTrialLookupFailed = true;
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grátis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1097,11 +1116,11 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
     if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Teste grátis negado por cooldown de sessão', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
-      return { ok: false, status: 429, body: { success: false, error: 'Teste grátis já utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+      await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis negado por cooldown de sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessão', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
     if (freeTrialLookupFailed) {
       return { ok: false, status: 503, body: { success: false, error: 'Erro ao verificar cooldown do teste gratis', reason: 'cooldown_check_failed', show_free_trial: false } };
     }
@@ -1114,7 +1133,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   try {
     user = await findOrCreateHotspotUser({ macAddress: cleanMac, ipAddress, planName: 'free_trial', status: 'trial', popId, expiresAt });
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao criar/atualizar usuário', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao criar/atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1133,7 +1152,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     const { error: sessionErr } = await supabase.from('hotspot_sessions').insert(sessionPayload);
     if (sessionErr) throw sessionErr;
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar sessão', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1153,10 +1172,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     const up = await supabase.from('free_trials').upsert(payload, { onConflict: 'mac_address' });
     if (up.error) throw up.error;
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar histórico de teste grátis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar histÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rico de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
-  await registerSystemLog('info', 'free_trial', 'Teste grátis liberado', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
+  await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis liberado', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
   return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user?.id || null, duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds, cooldown_until: cooldownUntil, show_free_trial: false } };
 }
 // ============================================================
@@ -1165,7 +1184,7 @@ setInterval(async () => {
   try {
     const now = new Date().toISOString();
     
-    // 1. Limpar sessões expiradas
+    // 1. Limpar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes expiradas
     const { data: expiredSessions } = await supabase.from('hotspot_sessions')
       .select('id, mac_address, pop_ip')
       .eq('status', 'active')
@@ -1187,15 +1206,15 @@ setInterval(async () => {
     }
 
   } catch (error) {
-    console.error('❌ Erro no CRON de limpeza:', error.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no CRON de limpeza:', error.message);
   }
 }, 60000); // Executa a cada 1 minuto
 
 // ============================================================
-// 🔑 ROTAS DE AUTENTICAÇÃO (ADMIN)
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ ROTAS DE AUTENTICAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O (ADMIN)
 // ============================================================
 
-// Aliases legados (português/curtos) -> padrão novo
+// Aliases legados (portuguÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs/curtos) -> padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o novo
 app.post('/api/login', (req, res, next) => {
   // Encaminha para /api/auth/login
   req.url = '/api/auth/login';
@@ -1209,14 +1228,14 @@ app.post('/api/logout', authMiddleware, (req, res, next) => {
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+    if (!username || !password) return res.status(400).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio e senha sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
 
     const { data: admin, error } = await supabase.from('admins').select('*').eq('username', username).single();
-    if (error || !admin) return res.status(401).json({ error: 'Credenciais inválidas' });
+    if (error || !admin) return res.status(401).json({ error: 'Credenciais invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lidas' });
 
     const passwordCheck = verifyPasswordHash(admin.password, password);
     if (!passwordCheck.ok) {
-      return res.status(401).json({ error: 'Credenciais inválidas' });
+      return res.status(401).json({ error: 'Credenciais invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lidas' });
     }
     if (passwordCheck.legacySha256) {
       await supabase.from('admins').update({
@@ -1232,7 +1251,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     
     res.json({ token, user: { id: admin.id, username: admin.username, role } });
   } catch (err) {
-    console.error('❌ Erro no login:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no login:', err.message);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
@@ -1259,10 +1278,10 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
       .select('*')
       .eq('id', adminId)
       .single();
-    if (error || !admin) return res.status(404).json({ error: 'Admin não encontrado' });
+    if (error || !admin) return res.status(404).json({ error: 'Admin nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     if (new_password) {
-      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatória' });
+      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ria' });
       const currentCheck = verifyPasswordHash(admin.password, current_password);
       if (!currentCheck.ok) {
         return res.status(401).json({ error: 'Senha atual incorreta' });
@@ -1285,16 +1304,16 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     await registerAuditLog(admin.username, 'update', 'admin', 'Perfil atualizado', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true, user: { id: data.id, username: data.username, email: data.email } });
   } catch (err) {
-    console.error('❌ Erro ao atualizar perfil:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar perfil:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
 });
 
 // ============================================================
-// 👥 ROTAS DE USUÁRIOS (CLIENTES)
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¥ ROTAS DE USUÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂRIOS (CLIENTES)
 // ============================================================
 
-// Listar usuários
+// Listar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const { search, status, plan_id } = req.query;
@@ -1308,14 +1327,15 @@ app.get('/api/users', authMiddleware, async (req, res) => {
 
     const { data, error } = await query;
     if (error) throw error;
-    res.json(data || []);
+    const enriched = await enrichUsersWithSessionInfo(data || []);
+    res.json(enriched);
   } catch (err) {
-    console.error('❌ Erro ao listar usuários:', err.message);
-    res.status(500).json({ error: 'Erro ao listar usuários' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios:', err.message);
+    res.status(500).json({ error: 'Erro ao listar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios' });
   }
 });
 
-// Criar usuário
+// Criar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users', authMiddleware, async (req, res) => {
   try {
     const { name, username, mac_address, phone, cpf, email, address, plan_id, plan_name, hotspot_id, status, is_vip } = req.body;
@@ -1327,7 +1347,7 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     if (plan_id) {
       const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).maybeSingle();
       if (planError) throw planError;
-      if (!planData) return res.status(404).json({ error: 'Plano não encontrado' });
+      if (!planData) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
       plan = planData;
       expiresAt = new Date(now.getTime() + Number(plan.duration_days || 30) * 24 * 60 * 60 * 1000).toISOString();
     }
@@ -1367,21 +1387,21 @@ app.post('/api/users', authMiddleware, async (req, res) => {
       await authorizeAccess(cleanMac, '192.168.32.1', null, null, hotspot_id, Math.ceil(durationSeconds / 60), plan.speed_mbps || 10, plan.name, durationSeconds);
     }
 
-    await registerAuditLog(req.user.username, 'create', 'user', `Usuário criado: ${name || cleanMac || data.id}`, getClientIp(req), req.headers['user-agent'], { user_id: data.id, plan_id: plan?.id || null });
+    await registerAuditLog(req.user.username, 'create', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio criado: ${name || cleanMac || data.id}`, getClientIp(req), req.headers['user-agent'], { user_id: data.id, plan_id: plan?.id || null });
     res.status(201).json(data);
   } catch (err) {
-    console.error('❌ Erro ao criar usuário:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
     if (String(err.message || '').includes('users_cpf_key')) {
       return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
     }
     if (String(err.message || '').includes('users_email_key')) {
       return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
     }
-    res.status(500).json({ error: 'Erro ao criar usuário' });
+    res.status(500).json({ error: 'Erro ao criar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Atualizar usuário
+// Atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
 app.put('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1418,11 +1438,11 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     let plan = null;
     if (Object.prototype.hasOwnProperty.call(body, 'plan_id') && body.plan_id !== '' && body.plan_id !== null && body.plan_id !== undefined) {
       const planId = Number(body.plan_id);
-      if (!Number.isFinite(planId)) return res.status(400).json({ error: 'Plano inválido' });
+      if (!Number.isFinite(planId)) return res.status(400).json({ error: 'Plano invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido' });
 
       const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', planId).maybeSingle();
       if (planError) throw planError;
-      if (!planData) return res.status(404).json({ error: 'Plano não encontrado' });
+      if (!planData) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
       plan = planData;
       const days = Number(plan.duration_days || 30);
       updateData.expires_at = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -1447,43 +1467,57 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, Math.ceil(durationSeconds / 60), activePlan?.speed_mbps || 10, data.plan_name, durationSeconds);
     }
 
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, plan_id: data.plan_id || null });
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, plan_id: data.plan_id || null });
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar usuário:', err.message);
-    await registerSystemLog('error', 'users', 'Erro ao atualizar usuário', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    await registerSystemLog('error', 'users', 'Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
     if (String(err.message || '').includes('users_cpf_key')) {
       return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
     }
     if (String(err.message || '').includes('users_email_key')) {
       return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
     }
-    res.status(500).json({ error: err.message || 'Erro ao atualizar usuário' });
+    res.status(500).json({ error: err.message || 'Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
   }
 });
-// Deletar usuário
+// Deletar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
 app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+    const { data: user } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
+    const disconnect = user ? await revokeAndDisconnectUser(user, 'deleted') : { radius_revoked: false, disconnect_status: 'not_applicable', disconnect_method: 'none' };
+
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, getClientIp(req), req.headers['user-agent']);
-    res.json({ message: 'Usuário removido com sucesso' });
+    await registerAuditLog(req.user.username, 'delete', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio removido: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: user?.mac_address || null, pop_id: user?.pop_id || user?.hotspot_id || null });
+    res.json({
+      success: true,
+      user_id: id,
+      mac_address: user?.mac_address || null,
+      pop_id: user?.pop_id || user?.hotspot_id || null,
+      blocked: false,
+      deleted: true,
+      radius_revoked: disconnect.radius_revoked,
+      disconnect_status: disconnect.disconnect_status,
+      disconnect_method: disconnect.disconnect_method,
+      message: 'Usuario removido com sucesso'
+    });
   } catch (err) {
-    console.error('❌ Erro ao deletar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar usuário' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Renovar plano do usuário
+// Renovar plano do usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { plan_id, duration_days } = req.body;
 
     const { data: plan, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).single();
-    if (planError || !plan) return res.status(400).json({ error: 'Plano não encontrado' });
+    if (planError || !plan) return res.status(400).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const days = duration_days || plan.duration_days || 30;
     const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
@@ -1494,64 +1528,114 @@ app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
     }).eq('id', id).select().single();
 
     if (error) throw error;
+    if (data.mac_address) {
+      const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+      await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, Math.ceil(durationSeconds / 60), plan.speed_mbps || 10, plan.name, durationSeconds);
+    }
     await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao renovar plano:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao renovar plano:', err.message);
     res.status(500).json({ error: 'Erro ao renovar plano' });
   }
 });
 
-// Bloquear usuário
+// Bloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { data, error } = await supabase.from('users').update({ status: 'blocked', updated_at: new Date().toISOString() }).eq('id', id).select().single();
+    const now = new Date().toISOString();
+    const preferred = { status: 'blocked', blocked_at: now, blocked_reason: req.body?.reason || null, updated_at: now };
+    const fallback = { status: 'blocked', updated_at: now };
+    const { data, error } = await safeUpdateWithFallback('users', id, preferred, fallback);
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário bloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
-    res.json(data);
+    const disconnect = await revokeAndDisconnectUser(data, 'blocked');
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio bloqueado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: data?.mac_address || null });
+    res.json({
+      success: true,
+      user: data,
+      user_id: id,
+      mac_address: data?.mac_address || null,
+      pop_id: data?.pop_id || data?.hotspot_id || null,
+      blocked: true,
+      deleted: false,
+      radius_revoked: disconnect.radius_revoked,
+      disconnect_status: disconnect.disconnect_status,
+      disconnect_method: disconnect.disconnect_method,
+      message: 'Usuario bloqueado'
+    });
   } catch (err) {
-    console.error('❌ Erro ao bloquear usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao bloquear usuário' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao bloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao bloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Desbloquear usuário
+// Desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users/:id/unblock', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `Usuário desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao desbloquear usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao desbloquear usuário' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Marcar usuário como VIP
-app.post('/api/users/:id/vip', authMiddleware, async (req, res) => {
+// Marcar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio como VIP
+app.post('/api/users/:id/vip', authMiddleware, updatePrimeAccessHandler);
+
+async function updatePrimeAccessHandler(req, res) {
   try {
     const { id } = req.params;
-    const { is_vip = true } = req.body;
-    const { data, error } = await supabase.from('users').update({ is_vip, updated_at: new Date().toISOString() }).eq('id', id).select().single();
-    if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `VIP atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
-    res.json(data);
-  } catch (err) {
-    console.error('❌ Erro ao atualizar VIP:', err.message);
-    res.status(500).json({ error: 'Erro ao atualizar VIP' });
-  }
-});
+    const enabledValue = Object.prototype.hasOwnProperty.call(req.body || {}, 'enabled') ? req.body.enabled : req.body?.is_vip;
+    const vipEnabled = enabledValue !== false;
+    const { vip_notes = null } = req.body || {};
+    const now = new Date().toISOString();
+    const { data: current } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
 
-// Exportar usuários para CSV
+    const preferred = vipEnabled
+      ? { is_vip: true, vip_since: now, vip_notes, status: 'active', expires_at: null, updated_at: now }
+      : { is_vip: false, vip_since: null, vip_notes, updated_at: now };
+    const fallback = vipEnabled
+      ? { is_vip: true, status: 'active', expires_at: null, updated_at: now }
+      : { is_vip: false, updated_at: now };
+
+    if (!vipEnabled && String(current?.status || '').toLowerCase() !== 'blocked') {
+      const validUntil = current?.expires_at ? new Date(current.expires_at).getTime() : 0;
+      preferred.status = validUntil > Date.now() ? (current.status || 'active') : 'inactive';
+      fallback.status = preferred.status;
+    }
+
+    const { data, error } = await safeUpdateWithFallback('users', id, preferred, fallback);
+    if (error) throw error;
+
+    if (data.mac_address && vipEnabled && String(data.status || '').toLowerCase() !== 'blocked') {
+      await authorizeAccess(data.mac_address, '192.168.32.1', null, null, null, null, null, 'prime_access', null);
+    } else if (data.mac_address && !vipEnabled) {
+      await revokeRadiusAccess(data.mac_address);
+    }
+
+    await registerAuditLog(req.user.username, 'prime_access', 'user', `Acesso Prime atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, enabled: vipEnabled });
+    res.json({ success: true, user: data, message: vipEnabled ? 'Cliente marcado como Acesso Prime' : 'Acesso Prime removido deste cliente' });
+  } catch (err) {
+    console.error('Erro ao atualizar Acesso Prime:', err.message);
+    res.status(500).json({ error: 'Erro ao atualizar Acesso Prime' });
+  }
+}
+
+app.patch('/api/users/:id/vip', authMiddleware, updatePrimeAccessHandler);
+app.patch('/api/users/:id/prime-access', authMiddleware, updatePrimeAccessHandler);
+
+// Exportar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios para CSV
 app.get('/api/users/export', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
     if (error) throw error;
 
-    const headers = ['Nome', 'Usuário', 'MAC', 'Telefone', 'CPF', 'Email', 'Plano', 'Status', 'Data Cadastro'];
+    const headers = ['Nome', 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', 'MAC', 'Telefone', 'CPF', 'Email', 'Plano', 'Status', 'Data Cadastro'];
     const rows = (data || []).map(u => [
       u.name || '', u.username || '', u.mac_address || '', u.phone || '', u.cpf || '', u.email || '', u.plan_name || '', u.status || '',
       u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : ''
@@ -1562,34 +1646,35 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=users_${new Date().toISOString().slice(0, 10)}.csv`);
     res.send('\uFEFF' + csv);
   } catch (err) {
-    console.error('❌ Erro ao exportar usuários:', err.message);
-    res.status(500).json({ error: 'Erro ao exportar usuários' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao exportar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios:', err.message);
+    res.status(500).json({ error: 'Erro ao exportar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios' });
   }
 });
 
-// Buscar usuário por ID
+// Buscar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio por ID
 app.get('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
-    if (userError || !user) return res.status(404).json({ error: 'Usuário não encontrado' });
+    if (userError || !user) return res.status(404).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
     const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     const { data: lastSession } = await supabase.from('hotspot_sessions').select('created_at').eq('user_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle();
 
-    res.json({ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
+    const [enriched] = await enrichUsersWithSessionInfo([{ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null }]);
+    res.json(enriched || { ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
   } catch (err) {
-    console.error('❌ Erro ao buscar usuário:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar usuário' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
 
 
 // ============================================================
-// 📋 ROTAS DE PLANOS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ROTAS DE PLANOS
 // ============================================================
 
 // Listar planos
@@ -1599,7 +1684,7 @@ app.get('/api/plans', async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar planos:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar planos:', err.message);
     res.status(500).json({ error: 'Erro ao listar planos' });
   }
 });
@@ -1617,7 +1702,7 @@ app.post('/api/plans', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'create', 'plan', `Plano criado: ${name}`, getClientIp(req), req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
-    console.error('❌ Erro ao criar plano:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar plano:', err.message);
     res.status(500).json({ error: 'Erro ao criar plano' });
   }
 });
@@ -1636,7 +1721,7 @@ app.put('/api/plans/:id', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar plano:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar plano:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar plano' });
   }
 });
@@ -1651,13 +1736,13 @@ app.delete('/api/plans/:id', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json({ message: 'Plano removido com sucesso' });
   } catch (err) {
-    console.error('❌ Erro ao deletar plano:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar plano:', err.message);
     res.status(500).json({ error: 'Erro ao deletar plano' });
   }
 });
 
 // ============================================================
-// 💳 ROTAS DE PAGAMENTOS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â³ ROTAS DE PAGAMENTOS
 // ============================================================
 
 // Listar pagamentos
@@ -1674,7 +1759,7 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar pagamentos:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar pagamentos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagamentos' });
   }
 });
@@ -1684,24 +1769,24 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
   try {
     const { mac_address, plan_id, plan_name, description, payment_id } = req.body;
     const cleanMac = normalizeMac(mac_address);
-    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
+    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
 
     let planQuery = supabase.from('plans').select('*');
     planQuery = plan_id ? planQuery.eq('id', plan_id) : planQuery.eq('name', plan_name);
 
     const { data: plan, error: planError } = await planQuery.limit(1).maybeSingle();
     if (planError) throw planError;
-    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
-    if (plan.active === false || plan.status === 'inactive') return res.status(400).json({ error: 'Plano indisponível' });
+    if (!plan) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (plan.active === false || plan.status === 'inactive') return res.status(400).json({ error: 'Plano indisponÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel' });
 
     const planAmount = Number(plan.price);
-    if (!Number.isFinite(planAmount) || planAmount <= 0) return res.status(400).json({ error: 'Plano sem valor válido' });
+    if (!Number.isFinite(planAmount) || planAmount <= 0) return res.status(400).json({ error: 'Plano sem valor vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido' });
 
     const selectedPlanName = plan.name || plan_name || null;
     const paymentDescription = description || selectedPlanName || 'Plano WiFi';
 
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
-    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o configurado' });
 
     const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
@@ -1773,7 +1858,7 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
       external_reference: externalReference
     });
   } catch (err) {
-    console.error('❌ Erro ao gerar PIX:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar PIX:', err.message);
     res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
   }
 });
@@ -1796,24 +1881,24 @@ app.get('/api/check-payment', async (req, res) => {
       return res.json(payment || { status: 'not_found' });
     }
 
-    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'Referência, ID ou MAC do pagamento necessário' });
+    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'ReferÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia, ID ou MAC do pagamento necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
 
     let query = supabase.from('payments').select('*');
     if (external_reference) query = query.eq('external_reference', external_reference);
     else query = query.eq('mercado_pago_id', mercado_pago_id);
 
     const { data: payment, error } = await query.single();
-    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     res.json(payment);
   } catch (err) {
-    console.error('❌ Erro ao verificar pagamento:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao verificar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao verificar pagamento' });
   }
 });
 
 // ============================================================
-// 🎟️ ROTAS DE VOUCHERS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€¦Ã‚Â¸ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â ROTAS DE VOUCHERS
 // ============================================================
 
 // Listar vouchers
@@ -1823,7 +1908,7 @@ app.get('/api/vouchers', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar vouchers:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao listar vouchers' });
   }
 });
@@ -1862,7 +1947,7 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
       res.status(201).json(data);
     }
   } catch (err) {
-    console.error('❌ Erro ao criar vouchers:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao criar vouchers' });
   }
 });
@@ -1877,7 +1962,7 @@ app.put('/api/vouchers/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error('❌ Erro ao atualizar voucher:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar voucher' });
   }
 });
@@ -1890,19 +1975,19 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json({ message: 'Voucher removido' });
   } catch (err) {
-    console.error('❌ Erro ao deletar voucher:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao deletar voucher' });
   }
 });
 
-// Validar voucher (público)
+// Validar voucher (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
 // Alias legado PT
 app.post('/api/vouchers/validate', voucherLimiter, async (req, res) => {
   try {
     const { code, mac_address } = req.body;
     const cleanMac = normalizeMac(mac_address);
     const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', String(code).toUpperCase()).eq('status', 'active').maybeSingle();
-    if (error || !voucher) return res.status(404).json({ error: 'Voucher inválido ou já utilizado' });
+    if (error || !voucher) return res.status(404).json({ error: 'Voucher invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido ou jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ utilizado' });
 
     await supabase.from('vouchers').update({
       status: 'used', used: true, used_at: new Date().toISOString(),
@@ -1911,16 +1996,16 @@ app.post('/api/vouchers/validate', voucherLimiter, async (req, res) => {
 
     res.json({ valid: true, plan_name: voucher.plan_name, duration_hours: voucher.duration_hours });
   } catch (err) {
-    console.error('❌ Erro ao validar voucher:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao validar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao validar voucher' });
   }
 });
 
 // ============================================================
-// 📊 ROTAS DE ESTATÍSTICAS E DASHBOARD
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  ROTAS DE ESTATÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
 // ============================================================
 
-// 🔧 HELPERS (compatibilidade / schema flexível)
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â§ HELPERS (compatibilidade / schema flexÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel)
 function isMissingColumnError(err) {
   const msg = (err && (err.message || err.details || err.hint)) ? `${err.message || ''} ${err.details || ''} ${err.hint || ''}` : '';
   return /Could not find the '.+' column/i.test(msg) || /column .* does not exist/i.test(msg);
@@ -1929,13 +2014,379 @@ function isMissingColumnError(err) {
 async function safeInsertWithFallback(table, preferredPayload, fallbackPayload) {
   let result = await supabase.from(table).insert(preferredPayload).select().single();
 
-  // Se o payload preferido falhar (coluna ausente, tipo inválido, etc), tenta o fallback.
-  // Isso evita 500 quando o frontend envia campos "extras" que não existem na tabela.
+  // Se o payload preferido falhar (coluna ausente, tipo invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido, etc), tenta o fallback.
+  // Isso evita 500 quando o frontend envia campos "extras" que nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existem na tabela.
   if (result.error && fallbackPayload) {
     result = await supabase.from(table).insert(fallbackPayload).select().single();
   }
 
   return result;
+}
+
+async function safeUpdateWithFallback(table, id, preferredPayload, fallbackPayload = null) {
+  let result = await supabase.from(table).update(preferredPayload).eq('id', id).select().single();
+  if (result.error && fallbackPayload) {
+    result = await supabase.from(table).update(fallbackPayload).eq('id', id).select().single();
+  }
+  return result;
+}
+
+function numberOrZero(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function normalizeTrafficBytes(record = {}) {
+  const rx = numberOrZero(record.rx_bytes ?? record.bytes_in ?? record.input_octets ?? record.acct_input_octets);
+  const tx = numberOrZero(record.tx_bytes ?? record.bytes_out ?? record.output_octets ?? record.acct_output_octets);
+  const total = numberOrZero(record.total_bytes ?? record.traffic_bytes ?? record.bytes_total) || rx + tx;
+  return { rx_bytes: rx, tx_bytes: tx, total_bytes: total };
+}
+
+function formatBytes(bytes) {
+  let value = numberOrZero(bytes);
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(unit === 0 ? 0 : 2)} ${units[unit]}`;
+}
+
+function isNotExpired(expiresAt) {
+  if (!expiresAt) return true;
+  const ms = new Date(expiresAt).getTime();
+  return !Number.isFinite(ms) || ms > Date.now();
+}
+
+function deriveClientOperationalStatus(user = {}) {
+  const raw = String(user.status || '').toLowerCase();
+  if (raw === 'blocked' || user.blocked === true) return 'blocked';
+  if (user.is_vip === true || raw === 'vip') return 'vip';
+  const expired = user.expires_at && !isNotExpired(user.expires_at);
+  if (expired || raw === 'inactive' || raw === 'expired') return 'inactive';
+  if (['active', 'paid', 'trial'].includes(raw)) return 'active';
+  return 'inactive';
+}
+
+function sessionPopId(session = {}) {
+  return session.pop_id || session.hotspot_id || session.last_pop_id || session.popId || null;
+}
+
+function sessionLocalIp(session = {}) {
+  return session.local_ip || session.ip_address || session.client_ip || session.framed_ip_address || session.ip || null;
+}
+
+function sessionTime(session = {}) {
+  return session.started_at || session.created_at || session.updated_at || null;
+}
+
+async function getLatestSessionsByUsers(users = []) {
+  const byKey = new Map();
+  const userIds = [...new Set(users.map(u => u.id).filter(Boolean))];
+  const macs = [...new Set(users.flatMap(u => getMacVariants(u.mac_address || u.username || '')).filter(Boolean))];
+  const rows = [];
+
+  if (userIds.length) {
+    const { data, error } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .in('user_id', userIds)
+      .order('created_at', { ascending: false })
+      .limit(1000);
+    if (!error) rows.push(...(data || []));
+    else await registerSystemLog('warning', 'users', 'Falha ao buscar sessoes por user_id', { error: error.message });
+  }
+
+  if (macs.length) {
+    const { data, error } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .in('mac_address', macs)
+      .order('created_at', { ascending: false })
+      .limit(1000);
+    if (!error) rows.push(...(data || []));
+    else await registerSystemLog('warning', 'users', 'Falha ao buscar sessoes por MAC', { error: error.message });
+  }
+
+  for (const session of rows) {
+    const keys = [
+      session.user_id ? `user:${session.user_id}` : null,
+      ...getMacVariants(session.mac_address || '').map(mac => `mac:${normalizeMac(mac) || mac}`)
+    ].filter(Boolean);
+    for (const key of keys) {
+      if (!byKey.has(key)) byKey.set(key, session);
+    }
+  }
+
+  return byKey;
+}
+
+async function enrichUsersWithSessionInfo(users = []) {
+  if (!users.length) return [];
+  const sessionByKey = await getLatestSessionsByUsers(users);
+  const popIds = [...new Set([
+    ...[...sessionByKey.values()].map(sessionPopId),
+    ...users.map(u => u.pop_id || u.last_pop_id || u.hotspot_id)
+  ].filter(Boolean))];
+  const popMap = new Map();
+
+  if (popIds.length) {
+    const { data, error } = await supabase.from('pops').select('id, name, unique_id, location').in('id', popIds);
+    if (!error) (data || []).forEach(pop => popMap.set(String(pop.id), pop));
+  }
+
+  const macs = [...new Set(users.flatMap(u => getMacVariants(u.mac_address || u.username || '')).filter(Boolean))];
+  const trialByMac = new Map();
+  if (macs.length) {
+    const { data, error } = await supabase
+      .from('free_trials')
+      .select('*')
+      .in('mac_address', macs)
+      .order('updated_at', { ascending: false })
+      .limit(1000);
+    if (!error) {
+      (data || []).forEach(trial => {
+        const key = normalizeMac(trial.mac_address || '');
+        if (key && !trialByMac.has(key)) trialByMac.set(key, trial);
+      });
+    }
+  }
+
+  return users.map(user => {
+    const mac = normalizeMac(user.mac_address || user.username || '');
+    const session = sessionByKey.get(`user:${user.id}`) || (mac ? sessionByKey.get(`mac:${mac}`) : null) || null;
+    const popId = sessionPopId(session || {}) || user.pop_id || user.last_pop_id || user.hotspot_id || null;
+    const pop = popId ? popMap.get(String(popId)) : null;
+    const trial = mac ? trialByMac.get(mac) : null;
+    const popName = session?.pop_name || pop?.name || user.pop_name || user.last_pop_name || null;
+    const popLocation = session?.pop_location || pop?.location || user.pop_location || user.last_pop_location || null;
+    return {
+      ...user,
+      operational_status: deriveClientOperationalStatus(user),
+      last_pop_id: popId || user.last_pop_id || user.pop_id || user.hotspot_id || null,
+      last_pop_name: popName,
+      last_pop_location: popLocation,
+      pop_id: user.pop_id || popId || null,
+      pop_name: user.pop_name || popName,
+      pop_location: user.pop_location || popLocation,
+      local_ip: sessionLocalIp(session || {}) || user.local_ip || user.ip_address || null,
+      last_connection_at: sessionTime(session || {}) || user.last_seen_at || user.updated_at || null,
+      cooldown_until: trial?.cooldown_until || session?.cooldown_until || user.cooldown_until || null
+    };
+  });
+}
+
+async function createPopCommand(popId, commandType, payload) {
+  if (!popId) return null;
+  const now = new Date().toISOString();
+  const preferred = {
+    pop_id: popId,
+    command_type: commandType,
+    payload,
+    status: 'pending',
+    attempts: 0,
+    created_at: now
+  };
+  const fallback = { pop_id: popId, command_type: commandType, payload, status: 'pending', created_at: now };
+  const { data, error } = await safeInsertWithFallback('pop_commands', preferred, fallback);
+  if (error) {
+    await registerSystemLog('error', 'pop_commands', 'Erro ao criar comando para POP', { pop_id: popId, command_type: commandType, error: error.message });
+    return null;
+  }
+  return data;
+}
+
+async function revokeRadiusAccess(macAddress) {
+  const mac = normalizeMac(macAddress);
+  if (!mac) return false;
+  const variants = getMacVariants(mac);
+  const now = new Date().toISOString();
+  const update = await supabase
+    .from('radius_replies')
+    .update({ status: 'revoked', expires_at: now, updated_at: now })
+    .in('username', variants);
+  if (!update.error) return true;
+
+  const del = await supabase.from('radius_replies').delete().in('username', variants);
+  return !del.error;
+}
+
+async function queueDisconnectCommandForUser(user, reason = 'disconnect_user') {
+  const mac = normalizeMac(user?.mac_address || user?.username || '');
+  if (!mac) return null;
+  let popId = user?.pop_id || user?.last_pop_id || user?.hotspot_id || null;
+
+  if (!popId) {
+    const variants = getMacVariants(mac);
+    const { data } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .in('mac_address', variants)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    popId = sessionPopId(data || {});
+  }
+
+  if (!popId) return null;
+  return createPopCommand(popId, 'disconnect_hotspot_user', { mac_address: mac, username: mac, reason });
+}
+
+async function revokeAndDisconnectUser(user, reason = 'disconnect_user') {
+  const mac = normalizeMac(user?.mac_address || user?.username || '');
+  if (!mac) return { radius_revoked: false, disconnect_status: 'not_applicable', disconnect_method: 'none' };
+  const radiusRevoked = await revokeRadiusAccess(mac);
+  let directDone = false;
+  let directError = null;
+  try {
+    directDone = await revokeAccess(mac, user?.pop_ip || user?.ip || '192.168.32.1', null, null, user?.pop_id || user?.hotspot_id || null);
+  } catch (err) {
+    directError = err.message;
+    await registerSystemLog('warning', 'users', 'Falha ao revogar acesso direto', { user_id: user?.id, error: err.message });
+  }
+  if (directDone) return { radius_revoked: radiusRevoked, disconnect_status: 'done', disconnect_method: 'routeros_api' };
+
+  const command = await queueDisconnectCommandForUser(user, reason);
+  if (command) return { radius_revoked: radiusRevoked, disconnect_status: 'queued', disconnect_method: 'pop_command_queue', command_id: command.id };
+  return { radius_revoked: radiusRevoked, disconnect_status: 'failed', disconnect_method: 'none', error: directError || 'POP nao identificado para fila de comandos' };
+}
+
+function getPopMetricPayload(popId, source = {}) {
+  const traffic = normalizeTrafficBytes(source);
+  return {
+    pop_id: popId,
+    active_users: Math.max(0, Math.floor(Number(source.active_users ?? source.users_connected ?? source.active_clients ?? 0) || 0)),
+    rx_bytes: traffic.rx_bytes,
+    tx_bytes: traffic.tx_bytes,
+    total_bytes: traffic.total_bytes,
+    peak_bandwidth_mbps: numberOrZero(source.peak_bandwidth_mbps ?? source.bandwidth_mbps ?? source.bandwidth),
+    uptime: source.uptime || null,
+    identity: source.identity || null,
+    routeros_version: source.routeros_version || source.version || null,
+    created_at: new Date().toISOString()
+  };
+}
+
+async function storePopMetric(popId, source = {}) {
+  const payload = getPopMetricPayload(popId, source);
+  const { error } = await supabase.from('pop_metrics').insert(payload);
+  if (error) {
+    await registerSystemLog('warning', 'pop_metrics', 'Falha ao gravar metricas do POP', { pop_id: popId, error: error.message });
+    return null;
+  }
+  return payload;
+}
+
+async function buildDashboardMetrics() {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+  const nowIso = now.toISOString();
+
+  const { data: users } = await supabase.from('users').select('id, status, expires_at, hotspot_id, pop_id');
+  const { data: pops } = await supabase.from('pops').select('*');
+
+  let activeSessions = [];
+  try {
+    const { data } = await supabase
+      .from('hotspot_sessions')
+      .select('*')
+      .eq('status', 'active')
+      .gt('expires_at', nowIso)
+      .limit(5000);
+    activeSessions = data || [];
+  } catch (_err) {}
+
+  let metricsToday = [];
+  try {
+    const { data } = await supabase
+      .from('pop_metrics')
+      .select('*')
+      .gte('created_at', todayStart.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(5000);
+    metricsToday = data || [];
+  } catch (_err) {}
+
+  const readTrafficTable = async (tableName) => {
+    try {
+      const { data, error } = await supabase.from(tableName).select('*').limit(5000);
+      return error ? [] : (data || []);
+    } catch (_err) {
+      return [];
+    }
+  };
+
+  const accountingRows = [
+    ...(await readTrafficTable('radacct')),
+    ...(await readTrafficTable('accounting'))
+  ];
+
+  const latestMetricByPop = new Map();
+  for (const metric of metricsToday) {
+    const key = String(metric.pop_id || '');
+    if (key && !latestMetricByPop.has(key)) latestMetricByPop.set(key, metric);
+  }
+
+  const userPopById = new Map((users || []).map(user => [String(user.id), user.pop_id || user.hotspot_id || null]));
+  const activeSessionsByPop = new Map();
+  for (const session of activeSessions) {
+    const popId = sessionPopId(session) || userPopById.get(String(session.user_id || ''));
+    if (!popId) continue;
+    activeSessionsByPop.set(String(popId), (activeSessionsByPop.get(String(popId)) || 0) + 1);
+  }
+
+  const freshMetrics = [...latestMetricByPop.values()].filter(metric => String(metric.created_at || '') >= fiveMinutesAgo);
+  const metricOnlineUsers = freshMetrics.reduce((sum, metric) => sum + numberOrZero(metric.active_users), 0);
+  const onlineUsers = metricOnlineUsers || activeSessions.length;
+  const peakUsersToday = Math.max(onlineUsers, ...metricsToday.map(metric => numberOrZero(metric.active_users)));
+
+  const sessionTraffic = activeSessions.reduce((sum, session) => sum + normalizeTrafficBytes(session).total_bytes, 0);
+  const metricTraffic = [...latestMetricByPop.values()].reduce((sum, metric) => sum + normalizeTrafficBytes(metric).total_bytes, 0);
+  const accountingTraffic = accountingRows.reduce((sum, row) => sum + normalizeTrafficBytes(row).total_bytes, 0);
+  const totalTrafficBytes = Math.max(sessionTraffic, metricTraffic, accountingTraffic);
+  const peakBandwidthMbps = Math.max(0, ...metricsToday.map(metric => numberOrZero(metric.peak_bandwidth_mbps)));
+
+  const dashboardPops = (pops || []).map(pop => {
+    const popId = String(pop.id);
+    const metric = latestMetricByPop.get(popId);
+    const metricFresh = metric && String(metric.created_at || '') >= fiveMinutesAgo;
+    const traffic = normalizeTrafficBytes(metric || {});
+    const lastHeartbeat = pop.last_heartbeat_at || pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || null;
+    const lastActivity = metric?.created_at || lastHeartbeat;
+    return {
+      id: pop.id,
+      unique_id: pop.unique_id,
+      name: pop.name,
+      location: pop.location,
+      status: pop.status,
+      active_users: metricFresh ? numberOrZero(metric.active_users) : (activeSessionsByPop.get(popId) || numberOrZero(pop.active_clients || pop.users_connected)),
+      last_heartbeat_at: lastHeartbeat,
+      last_activity_at: lastActivity,
+      traffic_total_bytes: traffic.total_bytes,
+      peak_bandwidth_mbps: numberOrZero(metric?.peak_bandwidth_mbps)
+    };
+  });
+
+  const onlinePops = (pops || []).filter(pop => {
+    const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at;
+    return String(pop.status || '').toLowerCase() === 'online' && (!last || (Date.now() - new Date(last).getTime()) <= 2 * 60 * 1000);
+  }).length;
+
+  return {
+    online_users: onlineUsers,
+    peak_users_today: peakUsersToday,
+    total_traffic_bytes: totalTrafficBytes,
+    total_traffic_human: formatBytes(totalTrafficBytes),
+    peak_bandwidth_mbps: Number(peakBandwidthMbps.toFixed(2)),
+    online_pops: onlinePops,
+    offline_pops: Math.max(0, (pops || []).length - onlinePops),
+    total_customers: users?.length || 0,
+    pops: dashboardPops
+  };
 }
 
 function looksLikeMissingColumnError(err, columnName = null, tableName = null) {
@@ -2026,7 +2477,7 @@ async function syncL2tpChapSecretsFromDb() {
     console.log('[L2TP] chap-secrets synced successfully.');
     return { ok: true };
   } catch (err) {
-    console.error('❌ Erro ao sincronizar chap-secrets:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao sincronizar chap-secrets:', err.message);
     await registerSystemLog('error', 'L2TP Sync', 'Erro ao sincronizar chap-secrets', { error: err.message });
     return { ok: false, error: err.message };
   }
@@ -2182,7 +2633,7 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
     });
     res.json(normalized);
   } catch (err) {
-    console.error('❌ Erro ao listar POPs:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar POPs:', err.message);
     res.status(500).json({ error: 'Erro ao listar POPs' });
   }
 });
@@ -2192,9 +2643,9 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
   try {
     const now = new Date().toISOString();
 
-    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numérica)
+    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rica)
     const normalized = { ...(req.body || {}) };
-    // Evita erro de schema quando o frontend envia campos não existentes (ex: last_heartbeat)
+    // Evita erro de schema quando o frontend envia campos nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existentes (ex: last_heartbeat)
     delete normalized.last_heartbeat;
     // Nunca persistir placeholder/marcador como senha real.
     if (normalized.vpn_password === '' || normalized.vpn_password === null || typeof normalized.vpn_password === 'undefined' || String(normalized.vpn_password).trim() === '********') {
@@ -2208,7 +2659,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       }
     }
 
-    // Alguns bancos antigos exigem id obrigatório (sem default). Se vier vazio, geramos.
+    // Alguns bancos antigos exigem id obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio (sem default). Se vier vazio, geramos.
     if (!normalized.id && !normalized.unique_id) {
       const newId = generatePopId();
       normalized.id = newId;
@@ -2221,7 +2672,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     delete preferred.last_heartbeat;
     delete preferred.id;
 
-    // Fallback mínimo (compatível com esquemas antigos/novos)
+    // Fallback mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­nimo (compatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel com esquemas antigos/novos)
     const fallback = {
       name: normalized.name,
       ip: normalized.ip || null,
@@ -2245,7 +2696,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     // Persist provisioning material (POP radius_secret + MikroTik API credentials) before generating the script.
     const enrichedPop = await ensurePopProvisioningMaterial(data);
 
-    // Guarda configuração avançada (para gerar script completo mesmo se a tabela pops não tiver todas as colunas)
+    // Guarda configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o avanÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ada (para gerar script completo mesmo se a tabela pops nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tiver todas as colunas)
     try {
       await supabase.from('settings').upsert({
         key: `pop_config_${data.id}`,
@@ -2253,7 +2704,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
         updated_at: now
       }, { onConflict: 'key' });
     } catch (_e) {
-      // ignora se settings não existir/estruturar diferente
+      // ignora se settings nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existir/estruturar diferente
     }
 
     // Gera script completo imediatamente para o frontend copiar no fluxo de criacao
@@ -2261,17 +2712,17 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('❌ FreeRADIUS sync failed after POP create:', radiusSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after POP create:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('❌ L2TP chap-secrets sync failed after POP create:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after POP create:', l2tpSync.error);
     }
 
     res.status(201).json({ ...enrichedPop, script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('❌ Erro ao criar POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar POP:', err.message);
     res.status(500).json({ error: 'Erro ao criar POP' });
   }
 });
@@ -2402,7 +2853,7 @@ function buildPopInstallScript(pop, config = {}) {
     }
     if (isTrunk) {
       // Trunk: WAN vem de uma VLAN transportada pela interface uplink (wanInterface)
-      // Por padrão, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
+      // Por padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
       const useWanVlan = trunkInternetVlanId || vlanId;
       const uplink = trunkUplinkInterface;
       if (useWanVlan) {
@@ -2430,7 +2881,7 @@ function buildPopInstallScript(pop, config = {}) {
     if (wanType === 'static') {
       const mask = staticMask || '24';
       return (
-        `# WAN (IP Estático)\n` +
+        `# WAN (IP EstÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tico)\n` +
         `/ip address add address=${staticIp}/${mask} interface=${wanInterface} comment="${tag}"\n` +
         (staticGw ? `/ip route add gateway=${staticGw} comment="${tag}"\n` : '') +
         `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
@@ -2489,7 +2940,7 @@ const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no
   // HTML do portal no MikroTik (login.html/alogin.html -> /entrypoint)
   const portalUrl = `${frontendUrl}/portal.html`;
   const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${portalUrl}\\?mac=\\$(mac)&ip=\\$(ip)&hotspot=\\$(server-name)&loginUrl=\\$(link-login-only)&orig=\\$(link-orig)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
-  const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">✔</div><div class="success-text">Autenticacao realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
+  const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</div><div class="success-text">Autenticacao realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
 
   const hotspotHtmlBlock =
     `# HTML do Hotspot (Portal)\n` +
@@ -2557,7 +3008,9 @@ ${hotspotHtmlBlock}
 
 ${userProfileTuningLine}${redirectLine}
 
-/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event="/tool fetch url=\\"${apiUrl}/api/pops/${pop.id}/heartbeat\\" http-method=post${heartbeatHeader} keep-result=no" start-time=startup comment="${tag}"
+/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event=":local active [/ip hotspot active print count-only]; :local uptime [/system resource get uptime]; :local version [/system resource get version]; :local identity [/system identity get name]; :local rx 0; :local tx 0; :do={ :set rx [/interface get \"ms-bridge-${popId}\" rx-byte]; :set tx [/interface get \"ms-bridge-${popId}\" tx-byte]; } on-error={}; :local total ($rx + $tx); /tool fetch url=\"${apiUrl}/api/pops/${pop.id}/heartbeat?active_users=$active&rx_bytes=$rx&tx_bytes=$tx&total_bytes=$total&uptime=$uptime&routeros_version=$version&identity=$identity\" http-method=post${heartbeatHeader} keep-result=no" start-time=startup comment="${tag}"
+
+/system scheduler add name="ms-commands-${popId}" interval=15s on-event="/tool fetch url=\"${apiUrl}/api/pops/${pop.id}/commands.rsc?token=${heartbeatToken}\" dst-path=ms-pop-commands.rsc keep-result=yes; /import ms-pop-commands.rsc" start-time=startup comment="${tag}"
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
@@ -2572,7 +3025,7 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: existing, error: existingErr } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (existingErr || !existing) return res.status(404).json({ error: 'POP não encontrado' });
+    if (existingErr || !existing) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const updateData = { updated_at: new Date().toISOString() };
     const body = { ...(req.body || {}) };
@@ -2599,17 +3052,17 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('❌ FreeRADIUS sync failed after POP update:', radiusSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after POP update:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('❌ L2TP chap-secrets sync failed after POP update:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after POP update:', l2tpSync.error);
     }
 
     res.json({ ...enrichedPop, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('❌ Erro ao atualizar POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar POP:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar POP' });
   }
 });
@@ -2633,21 +3086,21 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('❌ FreeRADIUS sync failed after POP delete:', radiusSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after POP delete:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('❌ L2TP chap-secrets sync failed after POP delete:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after POP delete:', l2tpSync.error);
     }
 
     res.json({ message: 'POP removido com sucesso', freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('❌ Erro ao deletar POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar POP:', err.message);
     res.status(500).json({ error: 'Erro ao deletar POP' });
   }
 });
-// Alias legado (português)
+// Alias legado (portuguÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs)
 app.put('/api/perfil', authMiddleware, (req, res, next) => {
   req.url = '/api/profile';
   next();
@@ -2663,7 +3116,7 @@ app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
       .select('*')
       .eq('id', id)
       .single();
-    if (popErr || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     let config = {};
     try {
@@ -2678,17 +3131,17 @@ app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
     // Retorna sempre os dados do POP + o config salvo (quando existir)
     res.json({ pop, config });
   } catch (err) {
-    console.error('❌ Erro ao obter config do POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao obter config do POP:', err.message);
     res.status(500).json({ error: 'Erro ao obter config do POP' });
   }
 });
 
-// Gerar script de configuração para um POP
+// Gerar script de configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o para um POP
 app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     let config = {};
     try {
@@ -2701,27 +3154,27 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('❌ FreeRADIUS sync failed after script generation:', radiusSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after script generation:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('❌ L2TP chap-secrets sync failed after script generation:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after script generation:', l2tpSync.error);
     }
 
     res.json({ script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('❌ Erro ao gerar script:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar script:', err.message);
     res.status(500).json({ error: 'Erro ao gerar script' });
   }
 });
-// Receber heartbeat do MikroTik (atualiza status e última atividade)
-// Gerar script de reversão para um POP
+// Receber heartbeat do MikroTik (atualiza status e ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltima atividade)
+// Gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o para um POP
 app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const uniqueTag = `MS-TELECOM-${id}`;
     const script =
@@ -2742,8 +3195,8 @@ app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
 
     res.json({ script });
   } catch (err) {
-    console.error('❌ Erro ao gerar script de reversão:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar script de reversão' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o' });
   }
 });
 
@@ -2780,7 +3233,7 @@ app.post('/api/admin/pops/vpn-backfill', authMiddleware, async (req, res) => {
       freeradius_sync: radiusSync.ok ? 'ok' : 'failed'
     });
   } catch (err) {
-    console.error('❌ vpn-backfill error:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ vpn-backfill error:', err.message);
     res.status(500).json({ error: 'Erro no backfill VPN' });
   }
 });
@@ -2791,46 +3244,51 @@ app.post('/api/pops/:id/ping', async (req, res) => {
     const { id } = req.params;
     if (!(await requirePopToken(req, res, id))) return;
     const now = new Date().toISOString();
+    const metrics = { ...(req.query || {}), ...(req.body || {}) };
     const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (popErr || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const updateData = { status: 'online', updated_at: now };
     if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
     if (Object.prototype.hasOwnProperty.call(pop, 'last_seen')) updateData.last_seen = now;
-    if (Object.prototype.hasOwnProperty.call(pop, 'users_connected') && req.body && typeof req.body.users_connected !== 'undefined') {
-      updateData.users_connected = req.body.users_connected;
+    if (Object.prototype.hasOwnProperty.call(pop, 'users_connected') && typeof metrics.users_connected !== 'undefined') {
+      updateData.users_connected = metrics.users_connected;
     }
-    if (Object.prototype.hasOwnProperty.call(pop, 'bandwidth') && req.body && typeof req.body.bandwidth !== 'undefined') {
-      updateData.bandwidth = req.body.bandwidth;
+    if (Object.prototype.hasOwnProperty.call(pop, 'active_clients') && typeof metrics.active_users !== 'undefined') {
+      updateData.active_clients = metrics.active_users;
+    }
+    if (Object.prototype.hasOwnProperty.call(pop, 'bandwidth') && typeof (metrics.bandwidth || metrics.peak_bandwidth_mbps) !== 'undefined') {
+      updateData.bandwidth = metrics.bandwidth || metrics.peak_bandwidth_mbps;
     }
 
     const { error: updateErr } = await supabase.from('pops').update(updateData).eq('id', id);
     if (updateErr) throw updateErr;
+    await storePopMetric(id, metrics);
     res.json({ status: 'ok', pop_id: id, timestamp: now });
   } catch (err) {
-    console.error('❌ Erro ao processar ping do POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao processar ping do POP:', err.message);
     res.status(500).json({ error: 'Erro ao processar ping' });
   }
 });
 
-// Status do POP (público)
+// Status do POP (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
 app.get('/api/pops/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP não encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || pop.created_at;
     const seconds = last ? Math.floor((Date.now() - new Date(last).getTime()) / 1000) : null;
     const status = (seconds !== null && seconds > 60) ? 'offline' : (pop.status || 'online');
     res.json({ id, name: pop.name, status, seconds_since_last: seconds });
   } catch (err) {
-    console.error('❌ Erro ao consultar status do POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao consultar status do POP:', err.message);
     res.status(500).json({ error: 'Erro ao consultar status' });
   }
 });
 
-// Registrar POP via MikroTik (público)
+// Registrar POP via MikroTik (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
 app.post('/api/pops/register', async (req, res) => {
   try {
     if (!validatePopRegisterToken(req)) {
@@ -2838,10 +3296,10 @@ app.post('/api/pops/register', async (req, res) => {
     }
     const now = new Date().toISOString();
     const { name, ip, location } = req.body || {};
-    if (!name || !ip) return res.status(400).json({ error: 'name e ip são obrigatórios' });
+    if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
 
     const popToken = crypto.randomBytes(32).toString('hex');
-    // Não insere `token` na tabela pops porque o schema atual não possui essa coluna.
+    // NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o insere `token` na tabela pops porque o schema atual nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o possui essa coluna.
     const preferred = { ...req.body, name, ip, location, status: 'online', created_at: now, updated_at: now };
     delete preferred.id;
     const fallback = { name, ip, location, status: 'online', created_at: now };
@@ -2849,7 +3307,7 @@ app.post('/api/pops/register', async (req, res) => {
     const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
     if (error) throw error;
 
-    // Guarda o token em settings para validação futura (se necessário)
+    // Guarda o token em settings para validaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o futura (se necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio)
     try {
       await supabase.from('settings').upsert({
         key: `pop_token_${data.id}`,
@@ -2860,7 +3318,7 @@ app.post('/api/pops/register', async (req, res) => {
 
     res.status(201).json({ status: 'success', pop_id: data.id, pop_token: popToken });
   } catch (err) {
-    console.error('❌ Erro ao registrar POP:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao registrar POP:', err.message);
     res.status(500).json({ error: 'Erro ao registrar POP' });
   }
 });
@@ -2870,6 +3328,7 @@ app.post('/api/pops/:id/heartbeat', async (req, res) => {
     const { id } = req.params;
     if (!(await requirePopToken(req, res, id))) return;
     const now = new Date().toISOString();
+    const metrics = { ...(req.query || {}), ...(req.body || {}) };
     const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
     if (popErr || !pop) return res.sendStatus(404);
 
@@ -2877,13 +3336,97 @@ app.post('/api/pops/:id/heartbeat', async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
     if (Object.prototype.hasOwnProperty.call(pop, 'last_seen')) updateData.last_seen = now;
     if (Object.prototype.hasOwnProperty.call(pop, 'last_seen_at')) updateData.last_seen_at = now;
-    if (Object.prototype.hasOwnProperty.call(pop, 'last_seen_at')) updateData.last_seen_at = now;
+    if (Object.prototype.hasOwnProperty.call(pop, 'users_connected') && typeof metrics.active_users !== 'undefined') updateData.users_connected = metrics.active_users;
+    if (Object.prototype.hasOwnProperty.call(pop, 'active_clients') && typeof metrics.active_users !== 'undefined') updateData.active_clients = metrics.active_users;
+    if (Object.prototype.hasOwnProperty.call(pop, 'bandwidth') && typeof (metrics.bandwidth || metrics.peak_bandwidth_mbps) !== 'undefined') updateData.bandwidth = metrics.bandwidth || metrics.peak_bandwidth_mbps;
 
     await supabase.from('pops').update(updateData).eq('id', id);
+    await storePopMetric(id, metrics);
     res.sendStatus(200);
   } catch (err) {
-    console.error('❌ Erro no heartbeat:', err.message);
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no heartbeat:', err.message);
     res.sendStatus(500);
+  }
+});
+
+app.get('/api/pops/:popId/commands', async (req, res) => {
+  try {
+    const { popId } = req.params;
+    if (!(await requirePopToken(req, res, popId))) return;
+    const { data, error } = await supabase
+      .from('pop_commands')
+      .select('*')
+      .eq('pop_id', popId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(20);
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    await registerSystemLog('warning', 'pop_commands', 'Falha ao buscar comandos pendentes', { pop_id: req.params.popId, error: err.message });
+    res.json([]);
+  }
+});
+
+app.post('/api/pops/:popId/commands/:commandId/result', async (req, res) => {
+  try {
+    const { popId, commandId } = req.params;
+    if (!(await requirePopToken(req, res, popId))) return;
+    const now = new Date().toISOString();
+    const status = String(req.body?.status || req.query.status || 'done').toLowerCase() === 'failed' ? 'failed' : 'done';
+    const preferred = {
+      status,
+      attempts: Number(req.body?.attempts || 1),
+      last_error: req.body?.error || req.query.error || null,
+      executed_at: now
+    };
+    const fallback = { status, executed_at: now };
+    const { error } = await safeUpdateWithFallback('pop_commands', commandId, preferred, fallback);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) {
+    await registerSystemLog('warning', 'pop_commands', 'Falha ao confirmar comando do POP', { pop_id: req.params.popId, command_id: req.params.commandId, error: err.message });
+    res.status(500).json({ error: 'Erro ao confirmar comando' });
+  }
+});
+
+app.get('/api/pops/:popId/commands.rsc', async (req, res) => {
+  try {
+    const { popId } = req.params;
+    if (!(await requirePopToken(req, res, popId))) return;
+    const token = String(getBearerOrBodyToken(req) || '');
+    const { data, error } = await supabase
+      .from('pop_commands')
+      .select('*')
+      .eq('pop_id', popId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(10);
+    if (error) throw error;
+
+    const apiUrl = API_BASE_URL;
+    const lines = [':put "MS Telecom POP commands"'];
+    for (const command of data || []) {
+      if (command.command_type !== 'disconnect_hotspot_user' && command.command_type !== 'disconnect_user') continue;
+      const mac = normalizeMac(command.payload?.mac_address || command.payload?.mac || '');
+      if (!mac) continue;
+      const resultUrl = `${apiUrl}/api/pops/${popId}/commands/${command.id}/result?token=${encodeURIComponent(token)}&status=done`;
+      lines.push(`:do={ :local mac "${mac}"; /ip hotspot active remove [find user=$mac]; /ip hotspot active remove [find mac-address=$mac]; /ip hotspot cookie remove [find user=$mac]; /ip hotspot cookie remove [find mac-address=$mac]; /ip hotspot host remove [find mac-address=$mac]; /tool fetch url="${resultUrl}" http-method=post keep-result=no; } on-error={ :put "command ${command.id} failed"; }`);
+    }
+    res.type('text/plain').send(lines.join('\n') + '\n');
+  } catch (err) {
+    await registerSystemLog('warning', 'pop_commands', 'Falha ao gerar script de comandos do POP', { pop_id: req.params.popId, error: err.message });
+    res.type('text/plain').send(':put "no commands"\n');
+  }
+});
+
+app.get('/api/dashboard/metrics', authMiddleware, async (req, res) => {
+  try {
+    const metrics = await buildDashboardMetrics();
+    res.json(metrics);
+  } catch (err) {
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tricas do dashboard:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tricas do dashboard' });
   }
 });
 
@@ -2902,12 +3445,12 @@ app.get('/api/stats/summary', authMiddleware, async (req, res) => {
       online_pops: 1 // Mock ou buscar de pops ativos
     });
   } catch (err) {
-    console.error('❌ Erro ao buscar sumário:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar sumÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas' });
   }
 });
 
-// Estatísticas de usuários por hora (Dashboard)
+// EstatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas de usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios por hora (Dashboard)
 app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
   try {
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -2932,13 +3475,13 @@ app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
 
     res.json({ data: hourlyData });
   } catch (error) {
-    console.error('❌ Erro ao buscar estatísticas reais:', error.message);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas por hora' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas reais:', error.message);
+    res.status(500).json({ error: 'Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas por hora' });
   }
 });
 
-// Listar sessões ativas (usuários online)
-// Estatísticas de tráfego total (real quando existir coluna de tráfego)
+// Listar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes ativas (usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios online)
+// EstatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas de trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego total (real quando existir coluna de trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego)
 app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -2966,8 +3509,8 @@ app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
       total_bytes: inBytes + outBytes
     });
   } catch (err) {
-    console.error('❌ Erro ao buscar tráfego total:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar tráfego total' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego total:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego total' });
   }
 });
 
@@ -2983,17 +3526,17 @@ app.get('/api/sessions/active', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('❌ Erro ao listar sessões ativas:', err.message);
-    res.status(500).json({ error: 'Erro ao listar sessões ativas' });
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes ativas:', err.message);
+    res.status(500).json({ error: 'Erro ao listar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes ativas' });
   }
 });
 
 // ============================================================
-// 📂 ROTAS DE BACKUP
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ROTAS DE BACKUP
 // ============================================================
 
 // ============================================================
-// 🏥 HEALTH CHECK
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¥ HEALTH CHECK
 // ============================================================
 
 app.get('/api/health', (_req, res) => {
@@ -3006,7 +3549,7 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Rotas públicas para o portal
+// Rotas pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblicas para o portal
 app.get('/api/public/plans', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -3032,7 +3575,7 @@ app.get('/api/public/free-trial-config', async (req, res) => {
     const config = data?.value || { enabled: false, duration_minutes: 15, cooldown_hours: 24 };
     res.json(config);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar configuração do teste grátis' });
+    res.status(500).json({ error: 'Erro ao buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis' });
   }
 });
 
@@ -3046,7 +3589,7 @@ app.get('/api/test-ip', (req, res) => {
 });
 
 // ============================================================
-// 🌐 ENTRYPOINT (MikroTik -> API -> Portal)
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â ENTRYPOINT (MikroTik -> API -> Portal)
 // ============================================================
 
 app.get('/entrypoint', (req, res) => {
@@ -3064,14 +3607,14 @@ app.get('/entrypoint', (req, res) => {
 });
 
 // ============================================================
-// 📊 ESTATÍSTICAS E DASHBOARD
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  ESTATÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
 // ============================================================
 
-// Nota: Rotas de estatísticas e POPs já definidas anteriormente no arquivo.
-// Removendo duplicações para evitar conflitos.
+// Nota: Rotas de estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas e POPs jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ definidas anteriormente no arquivo.
+// Removendo duplicaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes para evitar conflitos.
 
 // ============================================================
-// ⚙️ CONFIGURAÇÕES DE CAMPOS DE CADASTRO
+// ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â CONFIGURAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES DE CAMPOS DE CADASTRO
 // ============================================================
 
 app.get('/api/settings/fields', authMiddleware, async (req, res) => {
@@ -3085,7 +3628,7 @@ app.get('/api/settings/fields', authMiddleware, async (req, res) => {
       { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true },
       { field: 'cpf', label: 'CPF', enabled: false, required: false },
       { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
-      { field: 'gender', label: 'Gênero', enabled: false, required: false }
+      { field: 'gender', label: 'GÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªnero', enabled: false, required: false }
     ];
 
     res.json(data ? data.value : defaultFields);
@@ -3116,7 +3659,7 @@ async function getPortalRegistrationFields() {
     { field: 'email', label: 'E-mail', enabled: false, required: false },
     { field: 'cpf', label: 'CPF', enabled: false, required: false },
     { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
-    { field: 'gender', label: 'Gênero', enabled: false, required: false },
+    { field: 'gender', label: 'GÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªnero', enabled: false, required: false },
     { field: 'terms', label: 'Aceite dos termos', enabled: false, required: false }
   ];
 
@@ -3185,11 +3728,11 @@ app.get('/api/portal/registration-status', async (req, res) => {
   }
 });
 // ============================================================
-// ⚙️ CONFIGURAÇÕES DO SISTEMA (SETTINGS)
+// ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â CONFIGURAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES DO SISTEMA (SETTINGS)
 // ============================================================
 
-// Buscar configurações gerais
-// Buscar configurações consolidadas (compat com HTMLs)
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes gerais
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes consolidadas (compat com HTMLs)
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -3200,7 +3743,7 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações consolidadas (compat com HTMLs)
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes consolidadas (compat com HTMLs)
 app.put('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -3215,7 +3758,7 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Aliases legado PT (configurações)
+// Aliases legado PT (configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes)
 app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -3226,7 +3769,7 @@ app.get('/api/settings/system', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações gerais
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes gerais
 app.put('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -3241,7 +3784,7 @@ app.put('/api/settings/system', authMiddleware, async (req, res) => {
   }
 });
 
-// Buscar configurações de pagamento
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de pagamento
 app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'payment').maybeSingle();
@@ -3252,7 +3795,7 @@ app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações de pagamento
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de pagamento
 app.put('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -3267,8 +3810,8 @@ app.put('/api/settings/payment', authMiddleware, async (req, res) => {
   }
 });
 
-// Buscar configurações de teste grátis
-// Buscar configurações de integrações
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de integraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
 app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'integrations').maybeSingle();
@@ -3279,7 +3822,7 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configurações de integrações
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de integraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
 app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const blockedSecretKeys = /(supabase.*key|radius.*secret|mercado.*token|mercadopago.*token|vpn.*psk|ssh.*key|password|api_pass|secret|token)/i;
@@ -3317,7 +3860,7 @@ app.get('/api/settings/free_trial', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Salvar configurações de teste grátis
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis
 app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   try {
     const value = normalizeFreeTrialConfig(req.body && typeof req.body === 'object' ? req.body : {});
@@ -3338,16 +3881,16 @@ app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   }
 });
 // ============================================================
-// 🪝 WEBHOOKS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â WEBHOOKS
 // ============================================================
 
-// Webhook do Mercado Pago (Público)
+// Webhook do Mercado Pago (PÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
 // Aliases legado
 app.post('/api/webhooks/mercadopago', async (req, res) => {
   try {
     const { action, data, type } = req.body;
     
-    // Mercado Pago envia notificações de diferentes tipos, focamos em 'payment'
+    // Mercado Pago envia notificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de diferentes tipos, focamos em 'payment'
     if (type === 'payment' || action === 'payment.created' || action === 'payment.updated') {
       const paymentId = data?.id || req.query['data.id'];
       if (!paymentId) return res.status(200).send('OK');
@@ -3381,7 +3924,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
           }).eq('id', payment.id);
 
           // 3. Liberar acesso no MikroTik/RADIUS
-          // Buscamos a duração do plano
+          // Buscamos a duraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do plano
           const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
           const durationMinutes = (plan?.duration_days || 1) * 24 * 60;
           const cleanMac = normalizeMac(payment.user_mac);
@@ -3395,7 +3938,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
             payment.plan_name
           );
 
-          // 4. Registrar sessão
+          // 4. Registrar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
           await supabase.from('hotspot_sessions').insert({
             mac_address: cleanMac,
             plan_name: payment.plan_name,
@@ -3412,7 +3955,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
               method: wh.method || 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ event: 'payment.confirmed', payment_id: payment.id, mac: payment.user_mac })
-            }).catch(err => console.error(`❌ Erro ao disparar webhook ${wh.name}:`, err.message));
+            }).catch(err => console.error(`ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao disparar webhook ${wh.name}:`, err.message));
           }
 
           await registerSystemLog('info', 'mercadopago', `Pagamento aprovado e acesso liberado: ${payment.user_mac}`);
@@ -3422,8 +3965,8 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
     
     res.status(200).send('OK');
   } catch (err) {
-    console.error('❌ Erro no Webhook Mercado Pago:', err.message);
-    res.status(200).send('OK'); // Sempre retornar 200 para o MP não ficar retransmitindo em loop
+    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no Webhook Mercado Pago:', err.message);
+    res.status(200).send('OK'); // Sempre retornar 200 para o MP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ficar retransmitindo em loop
   }
 });
 
@@ -3450,7 +3993,7 @@ app.post('/api/webhooks', authMiddleware, async (req, res) => {
   }
 });
 
-// Rota de edição via POST (conforme frontend webhooks.html)
+// Rota de ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o via POST (conforme frontend webhooks.html)
 app.post('/api/webhooks/:id', authMiddleware, async (req, res) => {
   try {
     const { name, event, url, method, target, active } = req.body;
@@ -3477,9 +4020,9 @@ app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const { data: webhook } = await supabase.from('webhooks').select('*').eq('id', req.params.id).single();
-    if (!webhook) return res.status(404).json({ error: 'Webhook não encontrado' });
+    if (!webhook) return res.status(404).json({ error: 'Webhook nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
     
-    // Simulação de disparo
+    // SimulaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de disparo
     console.log(`[TEST] Disparando webhook ${webhook.name} para ${webhook.url}`);
     res.json({ success: true, message: 'Teste disparado com sucesso' });
   } catch (error) {
@@ -3488,7 +4031,7 @@ app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 📣 CAMPANHAS
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â£ CAMPANHAS
 // ============================================================
 
 app.get('/api/campaigns', authMiddleware, async (req, res) => {
@@ -3538,7 +4081,7 @@ app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// 📜 LOGS DE AUDITORIA
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã¢â‚¬Å“ LOGS DE AUDITORIA
 // ============================================================
 
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
@@ -3563,11 +4106,11 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   }
 });
 // ============================================================
-// 💾 BACKUP
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â¾ BACKUP
 // ============================================================
 
 // ============================================================
-// 📝 LOGS DO SISTEMA
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â LOGS DO SISTEMA
 // ============================================================
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
@@ -3611,9 +4154,9 @@ app.get('/api/backup/list', authMiddleware, requireRole('owner'), async (req, re
 // Download de backup
 app.get('/api/backup/download/:filename', authMiddleware, requireRole('owner'), (req, res) => {
   const filename = path.basename(req.params.filename || '');
-  if (!/^[\w.-]+\.json$/.test(filename)) return res.status(400).json({ error: 'Nome de arquivo inválido' });
+  if (!/^[\w.-]+\.json$/.test(filename)) return res.status(400).json({ error: 'Nome de arquivo invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido' });
   const filePath = path.join(BACKUP_DIR, filename);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado' });
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
   res.download(filePath);
 });
 
@@ -3643,10 +4186,10 @@ app.post('/api/backup/create', authMiddleware, requireRole('owner'), async (req,
 });
 
 // ============================================================
-// 🔄 ALIAS E ROTAS DE COMPATIBILIDADE
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ALIAS E ROTAS DE COMPATIBILIDADE
 // ============================================================
 
-// Alias para portal público
+// Alias para portal pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico
 app.get('/api/portal/plans', async (req, res) => {
   const { data, error } = await supabase.from('plans').select('*').eq('active', true).order('price');
   if (error) return res.status(500).json({ error: 'Erro ao listar planos' });
@@ -3676,7 +4219,7 @@ app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
     // ignora erro de janela temporaria (nao bloqueia a geracao do PIX)
   }
 
-  // Encaminha para a rota oficial de geração de PIX
+  // Encaminha para a rota oficial de geraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de PIX
   req.url = '/api/payments/generate-pix';
   return app._router.handle(req, res);
 });
@@ -3684,7 +4227,7 @@ app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
 app.get('/api/portal/check-payment/:id', async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
-  if (error || !data) return res.status(404).json({ error: 'Pagamento não encontrado' });
+  if (error || !data) return res.status(404).json({ error: 'Pagamento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
   res.json(data);
 });
 
@@ -3694,7 +4237,7 @@ app.post('/api/portal/login', async (req, res) => {
     const { data: user, error } = await supabase.from('users').select('*')
       .or(`username.eq.${identifier},email.eq.${identifier},cpf.eq.${identifier},phone.eq.${identifier}`)
       .single();
-    if (error || !user) return res.status(401).json({ error: 'Usuário não encontrado' });
+    if (error || !user) return res.status(401).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     if (user.password !== hashedPassword && user.password !== password) return res.status(401).json({ error: 'Senha incorreta' });
@@ -3712,14 +4255,14 @@ app.post('/api/portal/login', async (req, res) => {
 async function handlePortalRegister(req, res) {
   try {
     const cleanMac = normalizeMac(req.body.mac_address || req.body.mac);
-    if (!cleanMac) return res.status(400).json({ error: 'MAC obrigatório' });
+    if (!cleanMac) return res.status(400).json({ error: 'MAC obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio' });
 
     const fields = await getPortalRegistrationFields();
     const missingBody = (fields || [])
       .filter(f => f.enabled !== false && f.required === true)
       .map(f => f.field)
       .filter(field => field !== 'terms' && !String(req.body[field] || '').trim());
-    if (missingBody.length) return res.status(400).json({ error: 'Campos obrigatórios ausentes', missing_fields: missingBody });
+    if (missingBody.length) return res.status(400).json({ error: 'Campos obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios ausentes', missing_fields: missingBody });
 
     const payload = sanitizePortalRegistration(req.body, fields);
     const now = new Date().toISOString();
@@ -3762,7 +4305,7 @@ async function handlePortalRegister(req, res) {
 app.post('/api/portal/register-device', portalWriteLimiter, handlePortalRegister);
 app.post('/api/portal/register', portalWriteLimiter, handlePortalRegister);
 app.post('/api/portal/voucher', async (req, res) => {
-  // Encaminha para a rota oficial de validação de voucher
+  // Encaminha para a rota oficial de validaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de voucher
   req.url = '/api/vouchers/validate';
   app._router.handle(req, res);
 });
@@ -3783,13 +4326,13 @@ app.get('/api/portal/status', async (req, res) => {
     res.status(500).json({ error: 'Erro ao verificar status' });
   }
 });
-// Rota pública para verificar status de pagamento por MAC (usada pelo portal)
+// Rota pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblica para verificar status de pagamento por MAC (usada pelo portal)
 app.get('/api/portal/payment-status', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store');
     const { mac_address } = req.query;
     const cleanMac = normalizeMac(mac_address);
-    if (!cleanMac) return res.status(400).json({ error: 'MAC é obrigatório' });
+    if (!cleanMac) return res.status(400).json({ error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio' });
 
     const { data, error } = await supabase.from('payments')
       .select('*')
@@ -3804,22 +4347,22 @@ app.get('/api/portal/payment-status', async (req, res) => {
     res.status(500).json({ error: 'Erro ao verificar status de pagamento' });
   }
 });
-// Rota de compatibilidade para o portal público que chama /api/payments sem token
+// Rota de compatibilidade para o portal pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico que chama /api/payments sem token
 app.get('/api/payments', async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const { mac_address } = req.query;
 
-  // Se NÃO tem token e tem mac_address, redireciona para a rota pública do portal
+  // Se NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O tem token e tem mac_address, redireciona para a rota pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblica do portal
   if (!authHeader && mac_address) {
     req.url = '/api/portal/payment-status';
     return app._router.handle(req, res);
   }
 
-  // Caso contrário, segue para o middleware de autenticação e rota admin
+  // Caso contrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio, segue para o middleware de autenticaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o e rota admin
   next();
 });
 
-// Rota de Teste Grátis (chamada pelo frontend)
+// Rota de Teste GrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis (chamada pelo frontend)
 app.post('/api/users/test-access', accessLimiter, async (req, res) => {
   try {
     const body = req.body || {};
@@ -3852,15 +4395,15 @@ app.post('/api/liberar-teste', async (req, res) => {
 });
 
 // ============================================================
-// 👤 GESTÃO DE ADMINISTRADORES (ADMINS)
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¤ GESTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DE ADMINISTRADORES (ADMINS)
 // ============================================================
 
 // Listar todos os administradores
-// Free trial (público) - 1 uso por MAC
+// Free trial (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico) - 1 uso por MAC
 app.post('/api/free-trial', accessLimiter, async (req, res) => {
   try {
     const { mac_address, mac } = req.body || {};
-    if (!mac_address && !mac) return res.status(400).json({ success: false, message: 'MAC é obrigatório' });
+    if (!mac_address && !mac) return res.status(400).json({ success: false, message: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio' });
 
     const out = await handleFreeTrialAccess({
       macAddress: mac_address || mac,
@@ -3876,7 +4419,7 @@ app.post('/api/free-trial', accessLimiter, async (req, res) => {
     res.status(500).json({ success: false, message: 'Erro interno' });
   }
 });
-// Validar acesso (público)
+// Validar acesso (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
 app.post('/api/access/validate', async (req, res) => {
   try {
     const { mac_address } = req.body || {};
@@ -4044,10 +4587,10 @@ app.post('/api/admins', authMiddleware, requireRole('owner'), async (req, res) =
     const role = String(req.body.role || 'admin').toLowerCase();
     
     if (!username || !password) {
-      return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+      return res.status(400).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio e senha sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
     }
     if (!ADMIN_ROLES.has(role) || role === 'owner') {
-      return res.status(403).json({ error: 'Role não permitida', reason: 'role_escalation_blocked' });
+      return res.status(403).json({ error: 'Role nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o permitida', reason: 'role_escalation_blocked' });
     }
 
     const hashedPassword = hashPassword(password);
@@ -4081,10 +4624,10 @@ app.put('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, res
     const { username, email, password, role } = req.body;
     const requestedRole = role ? String(role).toLowerCase() : null;
     if (requestedRole && (!ADMIN_ROLES.has(requestedRole) || requestedRole === 'owner')) {
-      return res.status(403).json({ error: 'Role não permitida', reason: 'role_escalation_blocked' });
+      return res.status(403).json({ error: 'Role nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o permitida', reason: 'role_escalation_blocked' });
     }
     if (String(id) === String(req.user.id) && requestedRole) {
-      return res.status(403).json({ error: 'Não é permitido alterar o próprio role', reason: 'self_role_change_blocked' });
+      return res.status(403).json({ error: 'NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© permitido alterar o prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³prio role', reason: 'self_role_change_blocked' });
     }
     
     const updateData = {};
@@ -4117,7 +4660,7 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
 
     // Impedir que o admin delete a si mesmo
     if (id == req.user.id) {
-      return res.status(400).json({ error: 'Você não pode excluir seu próprio usuário' });
+      return res.status(400).json({ error: 'VocÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o pode excluir seu prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³prio usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
     }
 
     const { data: target, error: targetError } = await supabase
@@ -4126,7 +4669,7 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
       .eq('id', id)
       .maybeSingle();
     if (targetError) throw targetError;
-    if (!target) return res.status(404).json({ error: 'Administrador não encontrado' });
+    if (!target) return res.status(404).json({ error: 'Administrador nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
     if (target.role === 'owner') {
       const { count, error: countError } = await supabase
         .from('admins')
@@ -4134,7 +4677,7 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
         .eq('role', 'owner');
       if (countError) throw countError;
       if ((count || 0) <= 1) {
-        return res.status(409).json({ error: 'Não é permitido excluir o último owner', reason: 'last_owner_blocked' });
+        return res.status(409).json({ error: 'NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© permitido excluir o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltimo owner', reason: 'last_owner_blocked' });
       }
     }
 
@@ -4154,21 +4697,21 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
 });
 
 // ============================================================
-// 🚀 INICIAR SERVIDOR
+// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ INICIAR SERVIDOR
 // ============================================================
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║  🚀 MS TELECOM - HOTSPOT SYSTEM API                         ║
-║  ✅ Servidor rodando em: http://localhost:${PORT}              ║
-║  ✅ Ambiente: ${process.env.NODE_ENV || 'production'}                      ║
-║  ✅ Padrão: Código EN, Comentários PT-BR                     ║
-║  ✅ Endpoints: /api/users, /api/plans, /api/payments         ║
-║  ✅ Tabelas: users, plans, payments, pops                    ║
-║  ✅ Integração: MikroTik API, Mercado Pago, RADIUS           ║
-║  ✅ Deploy Automático: GitHub Actions → VPS                  ║
-║  ✅ CRON: Remoção automática de acessos expirados            ║
-╚══════════════════════════════════════════════════════════════╝
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ MS TELECOM - HOTSPOT SYSTEM API                         ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Servidor rodando em: http://localhost:${PORT}              ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Ambiente: ${process.env.NODE_ENV || 'production'}                      ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ PadrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: CÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³digo EN, ComentÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios PT-BR                     ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Endpoints: /api/users, /api/plans, /api/payments         ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Tabelas: users, plans, payments, pops                    ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ IntegraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: MikroTik API, Mercado Pago, RADIUS           ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Deploy AutomÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tico: GitHub Actions ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ VPS                  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ CRON: RemoÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o automÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tica de acessos expirados            ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
   `);
 });
