@@ -264,7 +264,8 @@
                 </div>
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Segurança da Conta</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">Senha Atual</label><input type="password" id="alterarSenhaAtual" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Nova Senha</label><input type="password" id="alterarNovaSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Confirmar Senha</label><input type="password" id="alterarConfirmarSenha" placeholder="********" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                     </div>
@@ -319,6 +320,46 @@
     </div>
 </div>
 
+<!-- Modal Novo Admin -->
+<div id="modalNovoAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h3 class="text-lg font-black text-white">Novo Usuário</h3>
+            <button onclick="closeModalNovoAdmin()" class="p-2 hover:bg-gray-800 rounded-xl transition"><i data-lucide="x" class="w-5 h-5 text-gray-500"></i></button>
+        </div>
+        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="novoAdminUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="novoAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Função</label><select id="novoAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="admin">admin</option><option value="operator">operator</option><option value="finance">finance</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label><input type="password" id="novoAdminPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalNovoAdmin()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="criarAdmin()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Admin -->
+<div id="modalEditarAdmin" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-sm max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-gray-800 shrink-0">
+            <h3 class="text-lg font-black text-white">Editar Usuário</h3>
+            <button onclick="closeModalEditarAdmin()" class="p-2 hover:bg-gray-800 rounded-xl transition"><i data-lucide="x" class="w-5 h-5 text-gray-500"></i></button>
+        </div>
+        <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+            <input type="hidden" id="editarAdminId">
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editarAdminUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editarAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Função</label><select id="editarAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="admin">admin</option><option value="operator">operator</option><option value="finance">finance</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova senha (opcional)</label><input type="password" id="editarAdminPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <button onclick="closeModalEditarAdmin()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Cancelar</button>
+            <button onclick="salvarEdicaoAdmin()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold">Salvar</button>
+        </div>
+    </div>
+</div>
 <script>
     // ============================================
     // RESTAURACAO (configuracoes.html)
@@ -411,7 +452,7 @@
         if (tabId === 'backup') carregarBackups();
         if (tabId === 'usuarios') carregarAdmins();
         if (tabId === 'integracao') carregarIntegracoes();
-        if (tabId === 'planos') carregarPlanos();
+        if (tabId === 'planos') { carregarPlanos(); carregarConfiguracoesSistema(); }
         if (tabId === 'geral') carregarConfig('system');
         if (tabId === 'teste_gratis') carregarConfig('free_trial');
         if (tabId === 'pagamento') carregarConfig('payment');
@@ -775,30 +816,235 @@
     }
 
     // ==================== ADMINS ====================
+    const ADMIN_PANEL_ROLES = ['admin', 'operator', 'finance'];
+    let adminsData = [];
+    let systemSettingsCache = {};
+
+    function getCurrentUser() {
+        try {
+            const stored = localStorage.getItem('user') || localStorage.getItem('ms_user');
+            if (stored && stored.trim().startsWith('{')) return JSON.parse(stored);
+        } catch (e) {}
+        try {
+            let part = String(token || '').split('.')[1] || '';
+            part = part.replace(/-/g, '+').replace(/_/g, '/');
+            while (part.length % 4) part += '=';
+            const payload = JSON.parse(atob(part));
+            return { id: payload.id, username: payload.username, role: payload.role };
+        } catch (e) {
+            return { username: 'Administrador', role: '' };
+        }
+    }
+
+    function updateHeaderUser() {
+        const user = getCurrentUser();
+        const el = document.getElementById('userName');
+        if (el) el.textContent = user.username || 'Administrador';
+    }
+
+    async function readApiError(res, fallback) {
+        try {
+            const data = await res.json();
+            return data.error || data.message || fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
     async function carregarAdmins() {
         const container = document.getElementById('listaAdmins');
         if (!container) return;
         try {
             const res = await fetch(`${API_URL}/api/admins`, { headers: authHeaders(false) });
-            if (!res.ok) throw new Error();
-            const admins = await res.json();
-            container.innerHTML = admins.map(a => `
-                <div class="py-4 px-6 flex justify-between items-center hover:bg-gray-900/30 transition">
-                    <div>
-                        <p class="text-sm font-bold text-white">${escapeHtml(a.full_name || '')}</p>
-                        <p class="text-xs text-gray-500">${escapeHtml(a.email || '')}</p>
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao carregar administradores'));
+            adminsData = await res.json();
+            const currentUser = getCurrentUser();
+            if (!adminsData || adminsData.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 p-4">Nenhum administrador encontrado</div>';
+                return;
+            }
+            container.innerHTML = adminsData.map(a => {
+                const isSelf = String(a.id) === String(currentUser.id);
+                const isOwnerRole = String(a.role || '').toLowerCase() === 'owner';
+                return `
+                    <div class="py-4 px-6 flex justify-between items-center hover:bg-gray-900/30 transition">
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-white truncate">${escapeHtml(a.username || '')}</p>
+                            <p class="text-xs text-gray-500 truncate">${escapeHtml(a.email || '-')}</p>
+                            <p class="text-[10px] text-blue-400 uppercase font-bold mt-1">${escapeHtml(a.role || 'admin')}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            ${isOwnerRole ? '' : `<button onclick="openModalEditarAdmin('${a.id}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>`}
+                            ${(isSelf || isOwnerRole) ? '' : `<button onclick="excluirAdmin('${a.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition" title="Excluir"><i data-lucide="trash" class="w-4 h-4 text-red-500"></i></button>`}
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="excluirAdmin('${a.id}')" class="p-2 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="trash" class="w-4 h-4 text-red-500"></i></button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
         } catch (e) {
-            container.innerHTML = '<div class="text-center text-red-500 p-4">Erro ao carregar administradores</div>';
+            console.error('Erro ao carregar administradores:', e);
+            container.innerHTML = `<div class="text-center text-red-500 p-4">${escapeHtml(e.message || 'Erro ao carregar administradores')}</div>`;
         }
     }
 
+    function openModalNovoAdmin() {
+        document.getElementById('novoAdminUsername').value = '';
+        document.getElementById('novoAdminEmail').value = '';
+        document.getElementById('novoAdminRole').value = 'admin';
+        document.getElementById('novoAdminPassword').value = '';
+        document.getElementById('modalNovoAdmin')?.classList.remove('hidden');
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    }
+
+    function closeModalNovoAdmin() {
+        document.getElementById('modalNovoAdmin')?.classList.add('hidden');
+    }
+
+    async function criarAdmin() {
+        const payload = {
+            username: document.getElementById('novoAdminUsername').value.trim(),
+            email: document.getElementById('novoAdminEmail').value.trim(),
+            role: document.getElementById('novoAdminRole').value,
+            password: document.getElementById('novoAdminPassword').value
+        };
+        if (!payload.username || !payload.password) return alert('Usuário e senha são obrigatórios');
+        try {
+            const res = await fetch(`${API_URL}/api/admins`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao criar administrador'));
+            closeModalNovoAdmin();
+            await carregarAdmins();
+            alert('Administrador criado com sucesso');
+        } catch (e) {
+            console.error('Erro ao criar administrador:', e);
+            alert(e.message || 'Erro ao criar administrador');
+        }
+    }
+
+    function openModalEditarAdmin(id) {
+        const admin = adminsData.find(a => String(a.id) === String(id));
+        if (!admin) return alert('Administrador não encontrado');
+        document.getElementById('editarAdminId').value = admin.id;
+        document.getElementById('editarAdminUsername').value = admin.username || '';
+        document.getElementById('editarAdminEmail').value = admin.email || '';
+        document.getElementById('editarAdminRole').value = ADMIN_PANEL_ROLES.includes(admin.role) ? admin.role : 'admin';
+        document.getElementById('editarAdminPassword').value = '';
+        document.getElementById('modalEditarAdmin')?.classList.remove('hidden');
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    }
+
+    function closeModalEditarAdmin() {
+        document.getElementById('modalEditarAdmin')?.classList.add('hidden');
+    }
+
+    async function salvarEdicaoAdmin() {
+        const id = document.getElementById('editarAdminId').value;
+        const password = document.getElementById('editarAdminPassword').value;
+        const payload = {
+            username: document.getElementById('editarAdminUsername').value.trim(),
+            email: document.getElementById('editarAdminEmail').value.trim(),
+            role: document.getElementById('editarAdminRole').value
+        };
+        if (password) payload.password = password;
+        if (!payload.username) return alert('Usuário é obrigatório');
+        try {
+            const res = await fetch(`${API_URL}/api/admins/${encodeURIComponent(id)}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao atualizar administrador'));
+            closeModalEditarAdmin();
+            await carregarAdmins();
+            alert('Administrador atualizado com sucesso');
+        } catch (e) {
+            console.error('Erro ao atualizar administrador:', e);
+            alert(e.message || 'Erro ao atualizar administrador');
+        }
+    }
+
+    async function excluirAdmin(id) {
+        if (!confirm('Excluir este administrador?')) return;
+        try {
+            const res = await fetch(`${API_URL}/api/admins/${encodeURIComponent(id)}`, { method: 'DELETE', headers: authHeaders(false) });
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao excluir administrador'));
+            await carregarAdmins();
+            alert('Administrador excluído com sucesso');
+        } catch (e) {
+            console.error('Erro ao excluir administrador:', e);
+            alert(e.message || 'Erro ao excluir administrador');
+        }
+    }
+
+    async function alterarSenha() {
+        const currentPassword = document.getElementById('alterarSenhaAtual')?.value || '';
+        const newPassword = document.getElementById('alterarNovaSenha')?.value || '';
+        const confirmPassword = document.getElementById('alterarConfirmarSenha')?.value || '';
+        if (!currentPassword || !newPassword) return alert('Informe a senha atual e a nova senha');
+        if (newPassword !== confirmPassword) return alert('Nova senha e confirmação não conferem');
+        try {
+            const res = await fetch(`${API_URL}/api/profile`, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+            });
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao alterar senha'));
+            document.getElementById('alterarSenhaAtual').value = '';
+            document.getElementById('alterarNovaSenha').value = '';
+            document.getElementById('alterarConfirmarSenha').value = '';
+            alert('Senha alterada com sucesso');
+        } catch (e) {
+            console.error('Erro ao alterar senha:', e);
+            alert(e.message || 'Erro ao alterar senha');
+        }
+    }
+
+    async function carregarConfiguracoesSistema() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/system`, { headers: authHeaders(false) });
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao carregar configurações globais'));
+            systemSettingsCache = await res.json();
+            const maxSpeed = systemSettingsCache.max_speed_mbps ?? systemSettingsCache.velocidadeMaxima ?? 100;
+            const inactiveMinutes = systemSettingsCache.inactive_session_minutes ?? systemSettingsCache.tempoSessao ?? 30;
+            if (document.getElementById('velocidadeMaxima')) document.getElementById('velocidadeMaxima').value = maxSpeed;
+            if (document.getElementById('tempoSessao')) document.getElementById('tempoSessao').value = inactiveMinutes;
+        } catch (e) {
+            console.error('Erro ao carregar configurações globais:', e);
+        }
+    }
+
+    async function salvarConfiguracoesSistema() {
+        const maxSpeed = Number(document.getElementById('velocidadeMaxima')?.value || 0);
+        const inactiveMinutes = Number(document.getElementById('tempoSessao')?.value || 0);
+        const payload = {
+            ...systemSettingsCache,
+            max_speed_mbps: maxSpeed,
+            velocidadeMaxima: maxSpeed,
+            inactive_session_minutes: inactiveMinutes,
+            tempoSessao: inactiveMinutes
+        };
+        try {
+            const res = await fetch(`${API_URL}/api/settings/system`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao salvar configurações globais'));
+            systemSettingsCache = payload;
+            alert('Configurações globais salvas com sucesso');
+        } catch (e) {
+            console.error('Erro ao salvar configurações globais:', e);
+            alert(e.message || 'Erro ao salvar configurações globais');
+        }
+    }
+
+    function salvarConfigGlobais() {
+        return salvarConfiguracoesSistema();
+    }
+
+    window.openModalNovoAdmin = openModalNovoAdmin;
+    window.closeModalNovoAdmin = closeModalNovoAdmin;
+    window.criarAdmin = criarAdmin;
+    window.openModalEditarAdmin = openModalEditarAdmin;
+    window.closeModalEditarAdmin = closeModalEditarAdmin;
+    window.salvarEdicaoAdmin = salvarEdicaoAdmin;
+    window.excluirAdmin = excluirAdmin;
+    window.alterarSenha = alterarSenha;
+    window.carregarAdmins = carregarAdmins;
+    window.carregarConfiguracoesSistema = carregarConfiguracoesSistema;
+    window.salvarConfiguracoesSistema = salvarConfiguracoesSistema;
+    window.salvarConfigGlobais = salvarConfigGlobais;
     // ==================== UTILS ====================
     function escapeHtml(str) {
         const div = document.createElement('div');
@@ -834,6 +1080,7 @@
         initMenuMobile();
         initTabs();
         initThemeButtons();
+        updateHeaderUser();
         updateSessionIp();
         
         // Carregar aba inicial
@@ -846,6 +1093,9 @@
         document.getElementById('salvarGeralBtn')?.addEventListener('click', () => salvarConfig('system'));
         document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', () => salvarConfig('free_trial'));
         document.getElementById('salvarPagamentoBtn')?.addEventListener('click', () => salvarConfig('payment'));
+        document.getElementById('salvarConfigGlobaisBtn')?.addEventListener('click', salvarConfigGlobais);
+        document.getElementById('alterarSenhaBtn')?.addEventListener('click', alterarSenha);
+        document.getElementById('testarConexaoBtn')?.addEventListener('click', testarConexao);
 
         if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     });
