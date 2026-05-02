@@ -26,7 +26,7 @@
 <body class="bg-[#0a0c15] text-gray-200">
 
 <script>
-    // ðŸ”’ PROTEÃ‡ÃƒO DE ACESSO
+    // PROTEÇÃO DE ACESSO
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
     if (!token) {
         window.location.href = 'login.html';
@@ -149,7 +149,7 @@
         <div class="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 custom-scrollbar">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Campanha *</label><input type="text" id="campaignNome" placeholder="Black Friday 2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label><textarea id="campaignDescricao" rows="2" placeholder="Descrição da campanha..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></textarea></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / CÃ³digo</label><input type="text" id="campaignCupom" placeholder="BLACK2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cupom / Código</label><input type="text" id="campaignCupom" placeholder="BLACK2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label><select id="campaignStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="active">Ativa</option><option value="inactive">Inativa</option></select></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Gênero</label><select id="campaignGenero" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"><option value="todos">Todos</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option><option value="outro">Outro</option></select></div>
             <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Mínima</label><input type="number" id="campaignIdadeMin" placeholder="18" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Idade Máxima</label><input type="number" id="campaignIdadeMax" placeholder="65" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm"></div></div>
@@ -197,7 +197,7 @@
 </div>
 
 <script>
-// ==================== CONFIGURAÇÕESES GLOBAIS ====================
+ // ==================== CONFIGURAÇÕES GLOBAIS ====================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let campanhasData = [];
 let campanhaAtualId = null;
@@ -333,17 +333,17 @@ async function salvarCampanha() {
     try {
         const res = await fetch(`${API_URL}/api/campaigns`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(dados) });
         if (res.ok) {
-            alert(`âœ… Campanha "${nome}" criada!`);
+            alert(`✅ Campanha "${nome}" criada!`);
             closeCampaignModal();
             carregarCampanhas();
             return;
         }
         const errorText = await res.text();
         console.error('Erro detalhado ao criar campanha:', errorText);
-        alert(`âš ï¸ Erro ao criar campanha: ${errorText || 'Tente novamente'}`);
+            alert(`⚠️ Erro ao criar campanha: ${errorText || 'Tente novamente'}`);
     } catch (error) {
         console.error('Erro de rede ao criar campanha:', error);
-        alert(`âš ï¸ Erro ao criar campanha. Tente novamente.`);
+            alert(`⚠️ Erro ao criar campanha. Tente novamente.`);
     }
 }
 
@@ -356,7 +356,7 @@ function openCampaignDetail(id) {
     const statusText = campanha.status === 'active' ? 'ATIVA' : 'INATIVA';
     const startDate = campanha.starts_at ? new Date(campanha.starts_at).toLocaleDateString('pt-BR') : '--';
     const endDate = campanha.ends_at ? new Date(campanha.ends_at).toLocaleDateString('pt-BR') : '--';
-    content.innerHTML = `<div class="space-y-2"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(campanha.name)}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Período</p><p>${startDate} - ${endDate}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p class="${statusClass} font-bold">${statusText}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Cupom</p><p class="font-mono text-blue-400">${campanha.coupon_code || 'N/A'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Descrição</p><p class="text-gray-300">${escapeHtml(campanha.description) || 'Sem descrição'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Segmentação</p><p>Gênero: ${campanha.gender || 'todos'} | Idade: ${campanha.min_age || '0'} - ${campanha.max_age || '+'}</p></div></div>`;
+            content.innerHTML = `<div class="space-y-2"><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Nome</p><p class="font-medium">${escapeHtml(campanha.name)}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Período</p><p>${startDate} - ${endDate}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Status</p><p class="${statusClass} font-bold">${statusText}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Cupom</p><p class="font-mono text-blue-400">${campanha.coupon_code || 'N/A'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Descrição</p><p class="text-gray-300">${escapeHtml(campanha.description) || 'Sem descrição'}</p></div><div class="bg-gray-900/50 rounded-xl p-3"><p class="text-[10px] text-gray-500">Segmentação</p><p>Gênero: ${campanha.gender || 'todos'} | Idade: ${campanha.min_age || '0'} - ${campanha.max_age || '+'}</p></div></div>`;
     document.getElementById('campaignDetailModal').classList.remove('hidden');
 }
 function closeCampaignDetailModal() { document.getElementById('campaignDetailModal').classList.add('hidden'); campanhaAtualId = null; }
@@ -397,9 +397,9 @@ async function atualizarCampanha() {
     };
     try {
         const res = await fetch(`${API_URL}/api/campaigns/${id}`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(dados) });
-        if (res.ok) { alert(`âœ… Campanha "${nome}" atualizada!`); closeEditCampaignModal(); carregarCampanhas(); }
+        if (res.ok) { alert(`✅ Campanha "${nome}" atualizada!`); closeEditCampaignModal(); carregarCampanhas(); }
         else throw new Error();
-    } catch (error) { alert(`âš ï¸ Erro ao atualizar campanha.`); }
+    } catch (error) { alert(`⚠️ Erro ao atualizar campanha.`); }
 }
 
 async function excluirCampanha() {
@@ -408,9 +408,9 @@ async function excluirCampanha() {
     if (!confirm(`Tem certeza que deseja excluir a campanha "${campanha.name}"?`)) return;
     try {
         const res = await fetch(`${API_URL}/api/campaigns/${campanhaAtualId}`, { method: 'DELETE', headers: authHeaders(false) });
-        if (res.ok) { alert(`âœ… Campanha "${campanha.name}" excluída!`); closeCampaignDetailModal(); carregarCampanhas(); }
+        if (res.ok) { alert(`✅ Campanha "${campanha.name}" excluída!`); closeCampaignDetailModal(); carregarCampanhas(); }
         else throw new Error();
-    } catch (error) { alert(`âš ï¸ Campanha "${campanha.name}" excluída localmente.`); closeCampaignDetailModal(); carregarCampanhas(); }
+    } catch (error) { alert(`⚠️ Campanha "${campanha.name}" excluída localmente.`); closeCampaignDetailModal(); carregarCampanhas(); }
 }
 
 // ==================== BUSCA ====================
@@ -443,7 +443,7 @@ async function sair() {
     window.location.href = 'login.html';
 }
 
-// ==================== INICIALIZAÃ‡ÃƒO ====================
+ // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('DOMContentLoaded', () => {
     initMenuMobile();
     updateSessionInfo();
