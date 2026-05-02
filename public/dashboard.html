@@ -701,7 +701,7 @@ async function loadDashboard() {
 
         const releasesTable = document.getElementById('releasesTable');
         if (latestReleases.length === 0) {
-            releasesTable.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma liberaÃƒÂ§ÃƒÂ£o encontrada</td></tr>';
+            releasesTable.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma liberação encontrada</td></tr>';
         } else {
             releasesTable.innerHTML = latestReleases.map(release => `
                 <tr class="hover:bg-gray-900/30 transition">
@@ -754,7 +754,7 @@ async function loadDashboard() {
                     </td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${pop.status === 'online' || pop.status === 'active' ? 'status-badge-online' : 'status-badge-offline'}">
-                            ${pop.status === 'online' || pop.status === 'active' ? 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Online' : 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Offline'}
+                            ${pop.status === 'online' || pop.status === 'active' ? '● Online' : '● Offline'}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-300">${pop.active_users ?? pop.active_clients ?? pop.users_connected ?? 0}</td>
@@ -787,7 +787,7 @@ async function openAllReleasesModal() {
         const payments = await response.json();
         const releases = payments.filter(isPaidPayment);
         if (releases.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberaÃƒÂ§ÃƒÂ£o encontradatd></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberação encontradatd></tr>';
         } else {
             tableBody.innerHTML = releases.map(release => `
                 <tr class="hover:bg-gray-900/30">
