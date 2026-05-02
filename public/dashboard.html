@@ -29,7 +29,7 @@
 </head>
 <body class="text-gray-200">
 
-<!-- ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢ PROTEÃƒâ€¡ÃƒÆ’O DE ACESSO -->
+<!-- PROTEÇÃO DE ACESSO -->
 <script>
     const authToken = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
     if (!authToken) {
@@ -323,7 +323,7 @@
                             </tr>
                         </thead>
                         <tbody id="releasesTable" class="divide-y divide-gray-800/50">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando lOperações...</td></tr>
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberações...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -393,7 +393,7 @@
             <div id="voucherResult" class="hidden bg-gray-900/50 rounded-xl p-4">
                 <p class="text-[10px] text-gray-500 uppercase mb-1">Voucher Gerado</p>
                 <code id="voucherCode" class="text-lg font-mono text-emerald-400 break-all"></code>
-                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar cÃƒÆ’Ã‚Â³digo</button>
+                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar código</button>
             </div>
         </div>
         <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
@@ -403,7 +403,7 @@
     </div>
 </div>
 
-<!-- MODAL: TODAS AS LIBERAÃƒâ€¡Ãƒâ€¢ESES -->
+<!-- MODAL: TODAS AS LIBERAÇÕES -->
 <div id="allReleasesModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
         <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
@@ -874,10 +874,10 @@ async function viewCustomerDetails(id, name) {
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'NÃƒÂ£o informado'}</p></div>
-                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Ativo' : 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â Bloqueado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'Não informado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? '● Ativo' : '● Bloqueado'}</p></div>
                 </div>
-                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'NÃƒÂ£o informado'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">ÃƒÅ¡ltimo acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
             </div>
@@ -998,7 +998,7 @@ async function logout() {
 // ============================================
 function openNewVoucherModal() { window.location.href = 'vouchers.html'; }
 function closeNewVoucherModal() { document.getElementById('newVoucherModal').classList.add('hidden'); }
-function generateVoucher() { alert('A geraÃƒÂ§ÃƒÂ£o de vouchers foi movida para o mÃƒÆ’Ã‚Â³dulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
+function generateVoucher() { alert('A geração de vouchers foi movida para o módulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
 function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('CÃƒÆ’Ã‚Â³digo copiado!'); }
 
 // ============================================
@@ -1033,7 +1033,7 @@ function initMobileMenu() {
 }
 
 // ============================================
-// INICIALIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O
+// INICIALIZAÇÃO
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     initMobileMenu();
