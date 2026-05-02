@@ -20,9 +20,9 @@
     .registration-card { position: relative; overflow: hidden; isolation: isolate; background: radial-gradient(circle at 16% -4%, rgba(56,189,248,.25), transparent 34%), radial-gradient(circle at 102% 16%, rgba(37,99,235,.22), transparent 36%), linear-gradient(145deg, rgba(15,23,42,.97), rgba(2,6,23,.92)); box-shadow: 0 30px 95px rgba(2,6,23,.72), 0 0 0 1px rgba(59,130,246,.12), inset 0 1px 0 rgba(255,255,255,.09); backdrop-filter: blur(24px); }
     .registration-card::before { content: ""; position: absolute; inset: 1px; border-radius: 1.9rem; border: 1px solid rgba(255,255,255,.07); pointer-events: none; z-index: -1; }
     .registration-card::after { content: ""; position: absolute; width: 220px; height: 220px; right: -110px; bottom: -120px; background: rgba(59,130,246,.2); filter: blur(70px); pointer-events: none; z-index: -1; }
-    .registration-input { background: rgba(2,6,23,.66); border: 1px solid rgba(148,163,184,.22); color: #f8fafc; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease; }
-    .registration-input::placeholder { color: rgba(148,163,184,.55); }
-    .registration-input:focus { border-color: rgba(56,189,248,.9); box-shadow: 0 0 0 4px rgba(56,189,248,.13), 0 12px 35px rgba(2,6,23,.24); background: rgba(2,6,23,.86); transform: translateY(-1px); }
+    .registration-input { min-height: 54px; background: rgba(2,6,23,.86); border: 2px solid rgba(125,211,252,.42); color: #f8fafc; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(15,23,42,.45); transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease; }
+    .registration-input::placeholder { color: rgba(203,213,225,.72); font-weight: 500; }
+    .registration-input:focus { border-color: rgba(56,189,248,.95); box-shadow: 0 0 0 4px rgba(56,189,248,.18), 0 14px 36px rgba(2,6,23,.34); background: rgba(2,6,23,.96); transform: translateY(-1px); }
     .registration-pill { background: linear-gradient(135deg, rgba(59,130,246,.22), rgba(34,211,238,.13)); border: 1px solid rgba(125,211,252,.34); color: #bfdbfe; box-shadow: 0 10px 28px rgba(37,99,235,.14), inset 0 1px 0 rgba(255,255,255,.09); }
     .registration-primary-btn { box-shadow: 0 18px 40px rgba(37,99,235,.28), inset 0 1px 0 rgba(255,255,255,.18); }
     .registration-primary-btn:hover { transform: translateY(-1px); box-shadow: 0 22px 48px rgba(37,99,235,.34), inset 0 1px 0 rgba(255,255,255,.22); }
@@ -319,8 +319,8 @@ function renderRegistrationFields(fields) {
     }
     if (field.field === 'gender') {
       return `<div>
-        <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-[0.14em] mb-2.5">${escapeHtml(field.label || 'Gênero')}${mark}</label>
-        <select name="gender" ${required} class="registration-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none">
+        <label class="block text-[12px] font-extrabold text-slate-200 uppercase tracking-[0.13em] mb-2">${escapeHtml(field.label || 'Gênero')}${mark}</label>
+        <select name="gender" ${required} class="registration-input w-full rounded-2xl px-5 py-4 text-base outline-none">
           <option value="">Selecione</option>
           <option value="Feminino">Feminino</option>
           <option value="Masculino">Masculino</option>
@@ -330,8 +330,8 @@ function renderRegistrationFields(fields) {
     }
     const autocomplete = field.field === 'name' ? 'name' : field.field === 'phone' ? 'tel' : field.field === 'email' ? 'email' : 'off';
     return `<div>
-      <label class="block text-[11px] font-extrabold text-slate-400 uppercase tracking-[0.14em] mb-2.5">${escapeHtml(field.label || field.field)}${mark}</label>
-      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} data-field="${escapeHtml(field.field)}" autocomplete="${autocomplete}" placeholder="${escapeHtml(field.label || '')}" class="registration-input w-full rounded-2xl px-4 py-3.5 text-sm outline-none">
+      <label class="block text-[12px] font-extrabold text-slate-200 uppercase tracking-[0.13em] mb-2">${escapeHtml(field.label || field.field)}${mark}</label>
+      <input name="${escapeHtml(field.field)}" type="${fieldInputType(field.field)}" ${required} data-field="${escapeHtml(field.field)}" autocomplete="${autocomplete}" placeholder="${escapeHtml(field.label || '')}" class="registration-input w-full rounded-2xl px-5 py-4 text-base outline-none">
     </div>`;
   }).join('');
 }
@@ -366,10 +366,10 @@ function setRegistrationGate(mode) {
 
   if (registrationGateActive) {
     const requiredMode = registrationGateMode === 'required';
-    registrationModeLabel.textContent = requiredMode ? 'Cadastro obrigatorio' : 'Cadastro recomendado';
+    registrationModeLabel.textContent = requiredMode ? 'Cadastro obrigatório' : 'Cadastro recomendado';
     registrationTitle.textContent = requiredMode ? 'Complete seu cadastro' : 'Quer agilizar seu atendimento?';
     registrationSubtitle.textContent = requiredMode
-      ? 'Preencha os dados solicitados para continuar para os planos e beneficios disponiveis.'
+      ? 'Preencha os dados solicitados para continuar para os planos e benefícios disponíveis.'
       : 'Informe seus dados agora ou pule por enquanto. Isso ajuda nosso atendimento a identificar seu dispositivo.';
     registrationSubmitBtn.textContent = requiredMode ? 'Salvar e continuar' : 'Continuar';
     renderRegistrationFields(registrationFields);
@@ -483,7 +483,7 @@ async function continueAfterRegistrationGate() {
     const orig = origCandidate && origCandidate.toLowerCase().startsWith('http://') ? origCandidate : 'http://192.168.32.1/';
 
     if (!mac) {
-      showStatusMessage('MAC nao detectado. Reconecte ao Wi-Fi.', 'error');
+      showStatusMessage('MAC não detectado. Reconecte ao Wi-Fi.', 'error');
       return;
     }
 
