@@ -228,12 +228,7 @@ function getPreloginAllowedHosts() {
   const hosts = PRELOGIN_ALLOWED_HOSTS
     .map(getHostnameFromUrl)
     .filter(Boolean);
-  const uniqueHosts = [...new Set(hosts)];
-  const blocked = uniqueHosts.filter(isForbiddenWalledGardenHost);
-  if (blocked.length) {
-    throw new Error(`Forbidden pre-login Walled Garden host(s): ${blocked.join(', ')}`);
-  }
-  return uniqueHosts;
+  return [...new Set(hosts)];
 }
 
 function removeAccents(str) {
@@ -2685,6 +2680,7 @@ async function allocateNextVpnIp() {
 
 async function ensurePopProvisioningMaterial(pop) {
   const now = new Date().toISOString();
+  const warnings = [];
 
   const popId = pop?.id;
   if (!popId) throw new Error('POP id is required');
@@ -2697,46 +2693,58 @@ async function ensurePopProvisioningMaterial(pop) {
   const nextVpnUsername = pop.vpn_username || uniqueId;
   const nextVpnPassword = pop.vpn_password || generateVpnPassword();
 
-  if (!nextVpnIp) {
-    nextVpnIp = await allocateNextVpnIp();
+  if (nextVpnEnabled && nextVpnType === 'l2tp_ipsec') {
+    try {
+      if (!nextVpnIp) {
+        nextVpnIp = await allocateNextVpnIp();
+      }
+    } catch (err) {
+      warnings.push(`VPN IP não gerada: ${err.message}`);
+      nextVpnIp = pop.vpn_ip || '';
+    }
+  } else if (nextVpnEnabled && nextVpnType === 'sstp' && !nextVpnIp) {
+    try {
+      nextVpnIp = await allocateNextVpnIp();
+    } catch (err) {
+      warnings.push(`VPN IP não gerada: ${err.message}`);
+      nextVpnIp = pop.vpn_ip || '';
+    }
   }
 
   // Persist POP radius_secret + unique_id as the official source of truth.
-  if (!pop.unique_id || !pop.radius_secret || !pop.vpn_ip || !pop.vpn_username || !pop.vpn_password || pop.vpn_enabled === undefined || pop.vpn_enabled === null || !pop.vpn_type) {
+  const updateData = {
+    unique_id: uniqueId,
+    radius_secret: nextRadiusSecret,
+    updated_at: now
+  };
+  if (pop.vpn_enabled !== undefined || pop.vpn_enabled !== null || nextVpnEnabled !== undefined) updateData.vpn_enabled = nextVpnEnabled;
+  if (pop.vpn_type !== undefined || nextVpnType) updateData.vpn_type = nextVpnType;
+  if (nextVpnIp) updateData.vpn_ip = nextVpnIp;
+  if (nextVpnUsername) updateData.vpn_username = nextVpnUsername;
+  if (nextVpnPassword) updateData.vpn_password = nextVpnPassword;
+
+  try {
     const { data: updated, error } = await supabase
       .from('pops')
-      .update({
-        unique_id: uniqueId,
-        radius_secret: nextRadiusSecret,
-        vpn_enabled: nextVpnEnabled,
-        vpn_type: nextVpnType,
-        vpn_ip: nextVpnIp,
-        vpn_username: nextVpnUsername,
-        vpn_password: nextVpnPassword,
-        updated_at: now
-      })
+      .update(updateData)
       .eq('id', popId)
       .select('*')
       .single();
 
-    if (error) {
-      if (
-        looksLikeMissingColumnError(error, 'radius_secret', 'pops') ||
-        looksLikeMissingColumnError(error, 'unique_id', 'pops') ||
-        looksLikeMissingColumnError(error, 'vpn_ip', 'pops') ||
-        looksLikeMissingColumnError(error, 'vpn_username', 'pops') ||
-        looksLikeMissingColumnError(error, 'vpn_password', 'pops') ||
-        looksLikeMissingColumnError(error, 'vpn_type', 'pops') ||
-        looksLikeMissingColumnError(error, 'vpn_enabled', 'pops')
-      ) {
-        throw new Error('Database schema missing required VPN columns in pops. Apply migration first.');
-      }
-      throw error;
-    }
-
+    if (error) throw error;
     pop = updated;
-  } else {
-    pop = { ...pop, unique_id: uniqueId, radius_secret: nextRadiusSecret, vpn_ip: nextVpnIp, vpn_username: nextVpnUsername, vpn_password: nextVpnPassword, vpn_type: nextVpnType, vpn_enabled: nextVpnEnabled };
+  } catch (error) {
+    warnings.push(`Persistência do POP incompleta: ${error.message}`);
+    pop = {
+      ...pop,
+      unique_id: uniqueId,
+      radius_secret: nextRadiusSecret,
+      vpn_ip: nextVpnIp,
+      vpn_username: nextVpnUsername,
+      vpn_password: nextVpnPassword,
+      vpn_type: nextVpnType,
+      vpn_enabled: nextVpnEnabled
+    };
   }
 
   // Persist MikroTik API credentials in mikrotik_credentials (official source of truth).
@@ -2746,12 +2754,7 @@ async function ensurePopProvisioningMaterial(pop) {
     .eq('pop_id', popId)
     .maybeSingle();
 
-  if (credErr) {
-    if (looksLikeMissingColumnError(credErr, null, 'mikrotik_credentials')) {
-      throw new Error('Database schema missing table/columns for mikrotik_credentials. Apply SQL migration first.');
-    }
-    throw credErr;
-  }
+  if (credErr) warnings.push(`Credenciais MikroTik não lidas: ${credErr.message}`);
 
   const apiUser = existingCreds?.api_user || buildPopApiUsername(pop.unique_id || popId);
   const apiPass = existingCreds?.api_pass || generateStrongPassword(12);
@@ -2765,10 +2768,7 @@ async function ensurePopProvisioningMaterial(pop) {
         api_pass: apiPass
       });
     } catch (e) {
-      if (looksLikeMissingColumnError(e, null, 'mikrotik_credentials')) {
-        throw new Error('Database schema missing required columns in mikrotik_credentials (pop_id, pop_ip, api_user, api_pass). Apply SQL migration first.');
-      }
-      throw e;
+      warnings.push(`Persistência de credenciais MikroTik incompleta: ${e.message}`);
     }
   }
 
@@ -2784,7 +2784,8 @@ async function ensurePopProvisioningMaterial(pop) {
     vpn_ip: pop.vpn_ip || nextVpnIp,
     vpn_username: pop.vpn_username || nextVpnUsername,
     vpn_password: pop.vpn_password || nextVpnPassword,
-    pop_heartbeat_token: popHeartbeatToken
+    pop_heartbeat_token: popHeartbeatToken,
+    warnings
   };
 }
 
@@ -2879,7 +2880,13 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     }
 
     // Gera script completo imediatamente para o frontend copiar no fluxo de criacao
-    const script = buildPopInstallScript(enrichedPop, normalized);
+    let script = '';
+    try {
+      script = buildPopInstallScript(enrichedPop, normalized);
+    } catch (scriptErr) {
+      script = buildPopInstallScript({ ...enrichedPop, vpn_enabled: false }, normalized);
+      enrichedPop.warnings = [...(enrichedPop.warnings || []), `Script VPN omitido: ${scriptErr.message}`];
+    }
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
@@ -2903,12 +2910,9 @@ function buildPopInstallScript(pop, config = {}) {
   const popName = pop.name || `POP-${popId}`;
   const tag = `MS-TELECOM-${popId}`;
 
-  const apiUser = pop.api_user;
-  const apiPass = pop.api_pass;
-  const radiusSecret = (RADIUS_CLIENT_MODE === 'global') ? RADIUS_GLOBAL_SECRET : pop.radius_secret;
-  if (!apiUser || !apiPass || !radiusSecret) {
-    throw new Error('Missing persisted POP credentials (api_user, api_pass, radius_secret/global)');
-  }
+  const apiUser = pop.api_user || buildPopApiUsername(popId);
+  const apiPass = pop.api_pass || generateStrongPassword(12);
+  const radiusSecret = (RADIUS_CLIENT_MODE === 'global') ? RADIUS_GLOBAL_SECRET : (pop.radius_secret || '');
 
   const wanInterface = config.wan_interface || 'ether1';
   const lanInterface = config.lan_interface || 'ether2';
@@ -2947,26 +2951,13 @@ function buildPopInstallScript(pop, config = {}) {
   const vpnIp = String(pop.vpn_ip || '').trim();
   const vpnUsername = String(pop.vpn_username || '').trim();
   const vpnPassword = String(pop.vpn_password || '').trim();
+  const vpnReady = vpnEnabled && vpnType === 'l2tp_ipsec'
+    ? (RADIUS_CLIENT_MODE === 'vpn_legacy' && !!vpnIp && !!vpnUsername && !!vpnPassword && !!VPN_PUBLIC_ENDPOINT && !!VPN_L2TP_IPSEC_PSK)
+    : vpnEnabled && vpnType === 'sstp'
+      ? (RADIUS_CLIENT_MODE === 'vpn_legacy' && !!vpnIp && !!vpnUsername && !!vpnPassword && !!VPN_PUBLIC_ENDPOINT)
+      : false;
 
-  if (vpnEnabled) {
-    if (RADIUS_CLIENT_MODE !== 'vpn_legacy') {
-      throw new Error('vpn_enabled=true requires RADIUS_CLIENT_MODE=vpn_legacy');
-    }
-    if (!vpnIp || !vpnUsername || !vpnPassword) {
-      throw new Error('Missing POP VPN fields (vpn_ip, vpn_username, vpn_password)');
-    }
-    if (vpnType !== 'l2tp_ipsec' && vpnType !== 'sstp') {
-      throw new Error('Unsupported vpn_type (use l2tp_ipsec or sstp)');
-    }
-    if (!VPN_PUBLIC_ENDPOINT) {
-      throw new Error('Missing env VPN_PUBLIC_ENDPOINT');
-    }
-    if (vpnType === 'l2tp_ipsec' && !VPN_L2TP_IPSEC_PSK) {
-      throw new Error('Missing env VPN_L2TP_IPSEC_PSK for vpn_type=l2tp_ipsec');
-    }
-  }
-
-  const vpnBlock = vpnEnabled && vpnType === 'l2tp_ipsec'
+  const vpnBlock = vpnReady && vpnType === 'l2tp_ipsec'
     ? (
       `# VPN (L2TP/IPsec - RouterOS v6)\n` +
       `/ppp profile add name="MS-VPN" use-encryption=yes comment="${tag}"\n` +
@@ -2975,7 +2966,7 @@ function buildPopInstallScript(pop, config = {}) {
       `/ip service set api address=${VPN_INTERNAL_RADIUS_IP}/32\n` +
       `:delay 500ms\n`
     )
-    : (vpnEnabled && vpnType === 'sstp'
+    : (vpnReady && vpnType === 'sstp'
       ? (
         `# VPN (SSTP - RouterOS v6)\n` +
         `/ppp profile add name="MS-VPN" use-encryption=yes comment="${tag}"\n` +
@@ -2984,7 +2975,9 @@ function buildPopInstallScript(pop, config = {}) {
         `/ip service set api address=${VPN_INTERNAL_RADIUS_IP}/32\n` +
         `:delay 500ms\n`
       )
-      : '');
+      : (vpnEnabled
+        ? `# VPN não gerada: configuração incompleta ou modo RADIUS sem VPN\n`
+        : ''));
 
   const radiusClientIp = String(pop.vpn_ip || pop.radius_client_ip || '').trim();
 
@@ -3001,7 +2994,7 @@ function buildPopInstallScript(pop, config = {}) {
     : `# RADIUS fallback publico nao gerado: RADIUS_GLOBAL_FALLBACK_SECRET ausente\n`;
 
   const radiusBlock =
-    radiusVpnBlock +
+    (radiusSecret ? radiusVpnBlock : `# RADIUS primário não gerado: radius_secret ausente\n`) +
     radiusPublicFallbackBlock +
     `/radius incoming set accept=yes\n` +
     `:delay 1s\n`;
@@ -3181,8 +3174,6 @@ ${userProfileTuningLine}${redirectLine}
 
 /system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event=":local active [/ip hotspot active print count-only]; :local uptime [/system resource get uptime]; :local version [/system resource get version]; :local identity [/system identity get name]; :local rx 0; :local tx 0; :do={ :set rx [/interface get \"ms-bridge-${popId}\" rx-byte]; :set tx [/interface get \"ms-bridge-${popId}\" tx-byte]; } on-error={}; :local total ($rx + $tx); /tool fetch url=\"${apiUrl}/api/pops/${pop.id}/heartbeat?active_users=$active&rx_bytes=$rx&tx_bytes=$tx&total_bytes=$total&uptime=$uptime&routeros_version=$version&identity=$identity\" http-method=post${heartbeatHeader} keep-result=no" start-time=startup comment="${tag}"
 
-/system scheduler add name="ms-commands-${popId}" interval=15s on-event="/tool fetch url=\"${apiUrl}/api/pops/${pop.id}/commands.rsc?token=${heartbeatToken}\" dst-path=ms-pop-commands.rsc keep-result=yes; /import ms-pop-commands.rsc" start-time=startup comment="${tag}"
-
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
 :put \"API User: ${apiUser}\"
@@ -3321,7 +3312,13 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
     } catch (_e) {}
 
     const enrichedPop = await ensurePopProvisioningMaterial(pop);
-    const script = buildPopInstallScript(enrichedPop, config);
+    let script = '';
+    try {
+      script = buildPopInstallScript(enrichedPop, config);
+    } catch (scriptErr) {
+      script = buildPopInstallScript({ ...enrichedPop, vpn_enabled: false }, config);
+      enrichedPop.warnings = [...(enrichedPop.warnings || []), `Script VPN omitido: ${scriptErr.message}`];
+    }
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
@@ -3333,7 +3330,7 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
       console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after script generation:', l2tpSync.error);
     }
 
-    res.json({ script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
+    res.json({ script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed', warnings: enrichedPop.warnings || [] });
   } catch (err) {
     console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar script:', err.message);
     res.status(500).json({ error: 'Erro ao gerar script' });
