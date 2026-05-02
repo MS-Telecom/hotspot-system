@@ -1491,12 +1491,12 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio removido: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: user?.mac_address || null, pop_id: user?.pop_id || user?.hotspot_id || null });
+    await registerAuditLog(req.user.username, 'delete', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio removido: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: user?.mac_address || null, pop_id: disconnect.pop_id || user?.pop_id || user?.last_pop_id || null });
     res.json({
       success: true,
       user_id: id,
       mac_address: user?.mac_address || null,
-      pop_id: user?.pop_id || user?.hotspot_id || null,
+      pop_id: disconnect.pop_id || user?.pop_id || user?.last_pop_id || null,
       blocked: false,
       deleted: true,
       radius_revoked: disconnect.radius_revoked,
@@ -1556,7 +1556,7 @@ app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
       user: data,
       user_id: id,
       mac_address: data?.mac_address || null,
-      pop_id: data?.pop_id || data?.hotspot_id || null,
+      pop_id: disconnect.pop_id || data?.pop_id || data?.last_pop_id || null,
       blocked: true,
       deleted: false,
       radius_revoked: disconnect.radius_revoked,
@@ -2218,41 +2218,110 @@ async function revokeRadiusAccess(macAddress) {
 async function queueDisconnectCommandForUser(user, reason = 'disconnect_user') {
   const mac = normalizeMac(user?.mac_address || user?.username || '');
   if (!mac) return null;
-  let popId = user?.pop_id || user?.last_pop_id || user?.hotspot_id || null;
 
-  if (!popId) {
-    const variants = getMacVariants(mac);
-    const { data } = await supabase
-      .from('hotspot_sessions')
-      .select('*')
-      .in('mac_address', variants)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    popId = sessionPopId(data || {});
+  let popId = user?.pop_id || user?.last_pop_id || null;
+  let popIp = user?.pop_ip || null;
+
+  const variants = getMacVariants(mac);
+
+  const { data: session, error: sessionError } = await supabase
+    .from('hotspot_sessions')
+    .select('*')
+    .in('mac_address', variants)
+    .order('updated_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (sessionError) {
+    await registerSystemLog('warning', 'pop_commands', 'Falha ao buscar ultima sessao para comando de desconexao', {
+      mac_address: mac,
+      error: sessionError.message
+    });
   }
 
-  if (!popId) return null;
-  return createPopCommand(popId, 'disconnect_hotspot_user', { mac_address: mac, username: mac, reason });
+  const sessionPop = sessionPopId(session || {});
+  if (sessionPop) popId = sessionPop;
+  if (session?.pop_ip) popIp = session.pop_ip;
+
+  if (!popId) {
+    await registerSystemLog('warning', 'pop_commands', 'POP nao identificado para comando de desconexao', {
+      user_id: user?.id || null,
+      mac_address: mac,
+      reason
+    });
+    return null;
+  }
+
+  return createPopCommand(popId, 'disconnect_hotspot_user', {
+    mac_address: mac,
+    username: mac,
+    reason,
+    pop_ip: popIp || null
+  });
 }
 
 async function revokeAndDisconnectUser(user, reason = 'disconnect_user') {
   const mac = normalizeMac(user?.mac_address || user?.username || '');
-  if (!mac) return { radius_revoked: false, disconnect_status: 'not_applicable', disconnect_method: 'none' };
+  if (!mac) {
+    return {
+      radius_revoked: false,
+      disconnect_status: 'not_applicable',
+      disconnect_method: 'none',
+      error: 'MAC ausente'
+    };
+  }
+
   const radiusRevoked = await revokeRadiusAccess(mac);
+
   let directDone = false;
   let directError = null;
+
   try {
-    directDone = await revokeAccess(mac, user?.pop_ip || user?.ip || '192.168.32.1', null, null, user?.pop_id || user?.hotspot_id || null);
+    directDone = await revokeAccess(
+      mac,
+      user?.pop_ip || user?.ip || '192.168.32.1',
+      null,
+      null,
+      user?.pop_id || user?.last_pop_id || null
+    );
   } catch (err) {
     directError = err.message;
-    await registerSystemLog('warning', 'users', 'Falha ao revogar acesso direto', { user_id: user?.id, error: err.message });
+    await registerSystemLog('warning', 'users', 'Falha ao revogar acesso direto', {
+      user_id: user?.id || null,
+      mac_address: mac,
+      error: err.message
+    });
   }
-  if (directDone) return { radius_revoked: radiusRevoked, disconnect_status: 'done', disconnect_method: 'routeros_api' };
+
+  if (directDone) {
+    return {
+      radius_revoked: radiusRevoked,
+      disconnect_status: 'done',
+      disconnect_method: 'routeros_api',
+      pop_id: user?.pop_id || user?.last_pop_id || null
+    };
+  }
 
   const command = await queueDisconnectCommandForUser(user, reason);
-  if (command) return { radius_revoked: radiusRevoked, disconnect_status: 'queued', disconnect_method: 'pop_command_queue', command_id: command.id };
-  return { radius_revoked: radiusRevoked, disconnect_status: 'failed', disconnect_method: 'none', error: directError || 'POP nao identificado para fila de comandos' };
+
+  if (command) {
+    return {
+      radius_revoked: radiusRevoked,
+      disconnect_status: 'queued',
+      disconnect_method: 'pop_command_queue',
+      command_id: command.id,
+      pop_id: command.pop_id || null
+    };
+  }
+
+  return {
+    radius_revoked: radiusRevoked,
+    disconnect_status: 'failed',
+    disconnect_method: 'none',
+    pop_id: null,
+    error: directError || 'POP nao identificado para fila de comandos'
+  };
 }
 
 function getPopMetricPayload(popId, source = {}) {
