@@ -2071,7 +2071,7 @@ function deriveClientOperationalStatus(user = {}) {
 }
 
 function sessionPopId(session = {}) {
-  return session.pop_id || session.hotspot_id || session.last_pop_id || session.popId || null;
+  return session.pop_id || session.last_pop_id || session.popId || null;
 }
 
 function sessionLocalIp(session = {}) {
@@ -2093,6 +2093,7 @@ async function getLatestSessionsByUsers(users = []) {
       .from('hotspot_sessions')
       .select('*')
       .in('user_id', userIds)
+      .order('updated_at', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1000);
     if (!error) rows.push(...(data || []));
@@ -2104,6 +2105,7 @@ async function getLatestSessionsByUsers(users = []) {
       .from('hotspot_sessions')
       .select('*')
       .in('mac_address', macs)
+      .order('updated_at', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1000);
     if (!error) rows.push(...(data || []));
@@ -2128,7 +2130,7 @@ async function enrichUsersWithSessionInfo(users = []) {
   const sessionByKey = await getLatestSessionsByUsers(users);
   const popIds = [...new Set([
     ...[...sessionByKey.values()].map(sessionPopId),
-    ...users.map(u => u.pop_id || u.last_pop_id || u.hotspot_id)
+    ...users.map(u => u.pop_id || u.last_pop_id)
   ].filter(Boolean))];
   const popMap = new Map();
 
@@ -2157,7 +2159,7 @@ async function enrichUsersWithSessionInfo(users = []) {
   return users.map(user => {
     const mac = normalizeMac(user.mac_address || user.username || '');
     const session = sessionByKey.get(`user:${user.id}`) || (mac ? sessionByKey.get(`mac:${mac}`) : null) || null;
-    const popId = sessionPopId(session || {}) || user.pop_id || user.last_pop_id || user.hotspot_id || null;
+    const popId = sessionPopId(session || {}) || user.pop_id || user.last_pop_id || null;
     const pop = popId ? popMap.get(String(popId)) : null;
     const trial = mac ? trialByMac.get(mac) : null;
     const popName = session?.pop_name || pop?.name || user.pop_name || user.last_pop_name || null;
@@ -2165,7 +2167,7 @@ async function enrichUsersWithSessionInfo(users = []) {
     return {
       ...user,
       operational_status: deriveClientOperationalStatus(user),
-      last_pop_id: popId || user.last_pop_id || user.pop_id || user.hotspot_id || null,
+      last_pop_id: popId || user.last_pop_id || user.pop_id || null,
       last_pop_name: popName,
       last_pop_location: popLocation,
       pop_id: user.pop_id || popId || null,
