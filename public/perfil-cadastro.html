@@ -158,7 +158,7 @@
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" class="obrigatorio-toggle w-4 h-4 rounded" data-campo="${campo.field}" ${campo.required ? 'checked' : ''}>
-                            <span class="text-xs text-gray-400">Obrigatorio</span>
+                            <span class="text-xs text-gray-400">Obrigatório</span>
                         </label>
                     </div>
                 </div>
@@ -185,9 +185,9 @@
                 headers: authHeaders(),
                 body: JSON.stringify(fieldsToSave)
             });
-            if (res.ok) alert('âœ… Configurações salvas!'); else alert('âŒ Erro ao salvar');
+            if (res.ok) alert('✅ Configurações salvas!'); else alert('❌ Erro ao salvar');
         } catch (error) {
-            alert('âŒ Erro na conexão');
+            alert('❌ Erro na conexão');
         }
     }
 
@@ -225,4 +225,3 @@
 <script src="globals.js"></script>
 </body>
 </html>
-
