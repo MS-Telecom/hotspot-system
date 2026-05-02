@@ -194,6 +194,7 @@
   const params = new URLSearchParams(window.location.search);
   const macAddress = (params.get('mac') || '').toUpperCase();
   const loginUrl = params.get('loginUrl') || 'http://192.168.32.1/login';
+  const popId = params.get('pop_id') || params.get('pop') || '';
 
   const registrationGate = document.getElementById('registrationGate');
   const registrationForm = document.getElementById('registrationForm');
@@ -674,7 +675,8 @@ async function continueAfterRegistrationGate() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mac_address: macAddress
+          mac_address: macAddress,
+          pop_id: popId
         })
       });
 
