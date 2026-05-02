@@ -112,7 +112,7 @@
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="pagamento">Pagamento</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="integracao">Integrações</button>
                 <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="backup">Backup</button>
-                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios" id="usuariosAdminTabBtn">Usuários Admin</button>
+                <button class="tab-btn px-1 py-3 text-sm font-medium text-gray-400 hover:text-white transition-all whitespace-nowrap" data-tab="usuarios">Usuários Admin</button>
             </div>
 
             <!-- Aba Geral -->
@@ -330,7 +330,7 @@
         <div class="p-4 space-y-4 overflow-y-auto custom-scrollbar flex-1">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="novoAdminUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="novoAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Função</label><select id="novoAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="admin">Administrador</option><option value="operator">Operador</option><option value="finance">Financeiro</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Função</label><select id="novoAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="admin">admin</option><option value="operator">operator</option><option value="finance">finance</option></select></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Senha</label><input type="password" id="novoAdminPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
@@ -351,7 +351,7 @@
             <input type="hidden" id="editarAdminId">
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Usuário</label><input type="text" id="editarAdminUsername" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">E-mail</label><input type="email" id="editarAdminEmail" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
-            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Função</label><select id="editarAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="admin">Administrador</option><option value="operator">Operador</option><option value="finance">Financeiro</option></select></div>
+            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Função</label><select id="editarAdminRole" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"><option value="admin">admin</option><option value="operator">operator</option><option value="finance">finance</option></select></div>
             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Nova senha (opcional)</label><input type="password" id="editarAdminPassword" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm"></div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
@@ -450,7 +450,7 @@
 
         // Carregar dados
         if (tabId === 'backup') carregarBackups();
-        if (tabId === 'usuarios') { if (isOwnerUser()) carregarAdmins(); else return openTab('geral'); }
+        if (tabId === 'usuarios') carregarAdmins();
         if (tabId === 'integracao') carregarIntegracoes();
         if (tabId === 'planos') { carregarPlanos(); carregarConfiguracoesSistema(); }
         if (tabId === 'geral') carregarConfig('system');
@@ -821,50 +821,25 @@
     let systemSettingsCache = {};
 
     function getCurrentUser() {
-        let storedUser = {};
         try {
             const stored = localStorage.getItem('user') || localStorage.getItem('ms_user');
-            if (stored && stored.trim().startsWith('{')) storedUser = JSON.parse(stored) || {};
+            if (stored && stored.trim().startsWith('{')) return JSON.parse(stored);
         } catch (e) {}
         try {
             let part = String(token || '').split('.')[1] || '';
             part = part.replace(/-/g, '+').replace(/_/g, '/');
             while (part.length % 4) part += '=';
             const payload = JSON.parse(atob(part));
-            return {
-                id: storedUser.id || payload.id,
-                username: storedUser.username || payload.username,
-                role: storedUser.role || payload.role
-            };
+            return { id: payload.id, username: payload.username, role: payload.role };
         } catch (e) {
-            return { id: storedUser.id, username: storedUser.username || 'Administrador', role: storedUser.role || '' };
+            return { username: 'Administrador', role: '' };
         }
-    }
-
-    function getRoleLabel(role) {
-        const labels = {
-            owner: 'Proprietário',
-            admin: 'Administrador',
-            operator: 'Operador',
-            finance: 'Financeiro'
-        };
-        return labels[String(role || '').toLowerCase()] || String(role || 'Administrador');
-    }
-
-    function isOwnerUser() {
-        return String(getCurrentUser().role || '').toLowerCase() === 'owner';
     }
 
     function updateHeaderUser() {
         const user = getCurrentUser();
         const el = document.getElementById('userName');
         if (el) el.textContent = user.username || 'Administrador';
-    }
-
-    function applyAdminTabVisibility() {
-        const tab = document.getElementById('usuariosAdminTabBtn');
-        if (!tab) return;
-        tab.classList.toggle('hidden', !isOwnerUser());
     }
 
     async function readApiError(res, fallback) {
@@ -881,10 +856,7 @@
         if (!container) return;
         try {
             const res = await fetch(`${API_URL}/api/admins`, { headers: authHeaders(false) });
-            if (!res.ok) {
-                const msg = res.status === 403 ? 'Apenas usuários Proprietário podem gerenciar administradores.' : await readApiError(res, 'Erro ao carregar administradores');
-                throw new Error(msg);
-            }
+            if (!res.ok) throw new Error(await readApiError(res, 'Erro ao carregar administradores'));
             adminsData = await res.json();
             const currentUser = getCurrentUser();
             if (!adminsData || adminsData.length === 0) {
@@ -899,7 +871,7 @@
                         <div class="min-w-0">
                             <p class="text-sm font-bold text-white truncate">${escapeHtml(a.username || '')}</p>
                             <p class="text-xs text-gray-500 truncate">${escapeHtml(a.email || '-')}</p>
-                            <p class="text-[10px] text-blue-400 uppercase font-bold mt-1">${escapeHtml(getRoleLabel(a.role || 'admin'))}</p>
+                            <p class="text-[10px] text-blue-400 uppercase font-bold mt-1">${escapeHtml(a.role || 'admin')}</p>
                         </div>
                         <div class="flex gap-2">
                             ${isOwnerRole ? '' : `<button onclick="openModalEditarAdmin('${a.id}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-blue-500"></i></button>`}
@@ -1109,7 +1081,6 @@
         initTabs();
         initThemeButtons();
         updateHeaderUser();
-        applyAdminTabVisibility();
         updateSessionIp();
         
         // Carregar aba inicial

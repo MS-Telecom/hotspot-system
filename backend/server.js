@@ -152,36 +152,6 @@ function getMacVariants(value) {
   return [...new Set([normalized, compact, String(value || '').trim().toUpperCase()].filter(Boolean))];
 }
 
-function getPopRefFromPayload(source = {}) {
-  return source.pop_id ?? source.pop ?? source.pop_unique_id ?? source.hotspot_id ?? source.hotspot ?? source.server_name ?? null;
-}
-
-async function resolvePopContext(popRef, popIp = null) {
-  const ref = String(popRef || '').trim();
-  if (!ref) return { pop_id: null, pop_name: null, pop_location: null, pop_ip: popIp || null };
-
-  for (const field of ['id', 'unique_id', 'name']) {
-    try {
-      const { data, error } = await supabase
-        .from('pops')
-        .select('*')
-        .eq(field, ref)
-        .limit(1)
-        .maybeSingle();
-      if (!error && data) {
-        return {
-          pop_id: data.id || ref,
-          pop_name: data.name || data.unique_id || ref,
-          pop_location: data.location || null,
-          pop_ip: popIp || data.ip || data.vpn_ip || data.radius_client_ip || null
-        };
-      }
-    } catch (_error) {}
-  }
-
-  return { pop_id: ref, pop_name: null, pop_location: null, pop_ip: popIp || null };
-}
-
 function normalizeCpf(value) {
   const raw = String(value ?? '').trim();
   if (!raw || raw === '-' || raw.toLowerCase() === 'n/a') return null;
@@ -1071,47 +1041,6 @@ async function getLastTrialSession(macVariants) {
   return (data || []).find(isTrialSessionRecord) || null;
 }
 
-function removeMissingColumnFromPayload(payload, error) {
-  const message = String(error?.message || error?.details || error?.hint || '');
-  const match = message.match(/column "([^"]+)"/i) || message.match(/Could not find the '([^']+)' column/i);
-  if (!match || !Object.prototype.hasOwnProperty.call(payload, match[1])) return null;
-  const { [match[1]]: _removed, ...next } = payload;
-  return next;
-}
-
-async function saveHotspotSession(payload) {
-  const cleanMac = normalizeMac(payload?.mac_address);
-  if (!cleanMac) return { error: new Error('mac_address is required') };
-
-  let existing = null;
-  try {
-    const { data } = await supabase
-      .from('hotspot_sessions')
-      .select('id')
-      .in('mac_address', getMacVariants(cleanMac))
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    existing = data || null;
-  } catch (_error) {}
-
-  let current = { ...payload, mac_address: cleanMac };
-  for (let i = 0; i < 8; i++) {
-    const result = existing?.id
-      ? await supabase.from('hotspot_sessions').update({ ...current, updated_at: current.updated_at || new Date().toISOString() }).eq('id', existing.id)
-      : await supabase.from('hotspot_sessions').insert(current);
-
-    if (!result.error) return result;
-    const next = removeMissingColumnFromPayload(current, result.error);
-    if (!next) return result;
-    current = next;
-  }
-
-  return { error: new Error('Failed to save hotspot session') };
-}
-
 async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
   const cleanMac = normalizeMac(macAddress);
   if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio', reason: 'missing_mac' } };
@@ -1123,9 +1052,6 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   const expiresAtDate = new Date(Date.now() + durationSeconds * 1000);
   const expiresAt = expiresAtDate.toISOString();
   const cooldownUntil = new Date(expiresAtDate.getTime() + cooldownSeconds * 1000).toISOString();
-  const popContext = await resolvePopContext(popId, popIp);
-  const effectivePopId = popContext.pop_id || popId || null;
-  const effectivePopIp = popContext.pop_ip || popIp || null;
 
   if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis desativado', reason: 'trial_disabled' } };
 
@@ -1136,21 +1062,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       const planExpiresAt = user.expires_at || null;
       const durationForPlan = planExpiresAt ? Math.max(10, Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / 1000)) : 30 * 24 * 60 * 60;
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
-      await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
-      await saveHotspotSession({
-        ...(user?.id ? { user_id: user.id } : {}),
-        mac_address: cleanMac,
-        access_granted: true,
-        status: 'active',
-        expires_at: planExpiresAt,
-        plan_name: planName,
-        ...(effectivePopId ? { pop_id: effectivePopId } : {}),
-        ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-        ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-        ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
-        created_at: nowIso,
-        updated_at: nowIso
-      });
+      await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
       return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: planExpiresAt, reason: 'manual_plan_active', show_free_trial: false } };
     }
   } catch (error) {
@@ -1169,16 +1081,6 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       .maybeSingle();
 
     if (session) {
-      if (effectivePopId && (!session.pop_id || !session.pop_name || !session.pop_location)) {
-        await saveHotspotSession({
-          ...session,
-          pop_id: effectivePopId,
-          ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-          ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-          ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
-          updated_at: nowIso
-        });
-      }
       return { ok: true, status: 200, body: { message: 'Acesso jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ ativo', expires_at: session.expires_at, reason: 'active_session', show_free_trial: false } };
     }
   } catch (error) {
@@ -1224,12 +1126,12 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     }
   }
 
-  const auth = await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
+  const auth = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
   if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS', reason: 'radius_error', details: auth.errors } };
 
   let user = null;
   try {
-    user = await findOrCreateHotspotUser({ macAddress: cleanMac, ipAddress, planName: 'free_trial', status: 'trial', popId: effectivePopId, expiresAt });
+    user = await findOrCreateHotspotUser({ macAddress: cleanMac, ipAddress, planName: 'free_trial', status: 'trial', popId, expiresAt });
   } catch (error) {
     await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao criar/atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', { mac: cleanMac, error: error.message });
   }
@@ -1242,14 +1144,12 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       status: 'active',
       expires_at: expiresAt,
       plan_name: 'free_trial',
-      ...(effectivePopId ? { pop_id: effectivePopId } : {}),
-      ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-      ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-      ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
+      ...(popId ? { pop_id: popId } : {}),
+      ...(popIp ? { pop_ip: popIp } : {}),
       created_at: nowIso,
       updated_at: nowIso
     };
-    const { error: sessionErr } = await saveHotspotSession(sessionPayload);
+    const { error: sessionErr } = await supabase.from('hotspot_sessions').insert(sessionPayload);
     if (sessionErr) throw sessionErr;
   } catch (error) {
     await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
@@ -1267,7 +1167,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       attempts: Number(previousTrial?.attempts || 0) + 1,
       expires_at: expiresAt,
       updated_at: nowIso,
-      ...(effectivePopId ? { pop_id: effectivePopId } : {})
+      ...(popId ? { pop_id: popId } : {})
     };
     const up = await supabase.from('free_trials').upsert(payload, { onConflict: 'mac_address' });
     if (up.error) throw up.error;
@@ -2104,6 +2004,85 @@ app.post('/api/vouchers/validate', voucherLimiter, async (req, res) => {
 // ============================================================
 // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  ROTAS DE ESTATÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
 // ============================================================
+
+// Obter comandos pendentes para o MikroTik (.rsc)
+app.get('/api/pops/:popId/commands.rsc', async (req, res) => {
+  try {
+    const { popId } = req.params;
+    const token = req.query.token;
+
+    if (!await requirePopToken(req, res, popId)) return;
+
+    const { data: commands, error } = await supabase
+      .from('pop_commands')
+      .select('*')
+      .eq('pop_id', popId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(10);
+
+    if (error) throw error;
+
+    res.setHeader('Content-Type', 'text/plain');
+
+    if (!commands || commands.length === 0) {
+      return res.send(':log info "MS Telecom: no pending commands"');
+    }
+
+    let script = `# MS Telecom: Pending Commands for POP ${popId}\n`;
+
+    for (const cmd of commands) {
+      const payload = cmd.payload || {};
+      const mac = payload.mac_address || payload.username || '';
+
+      if (cmd.command_type === 'disconnect_hotspot_user' && mac) {
+        script += `:do { /ip hotspot active remove [find where user="${mac}"]; } on-error={};\n`;
+        script += `:do { /ip hotspot active remove [find where mac-address="${mac}"]; } on-error={};\n`;
+        script += `:do { /ip hotspot cookie remove [find where user="${mac}"]; } on-error={};\n`;
+        script += `:do { /ip hotspot host remove [find where mac-address="${mac}"]; } on-error={};\n`;
+      }
+
+      // Chamada de ACK
+      const ackUrl = `${API_BASE_URL}/api/pops/${popId}/commands/${cmd.id}/ack?token=${token}`;
+      script += `:do { /tool fetch url="${ackUrl}" keep-result=no; } on-error={};\n`;
+
+      // Incrementar tentativas
+      await supabase
+        .from('pop_commands')
+        .update({ attempts: (cmd.attempts || 0) + 1 })
+        .eq('id', cmd.id);
+    }
+
+    res.send(script);
+  } catch (err) {
+    console.error('Erro ao gerar commands.rsc:', err.message);
+    res.status(500).send(':log error "MS Telecom: error generating commands"');
+  }
+});
+
+// ACK de comando executado
+app.get('/api/pops/:popId/commands/:commandId/ack', async (req, res) => {
+  try {
+    const { popId, commandId } = req.params;
+    if (!await requirePopToken(req, res, popId)) return;
+
+    const { error } = await supabase
+      .from('pop_commands')
+      .update({
+        status: 'executed',
+        executed_at: new Date().toISOString(),
+        last_error: null
+      })
+      .eq('id', commandId)
+      .eq('pop_id', popId);
+
+    if (error) throw error;
+    res.send('OK');
+  } catch (err) {
+    console.error('Erro no ACK de comando:', err.message);
+    res.status(500).send('Error');
+  }
+});
 
 // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â§ HELPERS (compatibilidade / schema flexÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel)
 function isMissingColumnError(err) {
@@ -3181,7 +3160,7 @@ ${userProfileTuningLine}${redirectLine}
 
 /system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event=":local active [/ip hotspot active print count-only]; :local uptime [/system resource get uptime]; :local version [/system resource get version]; :local identity [/system identity get name]; :local rx 0; :local tx 0; :do={ :set rx [/interface get \"ms-bridge-${popId}\" rx-byte]; :set tx [/interface get \"ms-bridge-${popId}\" tx-byte]; } on-error={}; :local total ($rx + $tx); /tool fetch url=\"${apiUrl}/api/pops/${pop.id}/heartbeat?active_users=$active&rx_bytes=$rx&tx_bytes=$tx&total_bytes=$total&uptime=$uptime&routeros_version=$version&identity=$identity\" http-method=post${heartbeatHeader} keep-result=no" start-time=startup comment="${tag}"
 
-/system scheduler add name="ms-commands-${popId}" interval=15s on-event="/tool fetch url=\"${apiUrl}/api/pops/${pop.id}/commands.rsc?token=${heartbeatToken}\" dst-path=ms-pop-commands.rsc keep-result=yes; /import ms-pop-commands.rsc" start-time=startup comment="${tag}"
+	/system scheduler add name="ms-commands-${popId}" interval=10s on-event="/tool fetch url=\"${apiUrl}/api/pops/${pop.id}/commands.rsc?token=${heartbeatToken}\" mode=https dst-path=ms-commands.rsc; /import ms-commands.rsc; /file remove ms-commands.rsc" start-time=startup comment="${tag}"
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
@@ -4539,7 +4518,7 @@ app.post('/api/users/test-access', accessLimiter, async (req, res) => {
     const body = req.body || {};
     const macAddress = body.mac_address || body.mac;
     const ipAddress = body.ip_address ?? body.ip ?? null;
-    const popId = getPopRefFromPayload(body);
+    const popId = body.pop_id ?? null;
     const popIp = body.pop_ip ?? null;
 
     const out = await handleFreeTrialAccess({ macAddress, durationMinutes: null, ipAddress, popId, popIp });
@@ -4555,7 +4534,7 @@ app.post('/api/liberar-teste', async (req, res) => {
     const body = req.body || {};
     const macAddress = body.mac_address || body.mac;
     const ipAddress = body.ip_address || body.ip || null;
-    const popId = getPopRefFromPayload(body);
+    const popId = body.pop_id || null;
     const popIp = body.pop_ip || null;
 
     const out = await handleFreeTrialAccess({ macAddress, durationMinutes: null, ipAddress, popId, popIp });
@@ -4580,7 +4559,7 @@ app.post('/api/free-trial', accessLimiter, async (req, res) => {
       macAddress: mac_address || mac,
       durationMinutes: null,
       ipAddress: req.body?.ip_address ?? req.body?.ip ?? null,
-      popId: getPopRefFromPayload(req.body || {}),
+      popId: req.body?.pop_id ?? null,
       popIp: req.body?.pop_ip ?? null
     });
 
@@ -4626,11 +4605,8 @@ app.get('/api/access/status', async (req, res) => {
 
   const nowMs = Date.now();
   const nowIso = new Date(nowMs).toISOString();
-  const popId = getPopRefFromPayload(req.query);
+  const popId = req.query.pop_id ?? null;
   const popIp = req.query.pop_ip ?? null;
-  const popContext = await resolvePopContext(popId, popIp);
-  const effectivePopId = popContext.pop_id || popId || null;
-  const effectivePopIp = popContext.pop_ip || popIp || null;
 
   try {
     const variants = getMacVariants(cleanMac);
@@ -4649,21 +4625,7 @@ app.get('/api/access/status', async (req, res) => {
         ? Math.max(10, Math.ceil((new Date(user.expires_at).getTime() - nowMs) / 1000))
         : 30 * 24 * 60 * 60;
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
-      await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
-      await saveHotspotSession({
-        ...(user?.id ? { user_id: user.id } : {}),
-        mac_address: cleanMac,
-        access_granted: true,
-        status: 'active',
-        expires_at: user.expires_at || null,
-        plan_name: planName,
-        ...(effectivePopId ? { pop_id: effectivePopId } : {}),
-        ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-        ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-        ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
-        created_at: nowIso,
-        updated_at: nowIso
-      });
+      await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
       return res.json({ allowed: true, reason: 'manual_plan_active', show_free_trial: false, expires_at: user.expires_at || null });
     }
 
@@ -4684,20 +4646,7 @@ app.get('/api/access/status', async (req, res) => {
       const expiresAt = new Date(approvedAt + durationDays * 24 * 60 * 60 * 1000).toISOString();
       if (new Date(expiresAt).getTime() > nowMs) {
         const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - nowMs) / 1000));
-        await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);
-        await saveHotspotSession({
-          mac_address: cleanMac,
-          access_granted: true,
-          status: 'active',
-          expires_at: expiresAt,
-          plan_name: payment.plan_name || 'paid_plan',
-          ...(effectivePopId ? { pop_id: effectivePopId } : {}),
-          ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-          ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-          ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
-          created_at: nowIso,
-          updated_at: nowIso
-        });
+        await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);
         return res.json({ allowed: true, reason: 'paid_plan_active', show_free_trial: false, expires_at: expiresAt });
       }
     }
@@ -4713,16 +4662,6 @@ app.get('/api/access/status', async (req, res) => {
       .maybeSingle();
 
     if (session) {
-      if (effectivePopId && (!session.pop_id || !session.pop_name || !session.pop_location)) {
-        await saveHotspotSession({
-          ...session,
-          pop_id: effectivePopId,
-          ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-          ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-          ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
-          updated_at: nowIso
-        });
-      }
       return res.json({ allowed: true, reason: 'active_session', show_free_trial: false, expires_at: session.expires_at });
     }
 
