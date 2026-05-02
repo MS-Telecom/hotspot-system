@@ -2944,7 +2944,7 @@ function buildPopInstallScript(pop, config = {}) {
   const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
   const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
   const heartbeatToken = pop.pop_heartbeat_token || '';
-  const heartbeatHeader = heartbeatToken ? ` http-header-field="Authorization: Bearer ${heartbeatToken}"` : '';
+  const heartbeatTokenParam = heartbeatToken ? `&token=${encodeURIComponent(heartbeatToken)}` : '';
 
   const vpnEnabled = parseBoolean(pop.vpn_enabled, false) || parseBoolean(config.vpn_enabled, false);
   const vpnType = String(pop.vpn_type || config.vpn_type || '').toLowerCase();
@@ -3172,7 +3172,7 @@ ${hotspotHtmlBlock}
 
 ${userProfileTuningLine}${redirectLine}
 
-/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event=":local active [/ip hotspot active print count-only]; :local uptime [/system resource get uptime]; :local version [/system resource get version]; :local identity [/system identity get name]; :local rx 0; :local tx 0; :do={ :set rx [/interface get \"ms-bridge-${popId}\" rx-byte]; :set tx [/interface get \"ms-bridge-${popId}\" tx-byte]; } on-error={}; :local total ($rx + $tx); /tool fetch url=\"${apiUrl}/api/pops/${pop.id}/heartbeat?active_users=$active&rx_bytes=$rx&tx_bytes=$tx&total_bytes=$total&uptime=$uptime&routeros_version=$version&identity=$identity\" http-method=post${heartbeatHeader} keep-result=no" start-time=startup comment="${tag}"
+/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event=":local active [/ip hotspot active print count-only]; :local uptime [/system resource get uptime]; :local version [/system resource get version]; :local identity [/system identity get name]; :local rx 0; :local tx 0; :do={ :set rx [/interface get \"ms-bridge-${popId}\" rx-byte]; :set tx [/interface get \"ms-bridge-${popId}\" tx-byte]; } on-error={}; :local total ($rx + $tx); /tool fetch url=\"${apiUrl}/api/pops/${pop.id}/heartbeat?active_users=$active&rx_bytes=$rx&tx_bytes=$tx&total_bytes=$total&uptime=$uptime&routeros_version=$version&identity=$identity${heartbeatTokenParam}\" http-method=post keep-result=no" start-time=startup comment="${tag}"
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
