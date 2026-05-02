@@ -196,6 +196,12 @@
   const loginUrl = params.get('loginUrl') || 'http://192.168.32.1/login';
   const popId = params.get('pop_id') || params.get('pop') || '';
 
+  function accessStatusUrl() {
+    const query = new URLSearchParams({ mac: macAddress });
+    if (popId) query.set('pop_id', popId);
+    return `${API_BASE}/api/access/status?${query.toString()}`;
+  }
+
   const registrationGate = document.getElementById('registrationGate');
   const registrationForm = document.getElementById('registrationForm');
   const registrationFieldsContainer = document.getElementById('registrationFieldsContainer');
@@ -631,7 +637,7 @@ async function continueAfterRegistrationGate() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
+      const res = await fetch(accessStatusUrl(), { cache: 'no-store' });
       if (!res.ok) {
         testeGratisBtn.classList.add('hidden');
         return;
@@ -743,7 +749,8 @@ async function continueAfterRegistrationGate() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mac_address: macAddress,
-          duration_minutes: 5
+          duration_minutes: 5,
+          pop_id: popId
         })
       });
 
@@ -826,7 +833,7 @@ async function continueAfterRegistrationGate() {
   async function checkAccessStatus(options = {}) {
     if (!macAddress) return;
     try {
-      const res = await fetch(`${API_BASE}/api/access/status?mac=${encodeURIComponent(macAddress)}`, { cache: 'no-store' });
+      const res = await fetch(accessStatusUrl(), { cache: 'no-store' });
       if (!res.ok) return;
       
       const data = await res.json();
