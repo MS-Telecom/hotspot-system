@@ -1124,9 +1124,27 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   const expiresAtDate = new Date(Date.now() + durationSeconds * 1000);
   const expiresAt = expiresAtDate.toISOString();
   const cooldownUntil = new Date(expiresAtDate.getTime() + cooldownSeconds * 1000).toISOString();
-  const popContext = await resolvePopContext(popId, popIp);
+  const popRef = popId || null;
+  const popContext = await resolvePopContext(popRef, popIp || ipAddress || null);
   const effectivePopId = popContext.pop_id || popId || null;
-  const effectivePopIp = popContext.pop_ip || popIp || null;
+  const effectivePopIp = popContext.pop_ip || popIp || ipAddress || null;
+
+  if (!popRef) {
+    console.warn('[free_trial] missing POP ref in payload', {
+      mac_address: cleanMac,
+      pop_id: null,
+      pop: null,
+      pop_unique_id: null,
+      hotspot: null
+    });
+    await registerSystemLog('warning', 'free_trial', 'Payload sem identificador de POP', {
+      mac_address: cleanMac,
+      pop_id: null,
+      pop: null,
+      pop_unique_id: null,
+      hotspot: null
+    });
+  }
 
   if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis desativado', reason: 'trial_disabled' } };
 
@@ -1147,8 +1165,6 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
         plan_name: planName,
         ...(effectivePopId ? { pop_id: effectivePopId } : {}),
         ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-        ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-        ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
         created_at: nowIso,
         updated_at: nowIso
       });
@@ -1170,13 +1186,11 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       .maybeSingle();
 
     if (session) {
-      if (effectivePopId && (!session.pop_id || !session.pop_name || !session.pop_location)) {
+      if (effectivePopId && (!session.pop_id || !session.pop_ip)) {
         await saveHotspotSession({
           ...session,
           pop_id: effectivePopId,
           ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-          ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-          ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
           updated_at: nowIso
         });
       }
@@ -1245,8 +1259,6 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       plan_name: 'free_trial',
       ...(effectivePopId ? { pop_id: effectivePopId } : {}),
       ...(effectivePopIp ? { pop_ip: effectivePopIp } : {}),
-      ...(popContext.pop_name ? { pop_name: popContext.pop_name } : {}),
-      ...(popContext.pop_location ? { pop_location: popContext.pop_location } : {}),
       created_at: nowIso,
       updated_at: nowIso
     };
@@ -4600,7 +4612,7 @@ app.post('/api/free-trial', accessLimiter, async (req, res) => {
       durationMinutes: null,
       ipAddress: req.body?.ip_address ?? req.body?.ip ?? null,
       popId: getPopRefFromPayload(req.body || {}),
-      popIp: req.body?.pop_ip ?? null
+      popIp: req.body?.pop_ip ?? req.body?.ip_address ?? req.body?.ip ?? null
     });
 
     if (!out.ok) return res.status(out.status).json({ success: false, message: out.body?.error || 'Erro ao liberar acesso', ...out.body });

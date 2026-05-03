@@ -194,7 +194,8 @@
   const params = new URLSearchParams(window.location.search);
   const macAddress = (params.get('mac') || '').toUpperCase();
   const loginUrl = params.get('loginUrl') || 'http://192.168.32.1/login';
-  const popId = params.get('pop_id') || params.get('pop') || '';
+  const popId = params.get('pop_id') || params.get('pop') || params.get('pop_unique_id') || '';
+  const clientIp = params.get('ip') || '';
 
   function accessStatusUrl() {
     const query = new URLSearchParams({ mac: macAddress });
@@ -682,7 +683,10 @@ async function continueAfterRegistrationGate() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mac_address: macAddress,
-          pop_id: popId
+          pop_id: popId,
+          pop: popId,
+          pop_unique_id: params.get('pop_unique_id') || '',
+          ip_address: clientIp
         })
       });
 
@@ -750,7 +754,10 @@ async function continueAfterRegistrationGate() {
         body: JSON.stringify({
           mac_address: macAddress,
           duration_minutes: 5,
-          pop_id: popId
+          pop_id: popId,
+          pop: popId,
+          pop_unique_id: params.get('pop_unique_id') || '',
+          ip_address: clientIp
         })
       });
 
