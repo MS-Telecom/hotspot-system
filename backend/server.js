@@ -2931,6 +2931,7 @@ function buildPopInstallScript(pop, config = {}) {
   const apiUser = pop.api_user || buildPopApiUsername(popId);
   const apiPass = pop.api_pass || generateStrongPassword(12);
   const radiusSecret = (RADIUS_CLIENT_MODE === 'global') ? RADIUS_GLOBAL_SECRET : (pop.radius_secret || '');
+  const effectiveRadiusSecret = radiusSecret || generateStrongPassword(18);
 
   const wanInterface = config.wan_interface || 'ether1';
   const lanInterface = config.lan_interface || 'ether2';
@@ -3002,19 +3003,12 @@ function buildPopInstallScript(pop, config = {}) {
 
   const radiusVpnBlock = radiusClientIp
     ? (
-      `/radius add service=hotspot address=${RADIUS_VPN_SERVER_IP} src-address=${radiusClientIp} secret="${radiusSecret}" authentication-port=1812 accounting-port=1813 timeout=3s domain="${popId}" protocol=udp comment="${tag}-radius-vpn"\n`
+      `/radius add service=hotspot address=${RADIUS_VPN_SERVER_IP} src-address=${radiusClientIp} secret="${effectiveRadiusSecret}" authentication-port=1812 accounting-port=1813 timeout=3s domain="${popId}" protocol=udp comment="${tag}-radius-vpn"\n`
     )
     : `# VPN IP ausente: RADIUS primario via VPN nao gerado\n`;
 
-  const radiusPublicFallbackBlock = RADIUS_GLOBAL_FALLBACK_SECRET
-    ? (
-      `/radius add service=hotspot address=${RADIUS_SERVER_IP} secret="${RADIUS_GLOBAL_FALLBACK_SECRET}" authentication-port=1812 accounting-port=1813 timeout=5s domain="${popId}" protocol=udp comment="${tag}-radius-public-fallback"\n`
-    )
-    : `# RADIUS fallback publico nao gerado: RADIUS_GLOBAL_FALLBACK_SECRET ausente\n`;
-
   const radiusBlock =
-    (radiusSecret ? radiusVpnBlock : `# RADIUS primário não gerado: radius_secret ausente\n`) +
-    radiusPublicFallbackBlock +
+    radiusVpnBlock +
     `/radius incoming set accept=yes\n` +
     `:delay 1s\n`;
 
