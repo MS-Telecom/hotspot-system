@@ -1093,6 +1093,12 @@ async function saveHotspotSession(payload) {
   } catch (_error) {}
 
   let current = { ...payload, mac_address: cleanMac };
+  delete current.pop_name;
+  delete current.pop_location;
+  delete current.last_pop_name;
+  delete current.last_pop_location;
+  delete current.pop_unique_id;
+  delete current.hotspot;
   for (let i = 0; i < 8; i++) {
     const result = existing?.id
       ? await supabase.from('hotspot_sessions').update({ ...current, updated_at: current.updated_at || new Date().toISOString() }).eq('id', existing.id)
@@ -2314,8 +2320,8 @@ async function queueDisconnectCommandForUser(user, reason = 'disconnect_user') {
   const mac = normalizeMac(user?.mac_address || user?.username || '');
   if (!mac) return null;
 
-  let popId = user?.pop_id || user?.last_pop_id || null;
-  let popIp = user?.pop_ip || null;
+  let popId = null;
+  let popIp = null;
 
   const variants = getMacVariants(mac);
 
@@ -2944,7 +2950,7 @@ function buildPopInstallScript(pop, config = {}) {
   const apiUrl = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
   const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
   const heartbeatToken = pop.pop_heartbeat_token || '';
-  const heartbeatTokenParam = heartbeatToken ? `&token=${encodeURIComponent(heartbeatToken)}` : '';
+  const heartbeatUrlForRouterOs = heartbeatToken ? `${apiUrl}/api/pops/${pop.id}/heartbeat\\?token=${heartbeatToken}` : `${apiUrl}/api/pops/${pop.id}/heartbeat`;
 
   const vpnEnabled = parseBoolean(pop.vpn_enabled, false) || parseBoolean(config.vpn_enabled, false);
   const vpnType = String(pop.vpn_type || config.vpn_type || '').toLowerCase();
@@ -3172,7 +3178,8 @@ ${hotspotHtmlBlock}
 
 ${userProfileTuningLine}${redirectLine}
 
-/system scheduler add name="ms-heartbeat-${popId}" interval=30s on-event=":local active [/ip hotspot active print count-only]; :local uptime [/system resource get uptime]; :local version [/system resource get version]; :local identity [/system identity get name]; :local rx 0; :local tx 0; :do={ :set rx [/interface get \"ms-bridge-${popId}\" rx-byte]; :set tx [/interface get \"ms-bridge-${popId}\" tx-byte]; } on-error={}; :local total ($rx + $tx); /tool fetch url=\"${apiUrl}/api/pops/${pop.id}/heartbeat?active_users=$active&rx_bytes=$rx&tx_bytes=$tx&total_bytes=$total&uptime=$uptime&routeros_version=$version&identity=$identity${heartbeatTokenParam}\" http-method=post keep-result=no" start-time=startup comment="${tag}"
+:do { /system scheduler remove [find name="ms-heartbeat-${popId}"] } on-error={}
+/system scheduler add comment="${tag}" interval=30s name="ms-heartbeat-${popId}" on-event="{/tool fetch http-method=post url=\"${heartbeatUrlForRouterOs}\" keep-result=no;}" policy=read,test start-time=startup
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
@@ -3241,6 +3248,16 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
     // Remove stored config snapshot.
     try {
       await supabase.from('settings').delete().eq('key', `pop_config_${id}`);
+    } catch (_e) {}
+
+    // Remove stored POP token.
+    try {
+      await supabase.from('settings').delete().eq('key', `pop_token_${id}`);
+    } catch (_e) {}
+
+    // Best-effort cleanup of pending commands.
+    try {
+      await supabase.from('pop_commands').delete().eq('pop_id', id).eq('status', 'pending');
     } catch (_e) {}
 
     const { error } = await supabase.from('pops').delete().eq('id', id);
