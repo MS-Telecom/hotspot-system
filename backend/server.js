@@ -3001,14 +3001,10 @@ function buildPopInstallScript(pop, config = {}) {
 
   const radiusClientIp = String(pop.vpn_ip || pop.radius_client_ip || '').trim();
 
-  const radiusVpnBlock = radiusClientIp
-    ? (
-      `/radius add service=hotspot address=${RADIUS_VPN_SERVER_IP} src-address=${radiusClientIp} secret="${effectiveRadiusSecret}" authentication-port=1812 accounting-port=1813 timeout=3s domain="${popId}" protocol=udp comment="${tag}-radius-vpn"\n`
-    )
-    : `# VPN IP ausente: RADIUS primario via VPN nao gerado\n`;
+  const radiusPublicBlock = `/radius add service=hotspot address=${RADIUS_SERVER_IP} secret="${effectiveRadiusSecret}" authentication-port=1812 accounting-port=1813 timeout=5s domain="${popId}" protocol=udp comment="${tag}-radius-public"\n`;
 
   const radiusBlock =
-    radiusVpnBlock +
+    radiusPublicBlock +
     `/radius incoming set accept=yes\n` +
     `:delay 1s\n`;
 
