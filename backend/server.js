@@ -2963,6 +2963,7 @@ function buildPopInstallScript(pop, config = {}) {
   const frontendUrl = FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
   const heartbeatToken = pop.pop_heartbeat_token || '';
   const heartbeatUrlForRouterOs = heartbeatToken ? `${apiUrl}/api/pops/${pop.id}/heartbeat\\?token=${heartbeatToken}` : `${apiUrl}/api/pops/${pop.id}/heartbeat`;
+  const commandsUrlForRouterOs = heartbeatToken ? `${apiUrl}/api/pops/${pop.id}/commands.rsc\\?token=${heartbeatToken}` : `${apiUrl}/api/pops/${pop.id}/commands.rsc`;
 
   const vpnEnabled = parseBoolean(pop.vpn_enabled, false) || parseBoolean(config.vpn_enabled, false);
   const vpnType = String(pop.vpn_type || config.vpn_type || '').toLowerCase();
@@ -3192,6 +3193,9 @@ ${userProfileTuningLine}${redirectLine}
 
 :do { /system scheduler remove [find name="ms-heartbeat-${popId}"] } on-error={}
 /system scheduler add comment="${tag}" interval=30s name="ms-heartbeat-${popId}" on-event="{/tool fetch http-method=post url=\"${heartbeatUrlForRouterOs}\" keep-result=no;}" policy=read,test start-time=startup
+
+:do { /system scheduler remove [find name="ms-commands-${popId}"] } on-error={}
+/system scheduler add comment="${tag}" interval=10s name="ms-commands-${popId}" on-event="{/tool fetch http-method=get url=\"${commandsUrlForRouterOs}\" dst-path=ms-commands.rsc keep-result=yes; /import file-name=ms-commands.rsc; :do { /file remove ms-commands.rsc } on-error={};}" policy=read,write,test start-time=startup
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
