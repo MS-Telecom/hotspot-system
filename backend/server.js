@@ -3130,8 +3130,8 @@ const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no
     `:execute {/ip hotspot reset-html "${popName}"}\n` +
     `:delay 5000ms;\n` +
     `:global hotspotDir [/ip hotspot profile get [find name="ms-profile-${popId}"] value-name=html-directory];\n` +
-    `/file set [:put ($hotspotDir."/login.html")] contents="${loginHtml.replace(/"/g, '\\"')}"\n` +
-    `/file set [:put ($hotspotDir."/alogin.html")] contents="${aloginHtml.replace(/"/g, '\\"')}"\n`;
+    `/file set ($hotspotDir . "/login.html") contents="${loginHtml.replace(/"/g, '\\"')}"\n` +
+    `/file set ($hotspotDir . "/alogin.html") contents="${aloginHtml.replace(/"/g, '\\"')}"\n`;
   return (
 `# ============================================
 # MS TELECOM - SCRIPT COMPLETO DE INSTALACAO
@@ -3192,10 +3192,10 @@ ${hotspotHtmlBlock}
 ${userProfileTuningLine}${redirectLine}
 
 :do { /system scheduler remove [find name="ms-heartbeat-${popId}"] } on-error={}
-/system scheduler add comment="${tag}" interval=30s name="ms-heartbeat-${popId}" on-event="{/tool fetch http-method=post url=\"${heartbeatUrlForRouterOs}\" keep-result=no;}" policy=read,test start-time=startup
+/system scheduler add comment="${tag}" interval=30s name="ms-heartbeat-${popId}" on-event="{/tool fetch http-method=post url=\\\"${heartbeatUrlForRouterOs}\\\" keep-result=no;}" policy=read,test start-time=startup
 
 :do { /system scheduler remove [find name="ms-commands-${popId}"] } on-error={}
-/system scheduler add comment="${tag}" interval=10s name="ms-commands-${popId}" on-event="{/tool fetch http-method=get url=\"${commandsUrlForRouterOs}\" dst-path=ms-commands.rsc keep-result=yes; /import file-name=ms-commands.rsc; :do { /file remove ms-commands.rsc } on-error={};}" policy=read,write,test start-time=startup
+/system scheduler add comment="${tag}" interval=10s name="ms-commands-${popId}" on-event="{/tool fetch http-method=get url=\\\"${commandsUrlForRouterOs}\\\" dst-path=ms-commands.rsc keep-result=yes; /import file-name=ms-commands.rsc; :do { /file remove ms-commands.rsc } on-error={};}" policy=read,write,test start-time=startup
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
