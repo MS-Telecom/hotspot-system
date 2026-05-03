@@ -3595,8 +3595,13 @@ app.get('/api/pops/:popId/commands.rsc', async (req, res) => {
       if (command.command_type !== 'disconnect_hotspot_user' && command.command_type !== 'disconnect_user') continue;
       const mac = normalizeMac(command.payload?.mac_address || command.payload?.mac || '');
       if (!mac) continue;
-      const resultUrl = `${apiUrl}/api/pops/${popId}/commands/${command.id}/result?token=${encodeURIComponent(token)}&status=done`;
-      lines.push(`:do={ :local mac "${mac}"; /ip hotspot active remove [find user=$mac]; /ip hotspot active remove [find mac-address=$mac]; /ip hotspot cookie remove [find user=$mac]; /ip hotspot cookie remove [find mac-address=$mac]; /ip hotspot host remove [find mac-address=$mac]; /tool fetch url="${resultUrl}" http-method=post keep-result=no; } on-error={ :put "command ${command.id} failed"; }`);
+      const resultUrl = `${apiUrl}/api/pops/${popId}/commands/${command.id}/result\\?token=${encodeURIComponent(token)}&status=done`;
+      lines.push(`:do { /ip hotspot active remove [find user="${mac}"] } on-error={}`);
+      lines.push(`:do { /ip hotspot active remove [find mac-address="${mac}"] } on-error={}`);
+      lines.push(`:do { /ip hotspot cookie remove [find user="${mac}"] } on-error={}`);
+      lines.push(`:do { /ip hotspot cookie remove [find mac-address="${mac}"] } on-error={}`);
+      lines.push(`:do { /ip hotspot host remove [find mac-address="${mac}"] } on-error={}`);
+      lines.push(`:do { /tool fetch http-method=post url="${resultUrl}" keep-result=no } on-error={}`);
     }
     res.type('text/plain').send(lines.join('\n') + '\n');
   } catch (err) {
