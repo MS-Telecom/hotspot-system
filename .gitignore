@@ -10,3 +10,6 @@ backend/tmp/
 *.zip
 dumps/
 backups/
+
+conversations.json
+*conversations*.json
