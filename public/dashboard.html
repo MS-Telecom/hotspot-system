@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -482,20 +482,44 @@
     </div>
 </div>
 
+<!-- MODAL: DETALHES DO POP -->
+<div id="popDetailsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
+    <div class="bg-[#0f1119] rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center p-4 md:p-6 border-b border-gray-800 shrink-0">
+            <h2 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="router" class="w-5 h-5 text-purple-500"></i>
+                Detalhes do POP
+            </h2>
+            <button type="button" onclick="closePopDetailsModal()" class="p-2 hover:bg-gray-800 rounded-lg">
+                <i data-lucide="x" class="w-5 h-5 text-gray-400"></i>
+            </button>
+        </div>
+        <div id="popDetailsContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500">Carregando...</div>
+        </div>
+        <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
+            <a href="hotspots.html" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-bold text-white">Abrir módulo POPs</a>
+            <button type="button" onclick="closePopDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+
 <script>
 // ============================================
-// CONFIGURAÃƒâ€¡Ãƒâ€¢ESES GLOBAIS
+// CONFIGURAÇÕES GLOBAIS
 // ============================================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let usersPerHourChart = null;
 let currentCustomerId = null;
+let dashboardPopsCache = [];
 
-// FunÃƒÂ§ÃƒÂ£o para obter o token de autenticaÃƒÂ§ÃƒÂ£o
+// Função para obter o token de autenticação
 function getAuthToken() {
     return localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
 }
 
-// FunÃƒÂ§ÃƒÂ£o para construir headers com autenticaÃƒÂ§ÃƒÂ£o
+// Função para construir headers com autenticação
 function buildAuthHeaders(includeJson = true) {
     const headers = {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -507,7 +531,7 @@ function buildAuthHeaders(includeJson = true) {
 }
 
 // ============================================
-// FUNÃƒâ€¡Ãƒâ€¢ES AUXILIARES
+// FUNÇÕES AUXILIARES
 // ============================================
 function updateSessionInfo() {
     const rawUser = localStorage.getItem('user');
@@ -554,7 +578,7 @@ function loadUserProfile() {
 }
 
 // ============================================
-// INICIALIZAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DO GRÃƒÆ’Ã‚ÂFICO
+// INICIALIZAÇÃO DO GRÁFICO
 // ============================================
 function initUsersPerHourChart(dataPoints = []) {
     const canvas = document.getElementById('usersPerHourChart');
@@ -601,12 +625,12 @@ function isPaidPayment(payment) {
 async function loadDashboard() {
     const token = getAuthToken();
     if (!token) {
-        console.error('[Dashboard] Token nÃƒÂ£o encontrado');
+        console.error('[Dashboard] Token não encontrado');
         return;
     }
 
     try {
-        // CORRIGIDO: Endpoints em inglÃƒÂªs conforme tabela de mapeamento
+        // CORRIGIDO: Endpoints em inglês conforme tabela de mapeamento
         const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes, metricsRes] = await Promise.all([
             fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) }),
@@ -622,6 +646,7 @@ async function loadDashboard() {
         const pops = popsRes.ok ? await popsRes.json() : [];
         const dashboardMetrics = metricsRes.ok ? await metricsRes.json() : {};
         const dashboardPops = Array.isArray(dashboardMetrics.pops) ? dashboardMetrics.pops : pops;
+        dashboardPopsCache = Array.isArray(dashboardPops) ? dashboardPops : [];
         let usersPerHourData = [];
         if (usersPerHourRes.ok) {
             const result = await usersPerHourRes.json();
@@ -693,7 +718,7 @@ async function loadDashboard() {
 
         initUsersPerHourChart(usersPerHourData);
 
-        // Tabela de ÃƒÂºltimas liberaÃƒÂ§ÃƒÂµes
+        // Tabela de últimas liberações
         const latestReleases = payments
             .filter(isPaidPayment)
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -760,9 +785,9 @@ async function loadDashboard() {
                     <td class="px-6 py-4 text-sm text-gray-300">${pop.active_users ?? pop.active_clients ?? pop.users_connected ?? 0}</td>
                     <td class="px-6 py-4 text-sm text-gray-400">${pop.last_activity_at || pop.last_heartbeat_at || pop.last_activity || pop.updated_at ? new Date(pop.last_activity_at || pop.last_heartbeat_at || pop.last_activity || pop.updated_at).toLocaleString('pt-BR') : '-'}</td>
                     <td class="px-6 py-4 text-center">
-                        <a href="hotspot-detalhe.html?id=${pop.id}" class="inline-flex items-center gap-1 text-blue-500 hover:text-blue-400 text-xs transition">
-                            <i data-lucide="arrow-right" class="w-3 h-3"></i> Detalhes
-                        </a>
+                        <button type="button" onclick='openPopDetailsModal(${JSON.stringify(String(pop.id || pop.unique_id || pop.name || ""))})' class="inline-flex items-center gap-1 text-blue-500 hover:text-blue-400 text-xs transition">
+                            <i data-lucide="eye" class="w-3 h-3"></i> Detalhes
+                        </button>
                     </td>
                 </tr>
             `).join('');
@@ -775,7 +800,7 @@ async function loadDashboard() {
 }
 
 // ============================================
-// FUNÃƒâ€¡Ãƒâ€¢ESES DOS MODAIS
+// FUNÇÕES DOS MODAIS
 // ============================================
 async function openAllReleasesModal() {
     const modal = document.getElementById('allReleasesModal');
@@ -787,7 +812,7 @@ async function openAllReleasesModal() {
         const payments = await response.json();
         const releases = payments.filter(isPaidPayment);
         if (releases.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberação encontradatd></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberação encontrada</td></tr>';
         } else {
             tableBody.innerHTML = releases.map(release => `
                 <tr class="hover:bg-gray-900/30">
@@ -806,7 +831,7 @@ async function openAllReleasesModal() {
         }
     } catch (error) {
         console.error('Erro:', error);
-        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberaÃƒÂ§ÃƒÂµes</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberações</td></tr>';
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -836,7 +861,7 @@ async function openPlanDetailsModal() {
                         <span class="text-emerald-400 font-bold">R$ ${plan.price}</span>
                     </div>
                     <p class="text-xs text-gray-500">Velocidade: ${plan.speed_mbps} Mbps</p>
-                    <p class="text-xs text-gray-500">DuraÃƒÂ§ÃƒÂ£o: ${plan.duration_days} dias</p>
+                    <p class="text-xs text-gray-500">Duração: ${plan.duration_days} dias</p>
                     <p class="text-xs text-gray-400 mt-2">${plan.description || ''}</p>
                 </div>
             `).join('');
@@ -850,7 +875,7 @@ async function openPlanDetailsModal() {
 function closePlanDetailsModal() { document.getElementById('planDetailsModal').classList.add('hidden'); }
 
 async function viewCustomerDetails(id, name) {
-    if (!id) return alert('ID do cliente nÃƒÂ£o informado');
+    if (!id) return alert('ID do cliente não informado');
     currentCustomerId = id;
     const modal = document.getElementById('customerDetailsModal');
     const content = document.getElementById('customerDetailsContent');
@@ -879,7 +904,7 @@ async function viewCustomerDetails(id, name) {
                 </div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
-                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">ÃƒÅ¡ltimo acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Último acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
             </div>
         `;
         if (customer.status !== 'blocked') blockBtn.classList.remove('hidden');
@@ -892,7 +917,7 @@ function closeCustomerDetailsModal() { document.getElementById('customerDetailsM
 function blockCustomerFromModal() { if (currentCustomerId) blockCustomer(currentCustomerId); }
 
 async function blockCustomer(id) {
-    if (!id) return alert('ID do cliente nÃƒÂ£o informado');
+    if (!id) return alert('ID do cliente não informado');
     if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
     try {
         const response = await fetch(`${API_URL}/api/users/${id}/block`, {
@@ -900,21 +925,21 @@ async function blockCustomer(id) {
             headers: buildAuthHeaders(true)
         });
         if (response.ok) {
-            alert('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Cliente bloqueado com sucesso!');
+            alert('✅ Cliente bloqueado com sucesso!');
             closeCustomerDetailsModal();
             loadDashboard();
         } else {
             const data = await response.json();
-            alert(data.error || 'ÃƒÂ¢Ã‚ÂÃ…â€™ Erro ao bloquear cliente');
+            alert(data.error || '❌ Erro ao bloquear cliente');
         }
     } catch (error) {
         console.error(error);
-        alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Erro ao bloquear cliente');
+        alert('❌ Erro ao bloquear cliente');
     }
 }
 
 async function markAsVip(id) {
-    if (!id) return alert('ID do cliente nÃƒÂ£o informado');
+    if (!id) return alert('ID do cliente não informado');
     if (!confirm('Deseja marcar este cliente como VIP?')) return;
     try {
         const response = await fetch(`${API_URL}/api/users/${id}/vip`, {
@@ -922,16 +947,126 @@ async function markAsVip(id) {
             headers: buildAuthHeaders(true)
         });
         if (response.ok) {
-            alert('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Cliente marcado como VIP com sucesso!');
+            alert('✅ Cliente marcado como VIP com sucesso!');
             loadDashboard();
         } else {
             const data = await response.json();
-            alert(data.error || 'ÃƒÂ¢Ã‚ÂÃ…â€™ Erro ao marcar cliente como VIP');
+            alert(data.error || '❌ Erro ao marcar cliente como VIP');
         }
     } catch (error) {
-        alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Erro ao marcar cliente como VIP');
+        alert('❌ Erro ao marcar cliente como VIP');
     }
 }
+
+
+function formatPopDate(value) {
+    if (!value) return '-';
+    try {
+        return new Date(value).toLocaleString('pt-BR');
+    } catch (_error) {
+        return '-';
+    }
+}
+
+function getPopStatusLabel(pop) {
+    const rawStatus = String(pop?.status || '').toLowerCase();
+    return rawStatus === 'online' || rawStatus === 'active' ? 'Online' : 'Offline';
+}
+
+async function openPopDetailsModal(popId) {
+    const modal = document.getElementById('popDetailsModal');
+    const content = document.getElementById('popDetailsContent');
+    if (!modal || !content) return;
+
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+
+    const targetId = String(popId || '');
+    let pop = dashboardPopsCache.find(item =>
+        String(item.id || '') === targetId ||
+        String(item.unique_id || '') === targetId ||
+        String(item.name || '') === targetId
+    );
+
+    if (!pop) {
+        content.innerHTML = '<div class="text-center text-red-500">POP não encontrado no dashboard.</div>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/pops/${encodeURIComponent(pop.id || pop.unique_id || targetId)}/status`, {
+            headers: buildAuthHeaders(false)
+        });
+
+        if (response.ok) {
+            const statusData = await response.json();
+            if (statusData && typeof statusData === 'object') {
+                pop = Object.assign({}, pop, statusData.pop || statusData);
+            }
+        }
+    } catch (_error) {
+        // O modal continua usando os dados já carregados no dashboard.
+    }
+
+    const statusLabel = getPopStatusLabel(pop);
+    const isOnline = statusLabel === 'Online';
+    const popName = pop.name || pop.unique_id || pop.id || 'POP';
+    const popIp = pop.ip || pop.public_ip || pop.vpn_ip || pop.radius_client_ip || '-';
+    const lastActivity = pop.last_activity_at || pop.last_heartbeat_at || pop.last_heartbeat || pop.last_activity || pop.updated_at;
+    const activeUsers = pop.active_users ?? pop.active_clients ?? pop.users_connected ?? 0;
+
+    content.innerHTML = `
+        <div class="space-y-4">
+            <div class="flex items-center gap-3 pb-4 border-b border-gray-700">
+                <div class="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+                    <i data-lucide="router" class="w-6 h-6 text-purple-500"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white">${popName}</p>
+                    <p class="text-xs text-gray-500 font-mono">ID: ${pop.id || pop.unique_id || '-'}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">Status</p>
+                    <p class="text-sm font-bold ${isOnline ? 'text-emerald-400' : 'text-red-400'}">● ${statusLabel}</p>
+                </div>
+                <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">Clientes ativos</p>
+                    <p class="text-sm font-bold text-white">${activeUsers}</p>
+                </div>
+                <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">IP</p>
+                    <p class="text-sm text-gray-300 font-mono break-all">${popIp}</p>
+                </div>
+                <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">Localização</p>
+                    <p class="text-sm text-gray-300">${pop.location || '-'}</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
+                <p class="text-[10px] text-gray-500 uppercase mb-1">Última atividade</p>
+                <p class="text-sm text-gray-300">${formatPopDate(lastActivity)}</p>
+            </div>
+
+            <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+                <p class="text-xs text-blue-300">
+                    Este card mostra os dados rápidos do POP sem sair do dashboard. Para editar, gerar script ou revisar configurações completas, abra o módulo POPs.
+                </p>
+            </div>
+        </div>
+    `;
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closePopDetailsModal() {
+    const modal = document.getElementById('popDetailsModal');
+    if (modal) modal.classList.add('hidden');
+}
+
 
 // ============================================
 // PERFIL E LOGOUT
@@ -952,7 +1087,7 @@ async function saveProfile() {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas nÃƒÂ£o coincidem');
+    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas não coincidem');
     if (newPassword && !currentPassword) return alert('Digite a senha atual para alterar');
     try {
         const response = await fetch(`${API_URL}/api/profile`, {
@@ -999,7 +1134,7 @@ async function logout() {
 function openNewVoucherModal() { window.location.href = 'vouchers.html'; }
 function closeNewVoucherModal() { document.getElementById('newVoucherModal').classList.add('hidden'); }
 function generateVoucher() { alert('A geração de vouchers foi movida para o módulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
-function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('CÃƒÆ’Ã‚Â³digo copiado!'); }
+function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('Código copiado!'); }
 
 // ============================================
 // BUSCA
