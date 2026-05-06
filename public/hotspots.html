@@ -188,7 +188,7 @@
         <p id="installationTypeHelp" class="text-[10px] text-cyan-400 mt-1">Novo: configuração completa da WAN será solicitada</p>
       </div>
 
-      <!-- TRUNK (MikroTik Secundario) -->
+      <!-- TRUNK (MikroTik Secundário) -->
       <div id="trunkBlock" class="hidden bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 space-y-3">
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Interface Uplink (para o MikroTik Principal)</label>
@@ -197,13 +197,13 @@
             <optgroup label="Portas SFP"><option value="sfp1">sfp1</option><option value="sfp2">sfp2</option><option value="sfp3">sfp3</option><option value="sfp4">sfp4</option></optgroup>
             <optgroup label="Interfaces Especiais"><option value="bridge">bridge</option><option value="bonding">bonding</option></optgroup>
           </select>
-          <p class="text-[10px] text-gray-400 mt-1">Cabo que liga no MikroTik principal (rede em producao).</p>
+          <p class="text-[10px] text-gray-400 mt-1">Cabo que liga no MikroTik principal (rede em produção).</p>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">VLAN da Internet (no trunk)</label>
           <input type="text" id="trunkInternetVlanId" placeholder="Ex: 120" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm">
-          <p class="text-[10px] text-gray-400 mt-1">VLAN usada para o MikroTik secundario obter Internet via DHCP.</p>
+          <p class="text-[10px] text-gray-400 mt-1">VLAN usada para o MikroTik secundário obter Internet via DHCP.</p>
         </div>
 
         <div>
@@ -227,7 +227,7 @@
         </div>
 
         <div id="trunkDualFields" class="hidden">
-          <p class="text-[10px] text-gray-400">No modo duas portas, a porta LAN (clientes) abaixo sera usada no MikroTik secundario.</p>
+          <p class="text-[10px] text-gray-400">No modo duas portas, a porta LAN (clientes) abaixo será usada no MikroTik secundário.</p>
         </div>
       </div>
 
@@ -343,7 +343,7 @@
             1) Criar a VLAN do Hotspot na porta trunk.<br>
             2) Garantir que essa VLAN tenha acesso &agrave; internet (rota/NAT no principal).<br>
             3) Garantir DNS/HTTP liberados para o portal e API (walled-garden conforme necessidade).<br>
-            4) Se j&aacute; existir PPPoE em outra VLAN, manter separado (nao misturar segmentos).
+            4) Se j&aacute; existir PPPoE em outra VLAN, manter separado (não misturar segmentos).
           </div>
         </div>
       </div>
@@ -545,7 +545,7 @@ function openNewPopModal(editData = null) {
     document.getElementById('popIp').value = editData.ip || '';
     document.getElementById('vpnEnabled').checked = !!editData.vpn_enabled;
     document.getElementById('vpnIp').value = editData.vpn_ip || '';
-    // radius_client_ip e um override avancado: nao preencher com valores errados.
+    // radius_client_ip é um override avançado: não preencher com valores errados.
     document.getElementById('radiusClientIp').value = editData.radius_client_ip ? String(editData.radius_client_ip) : '';
     document.getElementById('vpnType').value = editData.vpn_type || 'l2tp_ipsec';
     document.getElementById('vpnUsername').value = editData.vpn_username || '';
