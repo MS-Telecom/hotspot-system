@@ -206,7 +206,7 @@
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Configuração PIX</h3>
                     <div class="space-y-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">Provedor de Pagamento</label><select id="paymentProvider" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="mock">Mock / Demo</option><option value="mercadopago">Mercado Pago</option></select></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Provedor de Pagamento</label><select id="paymentProvider" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="mercadopago">Mercado Pago</option></select></div>
                         <div class="flex items-center justify-between gap-3 p-4 rounded-xl border border-gray-700 bg-gray-900/40">
                             <div>
                                 <p class="text-sm text-white font-semibold">Ativar liberação temporária para pagamento</p>
@@ -712,7 +712,7 @@
                     }
                 }
             } else if (key === 'payment') {
-                if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.provider || 'mock';
+                if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.provider || 'mercadopago';
                 if (document.getElementById('paymentGraceEnabled')) document.getElementById('paymentGraceEnabled').checked = value.payment_grace_enabled !== false;
                 if (document.getElementById('paymentGraceDuration')) {
                     const ds = value.payment_grace_duration_seconds ?? value.grace_duration_seconds ?? 300;
@@ -868,7 +868,7 @@
                 return Math.floor(v);
             };
             value = {
-                provider: document.getElementById('paymentProvider')?.value || 'mock',
+                provider: document.getElementById('paymentProvider')?.value || 'mercadopago',
                 payment_grace_enabled: document.getElementById('paymentGraceEnabled')?.checked !== false,
                 payment_grace_duration_seconds: unitToSeconds(document.getElementById('paymentGraceDuration')?.value, document.getElementById('paymentGraceDurationUnit')?.value || 'seconds'),
                 payment_grace_cooldown_seconds: unitToSeconds(document.getElementById('paymentGraceCooldown')?.value, document.getElementById('paymentGraceCooldownUnit')?.value || 'seconds'),

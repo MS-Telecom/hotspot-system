@@ -16,7 +16,8 @@
     "express-rate-limit": "^7.4.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "node-routeros": "^1.6.9"
+    "node-routeros": "^1.6.9",
+    "ws": "^8.18.0"
   },
   "engines": {
     "node": ">=18.0.0"

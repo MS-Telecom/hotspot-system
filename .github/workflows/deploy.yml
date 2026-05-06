@@ -66,4 +66,8 @@ jobs:
             pm2 start /home/ubuntu/hotspot-system/backend/server.js --name hotspot --cwd /home/ubuntu/hotspot-system/backend
             pm2 save
 
+            echo "⏳ Aguardando API ficar pronta"
+            sleep 5
+            curl --fail --retry 3 --retry-delay 2 http://127.0.0.1:3000/api/plans
+
             echo "✅ Deploy concluído em $(date)"

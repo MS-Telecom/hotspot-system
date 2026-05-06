@@ -1,7 +1,7 @@
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ HOTSPOT SYSTEM - MS TELECOM
-// Backend principal (server.js) - VERSÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DEFINITIVA
-// CÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³digo interno em inglÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs, comentÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios em portuguÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ HOTSPOT SYSTEM - MS TELECOM
+// Backend principal (server.js) - VERSÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢O DEFINITIVA
+// CÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³digo interno em inglÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªs, comentÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios em portuguÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªs
 // ============================================================
 
 require('dotenv').config();
@@ -14,22 +14,24 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
+global.WebSocket = WebSocket;
 
 // RouterOS API para controle MikroTik (opcional)
 let RouterOSAPI = null;
 try {
   RouterOSAPI = require('node-routeros').RouterOSAPI;
 } catch (e) {
-  console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â node-routeros nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o instalado - recursos de API MikroTik desabilitados');
+  console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â node-routeros nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o instalado - recursos de API MikroTik desabilitados');
 }
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Captura IP real quando estiver atrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡s de proxy (Vercel/Cloudflare/Nginx)
+// Captura IP real quando estiver atrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡s de proxy (Vercel/Cloudflare/Nginx)
 app.set('trust proxy', true);
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -89,25 +91,30 @@ if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-// CORS configurado para aceitar requisiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes do frontend no Vercel
-app.use(cors({
-    origin: [
-        'https://hotspot-system.vercel.app',
-        'http://localhost:3000',
-        'https://mstelecom-api.duckdns.org'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
+// CORS configurado para aceitar requisiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes do frontend no Vercel
+const corsOptions = {
+  origin: [
+    'https://hotspot-system.vercel.app',
+    'http://localhost:3000',
+    'https://mstelecom-api.duckdns.org'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Pop-Token'],
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
-// ValidaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de variÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡veis de ambiente
+// ValidaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o de variÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡veis de ambiente
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY || !JWT_SECRET) {
-  console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FATAL: VariÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡veis de ambiente obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rias faltando: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
+  console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FATAL: VariÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡veis de ambiente obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rias faltando: SUPABASE_URL, SUPABASE_KEY, JWT_SECRET');
   process.exit(1);
 }
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+  realtime: { transport: WebSocket }
+});
 
 function createApiRateLimit({ windowMs = 60 * 1000, max = 60 } = {}) {
   return rateLimit({
@@ -128,10 +135,10 @@ const accessLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 12 });
 const voucherLimiter = createApiRateLimit({ windowMs: 60 * 1000, max: 20 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â FUNÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES UTILITÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂRIAS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â FUNÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ES UTILITÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂRIAS
 // ============================================================
 
-// Remove acentos de uma string (ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºtil para slugs)
+// Remove acentos de uma string (ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºtil para slugs)
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return String(forwarded).split(',')[0].trim();
@@ -243,7 +250,7 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-// Gera senha forte aleatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ria
+// Gera senha forte aleatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ria
 function generateStrongPassword(length = 20) {
   return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 }
@@ -268,7 +275,7 @@ function intToIp(num) {
   ].join('.');
 }
 
-// Converte para nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero de forma segura
+// Converte para nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºmero de forma segura
 function parseNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -286,10 +293,10 @@ function generatePopId() {
 }
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â LOGS DE AUDITORIA E SISTEMA
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â LOGS DE AUDITORIA E SISTEMA
 // ============================================================
 
-// Registrar log de auditoria (aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios)
+// Registrar log de auditoria (aÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios)
 async function registerAuditLog(username, type, objectName, action, ip, userAgent, details = null) {
   try {
     await supabase.from('audit_logs').insert({
@@ -303,7 +310,7 @@ async function registerAuditLog(username, type, objectName, action, ip, userAgen
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao registrar log de auditoria:', error.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao registrar log de auditoria:', error.message);
   }
 }
 
@@ -320,12 +327,12 @@ async function registerSystemLog(level, source, message, details = null, ip = ''
       created_at: new Date().toISOString()
     });
   } catch (error) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao registrar log do sistema:', error.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao registrar log do sistema:', error.message);
   }
 }
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â MIDDLEWARE DE AUTENTICAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â MIDDLEWARE DE AUTENTICAÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢O
 // ============================================================
 
 function authMiddleware(req, res, next) {
@@ -478,7 +485,7 @@ app.get('/api/system/walled-garden-hosts', authMiddleware, (req, res) => {
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â§ MIKROTIK CREDENTIALS HELPERS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ MIKROTIK CREDENTIALS HELPERS
 // ============================================================
 
 // Buscar credenciais MikroTik
@@ -514,7 +521,7 @@ async function upsertMikrotikCredentials(payload) {
 }
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ MIKROTIK ACCESS CONTROL
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ MIKROTIK ACCESS CONTROL
 // ============================================================
 
 // ============================================================
@@ -643,22 +650,22 @@ async function syncFreeradiusClientsFromDb() {
       fs.mkdirSync(path.dirname(FREERADIUS_TMP_CLIENTS_PATH), { recursive: true });
       fs.writeFileSync(FREERADIUS_TMP_CLIENTS_PATH, conf, { encoding: 'utf8' });
 
-      // 1. Garante que o diretÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio de destino do FreeRADIUS exista no VPS
+      // 1. Garante que o diretÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio de destino do FreeRADIUS exista no VPS
       const { error: mkdirError } = await execAsync(`sudo mkdir -p ${path.dirname(FREERADIUS_CLIENTS_PATH)}`);
-      if (mkdirError) throw new Error(`Erro ao criar diretÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio FreeRADIUS: ${mkdirError.stderr}`);
+      if (mkdirError) throw new Error(`Erro ao criar diretÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio FreeRADIUS: ${mkdirError.stderr}`);
 
-      // 2. Copia o arquivo temporÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio para o destino final no VPS
+      // 2. Copia o arquivo temporÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio para o destino final no VPS
       await execAsync(`sudo cp ${FREERADIUS_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}.bak 2>/dev/null || true`);
       const { error: cpError } = await execAsync(`sudo cp ${FREERADIUS_TMP_CLIENTS_PATH} ${FREERADIUS_CLIENTS_PATH}`);
       if (cpError) throw new Error(`Erro ao copiar arquivo FreeRADIUS: ${cpError.stderr}`);
 
       // 3. Garante que o clients.conf principal inclua nosso arquivo
-      // LÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª o conteÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºdo do clients.conf principal do VPS
+      // LÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª o conteÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºdo do clients.conf principal do VPS
       const { stdout: mainClientsConfContent, error: catError } = await execAsync(`sudo cat ${FREERADIUS_MAIN_CLIENTS_CONF}`);
       if (catError) throw new Error(`Erro ao ler clients.conf: ${catError.stderr}`);
 
       if (!mainClientsConfContent.includes(FREERADIUS_INCLUDE_LINE)) {
-        // Se a linha de include nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe, adiciona-a
+        // Se a linha de include nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o existe, adiciona-a
         const includeLine = `$INCLUDE ${FREERADIUS_CLIENTS_PATH}`;
         const { error: grepError } = await execAsync(`sudo /bin/grep -Fqx ${shellQuote(includeLine)} ${FREERADIUS_MAIN_CLIENTS_CONF}`);
         if (grepError) {
@@ -669,7 +676,7 @@ async function syncFreeradiusClientsFromDb() {
 
       // 4. Valida e recarrega FreeRADIUS
       const { error: validateError, stdout: validateOut, stderr: validateErr } = await execAsync(`sudo ${FREERADIUS_VALIDATE_CMD}`, 60000);
-      if (validateError) throw new Error(`ValidaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o FreeRADIUS falhou: ${validateErr || validateOut}`);
+      if (validateError) throw new Error(`ValidaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o FreeRADIUS falhou: ${validateErr || validateOut}`);
 
       const { error: reloadError, stdout: reloadOut, stderr: reloadErr } = await execAsync(`sudo ${FREERADIUS_RELOAD_CMD}`, 60000);
       if (reloadError) {
@@ -678,7 +685,7 @@ async function syncFreeradiusClientsFromDb() {
       }
 
     } catch (err) {
-      console.error("ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao sincronizar clientes FreeRADIUS:", err.message);
+      console.error("ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao sincronizar clientes FreeRADIUS:", err.message);
       await registerSystemLog(
         "error",
         "FreeRADIUS Sync",
@@ -698,7 +705,7 @@ async function syncFreeradiusClientsFromDb() {
 // Revogar acesso - remove IP Binding do MikroTik
 async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, apiPass = null, popId = null) {
   if (!RouterOSAPI) {
-    console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â revokeAccess: node-routeros nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o disponÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel');
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â revokeAccess: node-routeros nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o disponÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel');
     return false;
   }
 
@@ -715,7 +722,7 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
     }
 
     if (!username || !password) {
-      throw new Error('Credenciais da API MikroTik nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o disponÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­veis');
+      throw new Error('Credenciais da API MikroTik nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o disponÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­veis');
     }
 
     const conn = new RouterOSAPI({ host: popIp, user: username, password, port: 8728, timeout: 10 });
@@ -747,7 +754,7 @@ async function revokeAccess(macAddress, popIp = '192.168.32.1', apiUser = null, 
     await conn.close();
     return true;
   } catch (error) {
-    console.error(`ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Falha ao revogar acesso para ${macAddress}:`, error.message);
+    console.error(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Falha ao revogar acesso para ${macAddress}:`, error.message);
     return false;
   }
 }
@@ -1009,9 +1016,82 @@ async function getFreeTrialConfig() {
     if (error) throw error;
     return normalizeFreeTrialConfig(data?.value || {});
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao carregar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao carregar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o de teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis', { error: error.message });
     return normalizeFreeTrialConfig({ enabled: false });
   }
+}
+
+function normalizePaymentSettings(value = {}) {
+  const paymentGraceEnabled = value.payment_grace_enabled !== undefined ? !!value.payment_grace_enabled : true;
+  const paymentGraceDurationSeconds = firstFiniteNumber(
+    value.payment_grace_duration_seconds,
+    value.grace_duration_seconds,
+    value.grace_duration_minutes !== undefined ? Number(value.grace_duration_minutes) * 60 : undefined,
+    300
+  );
+  const paymentGraceCooldownSeconds = firstFiniteNumber(
+    value.payment_grace_cooldown_seconds,
+    value.grace_cooldown_seconds,
+    value.grace_cooldown_minutes !== undefined ? Number(value.grace_cooldown_minutes) * 60 : undefined,
+    value.grace_cooldown_hours !== undefined ? Number(value.grace_cooldown_hours) * 3600 : undefined,
+    3600
+  );
+  const paymentPixExpiresMinutes = firstFiniteNumber(value.payment_pix_expires_minutes, value.pix_expires_minutes, 30);
+  const paymentPollingIntervalSeconds = firstFiniteNumber(value.payment_polling_interval_seconds, value.polling_interval_seconds, 5);
+
+  return {
+    ...scrubSecretObject(value || {}),
+    provider: 'mercadopago',
+    payment_grace_enabled: paymentGraceEnabled,
+    payment_grace_duration_seconds: Math.max(10, Math.floor(paymentGraceDurationSeconds)),
+    payment_grace_cooldown_seconds: Math.max(60, Math.floor(paymentGraceCooldownSeconds)),
+    payment_pix_expires_minutes: Math.max(5, Math.floor(paymentPixExpiresMinutes)),
+    payment_polling_interval_seconds: Math.max(2, Math.floor(paymentPollingIntervalSeconds))
+  };
+}
+
+async function getPaymentSettings() {
+  try {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', 'payment').maybeSingle();
+    if (error) throw error;
+    return normalizePaymentSettings(data?.value || {});
+  } catch (error) {
+    await registerSystemLog('error', 'payment', 'Erro ao carregar configuraÃ§Ã£o de pagamento', { error: error.message });
+    return normalizePaymentSettings({});
+  }
+}
+
+async function savePaymentSettings(value = {}) {
+  const normalized = normalizePaymentSettings(value);
+  const { error } = await supabase.from('settings').upsert({
+    key: 'payment',
+    value: normalized,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'key' });
+  if (error) throw error;
+  return normalized;
+}
+
+async function createPaymentGraceSession(cleanMac, popId = null, popIp = null, planName = 'payment_grace') {
+  const nowIso = new Date().toISOString();
+  const cfg = await getPaymentSettings();
+  if (!cfg.payment_grace_enabled) return null;
+  const expiresAt = new Date(Date.now() + cfg.payment_grace_duration_seconds * 1000).toISOString();
+  const result = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || null, Math.ceil(cfg.payment_grace_duration_seconds / 60), 5, planName, cfg.payment_grace_duration_seconds);
+  if (result?.success) {
+    await saveHotspotSession({
+      mac_address: cleanMac,
+      pop_id: popId || null,
+      pop_ip: popIp || null,
+      access_granted: true,
+      status: 'active',
+      expires_at: expiresAt,
+      plan_name: planName,
+      created_at: nowIso,
+      updated_at: nowIso
+    });
+  }
+  return { expiresAt, cfg };
 }
 
 function isActivePaidUser(user) {
@@ -1021,7 +1101,7 @@ function isActivePaidUser(user) {
   const expiresAt = user.expires_at ? new Date(user.expires_at).getTime() : null;
   const hasFutureExpiry = expiresAt && expiresAt > Date.now();
   const activeStatus = ['active', 'paid', 'vip'].includes(status);
-  const paidPlan = planName && planName !== 'free_trial' && planName !== 'trial' && planName !== 'teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis';
+  const paidPlan = planName && planName !== 'free_trial' && planName !== 'trial' && planName !== 'teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis';
   return (hasFutureExpiry || activeStatus) && paidPlan;
 }
 
@@ -1032,8 +1112,8 @@ function getTrialCooldownUntil(record, cfg) {
   const cooldownSeconds = Math.max(0, Number.isFinite(configuredCooldown) && configuredCooldown > 0 ? configuredCooldown : storedCooldown);
   if (cooldownSeconds <= 0) return null;
 
-  // Reuso deve seguir a configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o atual do painel. NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o use cooldown_until antigo
-  // quando existe expires_at, pois ele pode ter sido gravado com outra configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o.
+  // Reuso deve seguir a configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o atual do painel. NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o use cooldown_until antigo
+  // quando existe expires_at, pois ele pode ter sido gravado com outra configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o.
   if (record.expires_at) return new Date(new Date(record.expires_at).getTime() + cooldownSeconds * 1000).toISOString();
 
   const lastUsed = record.last_used_at || record.used_at || record.first_used_at || record.created_at || null;
@@ -1115,7 +1195,7 @@ async function saveHotspotSession(payload) {
 
 async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = null, popIp = null }) {
   const cleanMac = normalizeMac(macAddress);
-  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio', reason: 'missing_mac' } };
+  if (!cleanMac) return { ok: false, status: 400, body: { error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio', reason: 'missing_mac' } };
 
   const nowIso = new Date().toISOString();
   const cfg = await getFreeTrialConfig();
@@ -1146,7 +1226,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     });
   }
 
-  if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis desativado', reason: 'trial_disabled' } };
+  if (!cfg.enabled) return { ok: false, status: 403, body: { error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis desativado', reason: 'trial_disabled' } };
 
   try {
     const { data: user } = await supabase.from('users').select('*').in('mac_address', getMacVariants(cleanMac)).limit(1).maybeSingle();
@@ -1171,7 +1251,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       return { ok: true, status: 200, body: { message: 'Plano ativo encontrado. Liberando acesso...', expires_at: planExpiresAt, reason: 'manual_plan_active', show_free_trial: false } };
     }
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar plano ativo antes do teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar plano ativo antes do teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1194,10 +1274,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
           updated_at: nowIso
         });
       }
-      return { ok: true, status: 200, body: { message: 'Acesso jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ ativo', expires_at: session.expires_at, reason: 'active_session', show_free_trial: false } };
+      return { ok: true, status: 200, body: { message: 'Acesso jÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ ativo', expires_at: session.expires_at, reason: 'active_session', show_free_trial: false } };
     }
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ativa de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o ativa de teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
   let previousTrial = null;
@@ -1216,12 +1296,12 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
 
     if (effectiveUntil && new Date(effectiveUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(effectiveUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
-      return { ok: false, status: 429, body: { success: false, error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+      await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis negado por cooldown', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: effectiveUntil });
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis jÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
     freeTrialLookupFailed = true;
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown de teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1229,11 +1309,11 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     const sessionCooldownUntil = getTrialCooldownUntil(lastTrialSession, { duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds });
     if (sessionCooldownUntil && new Date(sessionCooldownUntil).getTime() > Date.now()) {
       const retryAfterSeconds = Math.max(1, Math.ceil((new Date(sessionCooldownUntil).getTime() - Date.now()) / 1000));
-      await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis negado por cooldown de sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
-      return { ok: false, status: 429, body: { success: false, error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
+      await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis negado por cooldown de sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o', { mac: cleanMac, retry_after_seconds: retryAfterSeconds, cooldown_until: sessionCooldownUntil });
+      return { ok: false, status: 429, body: { success: false, error: 'Teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis jÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ utilizado', reason: 'cooldown', retry_after_seconds: retryAfterSeconds, show_free_trial: false } };
     }
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'Erro ao verificar cooldown por sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
     if (freeTrialLookupFailed) {
       return { ok: false, status: 503, body: { success: false, error: 'Erro ao verificar cooldown do teste gratis', reason: 'cooldown_check_failed', show_free_trial: false } };
     }
@@ -1246,7 +1326,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
   try {
     user = await findOrCreateHotspotUser({ macAddress: cleanMac, ipAddress, planName: 'free_trial', status: 'trial', popId: effectivePopId, expiresAt });
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao criar/atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao criar/atualizar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1265,7 +1345,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     const { error: sessionErr } = await saveHotspotSession(sessionPayload);
     if (sessionErr) throw sessionErr;
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o', { mac: cleanMac, error: error.message });
   }
 
   try {
@@ -1285,10 +1365,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
     const up = await supabase.from('free_trials').upsert(payload, { onConflict: 'mac_address' });
     if (up.error) throw up.error;
   } catch (error) {
-    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar histÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rico de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
+    await registerSystemLog('error', 'free_trial', 'RADIUS liberado, mas falhou ao gravar histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico de teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis', { mac: cleanMac, error: error.message });
   }
 
-  await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis liberado', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
+  await registerSystemLog('info', 'free_trial', 'Teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis liberado', { mac: cleanMac, expires_at: expiresAt, cooldown_until: cooldownUntil });
   return { ok: true, status: 200, body: { message: 'Acesso liberado', expires_at: expiresAt, user_id: user?.id || null, duration_seconds: durationSeconds, cooldown_seconds: cooldownSeconds, cooldown_until: cooldownUntil, show_free_trial: false } };
 }
 // ============================================================
@@ -1297,7 +1377,7 @@ setInterval(async () => {
   try {
     const now = new Date().toISOString();
     
-    // 1. Limpar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes expiradas
+    // 1. Limpar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes expiradas
     const { data: expiredSessions } = await supabase.from('hotspot_sessions')
       .select('id, mac_address, pop_ip')
       .eq('status', 'active')
@@ -1319,15 +1399,15 @@ setInterval(async () => {
     }
 
   } catch (error) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no CRON de limpeza:', error.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro no CRON de limpeza:', error.message);
   }
 }, 60000); // Executa a cada 1 minuto
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ ROTAS DE AUTENTICAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O (ADMIN)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ ROTAS DE AUTENTICAÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢O (ADMIN)
 // ============================================================
 
-// Aliases legados (portuguÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs/curtos) -> padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o novo
+// Aliases legados (portuguÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªs/curtos) -> padrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o novo
 app.post('/api/login', (req, res, next) => {
   // Encaminha para /api/auth/login
   req.url = '/api/auth/login';
@@ -1341,14 +1421,14 @@ app.post('/api/logout', authMiddleware, (req, res, next) => {
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio e senha sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
+    if (!username || !password) return res.status(400).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio e senha sÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rios' });
 
     const { data: admin, error } = await supabase.from('admins').select('*').eq('username', username).single();
-    if (error || !admin) return res.status(401).json({ error: 'Credenciais invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lidas' });
+    if (error || !admin) return res.status(401).json({ error: 'Credenciais invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lidas' });
 
     const passwordCheck = verifyPasswordHash(admin.password, password);
     if (!passwordCheck.ok) {
-      return res.status(401).json({ error: 'Credenciais invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lidas' });
+      return res.status(401).json({ error: 'Credenciais invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lidas' });
     }
     if (passwordCheck.legacySha256) {
       await supabase.from('admins').update({
@@ -1364,7 +1444,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     
     res.json({ token, user: { id: admin.id, username: admin.username, role } });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no login:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro no login:', err.message);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
 });
@@ -1391,10 +1471,10 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
       .select('*')
       .eq('id', adminId)
       .single();
-    if (error || !admin) return res.status(404).json({ error: 'Admin nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (error || !admin) return res.status(404).json({ error: 'Admin nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     if (new_password) {
-      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ria' });
+      if (!current_password) return res.status(400).json({ error: 'Senha atual obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ria' });
       const currentCheck = verifyPasswordHash(admin.password, current_password);
       if (!currentCheck.ok) {
         return res.status(401).json({ error: 'Senha atual incorreta' });
@@ -1417,16 +1497,16 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     await registerAuditLog(admin.username, 'update', 'admin', 'Perfil atualizado', getClientIp(req), req.headers['user-agent']);
     res.json({ success: true, user: { id: data.id, username: data.username, email: data.email } });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar perfil:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao atualizar perfil:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar perfil' });
   }
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¥ ROTAS DE USUÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂRIOS (CLIENTES)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ ROTAS DE USUÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂRIOS (CLIENTES)
 // ============================================================
 
-// Listar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios
+// Listar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const { search, status, plan_id } = req.query;
@@ -1443,12 +1523,12 @@ app.get('/api/users', authMiddleware, async (req, res) => {
     const enriched = await enrichUsersWithSessionInfo(data || []);
     res.json(enriched);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios:', err.message);
-    res.status(500).json({ error: 'Erro ao listar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao listar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios:', err.message);
+    res.status(500).json({ error: 'Erro ao listar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios' });
   }
 });
 
-// Criar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+// Criar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users', authMiddleware, async (req, res) => {
   try {
     const { name, username, mac_address, phone, cpf, email, address, plan_id, plan_name, hotspot_id, status, is_vip } = req.body;
@@ -1460,7 +1540,7 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     if (plan_id) {
       const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).maybeSingle();
       if (planError) throw planError;
-      if (!planData) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+      if (!planData) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
       plan = planData;
       expiresAt = new Date(now.getTime() + Number(plan.duration_days || 30) * 24 * 60 * 60 * 1000).toISOString();
     }
@@ -1500,21 +1580,21 @@ app.post('/api/users', authMiddleware, async (req, res) => {
       await authorizeAccess(cleanMac, '192.168.32.1', null, null, hotspot_id, Math.ceil(durationSeconds / 60), plan.speed_mbps || 10, plan.name, durationSeconds);
     }
 
-    await registerAuditLog(req.user.username, 'create', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio criado: ${name || cleanMac || data.id}`, getClientIp(req), req.headers['user-agent'], { user_id: data.id, plan_id: plan?.id || null });
+    await registerAuditLog(req.user.username, 'create', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio criado: ${name || cleanMac || data.id}`, getClientIp(req), req.headers['user-agent'], { user_id: data.id, plan_id: plan?.id || null });
     res.status(201).json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao criar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
     if (String(err.message || '').includes('users_cpf_key')) {
       return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
     }
     if (String(err.message || '').includes('users_email_key')) {
       return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
     }
-    res.status(500).json({ error: 'Erro ao criar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    res.status(500).json({ error: 'Erro ao criar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+// Atualizar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio
 app.put('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1551,11 +1631,11 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
     let plan = null;
     if (Object.prototype.hasOwnProperty.call(body, 'plan_id') && body.plan_id !== '' && body.plan_id !== null && body.plan_id !== undefined) {
       const planId = Number(body.plan_id);
-      if (!Number.isFinite(planId)) return res.status(400).json({ error: 'Plano invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido' });
+      if (!Number.isFinite(planId)) return res.status(400).json({ error: 'Plano invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lido' });
 
       const { data: planData, error: planError } = await supabase.from('plans').select('*').eq('id', planId).maybeSingle();
       if (planError) throw planError;
-      if (!planData) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+      if (!planData) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
       plan = planData;
       const days = Number(plan.duration_days || 30);
       updateData.expires_at = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -1580,21 +1660,21 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
       await authorizeAccess(data.mac_address, '192.168.32.1', null, null, data.hotspot_id, Math.ceil(durationSeconds / 60), activePlan?.speed_mbps || 10, data.plan_name, durationSeconds);
     }
 
-    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, plan_id: data.plan_id || null });
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio atualizado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, plan_id: data.plan_id || null });
     res.json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
-    await registerSystemLog('error', 'users', 'Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
+    await registerSystemLog('error', 'users', 'Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio', { user_id: req.params.id, error: err.message }, getClientIp(req), req.headers['user-agent']);
     if (String(err.message || '').includes('users_cpf_key')) {
       return res.status(409).json({ error: 'CPF ja cadastrado em outro cliente', reason: 'duplicate_cpf' });
     }
     if (String(err.message || '').includes('users_email_key')) {
       return res.status(409).json({ error: 'E-mail ja cadastrado em outro cliente', reason: 'duplicate_email' });
     }
-    res.status(500).json({ error: err.message || 'Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    res.status(500).json({ error: err.message || 'Erro ao atualizar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
   }
 });
-// Deletar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+// Deletar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio
 app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1604,7 +1684,7 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) throw error;
 
-    await registerAuditLog(req.user.username, 'delete', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio removido: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: user?.mac_address || null, pop_id: disconnect.pop_id || user?.pop_id || user?.last_pop_id || null });
+    await registerAuditLog(req.user.username, 'delete', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio removido: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: user?.mac_address || null, pop_id: disconnect.pop_id || user?.pop_id || user?.last_pop_id || null });
     res.json({
       success: true,
       user_id: id,
@@ -1618,19 +1698,19 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
       message: 'Usuario removido com sucesso'
     });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
-    res.status(500).json({ error: 'Erro ao deletar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao deletar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao deletar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Renovar plano do usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+// Renovar plano do usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { plan_id, duration_days } = req.body;
 
     const { data: plan, error: planError } = await supabase.from('plans').select('*').eq('id', plan_id).single();
-    if (planError || !plan) return res.status(400).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (planError || !plan) return res.status(400).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const days = duration_days || plan.duration_days || 30;
     const expiresAt = new Date(Date.now() + Number(days) * 24 * 60 * 60 * 1000).toISOString();
@@ -1648,12 +1728,12 @@ app.post('/api/users/:id/renew', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'update', 'user', `Plano renovado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao renovar plano:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao renovar plano:', err.message);
     res.status(500).json({ error: 'Erro ao renovar plano' });
   }
 });
 
-// Bloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+// Bloquear usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1663,7 +1743,7 @@ app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
     const { data, error } = await safeUpdateWithFallback('users', id, preferred, fallback);
     if (error) throw error;
     const disconnect = await revokeAndDisconnectUser(data, 'blocked');
-    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio bloqueado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: data?.mac_address || null });
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio bloqueado: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: data?.mac_address || null });
     res.json({
       success: true,
       user: data,
@@ -1678,26 +1758,26 @@ app.post('/api/users/:id/block', authMiddleware, async (req, res) => {
       message: 'Usuario bloqueado'
     });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao bloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
-    res.status(500).json({ error: 'Erro ao bloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao bloquear usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao bloquear usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+// Desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio
 app.post('/api/users/:id/unblock', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data, error } = await supabase.from('users').update({ status: 'active', updated_at: new Date().toISOString() }).eq('id', id).select().single();
     if (error) throw error;
-    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
+    await registerAuditLog(req.user.username, 'update', 'user', `UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio desbloqueado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
-    res.status(500).json({ error: 'Erro ao desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao desbloquear usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
-// Marcar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio como VIP
+// Marcar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio como VIP
 app.post('/api/users/:id/vip', authMiddleware, updatePrimeAccessHandler);
 
 async function updatePrimeAccessHandler(req, res) {
@@ -1742,13 +1822,13 @@ async function updatePrimeAccessHandler(req, res) {
 app.patch('/api/users/:id/vip', authMiddleware, updatePrimeAccessHandler);
 app.patch('/api/users/:id/prime-access', authMiddleware, updatePrimeAccessHandler);
 
-// Exportar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios para CSV
+// Exportar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios para CSV
 app.get('/api/users/export', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
     if (error) throw error;
 
-    const headers = ['Nome', 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio', 'MAC', 'Telefone', 'CPF', 'Email', 'Plano', 'Status', 'Data Cadastro'];
+    const headers = ['Nome', 'UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio', 'MAC', 'Telefone', 'CPF', 'Email', 'Plano', 'Status', 'Data Cadastro'];
     const rows = (data || []).map(u => [
       u.name || '', u.username || '', u.mac_address || '', u.phone || '', u.cpf || '', u.email || '', u.plan_name || '', u.status || '',
       u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : ''
@@ -1759,17 +1839,17 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=users_${new Date().toISOString().slice(0, 10)}.csv`);
     res.send('\uFEFF' + csv);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao exportar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios:', err.message);
-    res.status(500).json({ error: 'Erro ao exportar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao exportar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios:', err.message);
+    res.status(500).json({ error: 'Erro ao exportar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios' });
   }
 });
 
-// Buscar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio por ID
+// Buscar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio por ID
 app.get('/api/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
-    if (userError || !user) return res.status(404).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (userError || !user) return res.status(404).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const { data: payments } = await supabase.from('payments').select('amount').eq('user_id', id).eq('status', 'approved');
     const totalSpent = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
@@ -1779,15 +1859,15 @@ app.get('/api/users/:id', authMiddleware, async (req, res) => {
     const [enriched] = await enrichUsersWithSessionInfo([{ ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null }]);
     res.json(enriched || { ...user, total_spent: totalSpent, last_access: lastSession?.created_at || user.last_seen_at || null });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao buscar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
   }
 });
 
 
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ROTAS DE PLANOS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ ROTAS DE PLANOS
 // ============================================================
 
 // Listar planos
@@ -1797,7 +1877,7 @@ app.get('/api/plans', async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar planos:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao listar planos:', err.message);
     res.status(500).json({ error: 'Erro ao listar planos' });
   }
 });
@@ -1815,7 +1895,7 @@ app.post('/api/plans', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'create', 'plan', `Plano criado: ${name}`, getClientIp(req), req.headers['user-agent']);
     res.status(201).json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar plano:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao criar plano:', err.message);
     res.status(500).json({ error: 'Erro ao criar plano' });
   }
 });
@@ -1834,7 +1914,7 @@ app.put('/api/plans/:id', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'update', 'plan', `Plano atualizado: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar plano:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao atualizar plano:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar plano' });
   }
 });
@@ -1849,13 +1929,13 @@ app.delete('/api/plans/:id', authMiddleware, async (req, res) => {
     await registerAuditLog(req.user.username, 'delete', 'plan', `Plano removido: ${id}`, getClientIp(req), req.headers['user-agent']);
     res.json({ message: 'Plano removido com sucesso' });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar plano:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao deletar plano:', err.message);
     res.status(500).json({ error: 'Erro ao deletar plano' });
   }
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â³ ROTAS DE PAGAMENTOS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ ROTAS DE PAGAMENTOS
 // ============================================================
 
 // Listar pagamentos
@@ -1872,7 +1952,7 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar pagamentos:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao listar pagamentos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagamentos' });
   }
 });
@@ -1880,29 +1960,49 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 // Gerar PIX (Mercado Pago)
 app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
   try {
-    const { mac_address, plan_id, plan_name, description, payment_id } = req.body;
+    const { mac_address, plan_id, plan_name, description, payment_id, pop_id, pop, pop_unique_id, ip_address, ip } = req.body || {};
     const cleanMac = normalizeMac(mac_address);
-    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
-
+    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
     let planQuery = supabase.from('plans').select('*');
     planQuery = plan_id ? planQuery.eq('id', plan_id) : planQuery.eq('name', plan_name);
-
     const { data: plan, error: planError } = await planQuery.limit(1).maybeSingle();
     if (planError) throw planError;
-    if (!plan) return res.status(404).json({ error: 'Plano nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
-    if (plan.active === false || plan.status === 'inactive') return res.status(400).json({ error: 'Plano indisponÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel' });
-
+    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
+    if (plan.active === false || plan.status === 'inactive') return res.status(400).json({ error: 'Plano indisponível' });
     const planAmount = Number(plan.price);
-    if (!Number.isFinite(planAmount) || planAmount <= 0) return res.status(400).json({ error: 'Plano sem valor vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido' });
-
+    if (!Number.isFinite(planAmount) || planAmount <= 0) return res.status(400).json({ error: 'Plano sem valor válido' });
     const selectedPlanName = plan.name || plan_name || null;
     const paymentDescription = description || selectedPlanName || 'Plano WiFi';
-
+    const popRef = pop_id || pop || pop_unique_id || null;
+    const popIp = ip_address || ip || null;
+    const graceSession = await createPaymentGraceSession(cleanMac, popRef, popIp, 'payment_grace').catch(() => null);
+    const paymentSettings = await getPaymentSettings();
+    const externalReference = `HS-${cleanMac.replace(/:/g, '')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const pendingExpireAt = new Date(Date.now() + paymentSettings.payment_pix_expires_minutes * 60 * 1000).toISOString();
+    const { data: existingPending } = await supabase.from('payments').select('*').in('user_mac', getMacVariants(cleanMac)).eq('plan_name', selectedPlanName).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (existingPending && (!existingPending.expires_at || new Date(existingPending.expires_at).getTime() > Date.now())) {
+      if (popRef || popIp) {
+        await supabase.from('payments').update({
+          pop_id: popRef || existingPending.pop_id || null,
+          pop_ip: popIp || existingPending.pop_ip || null,
+          updated_at: new Date().toISOString()
+        }).eq('id', existingPending.id);
+      }
+      return res.json({
+        payment_id: existingPending.id,
+        provider: 'mercadopago',
+        status: existingPending.status,
+        pix_code: existingPending.pix_copy_paste || existingPending.pix_code || '',
+        qr_code_base64: existingPending.qr_code || existingPending.qr_code_base64 || '',
+        pix_copy_paste: existingPending.pix_copy_paste || existingPending.pix_code || '',
+        qr_code: existingPending.qr_code || existingPending.qr_code_base64 || '',
+        external_reference: existingPending.external_reference || externalReference,
+        expires_at: existingPending.expires_at || pendingExpireAt,
+        grace_duration_seconds: graceSession?.cfg?.payment_grace_duration_seconds || paymentSettings.payment_grace_duration_seconds
+      });
+    }
     const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
-    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o configurado' });
-
-    const externalReference = `HS-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago não configurado' });
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
@@ -1917,24 +2017,15 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
         payer: {
           email: 'cliente@hotspot.com',
           first_name: 'Cliente',
-          identification: {
-            type: 'CPF',
-            number: '00000000000'
-          }
+          identification: { type: 'CPF', number: '00000000000' }
         },
         external_reference: externalReference
       })
     });
-
     const mpData = await mpResponse.json();
     if (!mpResponse.ok) return res.status(400).json({ error: 'Erro ao gerar pagamento PIX', details: mpData });
-
     const pixCopyPaste = mpData.point_of_interaction?.transaction_data?.qr_code || '';
     const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
-
-    let payment;
-    let error;
-
     const paymentData = {
       user_mac: cleanMac,
       plan_name: selectedPlanName,
@@ -1942,40 +2033,36 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
       description: paymentDescription,
       status: 'pending',
       payment_method: 'pix',
+      provider: 'mercadopago',
+      provider_payment_id: String(mpData.id),
       mercado_pago_id: String(mpData.id),
+      pop_id: popRef || null,
+      pop_ip: popIp || null,
       pix_copy_paste: pixCopyPaste,
       qr_code: qrCodeBase64,
       external_reference: externalReference,
-      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      expires_at: pendingExpireAt,
       updated_at: new Date().toISOString()
     };
-
-    if (payment_id) {
-      const result = await supabase.from('payments').update(paymentData).eq('id', payment_id).select().single();
-      payment = result.data;
-      error = result.error;
-    } else {
-      const result = await supabase.from('payments').insert(paymentData).select().single();
-      payment = result.data;
-      error = result.error;
-    }
-
-    if (error) throw error;
-
+    const result = payment_id ? await supabase.from('payments').update(paymentData).eq('id', payment_id).select().single() : await supabase.from('payments').insert(paymentData).select().single();
+    if (result.error) throw result.error;
     res.json({
-      payment_id: payment.id,
+      payment_id: result.data.id,
+      provider: 'mercadopago',
+      status: 'pending',
       pix_code: pixCopyPaste,
       qr_code_base64: qrCodeBase64,
       pix_copy_paste: pixCopyPaste,
       qr_code: qrCodeBase64,
-      external_reference: externalReference
+      external_reference: externalReference,
+      expires_at: pendingExpireAt,
+      grace_duration_seconds: graceSession?.cfg?.payment_grace_duration_seconds || paymentSettings.payment_grace_duration_seconds
     });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar PIX:', err.message);
+    console.error('Erro ao gerar PIX:', err.message);
     res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
   }
-});
-// Verificar status de pagamento
+});// Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store');
@@ -1994,24 +2081,24 @@ app.get('/api/check-payment', async (req, res) => {
       return res.json(payment || { status: 'not_found' });
     }
 
-    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'ReferÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia, ID ou MAC do pagamento necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+    if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'ReferÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªncia, ID ou MAC do pagamento necessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
 
     let query = supabase.from('payments').select('*');
     if (external_reference) query = query.eq('external_reference', external_reference);
     else query = query.eq('mercado_pago_id', mercado_pago_id);
 
     const { data: payment, error } = await query.single();
-    if (error || !payment) return res.status(404).json({ error: 'Pagamento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     res.json(payment);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao verificar pagamento:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao verificar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao verificar pagamento' });
   }
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€¦Ã‚Â¸ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â ROTAS DE VOUCHERS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ROTAS DE VOUCHERS
 // ============================================================
 
 // Listar vouchers
@@ -2021,7 +2108,7 @@ app.get('/api/vouchers', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar vouchers:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao listar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao listar vouchers' });
   }
 });
@@ -2060,7 +2147,7 @@ app.post('/api/vouchers', authMiddleware, async (req, res) => {
       res.status(201).json(data);
     }
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar vouchers:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao criar vouchers:', err.message);
     res.status(500).json({ error: 'Erro ao criar vouchers' });
   }
 });
@@ -2075,7 +2162,7 @@ app.put('/api/vouchers/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar voucher:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao atualizar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar voucher' });
   }
 });
@@ -2088,19 +2175,19 @@ app.delete('/api/vouchers/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json({ message: 'Voucher removido' });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar voucher:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao deletar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao deletar voucher' });
   }
 });
 
-// Validar voucher (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
+// Validar voucher (pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico)
 // Alias legado PT
 app.post('/api/vouchers/validate', voucherLimiter, async (req, res) => {
   try {
     const { code, mac_address } = req.body;
     const cleanMac = normalizeMac(mac_address);
     const { data: voucher, error } = await supabase.from('vouchers').select('*').eq('code', String(code).toUpperCase()).eq('status', 'active').maybeSingle();
-    if (error || !voucher) return res.status(404).json({ error: 'Voucher invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido ou jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ utilizado' });
+    if (error || !voucher) return res.status(404).json({ error: 'Voucher invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lido ou jÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ utilizado' });
 
     await supabase.from('vouchers').update({
       status: 'used', used: true, used_at: new Date().toISOString(),
@@ -2109,16 +2196,16 @@ app.post('/api/vouchers/validate', voucherLimiter, async (req, res) => {
 
     res.json({ valid: true, plan_name: voucher.plan_name, duration_hours: voucher.duration_hours });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao validar voucher:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao validar voucher:', err.message);
     res.status(500).json({ error: 'Erro ao validar voucher' });
   }
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  ROTAS DE ESTATÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â  ROTAS DE ESTATÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
 // ============================================================
 
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â§ HELPERS (compatibilidade / schema flexÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ HELPERS (compatibilidade / schema flexÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel)
 function isMissingColumnError(err) {
   const msg = (err && (err.message || err.details || err.hint)) ? `${err.message || ''} ${err.details || ''} ${err.hint || ''}` : '';
   return /Could not find the '.+' column/i.test(msg) || /column .* does not exist/i.test(msg);
@@ -2127,8 +2214,8 @@ function isMissingColumnError(err) {
 async function safeInsertWithFallback(table, preferredPayload, fallbackPayload) {
   let result = await supabase.from(table).insert(preferredPayload).select().single();
 
-  // Se o payload preferido falhar (coluna ausente, tipo invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido, etc), tenta o fallback.
-  // Isso evita 500 quando o frontend envia campos "extras" que nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existem na tabela.
+  // Se o payload preferido falhar (coluna ausente, tipo invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lido, etc), tenta o fallback.
+  // Isso evita 500 quando o frontend envia campos "extras" que nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o existem na tabela.
   if (result.error && fallbackPayload) {
     result = await supabase.from(table).insert(fallbackPayload).select().single();
   }
@@ -2661,7 +2748,7 @@ async function syncL2tpChapSecretsFromDb() {
     console.log('[L2TP] chap-secrets synced successfully.');
     return { ok: true };
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao sincronizar chap-secrets:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao sincronizar chap-secrets:', err.message);
     await registerSystemLog('error', 'L2TP Sync', 'Erro ao sincronizar chap-secrets', { error: err.message });
     return { ok: false, error: err.message };
   }
@@ -2717,14 +2804,14 @@ async function ensurePopProvisioningMaterial(pop) {
         nextVpnIp = await allocateNextVpnIp();
       }
     } catch (err) {
-      warnings.push(`VPN IP não gerada: ${err.message}`);
+      warnings.push(`VPN IP nÃ£o gerada: ${err.message}`);
       nextVpnIp = pop.vpn_ip || '';
     }
   } else if (nextVpnEnabled && nextVpnType === 'sstp' && !nextVpnIp) {
     try {
       nextVpnIp = await allocateNextVpnIp();
     } catch (err) {
-      warnings.push(`VPN IP não gerada: ${err.message}`);
+      warnings.push(`VPN IP nÃ£o gerada: ${err.message}`);
       nextVpnIp = pop.vpn_ip || '';
     }
   }
@@ -2752,7 +2839,7 @@ async function ensurePopProvisioningMaterial(pop) {
     if (error) throw error;
     pop = updated;
   } catch (error) {
-    warnings.push(`Persistência do POP incompleta: ${error.message}`);
+    warnings.push(`PersistÃªncia do POP incompleta: ${error.message}`);
     pop = {
       ...pop,
       unique_id: uniqueId,
@@ -2772,7 +2859,7 @@ async function ensurePopProvisioningMaterial(pop) {
     .eq('pop_id', popId)
     .maybeSingle();
 
-  if (credErr) warnings.push(`Credenciais MikroTik não lidas: ${credErr.message}`);
+  if (credErr) warnings.push(`Credenciais MikroTik nÃ£o lidas: ${credErr.message}`);
 
   const apiUser = existingCreds?.api_user || buildPopApiUsername(pop.unique_id || popId);
   const apiPass = existingCreds?.api_pass || generateStrongPassword(12);
@@ -2786,7 +2873,7 @@ async function ensurePopProvisioningMaterial(pop) {
         api_pass: apiPass
       });
     } catch (e) {
-      warnings.push(`Persistência de credenciais MikroTik incompleta: ${e.message}`);
+      warnings.push(`PersistÃªncia de credenciais MikroTik incompleta: ${e.message}`);
     }
   }
 
@@ -2823,7 +2910,7 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
     });
     res.json(normalized);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar POPs:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao listar POPs:', err.message);
     res.status(500).json({ error: 'Erro ao listar POPs' });
   }
 });
@@ -2833,9 +2920,9 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
   try {
     const now = new Date().toISOString();
 
-    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rica)
+    // Normaliza alguns campos comuns (evita erro de tipo quando a coluna for numÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rica)
     const normalized = { ...(req.body || {}) };
-    // Evita erro de schema quando o frontend envia campos nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existentes (ex: last_heartbeat)
+    // Evita erro de schema quando o frontend envia campos nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o existentes (ex: last_heartbeat)
     delete normalized.last_heartbeat;
     // Nunca persistir placeholder/marcador como senha real.
     if (normalized.vpn_password === '' || normalized.vpn_password === null || typeof normalized.vpn_password === 'undefined' || String(normalized.vpn_password).trim() === '********') {
@@ -2849,7 +2936,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
       }
     }
 
-    // Alguns bancos antigos exigem id obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio (sem default). Se vier vazio, geramos.
+    // Alguns bancos antigos exigem id obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio (sem default). Se vier vazio, geramos.
     if (!normalized.id && !normalized.unique_id) {
       const newId = generatePopId();
       normalized.id = newId;
@@ -2862,7 +2949,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     delete preferred.last_heartbeat;
     delete preferred.id;
 
-    // Fallback mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­nimo (compatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel com esquemas antigos/novos)
+    // Fallback mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­nimo (compatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel com esquemas antigos/novos)
     const fallback = {
       name: normalized.name,
       ip: normalized.ip || null,
@@ -2886,7 +2973,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
     // Persist provisioning material (POP radius_secret + MikroTik API credentials) before generating the script.
     const enrichedPop = await ensurePopProvisioningMaterial(data);
 
-    // Guarda configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o avanÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ada (para gerar script completo mesmo se a tabela pops nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tiver todas as colunas)
+    // Guarda configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o avanÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ada (para gerar script completo mesmo se a tabela pops nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o tiver todas as colunas)
     try {
       await supabase.from('settings').upsert({
         key: `pop_config_${data.id}`,
@@ -2894,7 +2981,7 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
         updated_at: now
       }, { onConflict: 'key' });
     } catch (_e) {
-      // ignora se settings nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existir/estruturar diferente
+      // ignora se settings nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o existir/estruturar diferente
     }
 
     // Gera script completo imediatamente para o frontend copiar no fluxo de criacao
@@ -2908,17 +2995,17 @@ app.post('/api/pops', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after POP create:', radiusSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FreeRADIUS sync failed after POP create:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after POP create:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ L2TP chap-secrets sync failed after POP create:', l2tpSync.error);
     }
 
     res.status(201).json({ ...enrichedPop, script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao criar POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao criar POP:', err.message);
     res.status(500).json({ error: 'Erro ao criar POP' });
   }
 });
@@ -2996,7 +3083,7 @@ function buildPopInstallScript(pop, config = {}) {
         `:delay 500ms\n`
       )
       : (vpnEnabled
-        ? `# VPN não gerada: configuração incompleta ou modo RADIUS sem VPN\n`
+        ? `# VPN nÃ£o gerada: configuraÃ§Ã£o incompleta ou modo RADIUS sem VPN\n`
         : ''));
 
   const radiusClientIp = String(pop.vpn_ip || pop.radius_client_ip || '').trim();
@@ -3026,7 +3113,7 @@ function buildPopInstallScript(pop, config = {}) {
     }
     if (isTrunk) {
       // Trunk: WAN vem de uma VLAN transportada pela interface uplink (wanInterface)
-      // Por padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
+      // Por padrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o, usa DHCP nessa VLAN para obter acesso a Internet/Rotas (via MikroTik principal).
       const useWanVlan = trunkInternetVlanId || vlanId;
       const uplink = trunkUplinkInterface;
       if (useWanVlan) {
@@ -3054,7 +3141,7 @@ function buildPopInstallScript(pop, config = {}) {
     if (wanType === 'static') {
       const mask = staticMask || '24';
       return (
-        `# WAN (IP EstÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tico)\n` +
+        `# WAN (IP EstÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tico)\n` +
         `/ip address add address=${staticIp}/${mask} interface=${wanInterface} comment="${tag}"\n` +
         (staticGw ? `/ip route add gateway=${staticGw} comment="${tag}"\n` : '') +
         `/ip firewall nat add action=masquerade chain=srcnat out-interface=${wanInterface} comment="${tag}"\n`
@@ -3113,7 +3200,7 @@ const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no
   // HTML do portal no MikroTik (login.html/alogin.html -> /entrypoint)
   const portalUrl = `${frontendUrl}/portal`;
   const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${portalUrl}\\?mac=\\$(mac)&ip=\\$(ip)&hotspot=\\$(server-name)&pop_id=${encodeURIComponent(pop.id)}&pop=${encodeURIComponent(pop.id)}&pop_unique_id=${encodeURIComponent(pop.unique_id || pop.id)}&loginUrl=\\$(link-login-only)&orig=\\$(link-orig)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
-  const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</div><div class="success-text">Autenticacao realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
+  const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â</div><div class="success-text">Autenticacao realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
 
   const hotspotHtmlBlock =
     `# HTML do Hotspot (Portal)\n` +
@@ -3200,7 +3287,7 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: existing, error: existingErr } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (existingErr || !existing) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (existingErr || !existing) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const updateData = { updated_at: new Date().toISOString() };
     const body = { ...(req.body || {}) };
@@ -3227,17 +3314,17 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after POP update:', radiusSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FreeRADIUS sync failed after POP update:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after POP update:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ L2TP chap-secrets sync failed after POP update:', l2tpSync.error);
     }
 
     res.json({ ...enrichedPop, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao atualizar POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao atualizar POP:', err.message);
     res.status(500).json({ error: 'Erro ao atualizar POP' });
   }
 });
@@ -3271,21 +3358,21 @@ app.delete('/api/pops/:id', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after POP delete:', radiusSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FreeRADIUS sync failed after POP delete:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after POP delete:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ L2TP chap-secrets sync failed after POP delete:', l2tpSync.error);
     }
 
     res.json({ message: 'POP removido com sucesso', freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed' });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao deletar POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao deletar POP:', err.message);
     res.status(500).json({ error: 'Erro ao deletar POP' });
   }
 });
-// Alias legado (portuguÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªs)
+// Alias legado (portuguÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªs)
 app.put('/api/perfil', authMiddleware, (req, res, next) => {
   req.url = '/api/profile';
   next();
@@ -3301,7 +3388,7 @@ app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
       .select('*')
       .eq('id', id)
       .single();
-    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     let config = {};
     try {
@@ -3316,17 +3403,17 @@ app.get('/api/pops/:id/config', authMiddleware, async (req, res) => {
     // Retorna sempre os dados do POP + o config salvo (quando existir)
     res.json({ pop, config });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao obter config do POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao obter config do POP:', err.message);
     res.status(500).json({ error: 'Erro ao obter config do POP' });
   }
 });
 
-// Gerar script de configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o para um POP
+// Gerar script de configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o para um POP
 app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     let config = {};
     try {
@@ -3345,27 +3432,27 @@ app.get('/api/pops/:id/script', authMiddleware, async (req, res) => {
 
     const radiusSync = await syncFreeradiusClientsFromDb();
     if (!radiusSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ FreeRADIUS sync failed after script generation:', radiusSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FreeRADIUS sync failed after script generation:', radiusSync.error);
     }
 
     const l2tpSync = await syncL2tpChapSecretsFromDb();
     if (!l2tpSync.ok) {
-      console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ L2TP chap-secrets sync failed after script generation:', l2tpSync.error);
+      console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ L2TP chap-secrets sync failed after script generation:', l2tpSync.error);
     }
 
     res.json({ script, freeradius_sync: radiusSync.ok ? 'ok' : 'failed', l2tp_sync: l2tpSync.ok ? 'ok' : 'failed', warnings: enrichedPop.warnings || [] });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar script:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao gerar script:', err.message);
     res.status(500).json({ error: 'Erro ao gerar script' });
   }
 });
-// Receber heartbeat do MikroTik (atualiza status e ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltima atividade)
-// Gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o para um POP
+// Receber heartbeat do MikroTik (atualiza status e ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºltima atividade)
+// Gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o para um POP
 app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const uniqueTag = `MS-TELECOM-${id}`;
     const script =
@@ -3386,8 +3473,8 @@ app.get('/api/pops/:id/revert-script', authMiddleware, async (req, res) => {
 
     res.json({ script });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o:', err.message);
-    res.status(500).json({ error: 'Erro ao gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o:', err.message);
+    res.status(500).json({ error: 'Erro ao gerar script de reversÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o' });
   }
 });
 
@@ -3424,7 +3511,7 @@ app.post('/api/admin/pops/vpn-backfill', authMiddleware, async (req, res) => {
       freeradius_sync: radiusSync.ok ? 'ok' : 'failed'
     });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ vpn-backfill error:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ vpn-backfill error:', err.message);
     res.status(500).json({ error: 'Erro no backfill VPN' });
   }
 });
@@ -3437,7 +3524,7 @@ app.post('/api/pops/:id/ping', async (req, res) => {
     const now = new Date().toISOString();
     const metrics = { ...(req.query || {}), ...(req.body || {}) };
     const { data: pop, error: popErr } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (popErr || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const updateData = { status: 'online', updated_at: now };
     if (Object.prototype.hasOwnProperty.call(pop, 'last_heartbeat')) updateData.last_heartbeat = now;
@@ -3457,29 +3544,29 @@ app.post('/api/pops/:id/ping', async (req, res) => {
     await storePopMetric(id, metrics);
     res.json({ status: 'ok', pop_id: id, timestamp: now });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao processar ping do POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao processar ping do POP:', err.message);
     res.status(500).json({ error: 'Erro ao processar ping' });
   }
 });
 
-// Status do POP (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
+// Status do POP (pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico)
 app.get('/api/pops/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
-    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (error || !pop) return res.status(404).json({ error: 'POP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || pop.created_at;
     const seconds = last ? Math.floor((Date.now() - new Date(last).getTime()) / 1000) : null;
     const status = (seconds !== null && seconds > 60) ? 'offline' : (pop.status || 'online');
     res.json({ id, name: pop.name, status, seconds_since_last: seconds });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao consultar status do POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao consultar status do POP:', err.message);
     res.status(500).json({ error: 'Erro ao consultar status' });
   }
 });
 
-// Registrar POP via MikroTik (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
+// Registrar POP via MikroTik (pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico)
 app.post('/api/pops/register', async (req, res) => {
   try {
     if (!validatePopRegisterToken(req)) {
@@ -3487,10 +3574,10 @@ app.post('/api/pops/register', async (req, res) => {
     }
     const now = new Date().toISOString();
     const { name, ip, location } = req.body || {};
-    if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
+    if (!name || !ip) return res.status(400).json({ error: 'name e ip sÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rios' });
 
     const popToken = crypto.randomBytes(32).toString('hex');
-    // NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o insere `token` na tabela pops porque o schema atual nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o possui essa coluna.
+    // NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o insere `token` na tabela pops porque o schema atual nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o possui essa coluna.
     const preferred = { ...req.body, name, ip, location, status: 'online', created_at: now, updated_at: now };
     delete preferred.id;
     const fallback = { name, ip, location, status: 'online', created_at: now };
@@ -3498,7 +3585,7 @@ app.post('/api/pops/register', async (req, res) => {
     const { data, error } = await safeInsertWithFallback('pops', preferred, fallback);
     if (error) throw error;
 
-    // Guarda o token em settings para validaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o futura (se necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio)
+    // Guarda o token em settings para validaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o futura (se necessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio)
     try {
       await supabase.from('settings').upsert({
         key: `pop_token_${data.id}`,
@@ -3509,7 +3596,7 @@ app.post('/api/pops/register', async (req, res) => {
 
     res.status(201).json({ status: 'success', pop_id: data.id, pop_token: popToken });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao registrar POP:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao registrar POP:', err.message);
     res.status(500).json({ error: 'Erro ao registrar POP' });
   }
 });
@@ -3535,7 +3622,7 @@ app.post('/api/pops/:id/heartbeat', async (req, res) => {
     await storePopMetric(id, metrics);
     res.sendStatus(200);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no heartbeat:', err.message);
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro no heartbeat:', err.message);
     res.sendStatus(500);
   }
 });
@@ -3621,8 +3708,8 @@ app.get('/api/dashboard/metrics', authMiddleware, async (req, res) => {
     const metrics = await buildDashboardMetrics();
     res.json(metrics);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tricas do dashboard:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tricas do dashboard' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao buscar mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©tricas do dashboard:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©tricas do dashboard' });
   }
 });
 
@@ -3638,15 +3725,15 @@ app.get('/api/stats/summary', authMiddleware, async (req, res) => {
       total_users: users?.length || 0,
       active_sessions: activeSessions?.length || 0,
       total_revenue: totalRevenue,
-      online_pops: 1 // Mock ou buscar de pops ativos
+      online_pops: 1 // Buscar de pops ativos
     });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar sumÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao buscar sumÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­sticas' });
   }
 });
 
-// EstatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas de usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios por hora (Dashboard)
+// EstatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­sticas de usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios por hora (Dashboard)
 app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
   try {
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -3671,13 +3758,13 @@ app.get('/api/stats/users-per-hour', authMiddleware, async (req, res) => {
 
     res.json({ data: hourlyData });
   } catch (error) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas reais:', error.message);
-    res.status(500).json({ error: 'Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas por hora' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­sticas reais:', error.message);
+    res.status(500).json({ error: 'Erro ao buscar estatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­sticas por hora' });
   }
 });
 
-// Listar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes ativas (usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios online)
-// EstatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas de trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego total (real quando existir coluna de trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego)
+// Listar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes ativas (usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios online)
+// EstatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­sticas de trÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡fego total (real quando existir coluna de trÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡fego)
 app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -3705,8 +3792,8 @@ app.get('/api/stats/total-traffic', authMiddleware, async (req, res) => {
       total_bytes: inBytes + outBytes
     });
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao buscar trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego total:', err.message);
-    res.status(500).json({ error: 'Erro ao buscar trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡fego total' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao buscar trÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡fego total:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar trÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡fego total' });
   }
 });
 
@@ -3722,17 +3809,17 @@ app.get('/api/sessions/active', authMiddleware, async (req, res) => {
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao listar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes ativas:', err.message);
-    res.status(500).json({ error: 'Erro ao listar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes ativas' });
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao listar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes ativas:', err.message);
+    res.status(500).json({ error: 'Erro ao listar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes ativas' });
   }
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ROTAS DE BACKUP
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ ROTAS DE BACKUP
 // ============================================================
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¥ HEALTH CHECK
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ HEALTH CHECK
 // ============================================================
 
 app.get('/api/health', (_req, res) => {
@@ -3745,7 +3832,7 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Rotas pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblicas para o portal
+// Rotas pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblicas para o portal
 app.get('/api/public/plans', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -3771,7 +3858,7 @@ app.get('/api/public/free-trial-config', async (req, res) => {
     const config = data?.value || { enabled: false, duration_minutes: 15, cooldown_hours: 24 };
     res.json(config);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis' });
+    res.status(500).json({ error: 'Erro ao buscar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o do teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis' });
   }
 });
 
@@ -3785,7 +3872,7 @@ app.get('/api/test-ip', (req, res) => {
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â ENTRYPOINT (MikroTik -> API -> Portal)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ENTRYPOINT (MikroTik -> API -> Portal)
 // ============================================================
 
 app.get('/entrypoint', (req, res) => {
@@ -3803,14 +3890,14 @@ app.get('/entrypoint', (req, res) => {
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  ESTATÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â  ESTATÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂSTICAS E DASHBOARD
 // ============================================================
 
-// Nota: Rotas de estatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­sticas e POPs jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ definidas anteriormente no arquivo.
-// Removendo duplicaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes para evitar conflitos.
+// Nota: Rotas de estatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­sticas e POPs jÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ definidas anteriormente no arquivo.
+// Removendo duplicaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes para evitar conflitos.
 
 // ============================================================
-// ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â CONFIGURAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES DE CAMPOS DE CADASTRO
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â CONFIGURAÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ES DE CAMPOS DE CADASTRO
 // ============================================================
 
 app.get('/api/settings/fields', authMiddleware, async (req, res) => {
@@ -3824,7 +3911,7 @@ app.get('/api/settings/fields', authMiddleware, async (req, res) => {
       { field: 'phone', label: 'Telefone/WhatsApp', enabled: true, required: true },
       { field: 'cpf', label: 'CPF', enabled: false, required: false },
       { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
-      { field: 'gender', label: 'GÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªnero', enabled: false, required: false }
+      { field: 'gender', label: 'GÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªnero', enabled: false, required: false }
     ];
 
     res.json(data ? data.value : defaultFields);
@@ -3855,7 +3942,7 @@ async function getPortalRegistrationFields() {
     { field: 'email', label: 'E-mail', enabled: false, required: false },
     { field: 'cpf', label: 'CPF', enabled: false, required: false },
     { field: 'birth_date', label: 'Data de Nascimento', enabled: false, required: false },
-    { field: 'gender', label: 'GÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªnero', enabled: false, required: false },
+    { field: 'gender', label: 'GÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªnero', enabled: false, required: false },
     { field: 'terms', label: 'Aceite dos termos', enabled: false, required: false }
   ];
 
@@ -3924,11 +4011,11 @@ app.get('/api/portal/registration-status', async (req, res) => {
   }
 });
 // ============================================================
-// ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â CONFIGURAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES DO SISTEMA (SETTINGS)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â CONFIGURAÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ES DO SISTEMA (SETTINGS)
 // ============================================================
 
-// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes gerais
-// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes consolidadas (compat com HTMLs)
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes gerais
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes consolidadas (compat com HTMLs)
 app.get('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -3939,7 +4026,7 @@ app.get('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes consolidadas (compat com HTMLs)
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes consolidadas (compat com HTMLs)
 app.put('/api/settings', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -3954,7 +4041,7 @@ app.put('/api/settings', authMiddleware, async (req, res) => {
   }
 });
 
-// Aliases legado PT (configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes)
+// Aliases legado PT (configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes)
 app.get('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'system').maybeSingle();
@@ -3965,7 +4052,7 @@ app.get('/api/settings/system', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes gerais
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes gerais
 app.put('/api/settings/system', authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase.from('settings').upsert({
@@ -3980,34 +4067,47 @@ app.put('/api/settings/system', authMiddleware, async (req, res) => {
   }
 });
 
-// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de pagamento
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de pagamento
 app.get('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('settings').select('value').eq('key', 'payment').maybeSingle();
-    if (error) throw error;
-    res.json(scrubSecretObject(data?.value || {}));
+    const cfg = await getPaymentSettings();
+    res.json(cfg);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de pagamento
+app.get('/api/check-payment-by-mac', async (req, res) => {
+  try {
+    req.query = { ...(req.query || {}), mac: req.query?.mac || req.query?.mac_address || '' };
+    req.url = '/api/check-payment';
+    return app._router.handle(req, res);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao verificar status de pagamento' });
+  }
+});
+
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de pagamento
 app.put('/api/settings/payment', authMiddleware, async (req, res) => {
   try {
-    const { error } = await supabase.from('settings').upsert({
-      key: 'payment',
-      value: stripSecretFields(req.body),
-      updated_at: new Date().toISOString()
-    });
-    if (error) throw error;
-    res.json({ success: true });
+    const value = await savePaymentSettings(req.body);
+    res.json({ success: true, value });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis
-// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de integraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
+app.get('/api/portal/payment-settings', async (_req, res) => {
+  try {
+    const cfg = await getPaymentSettings();
+    res.json(cfg);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis
+// Buscar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de integraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes
 app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('settings').select('value').eq('key', 'integrations').maybeSingle();
@@ -4018,7 +4118,7 @@ app.get('/api/settings/integrations', authMiddleware, async (req, res) => {
   }
 });
 
-// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de integraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de integraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes
 app.put('/api/settings/integrations', authMiddleware, async (req, res) => {
   try {
     const blockedSecretKeys = /(supabase.*key|radius.*secret|mercado.*token|mercadopago.*token|vpn.*psk|ssh.*key|password|api_pass|secret|token)/i;
@@ -4056,7 +4156,7 @@ app.get('/api/settings/free_trial', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de teste grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis
+// Salvar configuraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de teste grÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis
 app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   try {
     const value = normalizeFreeTrialConfig(req.body && typeof req.body === 'object' ? req.body : {});
@@ -4077,16 +4177,16 @@ app.put('/api/settings/free_trial', authMiddleware, async (req, res) => {
   }
 });
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â WEBHOOKS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â WEBHOOKS
 // ============================================================
 
-// Webhook do Mercado Pago (PÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
+// Webhook do Mercado Pago (PÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico)
 // Aliases legado
 app.post('/api/webhooks/mercadopago', async (req, res) => {
   try {
     const { action, data, type } = req.body;
     
-    // Mercado Pago envia notificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de diferentes tipos, focamos em 'payment'
+    // Mercado Pago envia notificaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes de diferentes tipos, focamos em 'payment'
     if (type === 'payment' || action === 'payment.created' || action === 'payment.updated') {
       const paymentId = data?.id || req.query['data.id'];
       if (!paymentId) return res.status(200).send('OK');
@@ -4120,7 +4220,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
           }).eq('id', payment.id);
 
           // 3. Liberar acesso no MikroTik/RADIUS
-          // Buscamos a duraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do plano
+          // Buscamos a duraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o do plano
           const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
           const durationMinutes = (plan?.duration_days || 1) * 24 * 60;
           const cleanMac = normalizeMac(payment.user_mac);
@@ -4134,7 +4234,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
             payment.plan_name
           );
 
-          // 4. Registrar sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
+          // 4. Registrar sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o
           await supabase.from('hotspot_sessions').insert({
             mac_address: cleanMac,
             plan_name: payment.plan_name,
@@ -4151,7 +4251,7 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
               method: wh.method || 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ event: 'payment.confirmed', payment_id: payment.id, mac: payment.user_mac })
-            }).catch(err => console.error(`ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro ao disparar webhook ${wh.name}:`, err.message));
+            }).catch(err => console.error(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro ao disparar webhook ${wh.name}:`, err.message));
           }
 
           await registerSystemLog('info', 'mercadopago', `Pagamento aprovado e acesso liberado: ${payment.user_mac}`);
@@ -4161,8 +4261,8 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
     
     res.status(200).send('OK');
   } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erro no Webhook Mercado Pago:', err.message);
-    res.status(200).send('OK'); // Sempre retornar 200 para o MP nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ficar retransmitindo em loop
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Erro no Webhook Mercado Pago:', err.message);
+    res.status(200).send('OK'); // Sempre retornar 200 para o MP nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o ficar retransmitindo em loop
   }
 });
 
@@ -4189,7 +4289,7 @@ app.post('/api/webhooks', authMiddleware, async (req, res) => {
   }
 });
 
-// Rota de ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o via POST (conforme frontend webhooks.html)
+// Rota de ediÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o via POST (conforme frontend webhooks.html)
 app.post('/api/webhooks/:id', authMiddleware, async (req, res) => {
   try {
     const { name, event, url, method, target, active } = req.body;
@@ -4216,9 +4316,9 @@ app.delete('/api/webhooks/:id', authMiddleware, async (req, res) => {
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const { data: webhook } = await supabase.from('webhooks').select('*').eq('id', req.params.id).single();
-    if (!webhook) return res.status(404).json({ error: 'Webhook nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (!webhook) return res.status(404).json({ error: 'Webhook nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
     
-    // SimulaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de disparo
+    // SimulaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o de disparo
     console.log(`[TEST] Disparando webhook ${webhook.name} para ${webhook.url}`);
     res.json({ success: true, message: 'Teste disparado com sucesso' });
   } catch (error) {
@@ -4227,7 +4327,7 @@ app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â£ CAMPANHAS
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£ CAMPANHAS
 // ============================================================
 
 app.get('/api/campaigns', authMiddleware, async (req, res) => {
@@ -4277,7 +4377,7 @@ app.delete('/api/campaigns/:id', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã¢â‚¬Å“ LOGS DE AUDITORIA
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ LOGS DE AUDITORIA
 // ============================================================
 
 app.get('/api/audit-logs', authMiddleware, async (req, res) => {
@@ -4302,11 +4402,11 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   }
 });
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â¾ BACKUP
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ BACKUP
 // ============================================================
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â LOGS DO SISTEMA
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â LOGS DO SISTEMA
 // ============================================================
 
 app.get('/api/logs', authMiddleware, async (req, res) => {
@@ -4350,9 +4450,9 @@ app.get('/api/backup/list', authMiddleware, requireRole('owner'), async (req, re
 // Download de backup
 app.get('/api/backup/download/:filename', authMiddleware, requireRole('owner'), (req, res) => {
   const filename = path.basename(req.params.filename || '');
-  if (!/^[\w.-]+\.json$/.test(filename)) return res.status(400).json({ error: 'Nome de arquivo invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido' });
+  if (!/^[\w.-]+\.json$/.test(filename)) return res.status(400).json({ error: 'Nome de arquivo invÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lido' });
   const filePath = path.join(BACKUP_DIR, filename);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
   res.download(filePath);
 });
 
@@ -4382,10 +4482,10 @@ app.post('/api/backup/create', authMiddleware, requireRole('owner'), async (req,
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ALIAS E ROTAS DE COMPATIBILIDADE
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ ALIAS E ROTAS DE COMPATIBILIDADE
 // ============================================================
 
-// Alias para portal pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico
+// Alias para portal pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico
 app.get('/api/portal/plans', async (req, res) => {
   const { data, error } = await supabase.from('plans').select('*').eq('active', true).order('price');
   if (error) return res.status(500).json({ error: 'Erro ao listar planos' });
@@ -4394,28 +4494,18 @@ app.get('/api/portal/plans', async (req, res) => {
 
 app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
   try {
-    const { mac_address } = req.body || {};
+    const { mac_address, pop_id, pop, pop_unique_id, ip_address, ip } = req.body || {};
     const cleanMac = normalizeMac(mac_address);
+    const popRef = pop_id || pop || pop_unique_id || null;
+    const popIp = ip_address || ip || null;
     if (cleanMac) {
-      // Libera acesso temporario para realizar pagamento (janela curta)
-      const durationMinutes = 5;
-      const expiresAt = new Date(Date.now() + durationMinutes * 60000).toISOString();
-
-      const result = await authorizeAccess(cleanMac, '192.168.32.1', null, null, null, durationMinutes, 5, 'payment_window');
-      if (result?.success) {
-        await supabase.from('hotspot_sessions').insert({
-          mac_address: cleanMac,
-          status: 'active',
-          expires_at: expiresAt,
-          created_at: new Date().toISOString()
-        });
-      }
+      await createPaymentGraceSession(cleanMac, popRef, popIp, 'payment_window').catch(() => null);
     }
   } catch (_e) {
     // ignora erro de janela temporaria (nao bloqueia a geracao do PIX)
   }
 
-  // Encaminha para a rota oficial de geraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de PIX
+  // Encaminha para a rota oficial de geração de PIX
   req.url = '/api/payments/generate-pix';
   return app._router.handle(req, res);
 });
@@ -4423,7 +4513,7 @@ app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
 app.get('/api/portal/check-payment/:id', async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
-  if (error || !data) return res.status(404).json({ error: 'Pagamento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+  if (error || !data) return res.status(404).json({ error: 'Pagamento nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
   res.json(data);
 });
 
@@ -4433,7 +4523,7 @@ app.post('/api/portal/login', async (req, res) => {
     const { data: user, error } = await supabase.from('users').select('*')
       .or(`username.eq.${identifier},email.eq.${identifier},cpf.eq.${identifier},phone.eq.${identifier}`)
       .single();
-    if (error || !user) return res.status(401).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (error || !user) return res.status(401).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     if (user.password !== hashedPassword && user.password !== password) return res.status(401).json({ error: 'Senha incorreta' });
@@ -4451,14 +4541,14 @@ app.post('/api/portal/login', async (req, res) => {
 async function handlePortalRegister(req, res) {
   try {
     const cleanMac = normalizeMac(req.body.mac_address || req.body.mac);
-    if (!cleanMac) return res.status(400).json({ error: 'MAC obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio' });
+    if (!cleanMac) return res.status(400).json({ error: 'MAC obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio' });
 
     const fields = await getPortalRegistrationFields();
     const missingBody = (fields || [])
       .filter(f => f.enabled !== false && f.required === true)
       .map(f => f.field)
       .filter(field => field !== 'terms' && !String(req.body[field] || '').trim());
-    if (missingBody.length) return res.status(400).json({ error: 'Campos obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios ausentes', missing_fields: missingBody });
+    if (missingBody.length) return res.status(400).json({ error: 'Campos obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rios ausentes', missing_fields: missingBody });
 
     const payload = sanitizePortalRegistration(req.body, fields);
     const now = new Date().toISOString();
@@ -4501,7 +4591,7 @@ async function handlePortalRegister(req, res) {
 app.post('/api/portal/register-device', portalWriteLimiter, handlePortalRegister);
 app.post('/api/portal/register', portalWriteLimiter, handlePortalRegister);
 app.post('/api/portal/voucher', async (req, res) => {
-  // Encaminha para a rota oficial de validaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de voucher
+  // Encaminha para a rota oficial de validaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o de voucher
   req.url = '/api/vouchers/validate';
   app._router.handle(req, res);
 });
@@ -4522,13 +4612,13 @@ app.get('/api/portal/status', async (req, res) => {
     res.status(500).json({ error: 'Erro ao verificar status' });
   }
 });
-// Rota pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblica para verificar status de pagamento por MAC (usada pelo portal)
+// Rota pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblica para verificar status de pagamento por MAC (usada pelo portal)
 app.get('/api/portal/payment-status', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store');
     const { mac_address } = req.query;
     const cleanMac = normalizeMac(mac_address);
-    if (!cleanMac) return res.status(400).json({ error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio' });
+    if (!cleanMac) return res.status(400).json({ error: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio' });
 
     const { data, error } = await supabase.from('payments')
       .select('*')
@@ -4543,22 +4633,22 @@ app.get('/api/portal/payment-status', async (req, res) => {
     res.status(500).json({ error: 'Erro ao verificar status de pagamento' });
   }
 });
-// Rota de compatibilidade para o portal pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico que chama /api/payments sem token
+// Rota de compatibilidade para o portal pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico que chama /api/payments sem token
 app.get('/api/payments', async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const { mac_address } = req.query;
 
-  // Se NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O tem token e tem mac_address, redireciona para a rota pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblica do portal
+  // Se NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢O tem token e tem mac_address, redireciona para a rota pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblica do portal
   if (!authHeader && mac_address) {
     req.url = '/api/portal/payment-status';
     return app._router.handle(req, res);
   }
 
-  // Caso contrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio, segue para o middleware de autenticaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o e rota admin
+  // Caso contrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio, segue para o middleware de autenticaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o e rota admin
   next();
 });
 
-// Rota de Teste GrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tis (chamada pelo frontend)
+// Rota de Teste GrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tis (chamada pelo frontend)
 app.post('/api/users/test-access', accessLimiter, async (req, res) => {
   try {
     const body = req.body || {};
@@ -4591,15 +4681,15 @@ app.post('/api/liberar-teste', async (req, res) => {
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¤ GESTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DE ADMINISTRADORES (ADMINS)
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ GESTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢O DE ADMINISTRADORES (ADMINS)
 // ============================================================
 
 // Listar todos os administradores
-// Free trial (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico) - 1 uso por MAC
+// Free trial (pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico) - 1 uso por MAC
 app.post('/api/free-trial', accessLimiter, async (req, res) => {
   try {
     const { mac_address, mac } = req.body || {};
-    if (!mac_address && !mac) return res.status(400).json({ success: false, message: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio' });
+    if (!mac_address && !mac) return res.status(400).json({ success: false, message: 'MAC ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio' });
 
     const out = await handleFreeTrialAccess({
       macAddress: mac_address || mac,
@@ -4615,7 +4705,7 @@ app.post('/api/free-trial', accessLimiter, async (req, res) => {
     res.status(500).json({ success: false, message: 'Erro interno' });
   }
 });
-// Validar acesso (pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblico)
+// Validar acesso (pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºblico)
 app.post('/api/access/validate', async (req, res) => {
   try {
     const { mac_address } = req.body || {};
@@ -4823,10 +4913,10 @@ app.post('/api/admins', authMiddleware, requireRole('owner'), async (req, res) =
     const role = String(req.body.role || 'admin').toLowerCase();
     
     if (!username || !password) {
-      return res.status(400).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio e senha sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios' });
+      return res.status(400).json({ error: 'UsuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio e senha sÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o obrigatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rios' });
     }
     if (!ADMIN_ROLES.has(role) || role === 'owner') {
-      return res.status(403).json({ error: 'Role nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o permitida', reason: 'role_escalation_blocked' });
+      return res.status(403).json({ error: 'Role nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o permitida', reason: 'role_escalation_blocked' });
     }
 
     const hashedPassword = hashPassword(password);
@@ -4860,10 +4950,10 @@ app.put('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, res
     const { username, email, password, role } = req.body;
     const requestedRole = role ? String(role).toLowerCase() : null;
     if (requestedRole && (!ADMIN_ROLES.has(requestedRole) || requestedRole === 'owner')) {
-      return res.status(403).json({ error: 'Role nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o permitida', reason: 'role_escalation_blocked' });
+      return res.status(403).json({ error: 'Role nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o permitida', reason: 'role_escalation_blocked' });
     }
     if (String(id) === String(req.user.id) && requestedRole) {
-      return res.status(403).json({ error: 'NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© permitido alterar o prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³prio role', reason: 'self_role_change_blocked' });
+      return res.status(403).json({ error: 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© permitido alterar o prÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³prio role', reason: 'self_role_change_blocked' });
     }
     
     const updateData = {};
@@ -4896,7 +4986,7 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
 
     // Impedir que o admin delete a si mesmo
     if (id == req.user.id) {
-      return res.status(400).json({ error: 'VocÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o pode excluir seu prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³prio usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio' });
+      return res.status(400).json({ error: 'VocÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o pode excluir seu prÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³prio usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio' });
     }
 
     const { data: target, error: targetError } = await supabase
@@ -4905,7 +4995,7 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
       .eq('id', id)
       .maybeSingle();
     if (targetError) throw targetError;
-    if (!target) return res.status(404).json({ error: 'Administrador nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado' });
+    if (!target) return res.status(404).json({ error: 'Administrador nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o encontrado' });
     if (target.role === 'owner') {
       const { count, error: countError } = await supabase
         .from('admins')
@@ -4913,7 +5003,7 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
         .eq('role', 'owner');
       if (countError) throw countError;
       if ((count || 0) <= 1) {
-        return res.status(409).json({ error: 'NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© permitido excluir o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltimo owner', reason: 'last_owner_blocked' });
+        return res.status(409).json({ error: 'NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© permitido excluir o ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºltimo owner', reason: 'last_owner_blocked' });
       }
     }
 
@@ -4933,21 +5023,21 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
 });
 
 // ============================================================
-// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ INICIAR SERVIDOR
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ INICIAR SERVIDOR
 // ============================================================
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ MS TELECOM - HOTSPOT SYSTEM API                         ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Servidor rodando em: http://localhost:${PORT}              ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Ambiente: ${process.env.NODE_ENV || 'production'}                      ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ PadrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: CÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³digo EN, ComentÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios PT-BR                     ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Endpoints: /api/users, /api/plans, /api/payments         ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Tabelas: users, plans, payments, pops                    ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ IntegraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: MikroTik API, Mercado Pago, RADIUS           ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Deploy AutomÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tico: GitHub Actions ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ VPS                  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“  ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ CRON: RemoÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o automÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tica de acessos expirados            ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“
-ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ MS TELECOM - HOTSPOT SYSTEM API                         ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Servidor rodando em: http://localhost:${PORT}              ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Ambiente: ${process.env.NODE_ENV || 'production'}                      ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ PadrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o: CÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³digo EN, ComentÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rios PT-BR                     ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Endpoints: /api/users, /api/plans, /api/payments         ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Tabelas: users, plans, payments, pops                    ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ IntegraÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o: MikroTik API, Mercado Pago, RADIUS           ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Deploy AutomÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tico: GitHub Actions ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ VPS                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ CRON: RemoÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o automÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡tica de acessos expirados            ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â
   `);
 });
