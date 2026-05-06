@@ -381,7 +381,7 @@
     // - Restaurado: layout completo, abas, modais e UX (base old_main2)
     // - Mantido: rotas/payloads/autenticacao do backend atual
     // - Corrigido: backups (tenta /api/backup/list -> fallback /api/backup)
-    // - Removido/Desativado: chamadas antigas /api/configuracoes* (backend atual nao expõe)
+    // - Removido/Desativado: chamadas antigas /api/configuracoes* (backend atual não expõe)
     // ============================================
 
     if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
@@ -599,33 +599,78 @@
     }
 
     // ==================== BACKUP ====================
+    function formatBackupSize(bytes) {
+        const value = Number(bytes || 0);
+        if (!Number.isFinite(value) || value <= 0) return '-';
+        if (value < 1024) return `${value} B`;
+        if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+        return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function formatBackupDate(value) {
+        if (!value) return '-';
+        try {
+            return new Date(value).toLocaleString('pt-BR');
+        } catch (_error) {
+            return '-';
+        }
+    }
+
     async function carregarBackups() {
         const container = document.getElementById('listaBackups');
         if (!container) return;
+
+        container.innerHTML = '<div class="text-center text-gray-500 p-4">Carregando backups...</div>';
+
         try {
-            let res = await fetch(`${API_URL}/api/backup/list`, { headers: authHeaders(false) });
-            if (!res.ok) res = await fetch(`${API_URL}/api/backup`, { headers: authHeaders(false) });
-            if (!res.ok) throw new Error();
+            const res = await fetch(`${API_URL}/api/backup/list`, { headers: authHeaders(false) });
+
+            if (res.status === 401 || res.status === 403) {
+                container.innerHTML = '<div class="text-center text-yellow-400 p-4">Backup restrito ao usuário owner.</div>';
+                return;
+            }
+
+            if (!res.ok) {
+                let message = 'Erro ao carregar backups';
+                try {
+                    const data = await res.json();
+                    message = data.error || message;
+                } catch (_error) {}
+                throw new Error(message);
+            }
+
             const backups = await res.json();
-            if (!backups || backups.length === 0) {
+            if (!Array.isArray(backups) || backups.length === 0) {
                 container.innerHTML = '<div class="text-center text-gray-500 p-4">Nenhum backup encontrado</div>';
                 return;
             }
-            const normalized = backups.map(b => ({ filename: b.filename || b.file || b.name, created_at: b.created_at || b.timestamp || b.date }));
-            container.innerHTML = normalized.map(b => `
-                <div class="py-4 flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-medium text-white">${escapeHtml(String(b.filename || ''))}</p>
-                        <p class="text-[10px] text-gray-500">${b.created_at ? new Date(b.created_at).toLocaleString() : '-'}</p>
+
+            const normalized = backups.map(b => ({
+                filename: b.filename || b.file || b.name || '',
+                created_at: b.created_at || b.timestamp || b.date || null,
+                size: b.size || b.size_bytes || 0
+            }));
+
+            container.innerHTML = normalized.map(b => {
+                const safeFilename = String(b.filename || '').replace(/'/g, '&#39;');
+                return `
+                    <div class="py-4 flex justify-between items-center gap-3 border-b border-gray-800/60 last:border-b-0">
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-white truncate">${escapeHtml(String(b.filename || ''))}</p>
+                            <p class="text-[10px] text-gray-500">${formatBackupDate(b.created_at)} • ${formatBackupSize(b.size)}</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="downloadBackup('${safeFilename}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Baixar backup">
+                                <i data-lucide="download" class="w-4 h-4 text-blue-500"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="downloadBackup('${String(b.filename || '').replace(/'/g, '&#39;')}')" class="p-2 hover:bg-blue-500/10 rounded-lg transition" title="Download"><i data-lucide="download" class="w-4 h-4 text-blue-500"></i></button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+
             if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
         } catch (e) {
-            container.innerHTML = '<div class="text-center text-red-500 p-4">Erro ao carregar backups</div>';
+            container.innerHTML = `<div class="text-center text-red-500 p-4">${escapeHtml(e.message || 'Erro ao carregar backups')}</div>`;
         }
     }
 
@@ -634,33 +679,61 @@
             const res = await fetch(`${API_URL}/api/backup/download/${encodeURIComponent(String(filename || ''))}`, {
                 headers: authHeaders(false)
             });
-            if (!res.ok) throw new Error();
+
+            if (res.status === 401 || res.status === 403) {
+                alert('Backup restrito ao usuário owner.');
+                return;
+            }
+
+            if (!res.ok) {
+                let message = 'Erro ao baixar backup';
+                try {
+                    const data = await res.json();
+                    message = data.error || message;
+                } catch (_error) {}
+                throw new Error(message);
+            }
+
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = String(filename || 'backup');
+            a.download = String(filename || 'backup.json');
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch (e) {
-            alert('Erro ao baixar backup');
+            alert(e.message || 'Erro ao baixar backup');
         }
     }
 
     async function gerarBackup() {
         try {
             const res = await fetch(`${API_URL}/api/backup/create`, { method: 'POST', headers: authHeaders(false) });
-            if (!res.ok) throw new Error();
+
+            if (res.status === 401 || res.status === 403) {
+                alert('Backup restrito ao usuário owner.');
+                return;
+            }
+
+            if (!res.ok) {
+                let message = 'Erro ao gerar backup';
+                try {
+                    const data = await res.json();
+                    message = data.error || message;
+                } catch (_error) {}
+                throw new Error(message);
+            }
+
             alert('✅ Backup gerado com sucesso!');
             carregarBackups();
         } catch (e) {
-            alert('❌ Erro ao gerar backup');
+            alert(e.message || '❌ Erro ao gerar backup');
         }
     }
 
-    // ==================== CONFIGURAÇÕESES (SETTINGS) ====================
+    // ==================== CONFIGURAÇÕES (SETTINGS) ====================
     async function carregarConfig(key) {
         try {
             let url = '';
@@ -766,7 +839,7 @@
         }
     }
 
-    // ==================== INTEGRAÇÕESES (backend novo: /api/settings/integrations) ====================
+    // ==================== INTEGRAÇÕES (backend novo: /api/settings/integrations) ====================
     async function carregarIntegracoes() {
         try {
             const res = await fetch(`${API_URL}/api/settings/integrations`, { headers: authHeaders(false) });
