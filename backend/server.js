@@ -5029,15 +5029,15 @@ app.delete('/api/admins/:id', authMiddleware, requireRole('owner'), async (req, 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║  🚀 MS TELECOM - HOTSPOT SYSTEM API                         ║
+║  🚀 MS TELECOM - HOTSPOT SYSTEM API                          ║
 ║  ✅ Servidor rodando em: http://localhost:${PORT}            ║
 ║  ✅ Ambiente: ${process.env.NODE_ENV || 'production'}        ║
-?  ? Padr?o: C?digo EN, Coment?rios PT-BR                    ?
+║  ✅ Padrão: Código EN, Comentários PT-BR                     ║
 ║  ✅ Endpoints: /api/users, /api/plans, /api/payments         ║
 ║  ✅ Tabelas: users, plans, payments, pops                    ║
-?  ? Integra??o: MikroTik API, Mercado Pago, RADIUS           ?
+║  ✅ Integração: MikroTik API, Mercado Pago, RADIUS           ║
 ║  ✅ Deploy automático: GitHub Actions → VPS                  ║
-?  ? CRON: Remo??o autom?tica de acessos expirados            ?
+║  ✅ CRON: Remo??o autom?tica de acessos expirados            ║
 ╚══════════════════════════════════════════════════════════════╝
   `);
 });
