@@ -138,7 +138,7 @@
           <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4">
             <p class="text-xs text-yellow-500 flex items-center gap-2">
               <i data-lucide="clock" class="w-4 h-4"></i>
-              Após o pagamento, clique em "Já paguei" para liberar seu acesso
+              Após pagar, a liberação será automática. Se demorar, toque em "Já paguei" para verificar manualmente.
             </p>
           </div>
 
@@ -226,6 +226,8 @@
   const pixCode = document.getElementById('pixCode');
 
   let selectedPlan = null;
+  let selectedPaymentId = null;
+  let paymentPollingTimer = null;
   let lastFreeTest = localStorage.getItem('last_free_test') || 0;
   let redirectInProgress = false;
   let registrationGateActive = false;
@@ -270,6 +272,49 @@ function formatRetryAfter(seconds) {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   return rest ? `${hours}h ${rest}min` : `${hours} horas`;
+}
+
+function clearPaymentPolling() {
+  if (paymentPollingTimer) {
+    clearInterval(paymentPollingTimer);
+    paymentPollingTimer = null;
+  }
+}
+
+async function loadPaymentSettings() {
+  try {
+    const res = await fetch(`${API_BASE}/api/portal/payment-settings`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Falha ao carregar config de pagamento');
+    window.__paymentCfg = await res.json();
+  } catch (_e) {
+    window.__paymentCfg = window.__paymentCfg || { payment_polling_interval_seconds: 5, payment_grace_duration_seconds: 300 };
+  }
+}
+
+async function checkSelectedPaymentStatus() {
+  if (!selectedPaymentId && !macAddress) return null;
+  const url = selectedPaymentId
+    ? `${API_BASE}/api/portal/check-payment/${encodeURIComponent(selectedPaymentId)}`
+    : `${API_BASE}/api/check-payment?mac=${encodeURIComponent(macAddress)}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro ao verificar pagamento');
+  if (data && (data.status === 'approved' || data.status === 'paid')) {
+    clearPaymentPolling();
+    showStatusMessage('Pagamento aprovado, liberando acesso...', 'success');
+    setTimeout(() => redirectToMikrotik(macAddress), 1500);
+    return data;
+  }
+  return data;
+}
+
+function startPaymentPolling() {
+  clearPaymentPolling();
+  const intervalSeconds = Number(window.__paymentCfg?.payment_polling_interval_seconds || 5);
+  paymentPollingTimer = setInterval(() => {
+    if (!selectedPaymentId || redirectInProgress) return;
+    checkSelectedPaymentStatus().catch(() => {});
+  }, Math.max(2, intervalSeconds) * 1000);
 }
 
 function fieldInputType(field) {
@@ -567,21 +612,30 @@ async function continueAfterRegistrationGate() {
           paymentSection.scrollIntoView({ behavior: 'smooth' });
 
           qrCodeInner.innerHTML = 'Gerando QR Code...';
-          pixCode.textContent = 'Aguarde, gerando PIX...';
+          pixCode.textContent = 'Liberando tempo temporário para pagamento...';
 
           try {
-            const response = await fetch(`${API_BASE}/api/payments/generate-pix`, {
+            const response = await fetch(`${API_BASE}/api/portal/create-pix`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 mac_address: macAddress,
                 plan_name: selectedPlan.name,
-                amount: selectedPlan.price
+                amount: selectedPlan.price,
+                pop_id: popId,
+                pop: popId,
+                pop_unique_id: params.get('pop_unique_id') || '',
+                ip_address: clientIp
               })
             });
 
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Erro ao gerar PIX');
+
+            selectedPaymentId = data.payment_id || data.id || null;
+            const graceSeconds = Number(data.grace_duration_seconds || window.__paymentCfg?.payment_grace_duration_seconds || 300);
+            const graceLabel = graceSeconds < 60 ? `${Math.ceil(graceSeconds)} segundos` : `${Math.ceil(graceSeconds / 60)} minutos`;
+            showStatusMessage(`Liberamos ${graceLabel} de acesso para concluir o pagamento via PIX.`, 'info');
 
             if (data.qr_code_base64) {
               qrCodeInner.innerHTML = `<img src="data:image/png;base64,${data.qr_code_base64}" class="w-48 h-48" alt="QR Code PIX">`;
@@ -590,9 +644,11 @@ async function continueAfterRegistrationGate() {
             }
 
             pixCode.textContent = data.pix_copy_paste || data.pix_code || 'Código PIX não disponível';
+            startPaymentPolling();
           } catch (error) {
-            paymentSection.classList.add('hidden');
             selectedPlan = null;
+            selectedPaymentId = null;
+            clearPaymentPolling();
             showStatusMessage(error.message || 'Erro ao gerar PIX.', 'error');
           }
         });
@@ -781,13 +837,8 @@ async function continueAfterRegistrationGate() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/check-payment?mac=${encodeURIComponent(macAddress)}`);
-      const data = await res.json();
-
-      if (data && (data.status === 'approved' || data.status === 'paid')) {
-        showStatusMessage('Pagamento confirmado! Acesso liberado. Redirecionando...', 'success');
-        setTimeout(() => redirectToMikrotik(macAddress), 1500);
-      } else {
+      const data = await checkSelectedPaymentStatus();
+      if (!data || (data.status !== 'approved' && data.status !== 'paid')) {
         showStatusMessage('Pagamento ainda não encontrado. Faça o PIX e tente novamente.', 'warning');
         if (selectedPlan) {
           paymentSection.classList.remove('hidden');
@@ -802,6 +853,8 @@ async function continueAfterRegistrationGate() {
   document.getElementById('cancelarPagamentoBtn').addEventListener('click', () => {
     paymentSection.classList.add('hidden');
     selectedPlan = null;
+    selectedPaymentId = null;
+    clearPaymentPolling();
     qrCodeInner.innerHTML = 'Gerando...';
     pixCode.textContent = 'Gerando PIX...';
   });
@@ -881,6 +934,7 @@ async function continueAfterRegistrationGate() {
     lucide.createIcons();
     await loadRegistrationFields();
     await loadFreeTrialSettings();
+    await loadPaymentSettings();
     await checkAccessStatus({ skipTrialCheck: true });
     if (redirectInProgress) return;
 

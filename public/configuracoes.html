@@ -206,6 +206,21 @@
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Configuração PIX</h3>
                     <div class="space-y-4">
+                        <div><label class="text-sm text-gray-400 block mb-2">Provedor de Pagamento</label><select id="paymentProvider" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="mock">Mock / Demo</option><option value="mercadopago">Mercado Pago</option></select></div>
+                        <div class="flex items-center justify-between gap-3 p-4 rounded-xl border border-gray-700 bg-gray-900/40">
+                            <div>
+                                <p class="text-sm text-white font-semibold">Ativar liberação temporária para pagamento</p>
+                                <p class="text-xs text-gray-500">Libera alguns minutos de acesso para concluir o PIX.</p>
+                            </div>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="paymentGraceEnabled" class="sr-only peer" checked>
+                                <div class="relative w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            </label>
+                        </div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Tempo liberado para pagamento</label><div class="flex gap-3"><input type="number" id="paymentGraceDuration" value="300" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentGraceDurationUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="seconds">Segundos</option><option value="minutes">Minutos</option><option value="hours">Horas</option></select></div></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Tempo para liberar novamente</label><div class="flex gap-3"><input type="number" id="paymentGraceCooldown" value="3600" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentGraceCooldownUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="seconds">Segundos</option><option value="minutes">Minutos</option><option value="hours">Horas</option><option value="days">Dias</option></select></div></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Validade do QR Code PIX</label><div class="flex gap-3"><input type="number" id="paymentPixExpires" value="30" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentPixExpiresUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="minutes">Minutos</option><option value="hours">Horas</option></select></div></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Intervalo de verificação automática</label><div class="flex gap-3"><input type="number" id="paymentPollingInterval" value="5" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentPollingIntervalUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="seconds">Segundos</option></select></div></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="Belém/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
@@ -697,6 +712,51 @@
                     }
                 }
             } else if (key === 'payment') {
+                if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.provider || 'mock';
+                if (document.getElementById('paymentGraceEnabled')) document.getElementById('paymentGraceEnabled').checked = value.payment_grace_enabled !== false;
+                if (document.getElementById('paymentGraceDuration')) {
+                    const ds = value.payment_grace_duration_seconds ?? value.grace_duration_seconds ?? 300;
+                    if (ds % 3600 === 0) {
+                        document.getElementById('paymentGraceDuration').value = ds / 3600;
+                        document.getElementById('paymentGraceDurationUnit').value = 'hours';
+                    } else if (ds % 60 === 0) {
+                        document.getElementById('paymentGraceDuration').value = ds / 60;
+                        document.getElementById('paymentGraceDurationUnit').value = 'minutes';
+                    } else {
+                        document.getElementById('paymentGraceDuration').value = ds;
+                        document.getElementById('paymentGraceDurationUnit').value = 'seconds';
+                    }
+                }
+                if (document.getElementById('paymentGraceCooldown')) {
+                    const cs = value.payment_grace_cooldown_seconds ?? value.grace_cooldown_seconds ?? 3600;
+                    if (cs % 86400 === 0) {
+                        document.getElementById('paymentGraceCooldown').value = cs / 86400;
+                        document.getElementById('paymentGraceCooldownUnit').value = 'days';
+                    } else if (cs % 3600 === 0) {
+                        document.getElementById('paymentGraceCooldown').value = cs / 3600;
+                        document.getElementById('paymentGraceCooldownUnit').value = 'hours';
+                    } else if (cs % 60 === 0) {
+                        document.getElementById('paymentGraceCooldown').value = cs / 60;
+                        document.getElementById('paymentGraceCooldownUnit').value = 'minutes';
+                    } else {
+                        document.getElementById('paymentGraceCooldown').value = cs;
+                        document.getElementById('paymentGraceCooldownUnit').value = 'seconds';
+                    }
+                }
+                if (document.getElementById('paymentPixExpires')) {
+                    const ps = value.payment_pix_expires_minutes ?? value.pix_expires_minutes ?? 30;
+                    if (ps % 60 === 0) {
+                        document.getElementById('paymentPixExpires').value = ps / 60;
+                        document.getElementById('paymentPixExpiresUnit').value = 'hours';
+                    } else {
+                        document.getElementById('paymentPixExpires').value = ps;
+                        document.getElementById('paymentPixExpiresUnit').value = 'minutes';
+                    }
+                }
+                if (document.getElementById('paymentPollingInterval')) {
+                    document.getElementById('paymentPollingInterval').value = value.payment_polling_interval_seconds ?? value.polling_interval_seconds ?? 5;
+                    document.getElementById('paymentPollingIntervalUnit').value = 'seconds';
+                }
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
                 if (document.getElementById('pixCidade')) document.getElementById('pixCidade').value = value.pix_city || '';
@@ -792,7 +852,28 @@
                 cooldown_seconds: unitToSeconds(cooldownValue, cooldownUnit)
             };
         } else if (key === 'payment') {
+            const unitToSeconds = (value, unit) => {
+                const v = Number(value || 0);
+                if (!Number.isFinite(v)) return 0;
+                if (unit === 'minutes') return Math.floor(v * 60);
+                if (unit === 'hours') return Math.floor(v * 3600);
+                if (unit === 'days') return Math.floor(v * 86400);
+                return Math.floor(v);
+            };
+            const unitToMinutes = (value, unit) => {
+                const v = Number(value || 0);
+                if (!Number.isFinite(v)) return 0;
+                if (unit === 'hours') return Math.floor(v * 60);
+                if (unit === 'seconds') return Math.max(1, Math.ceil(v / 60));
+                return Math.floor(v);
+            };
             value = {
+                provider: document.getElementById('paymentProvider')?.value || 'mock',
+                payment_grace_enabled: document.getElementById('paymentGraceEnabled')?.checked !== false,
+                payment_grace_duration_seconds: unitToSeconds(document.getElementById('paymentGraceDuration')?.value, document.getElementById('paymentGraceDurationUnit')?.value || 'seconds'),
+                payment_grace_cooldown_seconds: unitToSeconds(document.getElementById('paymentGraceCooldown')?.value, document.getElementById('paymentGraceCooldownUnit')?.value || 'seconds'),
+                payment_pix_expires_minutes: unitToMinutes(document.getElementById('paymentPixExpires')?.value, document.getElementById('paymentPixExpiresUnit')?.value || 'minutes'),
+                payment_polling_interval_seconds: unitToSeconds(document.getElementById('paymentPollingInterval')?.value, document.getElementById('paymentPollingIntervalUnit')?.value || 'seconds'),
                 pix_key: document.getElementById('pixChave').value,
                 pix_name: document.getElementById('pixNome').value,
                 pix_city: document.getElementById('pixCidade').value
