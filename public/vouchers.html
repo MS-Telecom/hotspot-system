@@ -206,8 +206,8 @@ async function carregarVouchers() {
                 <td class="px-6 py-4 text-gray-500 text-xs">${v.expires_at ? new Date(v.expires_at).toLocaleDateString() : 'Sem expiração'}</td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex justify-end gap-2">
-                        <button onclick="editarVoucher(${JSON.stringify(v).replace(/"/g, '&quot;')})" class="p-1.5 hover:bg-gray-800 rounded-lg transition"><i data-lucide="edit" class="w-4 h-4 text-gray-400"></i></button>
-                        <button onclick="excluirVoucher(${v.id})" class="p-1.5 hover:bg-red-500/10 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
+                        <button onclick='editarVoucher(${JSON.stringify(v).replace(/'/g, '&#39;')})' class="p-1.5 hover:bg-gray-800 rounded-lg transition" title="Editar"><i data-lucide="edit" class="w-4 h-4 text-gray-400"></i></button>
+                        <button onclick='excluirVoucher(${JSON.stringify(String(v.id || ''))})' class="p-1.5 hover:bg-red-500/10 rounded-lg transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
                     </div>
                 </td>
             </tr>
@@ -259,17 +259,45 @@ function closeModalEditarVoucher() { document.getElementById('modalEditarVoucher
 
 document.getElementById('salvarEdicaoVoucherBtn').addEventListener('click', async () => {
     const id = document.getElementById('editarVoucherId').value;
-    const dados = { plan_name: document.getElementById('editarVoucherPlano').value, amount: parseFloat(document.getElementById('editarVoucherValor').value), expires_at: document.getElementById('editarVoucherValidade').value || null, used: document.getElementById('editarVoucherStatus').value === 'true' };
+    const dados = {
+        plan_name: document.getElementById('editarVoucherPlano').value.trim(),
+        amount: parseFloat(document.getElementById('editarVoucherValor').value),
+        expires_at: document.getElementById('editarVoucherValidade').value || null,
+        used: document.getElementById('editarVoucherStatus').value === 'true'
+    };
+
+    if (!id) {
+        alert('Voucher inválido');
+        return;
+    }
+
+    if (!dados.plan_name || Number.isNaN(dados.amount)) {
+        alert('Preencha plano e valor corretamente');
+        return;
+    }
+
     try {
-        // PUT /api/vouchers/:id não existe no backend oficial
-        alert('Funcionalidade de edição de voucher não disponível no backend oficial');
-    } catch (error) { alert('❌ Erro ao atualizar voucher'); }
+        const res = await fetch(`${API_URL}/api/vouchers/${encodeURIComponent(String(id))}`, {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify(dados)
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Erro ao atualizar voucher');
+
+        alert('✅ Voucher atualizado com sucesso!');
+        closeModalEditarVoucher();
+        carregarVouchers();
+    } catch (error) {
+        alert(error.message || '❌ Erro ao atualizar voucher');
+    }
 });
 
 async function excluirVoucher(id) {
     if (!confirm('Tem certeza que deseja excluir este voucher?')) return;
     try {
-        const res = await fetch(`${API_URL}/api/vouchers/${id}`, { method: 'DELETE', headers: authHeaders(false) });
+        const res = await fetch(`${API_URL}/api/vouchers/${encodeURIComponent(String(id))}`, { method: 'DELETE', headers: authHeaders(false) });
         if (res.ok) { alert('✅ Voucher excluído!'); carregarVouchers(); }
         else alert('❌ Erro ao excluir voucher');
     } catch (error) { alert('❌ Erro ao excluir voucher'); }
