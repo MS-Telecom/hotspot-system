@@ -249,7 +249,18 @@ function getPaymentCustomer(p) { return p.user_name || p.usuario_nome || p.clien
 function getPaymentPlan(p) { return p.plan_name || p.plano_nome || p.plano || 'N/A'; }
 function getPaymentMethod(p) { return p.payment_method || p.metodo || 'PIX'; }
 function getPaymentHotspot(p) { return p.hotspot_name || p.pop || p.localidade || p.hotspot || 'Não informado'; }
+function getPaymentMac(p) { return p.mac_address || p.user_mac || p.mac || p.client_mac || p.device_mac || p.user?.mac_address || ''; }
+function getPaymentPopId(p) { return p.pop_id || p.pop_unique_id || p.pop || p.hotspot_id || ''; }
 function isConfirmedPayment(p) { return p.status === 'approved' || p.status === 'confirmed' || p.status === 'pago'; }
+
+function escapeCsv(value) {
+    const text = String(value ?? '');
+    return /[;"\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function safePaymentId(p) {
+    return JSON.stringify(String(p?.id ?? ''));
+}
 
 function sumValues(arr) { return arr?.reduce((s, p) => s + getPaymentAmount(p), 0) || 0; }
 
@@ -366,7 +377,7 @@ function atualizarTabela(pagamentos) {
     const tbody = document.getElementById('tabelaPagamentos');
     const recentes = [...pagamentos].sort((a,b)=>new Date(getPaymentDate(b))-new Date(getPaymentDate(a))).slice(0,5);
     if(recentes.length===0) { tbody.innerHTML='<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhuma transação</td></tr>'; return; }
-    tbody.innerHTML = recentes.map(p => `<tr class="hover:bg-gray-900/30 cursor-pointer" onclick="verDetalhesTransacao('${p.id}')"><td class="px-6 py-4 text-sm text-gray-400">${new Date(getPaymentDate(p)).toLocaleString('pt-BR')}</td><td class="px-6 py-4 text-sm text-white">${getPaymentCustomer(p)}</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] rounded-lg">${getPaymentPlan(p)}</span></td><td class="px-6 py-4 font-bold text-emerald-400">R$ ${getPaymentAmount(p).toFixed(2)}</td><td class="px-6 py-4 text-sm text-gray-400">${getPaymentMethod(p)}</td><td class="px-6 py-4"><span class="px-2 py-1 ${isConfirmedPayment(p)?'bg-emerald-500/20 text-emerald-500':'bg-yellow-500/20 text-yellow-500'} text-[10px] rounded-lg">${isConfirmedPayment(p)?'Confirmado':'Pendente'}</span></td><td class="px-6 py-4 text-center"><button onclick="event.stopPropagation(); abrirModalPix('${p.id}', ${getPaymentAmount(p)})" class="p-1.5 hover:bg-gray-800 rounded-lg"><i data-lucide="qrcode" class="w-4 h-4 text-blue-500"></i></button></td></tr>`).join('');
+    tbody.innerHTML = recentes.map(p => `<tr class="hover:bg-gray-900/30 cursor-pointer" onclick='verDetalhesTransacao(${safePaymentId(p)})'><td class="px-6 py-4 text-sm text-gray-400">${new Date(getPaymentDate(p)).toLocaleString('pt-BR')}</td><td class="px-6 py-4 text-sm text-white">${getPaymentCustomer(p)}</td><td class="px-6 py-4"><span class="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] rounded-lg">${getPaymentPlan(p)}</span></td><td class="px-6 py-4 font-bold text-emerald-400">R$ ${getPaymentAmount(p).toFixed(2)}</td><td class="px-6 py-4 text-sm text-gray-400">${getPaymentMethod(p)}</td><td class="px-6 py-4"><span class="px-2 py-1 ${isConfirmedPayment(p)?'bg-emerald-500/20 text-emerald-500':'bg-yellow-500/20 text-yellow-500'} text-[10px] rounded-lg">${isConfirmedPayment(p)?'Confirmado':'Pendente'}</span></td><td class="px-6 py-4 text-center"><button onclick='event.stopPropagation(); cobrarCliente(${safePaymentId(p)})' class="p-1.5 hover:bg-gray-800 rounded-lg" title="Gerar PIX"><i data-lucide="qrcode" class="w-4 h-4 text-blue-500"></i></button></td></tr>`).join('');
     if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -374,7 +385,7 @@ function atualizarPendentes(pagamentos) {
     const pendentes = pagamentos.filter(p => !isConfirmedPayment(p));
     const container = document.getElementById('pendentesContainer');
     if(pendentes.length===0) { container.innerHTML='<div class="text-center text-gray-500 py-4">Nenhum pagamento pendente</div>'; return; }
-    container.innerHTML = pendentes.slice(0,5).map(p => `<div class="flex justify-between items-center p-3 bg-gray-900/30 rounded-xl mb-2"><div><p class="font-medium text-white text-sm">${getPaymentCustomer(p)}</p><p class="text-[10px] text-gray-500">${getPaymentPlan(p)} • Vencimento: ${new Date(getPaymentDate(p)).toLocaleDateString('pt-BR')}</p></div><div class="flex items-center gap-3"><span class="text-emerald-400 font-bold text-sm">R$ ${getPaymentAmount(p).toFixed(2)}</span><button onclick="event.stopPropagation(); cobrarCliente('${p.id}')" class="bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-500 px-3 py-1 rounded-lg text-xs transition">Cobrar</button></div></div>`).join('');
+    container.innerHTML = pendentes.slice(0,5).map(p => `<div class="flex justify-between items-center p-3 bg-gray-900/30 rounded-xl mb-2"><div><p class="font-medium text-white text-sm">${getPaymentCustomer(p)}</p><p class="text-[10px] text-gray-500">${getPaymentPlan(p)} • Vencimento: ${new Date(getPaymentDate(p)).toLocaleDateString('pt-BR')}</p></div><div class="flex items-center gap-3"><span class="text-emerald-400 font-bold text-sm">R$ ${getPaymentAmount(p).toFixed(2)}</span><button onclick='event.stopPropagation(); cobrarCliente(${safePaymentId(p)})' class="bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-500 px-3 py-1 rounded-lg text-xs transition">Cobrar</button></div></div>`).join('');
 }
 
 let todasTransacoesLista = [];
@@ -388,7 +399,7 @@ function renderPaginaTransacoes() {
     const start=(currentPage-1)*itemsPerPage; const end=start+itemsPerPage;
     const pageItems = todasTransacoesLista.slice(start,end);
     const totalPages = Math.ceil(todasTransacoesLista.length/itemsPerPage);
-    document.getElementById('tabelaTodasTransacoes').innerHTML = pageItems.map(p => `<tr class="hover:bg-gray-900/30 cursor-pointer" onclick="verDetalhesTransacao('${p.id}')"><td class="px-4 py-3 text-xs text-gray-400">${new Date(getPaymentDate(p)).toLocaleString('pt-BR')}</td><td class="px-4 py-3 text-xs text-white">${getPaymentCustomer(p)}</td><td class="px-4 py-3 text-xs">${getPaymentPlan(p)}</td><td class="px-4 py-3 text-emerald-400 font-bold text-xs">R$ ${getPaymentAmount(p).toFixed(2)}</td><td class="px-4 py-3 text-xs text-gray-400">${getPaymentMethod(p)}</td><td class="px-4 py-3"><span class="px-2 py-1 ${isConfirmedPayment(p)?'bg-emerald-500/20 text-emerald-500':'bg-yellow-500/20 text-yellow-500'} text-[10px] rounded-lg">${isConfirmedPayment(p)?'Confirmado':'Pendente'}</span></td><td class="px-4 py-3 text-center"><button onclick="event.stopPropagation(); abrirModalPix('${p.id}', ${getPaymentAmount(p)})" class="p-1 hover:bg-gray-800 rounded-lg"><i data-lucide="qrcode" class="w-4 h-4 text-blue-500"></i></button></td></tr>`).join('');
+    document.getElementById('tabelaTodasTransacoes').innerHTML = pageItems.map(p => `<tr class="hover:bg-gray-900/30 cursor-pointer" onclick='verDetalhesTransacao(${safePaymentId(p)})'><td class="px-4 py-3 text-xs text-gray-400">${new Date(getPaymentDate(p)).toLocaleString('pt-BR')}</td><td class="px-4 py-3 text-xs text-white">${getPaymentCustomer(p)}</td><td class="px-4 py-3 text-xs">${getPaymentPlan(p)}</td><td class="px-4 py-3 text-emerald-400 font-bold text-xs">R$ ${getPaymentAmount(p).toFixed(2)}</td><td class="px-4 py-3 text-xs text-gray-400">${getPaymentMethod(p)}</td><td class="px-4 py-3"><span class="px-2 py-1 ${isConfirmedPayment(p)?'bg-emerald-500/20 text-emerald-500':'bg-yellow-500/20 text-yellow-500'} text-[10px] rounded-lg">${isConfirmedPayment(p)?'Confirmado':'Pendente'}</span></td><td class="px-4 py-3 text-center"><button onclick='event.stopPropagation(); cobrarCliente(${safePaymentId(p)})' class="p-1 hover:bg-gray-800 rounded-lg" title="Gerar PIX"><i data-lucide="qrcode" class="w-4 h-4 text-blue-500"></i></button></td></tr>`).join('');
     const pag = document.getElementById('paginacaoContainer');
     if(totalPages>1) { let h=''; for(let i=1;i<=totalPages;i++) h+=`<button onclick="irParaPagina(${i})" class="px-3 py-1 rounded-lg text-xs ${i===currentPage?'bg-blue-600 text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'} transition">${i}</button>`; pag.innerHTML=h; } else pag.innerHTML='';
     if(typeof lucide !== 'undefined') lucide.createIcons();
@@ -403,31 +414,76 @@ function verDetalhesTransacao(id) {
 }
 function closeModalDetalhesTransacao() { document.getElementById('modalDetalhesTransacao').classList.add('hidden'); }
 
-async function abrirModalPix(pagamentoId, valor) {
+async function abrirModalPix(pagamentoId) {
+    const pagamento = pagamentosData.find(i => String(i.id) === String(pagamentoId));
+    if (!pagamento) {
+        alert('Pagamento não encontrado');
+        return;
+    }
+
+    const mac = getPaymentMac(pagamento);
+    const planName = getPaymentPlan(pagamento);
+    if (!mac || !planName || planName === 'N/A') {
+        alert('Este pagamento não possui MAC/plano suficientes para gerar PIX.');
+        return;
+    }
+
     const modal = document.getElementById('modalPix');
     const qrContainer = document.getElementById('qrCodeContainer');
     const pixCode = document.getElementById('pixCopiaCola');
     modal.classList.remove('hidden');
     qrContainer.innerHTML = '<div class="text-center text-gray-400">Gerando QR Code...</div>';
+    pixCode.textContent = 'Gerando PIX...';
+
     try {
-        const res = await fetch(`${API_URL}/api/payments/generate-pix`, { method:'POST', headers:authHeaders(true), body:JSON.stringify({ payment_id:pagamentoId, amount:valor, description:'Plano WiFi' }) });
-        const data = await res.json();
-        if(!res.ok) throw new Error(data.error||'Erro ao gerar PIX');
-        pixCode.textContent = data.pix_copy_paste || 'Código PIX não disponível';
-        qrContainer.innerHTML = data.qr_code ? `<img src="${data.qr_code}" alt="QR Code" class="w-48 h-48 mx-auto">` : '<div class="text-center text-yellow-500">QR Code não disponível</div>';
-    } catch(e) { console.error('Erro PIX:', e); qrContainer.innerHTML='<div class="text-center text-red-500">Erro ao gerar PIX</div>'; pixCode.textContent='Erro'; }
+        const payload = {
+            payment_id: pagamento.id,
+            mac_address: mac,
+            plan_id: pagamento.plan_id || pagamento.plan?.id || null,
+            plan_name: planName,
+            amount: getPaymentAmount(pagamento),
+            description: planName || 'Plano WiFi',
+            pop_id: getPaymentPopId(pagamento) || null
+        };
+
+        const res = await fetch(`${API_URL}/api/payments/generate-pix`, {
+            method: 'POST',
+            headers: authHeaders(true),
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Erro ao gerar PIX');
+
+        pixCode.textContent = data.pix_copy_paste || data.pix_code || 'Código PIX não disponível';
+        const qrCode = data.qr_code || data.qr_code_base64 || '';
+        const qrSrc = qrCode && qrCode.startsWith('data:') ? qrCode : (qrCode ? `data:image/png;base64,${qrCode}` : '');
+
+        qrContainer.innerHTML = qrSrc
+            ? `<img src="${qrSrc}" alt="QR Code" class="w-48 h-48 mx-auto">`
+            : '<div class="text-center text-yellow-500">QR Code não disponível</div>';
+    } catch(e) {
+        console.error('Erro PIX:', e);
+        qrContainer.innerHTML = '<div class="text-center text-red-500">Erro ao gerar PIX</div>';
+        pixCode.textContent = e.message || 'Erro';
+    }
 }
 function fecharModalPix() { document.getElementById('modalPix').classList.add('hidden'); }
 function copiarPix() { navigator.clipboard.writeText(document.getElementById('pixCopiaCola').textContent).then(()=>alert('Código PIX copiado!')).catch(()=>alert('Erro ao copiar')); }
 
-function cobrarCliente(pagamentoId) { const p = pagamentosData.find(i=>i.id==pagamentoId); if(p) abrirModalPix(p.id, getPaymentAmount(p)); }
-function cobrarTodosPendentes() { const pend = pagamentosData.filter(p=>!isConfirmedPayment(p)); if(pend.length===0){alert('Não há pagamentos pendentes');return;} if(pend.length>1) alert(`${pend.length} pagamentos pendentes. Abrindo o primeiro.`); abrirModalPix(pend[0].id, getPaymentAmount(pend[0])); }
+function cobrarCliente(pagamentoId) { abrirModalPix(pagamentoId); }
+function cobrarTodosPendentes() {
+    const pend = pagamentosData.filter(p => !isConfirmedPayment(p));
+    if (pend.length === 0) { alert('Não há pagamentos pendentes'); return; }
+    if (pend.length > 1) alert(`${pend.length} pagamentos pendentes. Abrindo o primeiro.`);
+    abrirModalPix(pend[0].id);
+}
 
 function exportarFinanceiro() {
     if(pagamentosData.length===0){alert('Não há dados para exportar');return;}
     const headers = ['ID','Data','Cliente','Plano','Valor','Método','Status'];
     const rows = pagamentosData.map(p=>[p.id,new Date(getPaymentDate(p)).toLocaleString('pt-BR'),getPaymentCustomer(p),getPaymentPlan(p),getPaymentAmount(p).toFixed(2),getPaymentMethod(p),isConfirmedPayment(p)?'Confirmado':'Pendente']);
-    const csv = [headers,...rows].map(r=>r.join(';')).join('\n');
+    const csv = [headers,...rows].map(r => r.map(escapeCsv).join(';')).join('\n');
     const blob = new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8;'});
     const link = document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`financeiro_${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(link.href);
 }
