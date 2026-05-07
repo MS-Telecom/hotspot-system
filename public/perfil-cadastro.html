@@ -3,39 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>MS Telecom | Perfil de Cadastro</title>
+    <title>MS Telecom | Perfil do Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0c15; }
-        .glass-card { background: rgba(15, 25, 35, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(59,130,246,0.2); transition: all 0.2s ease; }
-        .glass-card:hover { border-color: rgba(59,130,246,0.5); transform: translateX(2px); }
-        .sidebar-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.2), transparent); border-left: 3px solid #3b82f6; color: #3b82f6; }
-        .sidebar-link { transition: all 0.2s ease; }
-        .sidebar-link:hover { background: rgba(59,130,246,0.1); color: #fff; }
+        :root {
+            --bg: #0a0c15;
+            --card: rgba(12, 16, 28, 0.84);
+            --card-strong: rgba(15, 20, 35, 0.96);
+            --border: rgba(56, 189, 248, 0.16);
+            --border-strong: rgba(56, 189, 248, 0.34);
+            --text: #e5eefc;
+        }
+        html, body { min-height: 100%; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background:
+                radial-gradient(circle at top, rgba(14, 165, 233, 0.10), transparent 36%),
+                radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.08), transparent 30%),
+                var(--bg);
+            color: var(--text);
+        }
+        .glass-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.30);
+        }
+        .glass-card-strong {
+            background: linear-gradient(180deg, rgba(14, 19, 34, 0.96), rgba(8, 11, 20, 0.92));
+            border: 1px solid rgba(148, 163, 184, 0.10);
+        }
+        .sidebar-link.active {
+            background: linear-gradient(90deg, rgba(59,130,246,0.18), transparent);
+            border-left: 3px solid #38bdf8;
+            color: #e0f2fe;
+        }
+        .sidebar-link { transition: all .2s ease; }
+        .sidebar-link:hover { background: rgba(59,130,246,0.08); color: #fff; }
         #sidebar { z-index: 100; }
         #menuToggle { z-index: 101; }
         #menuOverlay { z-index: 99; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.45); border-radius: 999px; }
+        .toggle-track {
+            width: 46px;
+            height: 28px;
+            border-radius: 999px;
+            background: rgba(51,65,85,.9);
+            border: 1px solid rgba(148,163,184,.18);
+            position: relative;
+            transition: all .18s ease;
+            flex: 0 0 auto;
+        }
+        .toggle-track::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, #fff, #dbeafe);
+            box-shadow: 0 6px 14px rgba(0,0,0,.25);
+            transition: transform .18s ease;
+        }
+        .toggle-input:checked + .toggle-track {
+            background: linear-gradient(90deg, #2563eb, #22d3ee);
+            border-color: rgba(103,232,249,.75);
+        }
+        .toggle-input:checked + .toggle-track::after { transform: translateX(18px); }
+        .toggle-input:disabled + .toggle-track { opacity: .45; cursor: not-allowed; }
+        .device-frame {
+            border: 1px solid rgba(56, 189, 248, .22);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 18px 40px rgba(0,0,0,.28);
+        }
+        .preview-phone { width: 390px; }
+        .preview-tablet { width: 820px; }
+        .preview-desktop { width: 100%; max-width: 980px; }
+        .preview-shell { transform-origin: top center; transition: transform .18s ease, width .18s ease; }
+        .preview-shell[data-device="tablet"] { transform: scale(.88); }
+        .preview-shell[data-device="mobile"] { transform: scale(1); }
+        .preview-shell[data-device="desktop"] { transform: scale(.98); }
+        .chip {
+            border: 1px solid rgba(56, 189, 248, .22);
+            background: rgba(15, 23, 42, .82);
+            color: #cbd5e1;
+        }
+        .chip.active {
+            background: linear-gradient(90deg, rgba(37,99,235,.28), rgba(34,211,238,.22));
+            color: #e0f2fe;
+            border-color: rgba(103,232,249,.55);
+        }
     </style>
 </head>
 <body class="bg-[#0a0c15] text-gray-200">
-
 <script>
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
     if (!token) window.location.href = 'login.html';
 </script>
 
-<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-lg text-white shadow-lg">
+<button id="menuToggle" class="md:hidden fixed top-4 left-4 z-[101] p-2 bg-blue-600 rounded-xl text-white shadow-lg">
     <i data-lucide="menu" class="w-5 h-5"></i>
 </button>
 <div id="menuOverlay" class="hidden md:hidden fixed inset-0 bg-black/70 z-[90]"></div>
 
 <div class="flex h-screen overflow-hidden">
-    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-[#0f1119] hidden md:flex md:flex-col fixed md:static inset-y-0 left-0 z-[80] transition-all border-r border-gray-800 flex flex-col shrink-0">
         <div class="p-6 border-b border-gray-800">
             <div class="flex items-center gap-3">
@@ -43,14 +118,14 @@
                     <i data-lucide="zap" class="text-white w-5 h-5"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-500">TELECOM</span></h1>
+                    <h1 class="text-xl font-black tracking-tight">MS <span class="text-blue-400">TELECOM</span></h1>
                     <p class="text-[9px] text-gray-500 uppercase tracking-wider">NOC Commander</p>
                 </div>
             </div>
         </div>
-<nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
             <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
-            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
+            <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
             </a>
             <a href="hotspots.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
@@ -78,41 +153,138 @@
                 <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
             </a>
             <a href="logs-auditoria.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs Auditoria
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i> Logs de Auditoria
             </a>
             <a href="perfil-cadastro.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil de Cadastro
+                <i data-lucide="user-cog" class="w-5 h-5"></i> Perfil do Portal
             </a>
         </nav>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
         <header class="sticky top-0 z-10 bg-[#0a0c15]/95 backdrop-blur-sm border-b border-gray-800 px-4 sm:px-8 py-4 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-center">
             <div class="relative w-full sm:w-96">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
-                <input type="text" id="searchInput" placeholder="Buscar campo..." class="w-full bg-gray-900/50 border border-gray-700 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Buscar configuração..." class="w-full bg-gray-900/60 border border-gray-700 rounded-2xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-cyan-500 transition">
             </div>
             <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block"><p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p><p class="text-[9px] text-emerald-500 font-bold uppercase">Sistema Operacional</p></div>
-                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil"><i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i></button>
-                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair"><i data-lucide="log-out" class="w-5 h-5 text-red-400"></i></button>
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg"><span class="text-white font-bold text-sm">AD</span></div>
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs font-bold text-white">Bem-vindo, <span id="userName">Administrador</span></p>
+                    <p class="text-[9px] text-cyan-400 font-bold uppercase">Perfil do Portal</p>
+                </div>
+                <button onclick="openModalPerfil()" class="p-2 hover:bg-gray-800 rounded-lg transition" title="Meu Perfil">
+                    <i data-lucide="user-circle" class="w-5 h-5 text-blue-400"></i>
+                </button>
+                <button onclick="sair()" class="p-2 hover:bg-red-500/20 rounded-lg transition" title="Sair">
+                    <i data-lucide="log-out" class="w-5 h-5 text-red-400"></i>
+                </button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-sm">AD</span>
+                </div>
             </div>
         </header>
 
         <div class="p-4 sm:p-8 space-y-6 sm:space-y-8">
-            <div><h1 class="text-2xl sm:text-3xl font-black tracking-tight">Perfil de Cadastro</h1><p class="text-gray-500 text-xs sm:text-sm mt-1">Configure quais campos serão exibidos no formulário de cadastro</p></div>
-
-            <div id="loadingState" class="text-center py-12"><i data-lucide="loader-circle" class="w-8 h-8 animate-spin mx-auto text-blue-500"></i><p class="text-gray-500 mt-2">Carregando configurações...</p></div>
-
-            <div id="camposContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-                <!-- Carregado via JS -->
+            <div class="space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full chip text-xs font-semibold">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    Premium
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Perfil do Portal</h1>
+                    <p class="text-gray-400 text-xs sm:text-sm mt-1">Configure os campos de cadastro e visualize como o portal aparecerá para o cliente.</p>
+                </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3 pt-4">
-                <button id="salvarBtn" onclick="salvarConfiguracoes()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-lg text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/50 transition flex items-center justify-center gap-2"><i data-lucide="check" class="w-5 h-5"></i> Salvar Configurações</button>
-                <button onclick="window.history.back()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2"><i data-lucide="x" class="w-5 h-5"></i> Cancelar</button>
+            <div class="grid grid-cols-1 xl:grid-cols-[1.08fr_.92fr] gap-6 items-start">
+                <section class="glass-card rounded-3xl p-4 sm:p-6 border border-slate-800/80">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between mb-5">
+                        <div>
+                            <h2 class="text-lg font-extrabold text-white">Configurações do formulário</h2>
+                            <p class="text-sm text-slate-400">Ative, desative e torne campos obrigatórios.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="tab-btn chip active px-4 py-2 rounded-full text-xs font-semibold" data-tab="cadastro">Cadastro</button>
+                            <button class="tab-btn chip px-4 py-2 rounded-full text-xs font-semibold" data-tab="visualizacao">Visualização</button>
+                        </div>
+                    </div>
+
+                    <div id="loadingState" class="text-center py-14">
+                        <i data-lucide="loader-circle" class="w-9 h-9 animate-spin mx-auto text-cyan-400"></i>
+                        <p class="text-slate-400 mt-3">Carregando configurações...</p>
+                    </div>
+
+                    <div id="tabCadastro" class="space-y-4 hidden">
+                        <div class="glass-card-strong rounded-3xl p-4 sm:p-5 border border-slate-800/80">
+                            <div class="flex flex-col gap-1 mb-4">
+                                <h3 class="text-sm font-bold text-white">Cadastro</h3>
+                                <p class="text-xs text-slate-400">A lógica segue a estrutura recebida de <code class="text-cyan-300">/api/settings/fields</code>.</p>
+                            </div>
+                            <div id="camposContainer" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <div id="tabVisualizacao" class="hidden space-y-4">
+                        <div class="glass-card-strong rounded-3xl p-4 sm:p-5 border border-slate-800/80">
+                            <div class="flex items-center gap-3 mb-4">
+                                <i data-lucide="eye" class="w-5 h-5 text-cyan-400"></i>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white">Prévia do Portal</h3>
+                                    <p class="text-xs text-slate-400">Use os controles da direita para visualizar em celular, tablet e desktop.</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                O portal será renderizado de acordo com os campos habilitados, com asterisco nos obrigatórios e botão <span class="text-white font-semibold">Pular agora</span> apenas quando houver campos opcionais.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 pt-6">
+                        <button id="salvarBtn" onclick="salvarConfiguracoes()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl text-sm font-bold text-white hover:shadow-lg hover:shadow-blue-500/30 transition flex items-center justify-center gap-2">
+                            <i data-lucide="check" class="w-5 h-5"></i> Salvar configurações
+                        </button>
+                        <button onclick="window.history.back()" class="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                            <i data-lucide="x" class="w-5 h-5"></i> Cancelar
+                        </button>
+                    </div>
+                </section>
+
+                <section class="glass-card rounded-3xl p-4 sm:p-6 border border-slate-800/80">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between mb-5">
+                        <div>
+                            <h2 class="text-lg font-extrabold text-white">Prévia em tempo real</h2>
+                            <p class="text-sm text-slate-400">Visualização do portal no tamanho do dispositivo selecionado.</p>
+                        </div>
+                        <div class="inline-flex items-center gap-2 p-1 rounded-full bg-slate-900/90 border border-slate-800">
+                            <button class="device-btn chip active px-4 py-2 rounded-full text-xs font-semibold" data-device="mobile">Celular</button>
+                            <button class="device-btn chip px-4 py-2 rounded-full text-xs font-semibold" data-device="tablet">Tablet</button>
+                            <button class="device-btn chip px-4 py-2 rounded-full text-xs font-semibold" data-device="desktop">Desktop</button>
+                        </div>
+                    </div>
+
+                    <div id="previewViewport" class="flex justify-center overflow-hidden custom-scrollbar">
+                        <div id="devicePreview" class="preview-shell preview-phone" data-device="mobile">
+                            <div class="device-frame rounded-[2rem] p-4 sm:p-5 bg-[#0c111d]">
+                                <div class="rounded-[1.6rem] overflow-hidden bg-[#0f1423] border border-slate-800">
+                                    <div class="px-5 pt-5 pb-4 border-b border-slate-800/80 bg-gradient-to-b from-slate-900/70 to-transparent">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg">
+                                                <i data-lucide="wifi" class="w-5 h-5 text-white"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] uppercase tracking-[0.2em] text-cyan-400 font-bold">MS Telecom</p>
+                                                <h3 class="text-xl font-extrabold text-white">Bem-vindo ao MS Telecom Wi-Fi</h3>
+                                                <p class="text-sm text-slate-400 mt-1">Conecte-se e aproveite nossa rede Wi-Fi.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-5 space-y-3" id="previewContent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
@@ -121,6 +293,8 @@
 <script>
     const API_URL = 'https://mstelecom-api.duckdns.org';
     let allCampos = [];
+    let previewDevice = 'mobile';
+    let activeTab = 'cadastro';
 
     function authHeaders() {
         return {
@@ -129,55 +303,276 @@
         };
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function slugToLabel(field) {
+        const map = {
+            name: 'Nome Completo',
+            phone: 'Telefone/WhatsApp',
+            email: 'E-mail',
+            cpf: 'CPF',
+            birth_date: 'Data de Nascimento',
+            gender: 'Gênero',
+            address: 'Endereço',
+            city: 'Cidade',
+            cep: 'CEP',
+            terms: 'Aceite dos termos'
+        };
+        return map[field] || field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function normalizeFields(raw) {
+        const defaults = [
+            'name', 'phone', 'email', 'cpf', 'birth_date',
+            'gender', 'address', 'city', 'cep', 'terms'
+        ].map(field => ({ field, label: slugToLabel(field), enabled: false, required: false }));
+        const source = Array.isArray(raw) ? raw : [];
+        const merged = defaults.map(def => {
+            const found = source.find(item => item?.field === def.field) || {};
+            return {
+                field: def.field,
+                label: found.label || def.label,
+                enabled: !!found.enabled,
+                required: !!found.required
+            };
+        });
+        source.forEach(item => {
+            if (item?.field && !merged.some(x => x.field === item.field)) {
+                merged.push({
+                    field: item.field,
+                    label: item.label || slugToLabel(item.field),
+                    enabled: !!item.enabled,
+                    required: !!item.required
+                });
+            }
+        });
+        return merged;
+    }
+
+    function buildMap() {
+        const map = new Map();
+        allCampos.forEach(campo => map.set(campo.field, campo));
+        return map;
+    }
+
+    function hasRequiredEnabled() {
+        return allCampos.some(c => c.enabled && c.required);
+    }
+
+    function hasAnyEnabled() {
+        return allCampos.some(c => c.enabled);
+    }
+
+    function renderPreview() {
+        const preview = document.getElementById('previewContent');
+        if (!preview) return;
+        const enabled = allCampos.filter(c => c.enabled);
+        const required = enabled.filter(c => c.required);
+        const optional = enabled.filter(c => !c.required);
+        const showSkip = enabled.length > 0 && required.length === 0;
+        const map = buildMap();
+        const rows = enabled.map(campo => {
+            const isRequired = !!campo.required;
+            const label = escapeHtml(campo.label || slugToLabel(campo.field));
+            const tech = escapeHtml(campo.field);
+            const type = campo.field === 'email' ? 'email' : campo.field === 'phone' ? 'tel' : 'text';
+            const placeholder = {
+                name: 'Digite seu nome',
+                phone: '(91) 9 9999-9999',
+                email: 'voce@exemplo.com',
+                cpf: '000.000.000-00',
+                birth_date: 'dd/mm/aaaa',
+                gender: 'Selecione',
+                address: 'Rua, número, bairro',
+                city: 'Belém',
+                cep: '00000-000',
+                terms: 'Concordo com os termos'
+            }[campo.field] || 'Digite aqui';
+            if (campo.field === 'terms') {
+                return `
+                    <label class="flex items-start gap-3 rounded-2xl bg-slate-900/70 border border-slate-800 px-4 py-3">
+                        <input type="checkbox" checked class="mt-1 w-4 h-4 accent-cyan-400">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-white">${label}${isRequired ? '<span class="text-cyan-400"> *</span>' : ''}</span>
+                                <span class="text-[10px] uppercase tracking-[0.16em] text-slate-500">${tech}</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">Aceite dos termos e condições para continuar.</p>
+                        </div>
+                    </label>
+                `;
+            }
+            if (campo.field === 'gender') {
+                return `
+                    <div class="rounded-2xl bg-slate-900/70 border border-slate-800 px-4 py-3">
+                        <div class="flex items-center justify-between gap-3 mb-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-white">${label}${isRequired ? '<span class="text-cyan-400"> *</span>' : ''}</span>
+                                    <span class="text-[10px] uppercase tracking-[0.16em] text-slate-500">${tech}</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Campo seletor ilustrativo no portal.</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button class="px-3 py-2 rounded-xl bg-slate-800/90 text-xs text-white border border-slate-700">Masculino</button>
+                            <button class="px-3 py-2 rounded-xl bg-slate-800/90 text-xs text-white border border-slate-700">Feminino</button>
+                        </div>
+                    </div>
+                `;
+            }
+            return `
+                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 px-4 py-3">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-sm font-semibold text-white">${label}${isRequired ? '<span class="text-cyan-400"> *</span>' : ''}</span>
+                            <span class="text-[10px] uppercase tracking-[0.16em] text-slate-500">${tech}</span>
+                        </div>
+                        <span class="text-[10px] px-2 py-1 rounded-full ${isRequired ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-400/20' : 'bg-slate-800 text-slate-300 border border-slate-700'}">${isRequired ? 'Obrigatório' : 'Opcional'}</span>
+                    </div>
+                    <div class="rounded-xl border border-slate-800 bg-[#0b1020] px-4 py-3 text-sm text-slate-500">${escapeHtml(placeholder)}</div>
+                </div>
+            `;
+        }).join('');
+
+        preview.innerHTML = `
+            <div class="space-y-3">
+                ${rows}
+                ${enabled.length === 0 ? `
+                    <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 px-4 py-6 text-center">
+                        <i data-lucide="info" class="w-5 h-5 mx-auto text-cyan-400"></i>
+                        <p class="text-sm text-slate-300 mt-2">Nenhum campo habilitado no momento.</p>
+                        <p class="text-xs text-slate-500 mt-1">A prévia mostra o estado atual do formulário.</p>
+                    </div>
+                ` : ''}
+
+                <div class="pt-2 space-y-3">
+                    <button class="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold py-3 shadow-lg shadow-cyan-500/20">Continuar</button>
+                    ${showSkip ? '<button class="w-full rounded-2xl bg-slate-800 text-slate-300 font-bold py-3 border border-slate-700">Pular agora</button>' : ''}
+                    ${optional.length ? `<p class="text-[11px] text-slate-500 text-center">Campos opcionais: ${optional.map(c => escapeHtml(c.label)).join(', ')}</p>` : ''}
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function renderCampos() {
+        const container = document.getElementById('camposContainer');
+        if (!container) return;
+        if (!allCampos.length) {
+            container.innerHTML = `
+                <div class="text-center py-12 glass-card rounded-2xl">
+                    <p class="text-gray-400">Nenhum campo configurado no backend.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = allCampos.map(campo => {
+            const label = escapeHtml(campo.label || slugToLabel(campo.field));
+            const tech = escapeHtml(campo.field);
+            const disabled = !campo.enabled;
+            return `
+                <div class="glass-card-strong rounded-3xl p-4 sm:p-5 border border-slate-800/90">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="font-bold text-white text-sm">${label}</h3>
+                                <span class="text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">${tech}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Aba configurável do portal público.</p>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" class="sr-only toggle-input habilitado-toggle" data-campo="${escapeHtml(campo.field)}" ${campo.enabled ? 'checked' : ''}>
+                                <span class="toggle-track"></span>
+                                <span class="text-xs text-slate-300">Habilitado</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer select-none ${disabled ? 'opacity-50 pointer-events-none' : ''}">
+                                <input type="checkbox" class="sr-only toggle-input obrigatorio-toggle" data-campo="${escapeHtml(campo.field)}" ${campo.required ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+                                <span class="toggle-track"></span>
+                                <span class="text-xs text-slate-300">Obrigatório</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.habilitado-toggle').forEach(toggle => {
+            toggle.addEventListener('change', () => {
+                const field = toggle.dataset.campo;
+                const requiredToggle = document.querySelector(`.obrigatorio-toggle[data-campo="${CSS.escape(field)}"]`);
+                const item = allCampos.find(c => c.field === field);
+                if (!item) return;
+                item.enabled = toggle.checked;
+                if (!toggle.checked) {
+                    item.required = false;
+                    if (requiredToggle) {
+                        requiredToggle.checked = false;
+                        requiredToggle.disabled = true;
+                    }
+                } else if (requiredToggle) {
+                    requiredToggle.disabled = false;
+                }
+                renderPreview();
+            });
+        });
+
+        document.querySelectorAll('.obrigatorio-toggle').forEach(toggle => {
+            toggle.addEventListener('change', () => {
+                const field = toggle.dataset.campo;
+                const item = allCampos.find(c => c.field === field);
+                if (!item || !item.enabled) {
+                    toggle.checked = false;
+                    return;
+                }
+                item.required = toggle.checked;
+                renderPreview();
+            });
+        });
+    }
+
     async function carregarCampos() {
         try {
             const res = await fetch(`${API_URL}/api/settings/fields`, { headers: authHeaders() });
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            allCampos = Array.isArray(data) ? data : (data.data || []);
-            
-            document.getElementById('loadingState').classList.add('hidden');
-            const container = document.getElementById('camposContainer');
-            container.classList.remove('hidden');
-            
-            if (allCampos.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 glass-card rounded-2xl"><p class="text-gray-400">Nenhum campo configurado no backend.</p></div>';
-                return;
+            if (res.status === 401 || res.status === 403) {
+                throw new Error('PERMISSION');
             }
+            if (!res.ok) throw new Error('HTTP');
+            const data = await res.json();
+            allCampos = normalizeFields(Array.isArray(data) ? data : (data.data || []));
 
-            container.innerHTML = allCampos.map(campo => `
-                <div class="glass-card rounded-2xl p-4 border border-gray-800 space-y-3">
-                    <div class="bg-gray-900/50 rounded-xl p-3">
-                        <h3 class="font-bold text-white text-sm">${campo.label}</h3>
-                        <p class="text-xs text-gray-500 font-mono mt-1">${campo.field}</p>
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="habilitado-toggle w-4 h-4 rounded" data-campo="${campo.field}" ${campo.enabled ? 'checked' : ''}>
-                            <span class="text-xs text-gray-400">Habilitado</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="obrigatorio-toggle w-4 h-4 rounded" data-campo="${campo.field}" ${campo.required ? 'checked' : ''}>
-                            <span class="text-xs text-gray-400">Obrigatório</span>
-                        </label>
-                    </div>
-                </div>
-            `).join('');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('camposContainer').classList.remove('hidden');
+            renderCampos();
+            renderPreview();
             lucide.createIcons();
         } catch (error) {
-            document.getElementById('loadingState').innerHTML = '<p class="text-red-500">Erro ao carregar campos. Verifique se a rota /api/settings/fields existe.</p>';
+            const loading = document.getElementById('loadingState');
+            const message = error?.message === 'PERMISSION'
+                ? 'Sessão expirada ou usuário sem permissão.'
+                : 'Erro ao carregar campos. Verifique se a rota /api/settings/fields existe.';
+            loading.innerHTML = `<p class="text-red-400">${message}</p>`;
         }
     }
 
     async function salvarConfiguracoes() {
-        const fieldsToSave = [];
-        document.querySelectorAll('.habilitado-toggle').forEach(toggle => {
-            const field = toggle.dataset.campo;
-            const enabled = toggle.checked;
-            const required = document.querySelector(`.obrigatorio-toggle[data-campo="${field}"]`).checked;
-            const original = allCampos.find(f => f.field === field);
-            fieldsToSave.push({ field, label: original ? original.label : field, enabled, required });
-        });
+        const fieldsToSave = allCampos.map(campo => ({
+            field: campo.field,
+            label: campo.label || slugToLabel(campo.field),
+            enabled: !!campo.enabled,
+            required: !!(campo.enabled && campo.required)
+        }));
 
         try {
             const res = await fetch(`${API_URL}/api/settings/fields`, {
@@ -185,10 +580,40 @@
                 headers: authHeaders(),
                 body: JSON.stringify(fieldsToSave)
             });
-            if (res.ok) alert('✅ Configurações salvas!'); else alert('❌ Erro ao salvar');
+
+            if (res.status === 401 || res.status === 403) {
+                alert('Sessão expirada ou usuário sem permissão.');
+                return;
+            }
+            if (res.ok) {
+                alert('✅ Configurações salvas!');
+                await carregarCampos();
+            } else {
+                alert('❌ Erro ao salvar');
+            }
         } catch (error) {
             alert('❌ Erro na conexão');
         }
+    }
+
+    function setActiveTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        document.getElementById('tabCadastro').classList.toggle('hidden', tab !== 'cadastro');
+        document.getElementById('tabVisualizacao').classList.toggle('hidden', tab !== 'visualizacao');
+    }
+
+    function setPreviewDevice(device) {
+        previewDevice = device;
+        const preview = document.getElementById('devicePreview');
+        preview.dataset.device = device;
+        preview.classList.remove('preview-phone', 'preview-tablet', 'preview-desktop');
+        preview.classList.add(device === 'tablet' ? 'preview-tablet' : device === 'desktop' ? 'preview-desktop' : 'preview-phone');
+        document.querySelectorAll('.device-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.device === device);
+        });
     }
 
     function initMenuMobile() {
@@ -210,15 +635,34 @@
     }
 
     function sair() {
-        localStorage.removeItem('adminToken'); localStorage.removeItem('token');
-        localStorage.removeItem('ms_token'); localStorage.removeItem('authToken');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('ms_token');
+        localStorage.removeItem('authToken');
         window.location.href = 'login.html';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         initMenuMobile();
+        setActiveTab('cadastro');
+        setPreviewDevice('mobile');
         carregarCampos();
         lucide.createIcons();
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+        });
+        document.querySelectorAll('.device-btn').forEach(btn => {
+            btn.addEventListener('click', () => setPreviewDevice(btn.dataset.device));
+        });
+
+        document.getElementById('searchInput')?.addEventListener('input', (event) => {
+            const term = event.target.value.trim().toLowerCase();
+            document.querySelectorAll('#camposContainer > div').forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
     });
 </script>
 
