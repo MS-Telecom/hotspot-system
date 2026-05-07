@@ -2177,8 +2177,8 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
 
     if (provider === 'mock') {
       const mockPaymentId = payment_id || `mock_${externalReference}`;
-      const pixCopyPaste = `PIX_TESTE_${externalReference}`;
-      const qrCodeBase64 = Buffer.from(`PIX-TESTE:${mockPaymentId}:${cleanMac}`).toString('base64');
+      const pixCopyPaste = `PIX-MOCK-${externalReference}`;
+      const qrCodeBase64 = Buffer.from(`PIX-MOCK:${mockPaymentId}:${cleanMac}`).toString('base64');
       const paymentData = {
         ...paymentRowBase,
         provider_payment_id: mockPaymentId,
@@ -2204,15 +2204,19 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
         payment_id: result.data.id,
         provider: 'mock',
         status: 'pending',
+        mock: true,
         pix_code: pixCopyPaste,
-        qr_code_base64: qrCodeBase64,
+        qr_code_base64: null,
         pix_copy_paste: pixCopyPaste,
-        qr_code: qrCodeBase64,
+        qr_code: null,
+        message: 'Pagamento mock gerado',
         external_reference: externalReference,
         expires_at: pendingExpireAt,
-        grace_duration_seconds: graceSession?.cfg?.payment_grace_duration_seconds || paymentSettings.payment_grace_duration_seconds,
-        payment_mock_auto_approve_seconds: Math.max(1, Number(paymentSettings.payment_mock_auto_approve_seconds || 10)),
-        temporary_access: true
+        temporary_access: !!graceSession?.expiresAt,
+        temporary_access_expires_at: graceSession?.expiresAt || pendingExpireAt,
+        payment_grace_seconds: graceSession?.cfg?.payment_grace_duration_seconds || paymentSettings.payment_grace_duration_seconds,
+        auto_approve_seconds: Math.max(1, Number(paymentSettings.payment_mock_auto_approve_seconds || 10)),
+        payment_mock_auto_approve_seconds: Math.max(1, Number(paymentSettings.payment_mock_auto_approve_seconds || 10))
       });
     }
 

@@ -215,6 +215,7 @@
                                 </div>
                                 <span id="paymentTokenStatus" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-300">Não configurado</span>
                             </div>
+                            <div id="paymentMockNotice" class="hidden rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">Mercado Pago não é usado no modo Mock/Teste.</div>
                             <div class="grid gap-3 md:grid-cols-2">
                                 <div><label class="text-sm text-gray-400 block mb-2">URL da API</label><input type="text" value="https://api.mercadopago.com" readonly class="w-full bg-gray-950/70 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-400"></div>
                                 <div><label class="text-sm text-gray-400 block mb-2">Token salvo</label><input type="text" id="paymentTokenHint" value="********" readonly class="w-full bg-gray-950/70 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-400 font-mono"></div>
@@ -806,6 +807,7 @@
                 }
             } else if (key === 'payment') {
                 if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.payment_provider || value.provider || 'disabled';
+                if (document.getElementById('paymentMockNotice')) document.getElementById('paymentMockNotice').classList.toggle('hidden', String(value.payment_provider || value.provider || 'disabled') !== 'mock');
                 if (document.getElementById('paymentTokenStatus')) document.getElementById('paymentTokenStatus').textContent = value.mercado_pago_configured ? 'Configurado' : 'Não configurado';
                 if (document.getElementById('paymentTokenHint')) document.getElementById('paymentTokenHint').value = value.mercado_pago_token_hint ? `********${value.mercado_pago_token_hint}` : '********';
                 if (document.getElementById('paymentGraceEnabled')) document.getElementById('paymentGraceEnabled').checked = value.payment_grace_enabled !== false;

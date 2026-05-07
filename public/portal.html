@@ -133,8 +133,8 @@
         <div class="flex-1 space-y-4">
           <div class="bg-gray-900/50 rounded-2xl p-4">
             <p class="text-[10px] text-gray-500 uppercase mb-1">Código PIX copia e cola</p>
-            <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">Gerando PIX...</code>
-            <button id="copyPixBtn" class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1">
+            <code id="pixCode" class="text-xs font-mono text-blue-400 break-all">Aguardando código PIX...</code>
+            <button id="copyPixBtn" disabled class="mt-3 text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1">
               <i data-lucide="copy" class="w-3 h-3"></i> Copiar código
             </button>
           </div>
@@ -228,6 +228,7 @@
   const paymentSection = document.getElementById('paymentSection');
   const qrCodeInner = document.getElementById('qrCodeInner');
   const pixCode = document.getElementById('pixCode');
+  const copyPixBtn = document.getElementById('copyPixBtn');
 
   let selectedPlan = null;
   let selectedPaymentId = null;
@@ -286,6 +287,13 @@ function clearPaymentPolling() {
   }
 }
 
+function setPixCopyState(enabled) {
+  if (!copyPixBtn) return;
+  copyPixBtn.disabled = !enabled;
+  copyPixBtn.classList.toggle('opacity-50', !enabled);
+  copyPixBtn.classList.toggle('cursor-not-allowed', !enabled);
+}
+
 function clearPaymentGraceBanner() {
   if (paymentGraceTimer) {
     clearInterval(paymentGraceTimer);
@@ -308,7 +316,7 @@ function showPaymentGraceBanner(expiresAt, prefix = 'Acesso temporário liberado
     const seconds = Math.floor((remaining % 60000) / 1000);
     text.textContent = prefix;
     countdown.textContent = remaining > 0
-      ? `Você tem ${Math.max(1, minutes)} minuto(s) para concluir o PIX. Tempo restante: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      ? `Tempo restante: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
       : 'Tempo para pagamento expirou. Tente novamente em alguns minutos.';
     banner.classList.remove('hidden');
   };
@@ -324,7 +332,7 @@ async function loadPaymentSettings() {
     if (!res.ok) throw new Error('Falha ao carregar config de pagamento');
     window.__paymentCfg = await res.json();
   } catch (_e) {
-    window.__paymentCfg = window.__paymentCfg || { provider: 'disabled', payment_enabled: false, payment_grace_enabled: false, payment_polling_interval_seconds: 5, payment_grace_duration_seconds: 0, payment_grace_cooldown_seconds: 0 };
+  window.__paymentCfg = window.__paymentCfg || { provider: 'disabled', payment_enabled: false, payment_grace_enabled: false, payment_polling_interval_seconds: 5, payment_grace_duration_seconds: 0, payment_grace_cooldown_seconds: 0 };
   }
 }
 
@@ -342,13 +350,13 @@ async function checkSelectedPaymentStatus() {
     clearPaymentGraceBanner();
     return data;
   }
-  if (data && data.temporary_access === true && data.expires_at) {
-    showPaymentGraceBanner(data.expires_at, 'Acesso temporário liberado para pagamento');
+  if (data && data.temporary_access === true && (data.temporary_access_expires_at || data.expires_at)) {
+    showPaymentGraceBanner(data.temporary_access_expires_at || data.expires_at, 'Acesso temporário liberado para pagamento');
   }
   if (data && (data.status === 'approved' || data.status === 'paid')) {
     clearPaymentPolling();
     clearPaymentGraceBanner();
-    showStatusMessage('Pagamento aprovado, liberando acesso...', 'success');
+    showStatusMessage(data.mock ? 'Pagamento de teste aprovado. Liberando acesso...' : 'Pagamento aprovado, liberando acesso...', 'success');
     setTimeout(() => redirectToMikrotik(macAddress), 1500);
     return data;
   }
@@ -659,7 +667,8 @@ async function continueAfterRegistrationGate() {
           paymentSection.scrollIntoView({ behavior: 'smooth' });
 
           qrCodeInner.innerHTML = 'Gerando QR Code...';
-          pixCode.textContent = 'Liberando tempo temporário para pagamento...';
+          pixCode.textContent = 'Aguardando código PIX...';
+          setPixCopyState(false);
 
           try {
             const response = await fetch(`${API_BASE}/api/portal/create-pix`, {
@@ -689,7 +698,8 @@ async function continueAfterRegistrationGate() {
                 clearPaymentGraceBanner();
                 paymentSection.classList.remove('hidden');
                 qrCodeInner.innerHTML = 'QR indisponível';
-                pixCode.textContent = 'Não foi possível gerar o PIX. Nenhum acesso foi liberado.';
+                pixCode.textContent = 'Aguardando código PIX...';
+                setPixCopyState(false);
                 showStatusMessage('Não foi possível gerar o PIX. Nenhum acesso foi liberado.', 'error');
                 return;
               }
@@ -699,25 +709,35 @@ async function continueAfterRegistrationGate() {
             selectedPaymentId = data.payment_id || data.id || null;
             const graceSeconds = Number(data.grace_duration_seconds || window.__paymentCfg?.payment_grace_duration_seconds || 300);
             const graceLabel = graceSeconds < 60 ? `${Math.ceil(graceSeconds)} segundos` : `${Math.ceil(graceSeconds / 60)} minutos`;
-            if (data.temporary_access && data.expires_at) {
-              showPaymentGraceBanner(data.expires_at, 'Acesso temporário liberado para pagamento');
+            if (data.temporary_access && (data.temporary_access_expires_at || data.expires_at)) {
+              showPaymentGraceBanner(data.temporary_access_expires_at || data.expires_at, 'Acesso temporário liberado para pagamento');
             } else if (graceSeconds > 0) {
               showPaymentGraceBanner(new Date(Date.now() + graceSeconds * 1000).toISOString(), 'Acesso temporário liberado para pagamento');
             }
-            showStatusMessage(`Liberamos ${graceLabel} de acesso para concluir o pagamento via PIX.`, 'info');
+            if (data.mock) {
+              showStatusMessage('Modo teste: pagamento será aprovado automaticamente.', 'info');
+            } else {
+              showStatusMessage(`Liberamos ${graceLabel} de acesso para concluir o pagamento via PIX.`, 'info');
+            }
 
-            if (data.qr_code_base64) {
+            if (data.mock) {
+              qrCodeInner.innerHTML = `<div class="text-center px-3"><p class="text-sm font-bold text-cyan-700">PIX de teste</p><p class="text-[11px] text-cyan-600 mt-1">Aprovação automática em ${Math.max(1, Number(data.auto_approve_seconds || data.payment_mock_auto_approve_seconds || 10))} segundos</p></div>`;
+            } else if (data.qr_code_base64) {
               qrCodeInner.innerHTML = `<img src="data:image/png;base64,${data.qr_code_base64}" class="w-48 h-48" alt="QR Code PIX">`;
             } else {
               qrCodeInner.innerHTML = 'QR indisponível';
             }
 
-            pixCode.textContent = data.pix_copy_paste || data.pix_code || 'Código PIX não disponível';
+            const pixText = data.pix_copy_paste || data.pix_code || '';
+            pixCode.textContent = pixText || 'Aguardando código PIX...';
+            setPixCopyState(!!pixText);
             startPaymentPolling();
           } catch (error) {
             selectedPlan = null;
             selectedPaymentId = null;
             clearPaymentPolling();
+            clearPaymentGraceBanner();
+            setPixCopyState(false);
             showStatusMessage(error.message || 'Erro ao gerar PIX.', 'error');
           }
         });
@@ -926,7 +946,8 @@ async function continueAfterRegistrationGate() {
     clearPaymentPolling();
     clearPaymentGraceBanner();
     qrCodeInner.innerHTML = 'Gerando...';
-    pixCode.textContent = 'Gerando PIX...';
+    pixCode.textContent = 'Aguardando código PIX...';
+    setPixCopyState(false);
   });
 
   // Refresh eligibility periodically or on user interaction
@@ -938,8 +959,8 @@ async function continueAfterRegistrationGate() {
 
   document.getElementById('copyPixBtn').addEventListener('click', async () => {
     const code = pixCode.textContent || '';
-    if (!code || code.includes('Gerando')) {
-      showStatusMessage('Aguarde o código PIX ser gerado.', 'warning');
+    if (!code || code.includes('Gerando') || code.includes('Aguardando')) {
+      showStatusMessage('Código PIX ainda não disponível.', 'warning');
       return;
     }
 
