@@ -206,7 +206,26 @@
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <h3 class="font-bold text-white mb-4">Configuração PIX</h3>
                     <div class="space-y-4">
-                        <div><label class="text-sm text-gray-400 block mb-2">Provedor de Pagamento</label><select id="paymentProvider" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="mercadopago">Mercado Pago</option></select></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Modo de cobrança</label><select id="paymentProvider" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="disabled">Desativado</option><option value="mercadopago">Mercado Pago</option><option value="mock">Mock/Teste</option></select></div>
+                        <div class="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-sm text-white font-semibold">Integração Mercado Pago</p>
+                                    <p class="text-xs text-gray-400">O token é usado somente pelo backend. Ele não aparece no portal e não será exibido novamente.</p>
+                                </div>
+                                <span id="paymentTokenStatus" class="text-xs px-3 py-1 rounded-full border border-gray-700 text-gray-300">Não configurado</span>
+                            </div>
+                            <div class="grid gap-3 md:grid-cols-2">
+                                <div><label class="text-sm text-gray-400 block mb-2">URL da API</label><input type="text" value="https://api.mercadopago.com" readonly class="w-full bg-gray-950/70 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-400"></div>
+                                <div><label class="text-sm text-gray-400 block mb-2">Token salvo</label><input type="text" id="paymentTokenHint" value="********" readonly class="w-full bg-gray-950/70 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-400 font-mono"></div>
+                            </div>
+                            <div><label class="text-sm text-gray-400 block mb-2">Token da API</label><input type="password" id="mercadoPagoToken" placeholder="Cole o token da API Mercado Pago" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" id="salvarTokenPagamentoBtn" class="px-4 py-2 rounded-xl text-sm font-medium bg-cyan-600 hover:bg-cyan-500 transition">Salvar token</button>
+                                <button type="button" id="testarPagamentoBtn" class="px-4 py-2 rounded-xl text-sm font-medium bg-gray-800 hover:bg-gray-700 transition">Testar integração</button>
+                            </div>
+                            <div class="text-xs text-gray-400"><span class="font-semibold text-gray-200">Webhook:</span> <code class="text-cyan-300 break-all">https://mstelecom-api.duckdns.org/api/webhooks/mercadopago</code></div>
+                        </div>
                         <div class="flex items-center justify-between gap-3 p-4 rounded-xl border border-gray-700 bg-gray-900/40">
                             <div>
                                 <p class="text-sm text-white font-semibold">Ativar liberação temporária para pagamento</p>
@@ -221,6 +240,7 @@
                         <div><label class="text-sm text-gray-400 block mb-2">Tempo para liberar novamente</label><div class="flex gap-3"><input type="number" id="paymentGraceCooldown" value="3600" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentGraceCooldownUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="seconds">Segundos</option><option value="minutes">Minutos</option><option value="hours">Horas</option><option value="days">Dias</option></select></div></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Validade do QR Code PIX</label><div class="flex gap-3"><input type="number" id="paymentPixExpires" value="30" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentPixExpiresUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="minutes">Minutos</option><option value="hours">Horas</option></select></div></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Intervalo de verificação automática</label><div class="flex gap-3"><input type="number" id="paymentPollingInterval" value="5" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentPollingIntervalUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="seconds">Segundos</option></select></div></div>
+                        <div><label class="text-sm text-gray-400 block mb-2">Mock: aprovar automaticamente após</label><div class="flex gap-3"><input type="number" id="paymentMockAutoApprove" value="10" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><select id="paymentMockAutoApproveUnit" class="w-40 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"><option value="seconds">Segundos</option></select></div></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Chave PIX (CNPJ/CPF/Email)</label><input type="text" id="pixChave" value="contato@mstelecom.com.br" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm font-mono"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Nome do Recebedor</label><input type="text" id="pixNome" value="MS Telecom Ltda" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
                         <div><label class="text-sm text-gray-400 block mb-2">Cidade / UF</label><input type="text" id="pixCidade" value="Belém/PA" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm"></div>
@@ -785,7 +805,9 @@
                     }
                 }
             } else if (key === 'payment') {
-                if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.provider || 'mercadopago';
+                if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.payment_provider || value.provider || 'disabled';
+                if (document.getElementById('paymentTokenStatus')) document.getElementById('paymentTokenStatus').textContent = value.mercado_pago_configured ? 'Configurado' : 'Não configurado';
+                if (document.getElementById('paymentTokenHint')) document.getElementById('paymentTokenHint').value = value.mercado_pago_token_hint ? `********${value.mercado_pago_token_hint}` : '********';
                 if (document.getElementById('paymentGraceEnabled')) document.getElementById('paymentGraceEnabled').checked = value.payment_grace_enabled !== false;
                 if (document.getElementById('paymentGraceDuration')) {
                     const ds = value.payment_grace_duration_seconds ?? value.grace_duration_seconds ?? 300;
@@ -830,9 +852,14 @@
                     document.getElementById('paymentPollingInterval').value = value.payment_polling_interval_seconds ?? value.polling_interval_seconds ?? 5;
                     document.getElementById('paymentPollingIntervalUnit').value = 'seconds';
                 }
+                if (document.getElementById('paymentMockAutoApprove')) {
+                    document.getElementById('paymentMockAutoApprove').value = value.payment_mock_auto_approve_seconds ?? value.mock_auto_approve_seconds ?? 10;
+                    document.getElementById('paymentMockAutoApproveUnit').value = 'seconds';
+                }
                 if (document.getElementById('pixChave')) document.getElementById('pixChave').value = value.pix_key || '';
                 if (document.getElementById('pixNome')) document.getElementById('pixNome').value = value.pix_name || '';
                 if (document.getElementById('pixCidade')) document.getElementById('pixCidade').value = value.pix_city || '';
+                if (document.getElementById('mercadoPagoToken')) document.getElementById('mercadoPagoToken').value = '';
             }
         } catch (e) {
             console.error(`Erro ao carregar config ${key}:`, e);
@@ -893,6 +920,21 @@
     }
     window.testarConexao = testarConexao;
 
+    async function testarPagamento() {
+        try {
+            const res = await fetch(`${API_URL}/api/settings/payment/test`, {
+                method: 'POST',
+                headers: authHeaders()
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || data.error || 'Erro ao testar integração');
+            alert(data.message || 'Integração Mercado Pago validada com sucesso');
+        } catch (e) {
+            alert(e.message || 'Erro ao testar integração Mercado Pago');
+        }
+    }
+    window.testarPagamento = testarPagamento;
+
     async function salvarConfig(key) {
         let value = {};
         if (key === 'system') {
@@ -941,12 +983,16 @@
                 return Math.floor(v);
             };
             value = {
-                provider: document.getElementById('paymentProvider')?.value || 'mercadopago',
+                provider: document.getElementById('paymentProvider')?.value || 'disabled',
+                payment_provider: document.getElementById('paymentProvider')?.value || 'disabled',
+                payment_enabled: (document.getElementById('paymentProvider')?.value || 'disabled') !== 'disabled',
+                mercado_pago_access_token: document.getElementById('mercadoPagoToken')?.value || '',
                 payment_grace_enabled: document.getElementById('paymentGraceEnabled')?.checked !== false,
                 payment_grace_duration_seconds: unitToSeconds(document.getElementById('paymentGraceDuration')?.value, document.getElementById('paymentGraceDurationUnit')?.value || 'seconds'),
                 payment_grace_cooldown_seconds: unitToSeconds(document.getElementById('paymentGraceCooldown')?.value, document.getElementById('paymentGraceCooldownUnit')?.value || 'seconds'),
                 payment_pix_expires_minutes: unitToMinutes(document.getElementById('paymentPixExpires')?.value, document.getElementById('paymentPixExpiresUnit')?.value || 'minutes'),
                 payment_polling_interval_seconds: unitToSeconds(document.getElementById('paymentPollingInterval')?.value, document.getElementById('paymentPollingIntervalUnit')?.value || 'seconds'),
+                payment_mock_auto_approve_seconds: unitToSeconds(document.getElementById('paymentMockAutoApprove')?.value, document.getElementById('paymentMockAutoApproveUnit')?.value || 'seconds'),
                 pix_key: document.getElementById('pixChave').value,
                 pix_name: document.getElementById('pixNome').value,
                 pix_city: document.getElementById('pixCidade').value
@@ -1276,6 +1322,8 @@
         document.getElementById('salvarGeralBtn')?.addEventListener('click', () => salvarConfig('system'));
         document.getElementById('salvarConfigTesteBtn')?.addEventListener('click', () => salvarConfig('free_trial'));
         document.getElementById('salvarPagamentoBtn')?.addEventListener('click', () => salvarConfig('payment'));
+        document.getElementById('salvarTokenPagamentoBtn')?.addEventListener('click', () => salvarConfig('payment'));
+        document.getElementById('testarPagamentoBtn')?.addEventListener('click', testarPagamento);
         document.getElementById('salvarConfigGlobaisBtn')?.addEventListener('click', salvarConfigGlobais);
         document.getElementById('alterarSenhaBtn')?.addEventListener('click', alterarSenha);
         document.getElementById('testarConexaoBtn')?.addEventListener('click', testarConexao);

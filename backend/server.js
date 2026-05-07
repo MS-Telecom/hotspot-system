@@ -1022,32 +1022,90 @@ async function getFreeTrialConfig() {
 }
 
 function normalizePaymentSettings(value = {}) {
-  const paymentGraceEnabled = value.payment_grace_enabled !== undefined ? !!value.payment_grace_enabled : true;
+  const provider = ['disabled', 'mercadopago', 'mock'].includes(String(value.provider || '').toLowerCase())
+    ? String(value.provider).toLowerCase()
+    : 'disabled';
+  const paymentEnabled = value.payment_enabled !== undefined ? !!value.payment_enabled : false;
+  const paymentGraceEnabled = value.payment_grace_enabled !== undefined ? !!value.payment_grace_enabled : false;
   const paymentGraceDurationSeconds = firstFiniteNumber(
     value.payment_grace_duration_seconds,
     value.grace_duration_seconds,
     value.grace_duration_minutes !== undefined ? Number(value.grace_duration_minutes) * 60 : undefined,
-    300
+    0
   );
   const paymentGraceCooldownSeconds = firstFiniteNumber(
     value.payment_grace_cooldown_seconds,
     value.grace_cooldown_seconds,
     value.grace_cooldown_minutes !== undefined ? Number(value.grace_cooldown_minutes) * 60 : undefined,
     value.grace_cooldown_hours !== undefined ? Number(value.grace_cooldown_hours) * 3600 : undefined,
-    3600
+    0
   );
   const paymentPixExpiresMinutes = firstFiniteNumber(value.payment_pix_expires_minutes, value.pix_expires_minutes, 30);
   const paymentPollingIntervalSeconds = firstFiniteNumber(value.payment_polling_interval_seconds, value.polling_interval_seconds, 5);
+  const paymentMockAutoApproveSeconds = firstFiniteNumber(value.payment_mock_auto_approve_seconds, value.mock_auto_approve_seconds, 10);
 
   return {
     ...scrubSecretObject(value || {}),
-    provider: 'mercadopago',
+    provider,
+    payment_provider: provider,
+    payment_enabled: paymentEnabled,
     payment_grace_enabled: paymentGraceEnabled,
-    payment_grace_duration_seconds: Math.max(10, Math.floor(paymentGraceDurationSeconds)),
-    payment_grace_cooldown_seconds: Math.max(60, Math.floor(paymentGraceCooldownSeconds)),
+    payment_grace_duration_seconds: Math.max(0, Math.floor(paymentGraceDurationSeconds)),
+    payment_grace_cooldown_seconds: Math.max(0, Math.floor(paymentGraceCooldownSeconds)),
     payment_pix_expires_minutes: Math.max(5, Math.floor(paymentPixExpiresMinutes)),
-    payment_polling_interval_seconds: Math.max(2, Math.floor(paymentPollingIntervalSeconds))
+    payment_polling_interval_seconds: Math.max(2, Math.floor(paymentPollingIntervalSeconds)),
+    payment_mock_auto_approve_seconds: Math.max(1, Math.floor(paymentMockAutoApproveSeconds))
   };
+}
+
+function getSettingsEncryptionKey() {
+  const key = String(process.env.SETTINGS_ENCRYPTION_KEY || '').trim();
+  return key || null;
+}
+
+function encryptPaymentToken(token) {
+  const key = getSettingsEncryptionKey();
+  if (!key) throw new Error('SETTINGS_ENCRYPTION_KEY não configurada na VPS');
+  const secret = crypto.createHash('sha256').update(key).digest();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', secret, iv);
+  const encrypted = Buffer.concat([cipher.update(String(token || ''), 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `enc:${iv.toString('base64')}:${tag.toString('base64')}:${encrypted.toString('base64')}`;
+}
+
+function decryptPaymentToken(blob) {
+  const key = getSettingsEncryptionKey();
+  if (!key || !blob || typeof blob !== 'string' || !blob.startsWith('enc:')) return null;
+  const [, ivB64, tagB64, dataB64] = blob.split(':');
+  if (!ivB64 || !tagB64 || !dataB64) return null;
+  const secret = crypto.createHash('sha256').update(key).digest();
+  const decipher = crypto.createDecipheriv('aes-256-gcm', secret, Buffer.from(ivB64, 'base64'));
+  decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
+  const decrypted = Buffer.concat([decipher.update(Buffer.from(dataB64, 'base64')), decipher.final()]);
+  return decrypted.toString('utf8');
+}
+
+function sanitizePaymentSettingsForClient(value = {}) {
+  const { mercado_pago_credentials_blob, ...safe } = normalizePaymentSettings(value || {});
+  const token = getMercadoPagoAccessToken(value || {});
+  return {
+    ...safe,
+    payment_provider: safe.payment_provider || safe.provider || 'disabled',
+    mercado_pago_configured: !!token,
+    mercado_pago_token_hint: token ? token.slice(-6) : ''
+  };
+}
+
+function getMercadoPagoAccessToken(value = {}) {
+  const envToken = String(process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN || '').trim();
+  if (envToken) return envToken;
+  try {
+    const token = decryptPaymentToken(value?.mercado_pago_credentials_blob || value?.mercado_pago_access_token_blob || value?.mercado_pago_access_token_encrypted || '');
+    return token ? String(token).trim() : '';
+  } catch (_error) {
+    return '';
+  }
 }
 
 async function getPaymentSettings() {
@@ -1062,7 +1120,24 @@ async function getPaymentSettings() {
 }
 
 async function savePaymentSettings(value = {}) {
-  const normalized = normalizePaymentSettings(value);
+  const existing = await getPaymentSettings();
+  const incoming = { ...(existing || {}), ...(value || {}) };
+  const rawToken = String(incoming.mercado_pago_access_token || incoming.mercado_pago_token || '').trim();
+  if (rawToken) {
+    const encrypted = encryptPaymentToken(rawToken);
+    incoming.mercado_pago_credentials_blob = encrypted;
+    incoming.mercado_pago_token_hint = rawToken.slice(-6);
+  } else if (incoming.mercado_pago_credentials_blob || incoming.mercado_pago_access_token_blob || incoming.mercado_pago_access_token_encrypted) {
+    incoming.mercado_pago_credentials_blob = incoming.mercado_pago_credentials_blob || incoming.mercado_pago_access_token_blob || incoming.mercado_pago_access_token_encrypted;
+  } else if (existing?.mercado_pago_credentials_blob) {
+    incoming.mercado_pago_credentials_blob = existing.mercado_pago_credentials_blob;
+    incoming.mercado_pago_token_hint = existing.mercado_pago_token_hint || '';
+  }
+  delete incoming.mercado_pago_access_token;
+  delete incoming.mercado_pago_token;
+  delete incoming.mercado_pago_access_token_blob;
+  delete incoming.mercado_pago_access_token_encrypted;
+  const normalized = normalizePaymentSettings(incoming);
   const { error } = await supabase.from('settings').upsert({
     key: 'payment',
     value: normalized,
@@ -1075,7 +1150,34 @@ async function savePaymentSettings(value = {}) {
 async function createPaymentGraceSession(cleanMac, popId = null, popIp = null, planName = 'payment_grace') {
   const nowIso = new Date().toISOString();
   const cfg = await getPaymentSettings();
-  if (!cfg.payment_grace_enabled) return null;
+  if (!cfg.payment_enabled || !cfg.payment_grace_enabled || !cfg.payment_grace_duration_seconds) return null;
+  const variants = getMacVariants(cleanMac);
+  const { data: lastGrace } = await supabase
+    .from('hotspot_sessions')
+    .select('*')
+    .in('mac_address', variants)
+    .in('plan_name', ['payment_grace', 'payment_window'])
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastGrace) {
+    const startedAt = new Date(lastGrace.updated_at || lastGrace.created_at || nowIso).getTime();
+    const activeUntil = lastGrace.expires_at ? new Date(lastGrace.expires_at).getTime() : 0;
+    const cooldownUntil = startedAt + (cfg.payment_grace_duration_seconds + cfg.payment_grace_cooldown_seconds) * 1000;
+    if (activeUntil > Date.now()) {
+      return { expiresAt: lastGrace.expires_at, cfg, session: lastGrace, alreadyActive: true };
+    }
+    if (cooldownUntil > Date.now()) {
+      return {
+        cooldown: true,
+        retry_after_seconds: Math.max(1, Math.ceil((cooldownUntil - Date.now()) / 1000)),
+        cfg,
+        session: lastGrace
+      };
+    }
+  }
+
   const expiresAt = new Date(Date.now() + cfg.payment_grace_duration_seconds * 1000).toISOString();
   const result = await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId || null, Math.ceil(cfg.payment_grace_duration_seconds / 60), 5, planName, cfg.payment_grace_duration_seconds);
   if (result?.success) {
@@ -1094,6 +1196,57 @@ async function createPaymentGraceSession(cleanMac, popId = null, popIp = null, p
   return { expiresAt, cfg };
 }
 
+async function finalizeApprovedPayment(payment, { source = 'mercadopago' } = {}) {
+  if (!payment?.id) return null;
+
+  const cleanMac = normalizeMac(payment.user_mac);
+  if (!cleanMac) return null;
+
+  const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
+  const approvedAt = new Date(payment.approved_at || payment.updated_at || payment.created_at || new Date().toISOString()).getTime();
+  const durationDays = Number(plan?.duration_days || 1);
+  const expiresAt = new Date(approvedAt + durationDays * 24 * 60 * 60 * 1000).toISOString();
+  const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  const popId = payment.pop_id || null;
+  const popIp = payment.pop_ip || null;
+  const planName = payment.plan_name || 'paid_plan';
+
+  await authorizeAccess(cleanMac, popIp || '192.168.32.1', null, null, popId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, planName, durationSeconds);
+  await saveHotspotSession({
+    mac_address: cleanMac,
+    access_granted: true,
+    status: 'active',
+    expires_at: expiresAt,
+    plan_name: planName,
+    ...(payment.user_id ? { user_id: payment.user_id } : {}),
+    ...(popId ? { pop_id: popId } : {}),
+    ...(popIp ? { pop_ip: popIp } : {}),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  });
+
+  return { cleanMac, expiresAt, durationSeconds, plan, source };
+}
+
+async function maybeAutoApproveMockPayment(payment) {
+  if (!payment || String(payment.provider || '').toLowerCase() !== 'mock') return payment;
+  const autoSeconds = Math.max(1, Number(payment.mock_approved_at ? 0 : (payment.mock_auto_approve_seconds || payment.payment_mock_auto_approve_seconds || 10)));
+  const approvedAt = payment.mock_approved_at ? new Date(payment.mock_approved_at).getTime() : Date.now() + autoSeconds * 1000;
+  if (Date.now() < approvedAt) return payment;
+  if (payment.status === 'approved') return payment;
+
+  const nowIso = new Date().toISOString();
+  const updatedPayment = {
+    status: 'approved',
+    approved_at: nowIso,
+    updated_at: nowIso
+  };
+  await supabase.from('payments').update(updatedPayment).eq('id', payment.id);
+  const { data: refreshed } = await supabase.from('payments').select('*').eq('id', payment.id).maybeSingle();
+  const finalPayment = refreshed || { ...payment, ...updatedPayment };
+  await finalizeApprovedPayment(finalPayment, { source: 'mock' }).catch(() => null);
+  return finalPayment;
+}
 function isActivePaidUser(user) {
   if (!user) return false;
   const status = String(user.status || '').toLowerCase();
@@ -1962,12 +2115,19 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
   try {
     const { mac_address, plan_id, plan_name, description, payment_id, pop_id, pop, pop_unique_id, ip_address, ip } = req.body || {};
     const cleanMac = normalizeMac(mac_address);
-    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano s?o obrigat?rios' });
+    if (!cleanMac || (!plan_id && !plan_name)) return res.status(400).json({ error: 'MAC e plano são obrigatórios' });
+
+    const paymentSettings = await getPaymentSettings();
+    const provider = String(paymentSettings.provider || 'disabled').toLowerCase();
+    if (!paymentSettings.payment_enabled || provider === 'disabled') {
+      return res.status(400).json({ error: 'Pagamentos desativados' });
+    }
+
     let planQuery = supabase.from('plans').select('*');
     planQuery = plan_id ? planQuery.eq('id', plan_id) : planQuery.eq('name', plan_name);
     const { data: plan, error: planError } = await planQuery.limit(1).maybeSingle();
     if (planError) throw planError;
-    if (!plan) return res.status(404).json({ error: 'Plano n?o encontrado' });
+    if (!plan) return res.status(404).json({ error: 'Plano não encontrado' });
     if (plan.active === false || plan.status === 'inactive') return res.status(400).json({ error: 'Plano indisponível' });
     const planAmount = Number(plan.price);
     if (!Number.isFinite(planAmount) || planAmount <= 0) return res.status(400).json({ error: 'Plano sem valor válido' });
@@ -1975,8 +2135,6 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     const paymentDescription = description || selectedPlanName || 'Plano WiFi';
     const popRef = pop_id || pop || pop_unique_id || null;
     const popIp = ip_address || ip || null;
-    const graceSession = await createPaymentGraceSession(cleanMac, popRef, popIp, 'payment_grace').catch(() => null);
-    const paymentSettings = await getPaymentSettings();
     const externalReference = `HS-${cleanMac.replace(/:/g, '')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const pendingExpireAt = new Date(Date.now() + paymentSettings.payment_pix_expires_minutes * 60 * 1000).toISOString();
     const { data: existingPending } = await supabase.from('payments').select('*').in('user_mac', getMacVariants(cleanMac)).eq('plan_name', selectedPlanName).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle();
@@ -1990,7 +2148,7 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
       }
       return res.json({
         payment_id: existingPending.id,
-        provider: 'mercadopago',
+        provider: existingPending.provider || provider,
         status: existingPending.status,
         pix_code: existingPending.pix_copy_paste || existingPending.pix_code || '',
         qr_code_base64: existingPending.qr_code || existingPending.qr_code_base64 || '',
@@ -1998,11 +2156,69 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
         qr_code: existingPending.qr_code || existingPending.qr_code_base64 || '',
         external_reference: existingPending.external_reference || externalReference,
         expires_at: existingPending.expires_at || pendingExpireAt,
-        grace_duration_seconds: graceSession?.cfg?.payment_grace_duration_seconds || paymentSettings.payment_grace_duration_seconds
+        grace_duration_seconds: paymentSettings.payment_grace_duration_seconds
       });
     }
-    const MP_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
-    if (!MP_TOKEN) return res.status(500).json({ error: 'Token do Mercado Pago n?o configurado' });
+
+    const paymentRowBase = {
+      user_mac: cleanMac,
+      plan_name: selectedPlanName,
+      amount: planAmount,
+      description: paymentDescription,
+      status: 'pending',
+      payment_method: 'pix',
+      provider,
+      pop_id: popRef || null,
+      pop_ip: popIp || null,
+      external_reference: externalReference,
+      expires_at: pendingExpireAt,
+      updated_at: new Date().toISOString()
+    };
+
+    if (provider === 'mock') {
+      const mockPaymentId = payment_id || `mock_${externalReference}`;
+      const pixCopyPaste = `PIX_TESTE_${externalReference}`;
+      const qrCodeBase64 = Buffer.from(`PIX-TESTE:${mockPaymentId}:${cleanMac}`).toString('base64');
+      const paymentData = {
+        ...paymentRowBase,
+        provider_payment_id: mockPaymentId,
+        mercado_pago_id: mockPaymentId,
+        pix_copy_paste: pixCopyPaste,
+        qr_code: qrCodeBase64,
+        mock_payment: true,
+        mock_approved_at: new Date(Date.now() + Math.max(1, Number(paymentSettings.payment_mock_auto_approve_seconds || 10)) * 1000).toISOString()
+      };
+      const result = payment_id
+        ? await supabase.from('payments').update(paymentData).eq('id', payment_id).select().single()
+        : await supabase.from('payments').insert(paymentData).select().single();
+      if (result.error) throw result.error;
+      const graceSession = await createPaymentGraceSession(cleanMac, popRef, popIp, 'payment_window').catch((error) => error?.cooldown ? error : null);
+      if (graceSession?.cooldown) {
+        return res.status(429).json({
+          error: 'Tempo para pagamento expirou. Tente novamente em alguns minutos.',
+          reason: 'payment_grace_cooldown',
+          retry_after_seconds: graceSession.retry_after_seconds
+        });
+      }
+      return res.json({
+        payment_id: result.data.id,
+        provider: 'mock',
+        status: 'pending',
+        pix_code: pixCopyPaste,
+        qr_code_base64: qrCodeBase64,
+        pix_copy_paste: pixCopyPaste,
+        qr_code: qrCodeBase64,
+        external_reference: externalReference,
+        expires_at: pendingExpireAt,
+        grace_duration_seconds: graceSession?.cfg?.payment_grace_duration_seconds || paymentSettings.payment_grace_duration_seconds,
+        payment_mock_auto_approve_seconds: Math.max(1, Number(paymentSettings.payment_mock_auto_approve_seconds || 10)),
+        temporary_access: true
+      });
+    }
+
+    const MP_TOKEN = getMercadoPagoAccessToken(paymentSettings);
+    if (!MP_TOKEN) return res.status(500).json({ error: 'Token Mercado Pago não configurado' });
+
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
@@ -2027,25 +2243,24 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     const pixCopyPaste = mpData.point_of_interaction?.transaction_data?.qr_code || '';
     const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
     const paymentData = {
-      user_mac: cleanMac,
-      plan_name: selectedPlanName,
-      amount: planAmount,
-      description: paymentDescription,
-      status: 'pending',
-      payment_method: 'pix',
-      provider: 'mercadopago',
+      ...paymentRowBase,
       provider_payment_id: String(mpData.id),
       mercado_pago_id: String(mpData.id),
-      pop_id: popRef || null,
-      pop_ip: popIp || null,
       pix_copy_paste: pixCopyPaste,
-      qr_code: qrCodeBase64,
-      external_reference: externalReference,
-      expires_at: pendingExpireAt,
-      updated_at: new Date().toISOString()
+      qr_code: qrCodeBase64
     };
-    const result = payment_id ? await supabase.from('payments').update(paymentData).eq('id', payment_id).select().single() : await supabase.from('payments').insert(paymentData).select().single();
+    const result = payment_id
+      ? await supabase.from('payments').update(paymentData).eq('id', payment_id).select().single()
+      : await supabase.from('payments').insert(paymentData).select().single();
     if (result.error) throw result.error;
+    const graceSession = await createPaymentGraceSession(cleanMac, popRef, popIp, 'payment_grace').catch((error) => error?.cooldown ? error : null);
+    if (graceSession?.cooldown) {
+      return res.status(429).json({
+        error: 'Tempo para pagamento expirou. Tente novamente em alguns minutos.',
+        reason: 'payment_grace_cooldown',
+        retry_after_seconds: graceSession.retry_after_seconds
+      });
+    }
     res.json({
       payment_id: result.data.id,
       provider: 'mercadopago',
@@ -2062,7 +2277,8 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     console.error('❌ Erro ao gerar PIX:', err.message);
     res.status(500).json({ error: 'Erro ao gerar pagamento PIX' });
   }
-});// Verificar status de pagamento
+});
+// Verificar status de pagamento
 app.get('/api/check-payment', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store');
@@ -2078,7 +2294,8 @@ app.get('/api/check-payment', async (req, res) => {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return res.json(payment || { status: 'not_found' });
+      const maybePayment = await maybeAutoApproveMockPayment(payment).catch(() => payment);
+      return res.json(maybePayment || { status: 'not_found' });
     }
 
     if (!external_reference && !mercado_pago_id) return res.status(400).json({ error: 'Referência, ID ou MAC do pagamento necessário' });
@@ -2088,15 +2305,14 @@ app.get('/api/check-payment', async (req, res) => {
     else query = query.eq('mercado_pago_id', mercado_pago_id);
 
     const { data: payment, error } = await query.single();
-    if (error || !payment) return res.status(404).json({ error: 'Pagamento n?o encontrado' });
-
-    res.json(payment);
+    if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
+    const maybePayment = await maybeAutoApproveMockPayment(payment).catch(() => payment);
+    res.json(maybePayment);
   } catch (err) {
     console.error('❌ Erro ao verificar pagamento:', err.message);
     res.status(500).json({ error: 'Erro ao verificar pagamento' });
   }
 });
-
 // ============================================================
 // 🎟️ ROTAS DE VOUCHERS
 // ============================================================
@@ -4068,10 +4284,10 @@ app.put('/api/settings/system', authMiddleware, async (req, res) => {
 });
 
 // Buscar configurações de pagamento
-app.get('/api/settings/payment', authMiddleware, async (req, res) => {
+app.get('/api/settings/payment', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
     const cfg = await getPaymentSettings();
-    res.json(cfg);
+    res.json(sanitizePaymentSettingsForClient(cfg));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -4088,19 +4304,40 @@ app.get('/api/check-payment-by-mac', async (req, res) => {
 });
 
 // Salvar configurações de pagamento
-app.put('/api/settings/payment', authMiddleware, async (req, res) => {
+app.put('/api/settings/payment', authMiddleware, requireRole('owner'), async (req, res) => {
   try {
+    const rawToken = String(req.body?.mercado_pago_access_token || req.body?.mercado_pago_token || '').trim();
+    if (rawToken && !getSettingsEncryptionKey()) {
+      return res.status(400).json({ error: 'SETTINGS_ENCRYPTION_KEY não configurada na VPS' });
+    }
     const value = await savePaymentSettings(req.body);
-    res.json({ success: true, value });
+    res.json({ success: true, value: sanitizePaymentSettingsForClient(value) });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/settings/payment/test', authMiddleware, requireRole('owner'), async (_req, res) => {
+  try {
+    const cfg = await getPaymentSettings();
+    const token = getMercadoPagoAccessToken(cfg);
+    if (!token) return res.status(400).json({ ok: false, message: 'Token Mercado Pago não configurado' });
+
+    const mpResponse = await fetch('https://api.mercadopago.com/users/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!mpResponse.ok) return res.status(400).json({ ok: false, message: 'Token Mercado Pago inválido' });
+
+    res.json({ ok: true, message: 'Integração Mercado Pago validada com sucesso' });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: 'Falha ao testar integração Mercado Pago' });
   }
 });
 
 app.get('/api/portal/payment-settings', async (_req, res) => {
   try {
     const cfg = await getPaymentSettings();
-    res.json(cfg);
+    res.json(sanitizePaymentSettingsForClient(cfg));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -4493,19 +4730,6 @@ app.get('/api/portal/plans', async (req, res) => {
 });
 
 app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
-  try {
-    const { mac_address, pop_id, pop, pop_unique_id, ip_address, ip } = req.body || {};
-    const cleanMac = normalizeMac(mac_address);
-    const popRef = pop_id || pop || pop_unique_id || null;
-    const popIp = ip_address || ip || null;
-    if (cleanMac) {
-      await createPaymentGraceSession(cleanMac, popRef, popIp, 'payment_window').catch(() => null);
-    }
-  } catch (_e) {
-    // ignora erro de janela temporaria (nao bloqueia a geracao do PIX)
-  }
-
-  // Encaminha para a rota oficial de gera??o de PIX
   req.url = '/api/payments/generate-pix';
   return app._router.handle(req, res);
 });
@@ -4513,8 +4737,9 @@ app.post('/api/portal/create-pix', paymentLimiter, async (req, res) => {
 app.get('/api/portal/check-payment/:id', async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
-  if (error || !data) return res.status(404).json({ error: 'Pagamento n?o encontrado' });
-  res.json(data);
+  if (error || !data) return res.status(404).json({ error: 'Pagamento não encontrado' });
+  const maybePayment = await maybeAutoApproveMockPayment(data).catch(() => data);
+  res.json(maybePayment);
 });
 
 app.post('/api/portal/login', async (req, res) => {

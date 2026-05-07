@@ -114,6 +114,10 @@
     </div>
 
     <div id="paymentSection" class="hidden glass-card rounded-3xl p-8 border border-blue-500/30 mb-8">
+      <div id="paymentGraceBanner" class="hidden mb-6 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-center">
+        <p class="text-sm font-semibold text-cyan-300" id="paymentGraceText">Acesso temporário liberado para pagamento</p>
+        <p class="text-xs text-cyan-100/80 mt-1" id="paymentGraceCountdown">Você tem alguns minutos para concluir o PIX.</p>
+      </div>
       <div class="flex flex-col md:flex-row gap-8 items-center">
         <div class="flex-1 text-center md:text-left">
           <h3 class="text-2xl font-bold text-white mb-2">Pagamento via PIX</h3>
@@ -228,6 +232,7 @@
   let selectedPlan = null;
   let selectedPaymentId = null;
   let paymentPollingTimer = null;
+  let paymentGraceTimer = null;
   let lastFreeTest = localStorage.getItem('last_free_test') || 0;
   let redirectInProgress = false;
   let registrationGateActive = false;
@@ -281,13 +286,45 @@ function clearPaymentPolling() {
   }
 }
 
+function clearPaymentGraceBanner() {
+  if (paymentGraceTimer) {
+    clearInterval(paymentGraceTimer);
+    paymentGraceTimer = null;
+  }
+  const banner = document.getElementById('paymentGraceBanner');
+  if (banner) banner.classList.add('hidden');
+}
+
+function showPaymentGraceBanner(expiresAt, prefix = 'Acesso temporário liberado para pagamento') {
+  const banner = document.getElementById('paymentGraceBanner');
+  const text = document.getElementById('paymentGraceText');
+  const countdown = document.getElementById('paymentGraceCountdown');
+  if (!banner || !text || !countdown) return;
+
+  const until = expiresAt ? new Date(expiresAt).getTime() : Date.now();
+  const render = () => {
+    const remaining = Math.max(0, until - Date.now());
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    text.textContent = prefix;
+    countdown.textContent = remaining > 0
+      ? `Você tem ${Math.max(1, minutes)} minuto(s) para concluir o PIX. Tempo restante: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      : 'Tempo para pagamento expirou. Tente novamente em alguns minutos.';
+    banner.classList.remove('hidden');
+  };
+
+  clearPaymentGraceBanner();
+  render();
+  paymentGraceTimer = setInterval(render, 1000);
+}
+
 async function loadPaymentSettings() {
   try {
     const res = await fetch(`${API_BASE}/api/portal/payment-settings`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Falha ao carregar config de pagamento');
     window.__paymentCfg = await res.json();
   } catch (_e) {
-    window.__paymentCfg = window.__paymentCfg || { payment_polling_interval_seconds: 5, payment_grace_duration_seconds: 300 };
+    window.__paymentCfg = window.__paymentCfg || { provider: 'disabled', payment_enabled: false, payment_grace_enabled: false, payment_polling_interval_seconds: 5, payment_grace_duration_seconds: 0, payment_grace_cooldown_seconds: 0 };
   }
 }
 
@@ -299,8 +336,18 @@ async function checkSelectedPaymentStatus() {
   const res = await fetch(url, { cache: 'no-store' });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Erro ao verificar pagamento');
+  if (data && data.reason === 'payment_grace_cooldown') {
+    clearPaymentPolling();
+    showStatusMessage(`Tempo para pagamento expirou. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
+    clearPaymentGraceBanner();
+    return data;
+  }
+  if (data && data.temporary_access === true && data.expires_at) {
+    showPaymentGraceBanner(data.expires_at, 'Acesso temporário liberado para pagamento');
+  }
   if (data && (data.status === 'approved' || data.status === 'paid')) {
     clearPaymentPolling();
+    clearPaymentGraceBanner();
     showStatusMessage('Pagamento aprovado, liberando acesso...', 'success');
     setTimeout(() => redirectToMikrotik(macAddress), 1500);
     return data;
@@ -629,12 +676,34 @@ async function continueAfterRegistrationGate() {
               })
             });
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Erro ao gerar PIX');
+          const data = await response.json();
+            if (!response.ok) {
+              if (data?.reason === 'payment_grace_cooldown') {
+                clearPaymentPolling();
+                clearPaymentGraceBanner();
+                showStatusMessage(`Tempo para pagamento expirou. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
+                return;
+              }
+              if (data?.error === 'Token Mercado Pago não configurado' || data?.error === 'Pagamentos desativados') {
+                clearPaymentPolling();
+                clearPaymentGraceBanner();
+                paymentSection.classList.remove('hidden');
+                qrCodeInner.innerHTML = 'QR indisponível';
+                pixCode.textContent = 'Não foi possível gerar o PIX. Nenhum acesso foi liberado.';
+                showStatusMessage('Não foi possível gerar o PIX. Nenhum acesso foi liberado.', 'error');
+                return;
+              }
+              throw new Error(data.error || 'Erro ao gerar PIX');
+            }
 
             selectedPaymentId = data.payment_id || data.id || null;
             const graceSeconds = Number(data.grace_duration_seconds || window.__paymentCfg?.payment_grace_duration_seconds || 300);
             const graceLabel = graceSeconds < 60 ? `${Math.ceil(graceSeconds)} segundos` : `${Math.ceil(graceSeconds / 60)} minutos`;
+            if (data.temporary_access && data.expires_at) {
+              showPaymentGraceBanner(data.expires_at, 'Acesso temporário liberado para pagamento');
+            } else if (graceSeconds > 0) {
+              showPaymentGraceBanner(new Date(Date.now() + graceSeconds * 1000).toISOString(), 'Acesso temporário liberado para pagamento');
+            }
             showStatusMessage(`Liberamos ${graceLabel} de acesso para concluir o pagamento via PIX.`, 'info');
 
             if (data.qr_code_base64) {
@@ -855,6 +924,7 @@ async function continueAfterRegistrationGate() {
     selectedPlan = null;
     selectedPaymentId = null;
     clearPaymentPolling();
+    clearPaymentGraceBanner();
     qrCodeInner.innerHTML = 'Gerando...';
     pixCode.textContent = 'Gerando PIX...';
   });
@@ -898,6 +968,12 @@ async function continueAfterRegistrationGate() {
       
       const data = await res.json();
       if (data && data.allowed === true) {
+        if (data.reason === 'payment_grace_active') {
+          showPaymentGraceBanner(data.expires_at, 'Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.');
+          showStatusMessage('Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
+          testeGratisBtn.classList.add('hidden');
+          return;
+        }
         redirectInProgress = true;
         showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
         // Hide free trial button since user has active plan
