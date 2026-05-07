@@ -1204,8 +1204,8 @@ async function finalizeApprovedPayment(payment, { source = 'mercadopago' } = {})
 
   const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
   const approvedAt = new Date(payment.approved_at || payment.updated_at || payment.created_at || new Date().toISOString()).getTime();
-  const durationDays = Number(plan?.duration_days || 1);
-  const expiresAt = new Date(approvedAt + durationDays * 24 * 60 * 60 * 1000).toISOString();
+  const durationSecondsPlan = getPlanDurationSeconds(plan || {}, 1);
+  const expiresAt = new Date(approvedAt + durationSecondsPlan * 1000).toISOString();
   const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000));
   const popId = payment.pop_id || null;
   const popIp = payment.pop_ip || null;
@@ -1225,6 +1225,20 @@ async function finalizeApprovedPayment(payment, { source = 'mercadopago' } = {})
     updated_at: new Date().toISOString()
   });
 
+  const userPatch = {
+    status: 'active',
+    plan_name: planName,
+    expires_at: expiresAt,
+    updated_at: new Date().toISOString()
+  };
+  if (plan?.id) userPatch.plan_id = plan.id;
+  const userFilters = [];
+  if (payment.user_id) userFilters.push(`id.eq.${payment.user_id}`);
+  if (cleanMac) userFilters.push(`mac_address.eq.${cleanMac}`);
+  if (userFilters.length) {
+    await supabase.from('users').update(userPatch).or(userFilters.join(','));
+  }
+
   return { cleanMac, expiresAt, durationSeconds, plan, source };
 }
 
@@ -1239,6 +1253,7 @@ async function maybeAutoApproveMockPayment(payment) {
   const nowIso = new Date().toISOString();
   const updatedPayment = {
     status: 'approved',
+    payment_status: 'approved',
     approved_at: nowIso,
     updated_at: nowIso
   };
@@ -2039,9 +2054,28 @@ app.get('/api/plans', async (req, res) => {
 // Criar plano
 app.post('/api/plans', authMiddleware, async (req, res) => {
   try {
-    const { name, price, speed_mbps, duration_days, description, active } = req.body;
+    const { name, price, speed_mbps, duration_days, duration_value, duration_unit, duration_seconds, duration_minutes, description, active } = req.body;
+    const normalizedUnit = String(duration_unit || '').toLowerCase();
+    const rawDurationValue = firstFiniteNumber(duration_value, duration_days, duration_minutes !== undefined ? Number(duration_minutes) : undefined, duration_seconds !== undefined ? Number(duration_seconds) : undefined, 1);
+    const normalizedDurationSeconds = (() => {
+      if (Number.isFinite(Number(duration_seconds)) && Number(duration_seconds) > 0) return Math.max(60, Math.floor(Number(duration_seconds)));
+      if (Number.isFinite(Number(duration_minutes)) && Number(duration_minutes) > 0) return Math.max(60, Math.floor(Number(duration_minutes) * 60));
+      if (normalizedUnit === 'minutes') return Math.max(60, Math.floor(rawDurationValue * 60));
+      if (normalizedUnit === 'hours') return Math.max(60, Math.floor(rawDurationValue * 3600));
+      if (normalizedUnit === 'weeks') return Math.max(60, Math.floor(rawDurationValue * 7 * 24 * 3600));
+      if (normalizedUnit === 'months') return Math.max(60, Math.floor(rawDurationValue * 30 * 24 * 3600));
+      return Math.max(60, Math.floor(rawDurationValue * 24 * 3600));
+    })();
     const { data, error } = await supabase.from('plans').insert({
-      name, price, speed_mbps, duration_days, description,
+      name,
+      price,
+      speed_mbps,
+      duration_days: Number.isFinite(Number(duration_days)) ? Number(duration_days) : Math.max(1, Math.ceil(normalizedDurationSeconds / 86400)),
+      duration_value: Number.isFinite(Number(duration_value)) ? Number(duration_value) : rawDurationValue,
+      duration_unit: normalizedUnit || (Number.isFinite(Number(duration_minutes)) ? 'minutes' : 'days'),
+      duration_seconds: normalizedDurationSeconds,
+      duration_minutes: Math.max(1, Math.ceil(normalizedDurationSeconds / 60)),
+      description,
       active: active !== undefined ? active : true
     }).select().single();
 
@@ -2059,6 +2093,22 @@ app.put('/api/plans/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    const normalizedUnit = String(updateData.duration_unit || '').toLowerCase();
+    const rawDurationValue = firstFiniteNumber(updateData.duration_value, updateData.duration_days, updateData.duration_minutes !== undefined ? Number(updateData.duration_minutes) : undefined, updateData.duration_seconds !== undefined ? Number(updateData.duration_seconds) : undefined, 1);
+    const normalizedDurationSeconds = (() => {
+      if (Number.isFinite(Number(updateData.duration_seconds)) && Number(updateData.duration_seconds) > 0) return Math.max(60, Math.floor(Number(updateData.duration_seconds)));
+      if (Number.isFinite(Number(updateData.duration_minutes)) && Number(updateData.duration_minutes) > 0) return Math.max(60, Math.floor(Number(updateData.duration_minutes) * 60));
+      if (normalizedUnit === 'minutes') return Math.max(60, Math.floor(rawDurationValue * 60));
+      if (normalizedUnit === 'hours') return Math.max(60, Math.floor(rawDurationValue * 3600));
+      if (normalizedUnit === 'weeks') return Math.max(60, Math.floor(rawDurationValue * 7 * 24 * 3600));
+      if (normalizedUnit === 'months') return Math.max(60, Math.floor(rawDurationValue * 30 * 24 * 3600));
+      return Math.max(60, Math.floor(rawDurationValue * 24 * 3600));
+    })();
+    updateData.duration_days = Number.isFinite(Number(updateData.duration_days)) ? Number(updateData.duration_days) : Math.max(1, Math.ceil(normalizedDurationSeconds / 86400));
+    updateData.duration_value = Number.isFinite(Number(updateData.duration_value)) ? Number(updateData.duration_value) : rawDurationValue;
+    updateData.duration_unit = normalizedUnit || (Number.isFinite(Number(updateData.duration_minutes)) ? 'minutes' : 'days');
+    updateData.duration_seconds = normalizedDurationSeconds;
+    updateData.duration_minutes = Math.max(1, Math.ceil(normalizedDurationSeconds / 60));
     delete updateData.id;
     delete updateData.created_at;
 
@@ -2104,7 +2154,7 @@ app.get('/api/payments', authMiddleware, async (req, res) => {
 
     const { data, error } = await query;
     if (error) throw error;
-    res.json(data || []);
+    res.json((data || []).map(normalizePaymentDisplay));
   } catch (err) {
     console.error('❌ Erro ao listar pagamentos:', err.message);
     res.status(500).json({ error: 'Erro ao listar pagamentos' });
@@ -2136,6 +2186,7 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     const paymentDescription = description || selectedPlanName || 'Plano WiFi';
     const popRef = pop_id || pop || pop_unique_id || null;
     const popIp = ip_address || ip || null;
+    const { data: matchedUser } = await supabase.from('users').select('id, name, username').in('mac_address', getMacVariants(cleanMac)).order('updated_at', { ascending: false }).limit(1).maybeSingle().catch(() => ({ data: null }));
     const externalReference = `HS-${cleanMac.replace(/:/g, '')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const pendingExpireAt = new Date(Date.now() + paymentSettings.payment_pix_expires_minutes * 60 * 1000).toISOString();
     const { data: existingPending } = await supabase.from('payments').select('*').in('user_mac', getMacVariants(cleanMac)).eq('plan_name', selectedPlanName).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle();
@@ -2181,8 +2232,11 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     }
 
     const paymentRowBase = {
+      ...(matchedUser?.id ? { user_id: matchedUser.id } : {}),
       user_mac: cleanMac,
+      mac_address: cleanMac,
       plan_name: selectedPlanName,
+      plan_id: plan?.id || plan_id || null,
       amount: planAmount,
       description: paymentDescription,
       status: 'pending',
@@ -2201,6 +2255,7 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
       const qrCodeBase64 = Buffer.from(`PIX-MOCK:${mockPaymentId}:${cleanMac}`).toString('base64');
       const paymentData = {
         ...paymentRowBase,
+        plan_id: plan?.id || plan_id || null,
         provider_payment_id: mockPaymentId,
         mercado_pago_id: mockPaymentId,
         pix_copy_paste: pixCopyPaste,
@@ -2268,6 +2323,7 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     const qrCodeBase64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
     const paymentData = {
       ...paymentRowBase,
+      plan_id: plan?.id || plan_id || null,
       provider_payment_id: String(mpData.id),
       mercado_pago_id: String(mpData.id),
       pix_copy_paste: pixCopyPaste,
@@ -2319,6 +2375,9 @@ app.get('/api/check-payment', async (req, res) => {
         .maybeSingle();
       if (error) throw error;
       const maybePayment = await maybeAutoApproveMockPayment(payment).catch(() => payment);
+      if (maybePayment && (maybePayment.status === 'approved' || maybePayment.status === 'paid' || maybePayment.status === 'confirmed')) {
+        await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'portal-check' }).catch(() => null);
+      }
       return res.json(maybePayment || { status: 'not_found' });
     }
 
@@ -2331,6 +2390,9 @@ app.get('/api/check-payment', async (req, res) => {
     const { data: payment, error } = await query.single();
     if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
     const maybePayment = await maybeAutoApproveMockPayment(payment).catch(() => payment);
+    if (maybePayment && (maybePayment.status === 'approved' || maybePayment.status === 'paid' || maybePayment.status === 'confirmed')) {
+      await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'check-payment' }).catch(() => null);
+    }
     res.json(maybePayment);
   } catch (err) {
     console.error('❌ Erro ao verificar pagamento:', err.message);
@@ -2520,6 +2582,22 @@ function sessionLocalIp(session = {}) {
 
 function sessionTime(session = {}) {
   return session.started_at || session.created_at || session.updated_at || null;
+}
+
+function getPlanDurationSeconds(plan = {}, fallbackDays = 1) {
+  const durationSeconds = firstFiniteNumber(plan.duration_seconds, plan.duration_minutes !== undefined ? Number(plan.duration_minutes) * 60 : undefined);
+  if (Number.isFinite(durationSeconds) && durationSeconds > 0) return Math.max(60, Math.floor(durationSeconds));
+  if (plan.duration_value !== undefined || plan.duration_unit) {
+    const value = Math.max(0, Number(plan.duration_value ?? plan.duration_days ?? fallbackDays ?? 1) || 0);
+    const unit = String(plan.duration_unit || '').toLowerCase();
+    if (unit === 'minutes') return Math.max(60, Math.floor(value * 60));
+    if (unit === 'hours') return Math.max(60, Math.floor(value * 3600));
+    if (unit === 'weeks') return Math.max(60, Math.floor(value * 7 * 24 * 3600));
+    if (unit === 'months') return Math.max(60, Math.floor(value * 30 * 24 * 3600));
+    if (unit === 'days') return Math.max(60, Math.floor(value * 24 * 3600));
+  }
+  const days = Number(plan.duration_days ?? fallbackDays ?? 1);
+  return Math.max(60, Math.floor((Number.isFinite(days) && days > 0 ? days : fallbackDays || 1) * 24 * 3600));
 }
 
 async function getLatestSessionsByUsers(users = []) {
@@ -2822,6 +2900,18 @@ async function buildDashboardMetrics() {
     metricsToday = data || [];
   } catch (_err) {}
 
+  let recentPayments = [];
+  try {
+    const { data } = await supabase
+      .from('payments')
+      .select('id, user_id, user_mac, mac_address, plan_name, amount, status, provider, created_at, approved_at, updated_at, pop_id, pop_name, users(name, username)')
+      .in('status', ['approved', 'confirmed', 'pago', 'paid'])
+      .order('approved_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(20);
+    recentPayments = (data || []).map(normalizePaymentDisplay);
+  } catch (_err) {}
+
   const readTrafficTable = async (tableName) => {
     try {
       const { data, error } = await supabase.from(tableName).select('*').limit(5000);
@@ -2883,12 +2973,14 @@ async function buildDashboardMetrics() {
   });
 
   const onlinePops = (pops || []).filter(pop => {
-    const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at;
-    return String(pop.status || '').toLowerCase() === 'online' && (!last || (Date.now() - new Date(last).getTime()) <= 2 * 60 * 1000);
+    const last = pop.last_heartbeat_at || pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at;
+    const status = String(pop.status || '').toLowerCase();
+    return (status === 'online' || status === 'active') && (!last || (Date.now() - new Date(last).getTime()) <= 5 * 60 * 1000);
   }).length;
 
   return {
     online_users: onlineUsers,
+    online_users_count: onlineUsers,
     peak_users_today: peakUsersToday,
     total_traffic_bytes: totalTrafficBytes,
     total_traffic_human: formatBytes(totalTrafficBytes),
@@ -2896,7 +2988,23 @@ async function buildDashboardMetrics() {
     online_pops: onlinePops,
     offline_pops: Math.max(0, (pops || []).length - onlinePops),
     total_customers: users?.length || 0,
+    active_clients_count: activeSessions.length,
+    recent_payments: recentPayments,
     pops: dashboardPops
+  };
+}
+
+function normalizePaymentDisplay(payment = {}) {
+  return {
+    ...payment,
+    customer_name: payment.customer_name || payment.user_name || payment.name || payment.users?.name || payment.users?.username || null,
+    user_name: payment.user_name || payment.customer_name || payment.name || payment.users?.name || payment.users?.username || null,
+    mac_address: payment.mac_address || payment.user_mac || payment.mac || payment.users?.mac_address || null,
+    user_id: payment.user_id || payment.users?.id || null,
+    plan_name: payment.plan_name || payment.users?.plan_name || null,
+    amount: Number(payment.amount || 0),
+    status: payment.status || 'pending',
+    pop_name: payment.pop_name || payment.pop || payment.pops?.name || null
   };
 }
 
@@ -3139,13 +3247,13 @@ app.get('/api/pops', authMiddleware, async (req, res) => {
   try {
     const { data, error } = await supabase.from('pops').select('*').order('name', { ascending: true });
     if (error) throw error;
-    // Normaliza status: so fica online se recebeu heartbeat recente
+    // Normaliza status: só fica online se recebeu heartbeat recente
     const nowMs = Date.now();
     const normalized = (data || []).map(p => {
-      const hb = p.last_heartbeat || p.last_seen_at || p.updated_at || null;
+      const hb = p.last_heartbeat_at || p.last_heartbeat || p.last_seen_at || p.last_seen || p.updated_at || null;
       if (!hb) return { ...p, status: 'offline' };
       const diffSec = Math.floor((nowMs - new Date(hb).getTime()) / 1000);
-      const isOnline = diffSec >= 0 && diffSec <= 90; // tolerancia
+      const isOnline = diffSec >= 0 && diffSec <= 5 * 60; // tolerância
       return { ...p, status: isOnline ? 'online' : 'offline' };
     });
     res.json(normalized);
@@ -3796,9 +3904,9 @@ app.get('/api/pops/:id/status', async (req, res) => {
     const { data: pop, error } = await supabase.from('pops').select('*').eq('id', id).single();
     if (error || !pop) return res.status(404).json({ error: 'POP n?o encontrado' });
 
-    const last = pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || pop.created_at;
+    const last = pop.last_heartbeat_at || pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at || pop.created_at;
     const seconds = last ? Math.floor((Date.now() - new Date(last).getTime()) / 1000) : null;
-    const status = (seconds !== null && seconds > 60) ? 'offline' : (pop.status || 'online');
+    const status = (seconds !== null && seconds > 5 * 60) ? 'offline' : (pop.status || 'online');
     res.json({ id, name: pop.name, status, seconds_since_last: seconds });
   } catch (err) {
     console.error('❌ Erro ao consultar status do POP:', err.message);
@@ -4473,37 +4581,18 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
         if (payError) throw payError;
         
         if (payment && payment.status !== 'approved') {
-          // 2. Atualizar status para aprovado
-          await supabase.from('payments').update({
+          const approvedPayment = {
+            ...payment,
             status: 'approved',
             approved_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
+          };
+          await supabase.from('payments').update({
+            status: 'approved',
+            approved_at: approvedPayment.approved_at,
+            updated_at: approvedPayment.updated_at
           }).eq('id', payment.id);
-
-          // 3. Liberar acesso no MikroTik/RADIUS
-          // Buscamos a dura??o do plano
-          const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
-          const durationMinutes = (plan?.duration_days || 1) * 24 * 60;
-          const cleanMac = normalizeMac(payment.user_mac);
-          
-          await authorizeAccess(
-            cleanMac,
-            '192.168.32.1', 
-            null, null, null, 
-            durationMinutes, 
-            plan?.speed_mbps || 10, 
-            payment.plan_name
-          );
-
-          // 4. Registrar sess?o
-          await supabase.from('hotspot_sessions').insert({
-            mac_address: cleanMac,
-            plan_name: payment.plan_name,
-            status: 'active',
-            expires_at: new Date(Date.now() + durationMinutes * 60000).toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+          await finalizeApprovedPayment(approvedPayment, { source: 'mercadopago' }).catch(() => null);
 
           // 5. Disparar webhooks internos
           const { data: internalWebhooks } = await supabase.from('webhooks').select('*').eq('active', true).eq('event', 'payment.confirmed');
@@ -4763,6 +4852,9 @@ app.get('/api/portal/check-payment/:id', async (req, res) => {
   const { data, error } = await supabase.from('payments').select('*').eq('id', id).single();
   if (error || !data) return res.status(404).json({ error: 'Pagamento não encontrado' });
   const maybePayment = await maybeAutoApproveMockPayment(data).catch(() => data);
+  if (maybePayment && (maybePayment.status === 'approved' || maybePayment.status === 'paid' || maybePayment.status === 'confirmed')) {
+    await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'portal-payment' }).catch(() => null);
+  }
   res.json(maybePayment);
 });
 
@@ -5009,10 +5101,10 @@ app.get('/api/access/status', async (req, res) => {
 
     if (isActivePaidUser(user)) {
       const planName = user.plan_name || 'Premium';
+      const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
       const durationForPlan = user.expires_at
         ? Math.max(10, Math.ceil((new Date(user.expires_at).getTime() - nowMs) / 1000))
-        : 30 * 24 * 60 * 60;
-      const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
+        : getPlanDurationSeconds(plan || {}, 30);
       await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
       await saveHotspotSession({
         ...(user?.id ? { user_id: user.id } : {}),
@@ -5044,8 +5136,8 @@ app.get('/api/access/status', async (req, res) => {
     if (payment) {
       const { data: plan } = await supabase.from('plans').select('*').eq('name', payment.plan_name).maybeSingle();
       const approvedAt = new Date(payment.approved_at || payment.updated_at || payment.created_at || nowIso).getTime();
-      const durationDays = Number(plan?.duration_days || 1);
-      const expiresAt = new Date(approvedAt + durationDays * 24 * 60 * 60 * 1000).toISOString();
+      const durationSecondsPlan = getPlanDurationSeconds(plan || {}, 1);
+      const expiresAt = new Date(approvedAt + durationSecondsPlan * 1000).toISOString();
       if (new Date(expiresAt).getTime() > nowMs) {
         const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - nowMs) / 1000));
         await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);

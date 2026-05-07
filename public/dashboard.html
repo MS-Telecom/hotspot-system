@@ -60,7 +60,7 @@
         </div>
 
     <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">Operações</p>
+            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 mb-2">OperaÃ§Ãµes</p>
             <a href="dashboard.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
             </a>
@@ -80,7 +80,7 @@
                 <i data-lucide="webhook" class="w-5 h-5"></i> Webhooks / API
             </a>
             <a href="configuracoes.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
-                <i data-lucide="settings" class="w-5 h-5"></i> Configurações
+                <i data-lucide="settings" class="w-5 h-5"></i> ConfiguraÃ§Ãµes
             </a>
             <a href="logs.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all">
                 <i data-lucide="file-text" class="w-5 h-5"></i> Logs do Sistema
@@ -98,16 +98,16 @@
 
         <div class="p-4 border-t border-gray-800 bg-black/30">
             <div class="flex items-center justify-between mb-3">
-                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Sessão Atual</p>
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">SessÃ£o Atual</p>
                 <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
             </div>
             <div class="space-y-2 text-[10px] font-mono">
                 <div class="flex justify-between text-gray-500">
-                    <span>Usuário</span>
+                    <span>UsuÃ¡rio</span>
                     <span id="sessionUser" class="text-cyan-400">-</span>
                 </div>
                 <div class="flex justify-between text-gray-500">
-                    <span>Início</span>
+                    <span>InÃ­cio</span>
                     <span id="sessionStart" class="text-gray-600">-</span>
                 </div>
                 <div class="flex justify-between text-gray-500">
@@ -118,7 +118,7 @@
         </div>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL-->
+    <!-- CONTEÃšDO PRINCIPAL-->
     <main class="flex-1 overflow-y-auto bg-[#0a0c15] w-full md:w-auto">
 
         <!-- Top Bar -->
@@ -144,16 +144,16 @@
             </div>
         </header>
 
-        <!--CONTEÚDO DO DASHBOARD -->
+        <!--CONTEÃšDO DO DASHBOARD -->
         <div class="p-8 space-y-8">
 
-            <!-- Header da Página-->
+            <!-- Header da PÃ¡gina-->
             <div>
                 <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
-                <p class="text-gray-500 text-sm mt-1">Visão geral da rede e métricas em tempo real</p>
+                <p class="text-gray-500 text-sm mt-1">VisÃ£o geral da rede e mÃ©tricas em tempo real</p>
             </div>
 
-            <!--Cards de Métricas Financeiras -->
+            <!--Cards de MÃ©tricas Financeiras -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="flex justify-between items-start mb-4">
@@ -164,7 +164,7 @@
                     </div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Receita Total</p>
                     <span id="totalRevenue" class="text-3xl font-black mt-1">R$ 0,00</span>
-                    <p class="text-[10px] text-gray-600 mt-2">Mês atual</p>
+                    <p class="text-[10px] text-gray-600 mt-2">MÃªs atual</p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -172,11 +172,11 @@
                         <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
                             <i data-lucide="check-circle" class="text-blue-500 w-6 h-6"></i>
                         </div>
-                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">Concluídos</span>
+                        <span class="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">ConcluÃ­dos</span>
                     </div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Concluídos</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos ConcluÃ­dos</p>
                     <span id="completedPayments" class="text-3xl font-black mt-1">0</span>
-                    <p class="text-[10px] text-gray-600 mt-2">Transações confirmadas</p>
+                    <p class="text-[10px] text-gray-600 mt-2">TransaÃ§Ãµes confirmadas</p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -188,7 +188,7 @@
                     </div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Pendentes</p>
                     <span id="pendingPayments" class="text-3xl font-black mt-1">0</span>
-                    <p class="text-[10px] text-gray-600 mt-2">Aguardando confirmação</p>
+                    <p class="text-[10px] text-gray-600 mt-2">Aguardando confirmaÃ§Ã£o</p>
                 </div>
 
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
@@ -200,11 +200,11 @@
                     </div>
                     <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Pagamentos Cancelados</p>
                     <span id="canceledPayments" class="text-3xl font-black mt-1">0</span>
-                    <p class="text-[10px] text-gray-600 mt-2">Transações canceladas</p>
+                    <p class="text-[10px] text-gray-600 mt-2">TransaÃ§Ãµes canceladas</p>
                 </div>
             </div>
 
-            <!-- Cards de Métricas de Rede -->
+            <!-- Cards de MÃ©tricas de Rede -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="glass-card rounded-2xl p-6 stat-card border border-gray-800">
                     <div class="flex justify-between items-start mb-4">
@@ -225,7 +225,7 @@
                         </div>
                         <span id="usersVariation" class="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">0%</span>
                     </div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Usuários Online</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">UsuÃ¡rios Online</p>
                     <span id="onlineUsers" class="text-3xl font-black mt-1">0</span>
                     <p class="text-[10px] text-gray-600 mt-2">Pico hoje: <span id="peakUsers">0</span></p>
                 </div>
@@ -236,7 +236,7 @@
                             <i data-lucide="activity" class="text-orange-500 w-6 h-6"></i>
                         </div>
                     </div>
-                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">Tráfego Total</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase tracking-wider">TrÃ¡fego Total</p>
                     <span id="totalTraffic" class="text-3xl font-black mt-1">0 GB</span>
                     <p class="text-[10px] text-gray-600 mt-2">Pico: <span id="peakBandwidth">0</span> Mbps</p>
                 </div>
@@ -253,12 +253,12 @@
                 </div>
             </div>
 
-            <!-- Gráfico + Faturamento por Plano (2 colunas) -->
+            <!-- GrÃ¡fico + Faturamento por Plano (2 colunas) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Gráfico de Usuários Online -->
+                <!-- GrÃ¡fico de UsuÃ¡rios Online -->
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-white">Usuários Online (últimas 24h)</h3>
+                        <h3 class="font-bold text-white">UsuÃ¡rios Online (Ãºltimas 24h)</h3>
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                             <span class="text-[10px] text-gray-500">Tempo real</span>
@@ -272,7 +272,7 @@
                 <!-- Cards de Resumo por Plano -->
                 <div class="glass-card rounded-2xl p-6 border border-gray-800">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-white">Faturamento por Plano (últimos 30 dias)</h3>
+                        <h3 class="font-bold text-white">Faturamento por Plano (Ãºltimos 30 dias)</h3>
                         <button onclick="openPlanDetailsModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver detalhes</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -288,15 +288,15 @@
                             <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
                             </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Diário</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">DiÃ¡rio</p>
                             <p id="dailyRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p class="text-[9px] text-gray-600 mt-1">acessos diários</p>
+                            <p class="text-[9px] text-gray-600 mt-1">acessos diÃ¡rios</p>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
                             <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
                             </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste GrÃ¡tis</p>
                             <p id="trialRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
                             <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
                         </div>
@@ -304,10 +304,10 @@
                 </div>
             </div>
 
-            <!-- Últimas Liberações -->
+            <!-- Ãšltimas LiberaÃ§Ãµes -->
             <div class="glass-card rounded-2xl overflow-hidden border border-gray-800">
                 <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                    <h3 class="font-bold text-white">Últimas Liberações (PIX)</h3>
+                    <h3 class="font-bold text-white">Ãšltimas LiberaÃ§Ãµes (PIX)</h3>
                     <button onclick="openAllReleasesModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400">Ver todas</button>
                 </div>
                 <div class="overflow-x-auto">
@@ -319,11 +319,11 @@
                                 <th class="px-6 py-3 text-left">Plano</th>
                                 <th class="px-6 py-3 text-left">Valor</th>
                                 <th class="px-6 py-3 text-left">Data/Hora</th>
-                                <th class="px-6 py-3 text-center">Ações</th>
+                                <th class="px-6 py-3 text-center">AÃ§Ãµes</th>
                             </tr>
                         </thead>
                         <tbody id="releasesTable" class="divide-y divide-gray-800/50">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberações...</td></tr>
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Carregando liberaÃ§Ãµes...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -345,8 +345,8 @@
                                 <th class="px-6 py-3 text-left">Nome do POP</th>
                                 <th class="px-6 py-3 text-left">Status</th>
                                 <th class="px-6 py-3 text-left">Clientes Ativos</th>
-                                <th class="px-6 py-3 text-left">Última Atividade</th>
-                                <th class="px-6 py-3 text-center">Ação</th>
+                                <th class="px-6 py-3 text-left">Ãšltima Atividade</th>
+                                <th class="px-6 py-3 text-center">AÃ§Ã£o</th>
                             </tr>
                         </thead>
                         <tbody id="hotspotsTable" class="divide-y divide-gray-800/50">
@@ -361,7 +361,7 @@
 
 <!-- ==================== MODAIS ==================== -->
 
-<!-- MODAL: NOVO VOUCHER (redireciona para página de vouchers) -->
+<!-- MODAL: NOVO VOUCHER (redireciona para pÃ¡gina de vouchers) -->
 <div id="newVoucherModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2 sm:p-4">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
         <div class="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b border-gray-800 shrink-0">
@@ -377,7 +377,7 @@
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Plano</label>
                 <select id="voucherPlan" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
-                    <option value="diario">Diário (24h - R$ 5,00)</option>
+                    <option value="diario">DiÃ¡rio (24h - R$ 5,00)</option>
                     <option value="premium">Premium 24h (R$ 15,00)</option>
                     <option value="semanal">Premium Semanal (R$ 50,00)</option>
                 </select>
@@ -387,13 +387,13 @@
                 <input type="number" id="voucherQuantity" value="1" min="1" max="100" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Válido até</label>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">VÃ¡lido atÃ©</label>
                 <input type="date" id="voucherExpiration" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm">
             </div>
             <div id="voucherResult" class="hidden bg-gray-900/50 rounded-xl p-4">
                 <p class="text-[10px] text-gray-500 uppercase mb-1">Voucher Gerado</p>
                 <code id="voucherCode" class="text-lg font-mono text-emerald-400 break-all"></code>
-                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar código</button>
+                <button onclick="copyVoucherCode()" class="mt-2 text-xs text-blue-500">Copiar cÃ³digo</button>
             </div>
         </div>
         <div class="p-3 sm:p-4 md:p-6 border-t border-gray-800 flex justify-end gap-2 sm:gap-3 shrink-0">
@@ -403,13 +403,13 @@
     </div>
 </div>
 
-<!-- MODAL: TODAS AS LIBERAÇÕES -->
+<!-- MODAL: TODAS AS LIBERAÃ‡Ã•ES -->
 <div id="allReleasesModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-all p-2">
     <div class="bg-[#0f1119] rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col border border-gray-700 shadow-2xl mx-2">
         <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-800 shrink-0">
             <h2 class="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
                 <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"></i>
-                Todas as Liberações
+                Todas as LiberaÃ§Ãµes
             </h2>
             <button onclick="closeAllReleasesModal()" class="p-1 sm:p-2 hover:bg-gray-800 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400"></i>
@@ -498,7 +498,7 @@
             <div class="text-center text-gray-500">Carregando...</div>
         </div>
         <div class="p-4 border-t border-gray-800 flex justify-end gap-2 shrink-0">
-            <a href="hotspots.html" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-bold text-white">Abrir módulo POPs</a>
+            <a href="hotspots.html" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-bold text-white">Abrir mÃ³dulo POPs</a>
             <button type="button" onclick="closePopDetailsModal()" class="px-4 py-2 bg-gray-800 rounded-lg text-sm">Fechar</button>
         </div>
     </div>
@@ -507,19 +507,19 @@
 
 <script>
 // ============================================
-// CONFIGURAÇÕES GLOBAIS
+// CONFIGURAÃ‡Ã•ES GLOBAIS
 // ============================================
 const API_URL = 'https://mstelecom-api.duckdns.org';
 let usersPerHourChart = null;
 let currentCustomerId = null;
 let dashboardPopsCache = [];
 
-// Função para obter o token de autenticação
+// FunÃ§Ã£o para obter o token de autenticaÃ§Ã£o
 function getAuthToken() {
     return localStorage.getItem('adminToken') || localStorage.getItem('token') || localStorage.getItem('ms_token') || localStorage.getItem('authToken');
 }
 
-// Função para construir headers com autenticação
+// FunÃ§Ã£o para construir headers com autenticaÃ§Ã£o
 function buildAuthHeaders(includeJson = true) {
     const headers = {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -531,7 +531,7 @@ function buildAuthHeaders(includeJson = true) {
 }
 
 // ============================================
-// FUNÇÕES AUXILIARES
+// FUNÃ‡Ã•ES AUXILIARES
 // ============================================
 function updateSessionInfo() {
     const rawUser = localStorage.getItem('user');
@@ -591,7 +591,7 @@ function initUsersPerHourChart(dataPoints = []) {
         data: {
             labels: hours,
             datasets: [{
-                label: 'Usuários Online',
+                label: 'UsuÃ¡rios Online',
                 data: dataPoints.length ? dataPoints : Array(24).fill(0),
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59,130,246,0.1)',
@@ -622,15 +622,24 @@ function isPaidPayment(payment) {
     return payment && (payment.status === 'approved' || payment.status === 'confirmed' || payment.status === 'pago');
 }
 
+function isPopOnline(pop) {
+    const status = String(pop?.status || '').toLowerCase();
+    if (status === 'online' || status === 'active') return true;
+    const last = pop?.last_activity_at || pop?.last_heartbeat_at || pop?.last_heartbeat || pop?.last_seen_at || pop?.last_seen || pop?.updated_at || null;
+    if (!last) return false;
+    const ageMs = Date.now() - new Date(last).getTime();
+    return Number.isFinite(ageMs) && ageMs >= 0 && ageMs <= 5 * 60 * 1000;
+}
+
 async function loadDashboard() {
     const token = getAuthToken();
     if (!token) {
-        console.error('[Dashboard] Token não encontrado');
+        console.error('[Dashboard] Token nÃ£o encontrado');
         return;
     }
 
     try {
-        // CORRIGIDO: Endpoints em inglês conforme tabela de mapeamento
+        // CORRIGIDO: Endpoints em inglÃªs conforme tabela de mapeamento
         const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes, metricsRes] = await Promise.all([
             fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) }),
@@ -653,7 +662,7 @@ async function loadDashboard() {
             usersPerHourData = result.data || result.users_per_hour || [];
         }
 
-        // Métricas financeiras
+        // MÃ©tricas financeiras
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const sixtyDaysAgo = new Date(thirtyDaysAgo);
@@ -688,11 +697,11 @@ async function loadDashboard() {
             else if (planName.includes('teste') || planName.includes('trial')) trialRevenue += amount;
         });
 
-        // Métricas de rede
-        const onlineUsers = Number(dashboardMetrics.online_users ?? users.filter(u => u.status === 'active' || u.status === 'online').length);
+        // MÃ©tricas de rede
+        const onlineUsers = Number(dashboardMetrics.online_users_count ?? dashboardMetrics.online_users ?? dashboardMetrics.active_clients_count ?? users.filter(u => ['active', 'online', 'paid', 'confirmed'].includes(String(u.status || '').toLowerCase())).length);
         const totalCustomers = Number(dashboardMetrics.total_customers ?? users.length);
-        const onlinePops = Number(dashboardMetrics.online_pops ?? pops.filter(p => p.status === 'online' || p.status === 'active').length);
-        const offlinePops = Number(dashboardMetrics.offline_pops ?? pops.filter(p => p.status !== 'online' && p.status !== 'active').length);
+        const onlinePops = Number(dashboardMetrics.online_pops ?? pops.filter(isPopOnline).length);
+        const offlinePops = Number(dashboardMetrics.offline_pops ?? pops.filter(pop => !isPopOnline(pop)).length);
         const peakUsers = Number(dashboardMetrics.peak_users_today ?? (usersPerHourData.length ? Math.max(...usersPerHourData) : onlineUsers));
         const totalTrafficHuman = dashboardMetrics.total_traffic_human || '0 B';
         const peakBandwidth = Number(dashboardMetrics.peak_bandwidth_mbps || 0);
@@ -718,7 +727,7 @@ async function loadDashboard() {
 
         initUsersPerHourChart(usersPerHourData);
 
-        // Tabela de últimas liberações
+        // Tabela de Ãºltimas liberaÃ§Ãµes
         const latestReleases = payments
             .filter(isPaidPayment)
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -726,34 +735,34 @@ async function loadDashboard() {
 
         const releasesTable = document.getElementById('releasesTable');
         if (latestReleases.length === 0) {
-            releasesTable.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma liberação encontrada</td></tr>';
+            releasesTable.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">Nenhuma liberaÃ§Ã£o encontrada</td></tr>';
         } else {
             releasesTable.innerHTML = latestReleases.map(release => `
                 <tr class="hover:bg-gray-900/30 transition">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">
-                                ${(release.user_name || 'U').substring(0, 2).toUpperCase()}
+                                ${((release.customer_name || release.user_name || release.name || release.mac_address || 'U').substring(0, 2)).toUpperCase()}
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-white">${release.user_name || 'Cliente'}</p>
-                                <p class="text-[10px] text-gray-500 font-mono">${release.mac_address || '-'}</p>
+                                <p class="text-sm font-medium text-white">${release.customer_name || release.user_name || release.name || release.mac_address || 'Cliente'}</p>
+                                <p class="text-[10px] text-gray-500 font-mono">${release.mac_address || release.user_mac || '-'}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-300">${release.pop_name || '-'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${release.pop_name || release.pop || '-'}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${release.plan_name || '-'}</span></td>
                     <td class="px-6 py-4 font-bold text-emerald-400">R$ ${(release.amount || 0).toFixed(2)}</td>
                     <td class="px-6 py-4 text-sm text-gray-400">${new Date(release.created_at).toLocaleString('pt-BR')}</td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick="blockCustomer('${release.user_id || ''}')" class="p-1.5 hover:bg-red-500/10 rounded-lg transition" title="Bloquear cliente">
+                            <button onclick="blockCustomer('${release.user_id !== undefined && release.user_id !== null ? String(release.user_id) : ''}')" class="p-1.5 hover:bg-red-500/10 rounded-lg transition" title="Bloquear cliente">
                                 <i data-lucide="unplug" class="w-4 h-4 text-gray-500 hover:text-red-500"></i>
                             </button>
-                            <button onclick="markAsVip('${release.user_id || ''}')" class="p-1.5 hover:bg-yellow-500/10 rounded-lg transition" title="Marcar VIP">
+                            <button onclick="markAsVip('${release.user_id !== undefined && release.user_id !== null ? String(release.user_id) : ''}')" class="p-1.5 hover:bg-yellow-500/10 rounded-lg transition" title="Marcar VIP">
                                 <i data-lucide="crown" class="w-4 h-4 text-gray-500 hover:text-yellow-500"></i>
                             </button>
-                            <button onclick="viewCustomerDetails('${release.user_id || ''}', '${release.user_name || ''}')" class="p-1.5 hover:bg-blue-500/10 rounded-lg transition" title="Ver detalhes">
+                            <button onclick="viewCustomerDetails('${release.user_id !== undefined && release.user_id !== null ? String(release.user_id) : ''}', '${release.customer_name || release.user_name || release.name || ''}', '${release.mac_address || release.user_mac || ''}')" class="p-1.5 hover:bg-blue-500/10 rounded-lg transition" title="Ver detalhes">
                                 <i data-lucide="eye" class="w-4 h-4 text-gray-500 hover:text-blue-500"></i>
                             </button>
                         </div>
@@ -778,8 +787,8 @@ async function loadDashboard() {
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${pop.status === 'online' || pop.status === 'active' ? 'status-badge-online' : 'status-badge-offline'}">
-                            ${pop.status === 'online' || pop.status === 'active' ? '● Online' : '● Offline'}
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${isPopOnline(pop) ? 'status-badge-online' : 'status-badge-offline'}">
+                            ${isPopOnline(pop) ? '● Online' : '● Offline'}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-300">${pop.active_users ?? pop.active_clients ?? pop.users_connected ?? 0}</td>
@@ -800,7 +809,7 @@ async function loadDashboard() {
 }
 
 // ============================================
-// FUNÇÕES DOS MODAIS
+// FUNÃ‡Ã•ES DOS MODAIS
 // ============================================
 async function openAllReleasesModal() {
     const modal = document.getElementById('allReleasesModal');
@@ -812,14 +821,14 @@ async function openAllReleasesModal() {
         const payments = await response.json();
         const releases = payments.filter(isPaidPayment);
         if (releases.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberação encontrada</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Nenhuma liberaÃ§Ã£o encontrada</td></tr>';
         } else {
             tableBody.innerHTML = releases.map(release => `
                 <tr class="hover:bg-gray-900/30">
                     <td class="px-4 py-3">
                         <div>
-                            <p class="text-sm font-medium text-white">${release.user_name || 'Cliente'}</p>
-                            <p class="text-[10px] text-gray-500">${release.mac_address || '-'}</p>
+                            <p class="text-sm font-medium text-white">${release.customer_name || release.user_name || release.name || release.mac_address || 'Cliente'}</p>
+                            <p class="text-[10px] text-gray-500">${release.mac_address || release.user_mac || '-'}</p>
                         </div>
                     </td>
                     <td class="px-4 py-3"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${release.plan_name || 'N/A'}</span></td>
@@ -831,7 +840,7 @@ async function openAllReleasesModal() {
         }
     } catch (error) {
         console.error('Erro:', error);
-        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberações</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-red-500">Erro ao carregar liberaÃ§Ãµes</td></tr>';
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -861,22 +870,24 @@ async function openPlanDetailsModal() {
                         <span class="text-emerald-400 font-bold">R$ ${plan.price}</span>
                     </div>
                     <p class="text-xs text-gray-500">Velocidade: ${plan.speed_mbps} Mbps</p>
-                    <p class="text-xs text-gray-500">Duração: ${plan.duration_days} dias</p>
+                    <p class="text-xs text-gray-500">DuraÃ§Ã£o: ${plan.duration_days} dias</p>
                     <p class="text-xs text-gray-400 mt-2">${plan.description || ''}</p>
                 </div>
             `).join('');
         } else {
-            content.innerHTML = '<div class="text-center text-gray-500">Nenhum plano cadastrado</div>';
+            content.innerHTML = '<div class="text-center text-gray-500">Nenhum plano encontrado</div>';
         }
+        if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
     } catch (error) {
+        console.error('Erro:', error);
         content.innerHTML = '<div class="text-center text-red-500">Erro ao carregar planos</div>';
     }
 }
-function closePlanDetailsModal() { document.getElementById('planDetailsModal').classList.add('hidden'); }
 
-async function viewCustomerDetails(id, name) {
-    if (!id) return alert('ID do cliente não informado');
-    currentCustomerId = id;
+async function viewCustomerDetails(id, name, macAddress = '') {
+    const identifier = String(id || macAddress || '').trim();
+    if (!identifier) return alert('ID do cliente não informado');
+    currentCustomerId = identifier;
     const modal = document.getElementById('customerDetailsModal');
     const content = document.getElementById('customerDetailsContent');
     const blockBtn = document.getElementById('blockCustomerModalBtn');
@@ -884,9 +895,14 @@ async function viewCustomerDetails(id, name) {
     content.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
     blockBtn.classList.add('hidden');
     try {
-        const response = await fetch(`${API_URL}/api/users/${id}`, { headers: buildAuthHeaders(false) });
+        const response = identifier === String(Number(identifier))
+            ? await fetch(`${API_URL}/api/users/${encodeURIComponent(identifier)}`, { headers: buildAuthHeaders(false) })
+            : await fetch(`${API_URL}/api/users?search=${encodeURIComponent(identifier)}`, { headers: buildAuthHeaders(false) });
         if (!response.ok) throw new Error('Erro ao carregar cliente');
-        const customer = await response.json();
+        const customerData = await response.json();
+        const customer = Array.isArray(customerData) ? (customerData[0] || {}) : customerData;
+        const currentStatus = String(customer.status || customer.operational_status || '').toLowerCase();
+        const displayStatus = (currentStatus === 'active' || currentStatus === 'paid' || currentStatus === 'confirmed') ? 'Ativo' : 'Bloqueado';
         content.innerHTML = `
             <div class="space-y-3">
                 <div class="flex items-center gap-3 pb-3 border-b border-gray-700">
@@ -894,14 +910,15 @@ async function viewCustomerDetails(id, name) {
                         <i data-lucide="user" class="w-6 h-6 text-blue-500"></i>
                     </div>
                     <div>
-                        <p class="font-bold text-white">${customer.name || name || 'Cliente'}</p>
-                        <p class="text-xs text-gray-500">ID: ${String(id).substring(0,12)}...</p>
+                        <p class="font-bold text-white">${customer.name || name || customer.username || customer.mac_address || 'Cliente'}</p>
+                        <p class="text-xs text-gray-500">ID: ${String(customer.id || identifier).substring(0,12)}...</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Telefone</p><p class="text-sm text-white">${customer.phone || 'Não informado'}</p></div>
-                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${customer.status === 'active' ? 'text-emerald-500' : 'text-red-500'}">${customer.status === 'active' ? '● Ativo' : '● Bloqueado'}</p></div>
+                    <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase">Status</p><p class="text-sm font-bold ${displayStatus === 'Ativo' ? 'text-emerald-500' : 'text-red-500'}">● ${displayStatus}</p></div>
                 </div>
+                <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Plano atual</p><p class="text-sm text-gray-300">${customer.plan_name || customer.last_plan_name || 'N/A'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">E-mail</p><p class="text-sm text-gray-300">${customer.email || 'Não informado'}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Total Gasto</p><p class="text-lg font-bold text-emerald-400">R$ ${(customer.total_spent || 0).toFixed(2)}</p></div>
                 <div class="bg-gray-900/50 rounded-lg p-3"><p class="text-[10px] text-gray-500 uppercase mb-2">Último acesso</p><p class="text-sm text-gray-300">${customer.last_access || '-'}</p></div>
@@ -917,44 +934,58 @@ function closeCustomerDetailsModal() { document.getElementById('customerDetailsM
 function blockCustomerFromModal() { if (currentCustomerId) blockCustomer(currentCustomerId); }
 
 async function blockCustomer(id) {
-    if (!id) return alert('ID do cliente não informado');
+    if (!id) return alert('ID do cliente nÃ£o informado');
     if (!confirm('Tem certeza que deseja bloquear este cliente?')) return;
     try {
-        const response = await fetch(`${API_URL}/api/users/${id}/block`, {
+        let resolvedId = String(id);
+        if (!/^\d+$/.test(resolvedId)) {
+            const lookup = await fetch(`${API_URL}/api/users?search=${encodeURIComponent(resolvedId)}`, { headers: buildAuthHeaders(false) });
+            const list = lookup.ok ? await lookup.json() : [];
+            resolvedId = String((Array.isArray(list) ? list[0] : list)?.id || '');
+        }
+        if (!resolvedId) return alert('ID do cliente não informado');
+        const response = await fetch(`${API_URL}/api/users/${resolvedId}/block`, {
             method: 'POST',
             headers: buildAuthHeaders(true)
         });
         if (response.ok) {
-            alert('✅ Cliente bloqueado com sucesso!');
+            alert('âœ… Cliente bloqueado com sucesso!');
             closeCustomerDetailsModal();
             loadDashboard();
         } else {
             const data = await response.json();
-            alert(data.error || '❌ Erro ao bloquear cliente');
+            alert(data.error || 'âŒ Erro ao bloquear cliente');
         }
     } catch (error) {
         console.error(error);
-        alert('❌ Erro ao bloquear cliente');
+        alert('âŒ Erro ao bloquear cliente');
     }
 }
 
 async function markAsVip(id) {
-    if (!id) return alert('ID do cliente não informado');
+    if (!id) return alert('ID do cliente nÃ£o informado');
     if (!confirm('Deseja marcar este cliente como VIP?')) return;
     try {
-        const response = await fetch(`${API_URL}/api/users/${id}/vip`, {
+        let resolvedId = String(id);
+        if (!/^\d+$/.test(resolvedId)) {
+            const lookup = await fetch(`${API_URL}/api/users?search=${encodeURIComponent(resolvedId)}`, { headers: buildAuthHeaders(false) });
+            const list = lookup.ok ? await lookup.json() : [];
+            resolvedId = String((Array.isArray(list) ? list[0] : list)?.id || '');
+        }
+        if (!resolvedId) return alert('ID do cliente não informado');
+        const response = await fetch(`${API_URL}/api/users/${resolvedId}/vip`, {
             method: 'POST',
             headers: buildAuthHeaders(true)
         });
         if (response.ok) {
-            alert('✅ Cliente marcado como VIP com sucesso!');
+            alert('âœ… Cliente marcado como VIP com sucesso!');
             loadDashboard();
         } else {
             const data = await response.json();
-            alert(data.error || '❌ Erro ao marcar cliente como VIP');
+            alert(data.error || 'âŒ Erro ao marcar cliente como VIP');
         }
     } catch (error) {
-        alert('❌ Erro ao marcar cliente como VIP');
+        alert('âŒ Erro ao marcar cliente como VIP');
     }
 }
 
@@ -969,8 +1000,7 @@ function formatPopDate(value) {
 }
 
 function getPopStatusLabel(pop) {
-    const rawStatus = String(pop?.status || '').toLowerCase();
-    return rawStatus === 'online' || rawStatus === 'active' ? 'Online' : 'Offline';
+    return isPopOnline(pop) ? 'Online' : 'Offline';
 }
 
 async function openPopDetailsModal(popId) {
@@ -989,7 +1019,7 @@ async function openPopDetailsModal(popId) {
     );
 
     if (!pop) {
-        content.innerHTML = '<div class="text-center text-red-500">POP não encontrado no dashboard.</div>';
+        content.innerHTML = '<div class="text-center text-red-500">POP nÃ£o encontrado no dashboard.</div>';
         return;
     }
 
@@ -1005,11 +1035,11 @@ async function openPopDetailsModal(popId) {
             }
         }
     } catch (_error) {
-        // O modal continua usando os dados já carregados no dashboard.
+        // O modal continua usando os dados jÃ¡ carregados no dashboard.
     }
 
     const statusLabel = getPopStatusLabel(pop);
-    const isOnline = statusLabel === 'Online';
+    const isOnline = isPopOnline(pop);
     const popName = pop.name || pop.unique_id || pop.id || 'POP';
     const popIp = pop.ip || pop.public_ip || pop.vpn_ip || pop.radius_client_ip || '-';
     const lastActivity = pop.last_activity_at || pop.last_heartbeat_at || pop.last_heartbeat || pop.last_activity || pop.updated_at;
@@ -1030,7 +1060,7 @@ async function openPopDetailsModal(popId) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
                     <p class="text-[10px] text-gray-500 uppercase mb-1">Status</p>
-                    <p class="text-sm font-bold ${isOnline ? 'text-emerald-400' : 'text-red-400'}">● ${statusLabel}</p>
+                    <p class="text-sm font-bold ${isOnline ? 'text-emerald-400' : 'text-red-400'}">â— ${statusLabel}</p>
                 </div>
                 <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
                     <p class="text-[10px] text-gray-500 uppercase mb-1">Clientes ativos</p>
@@ -1041,19 +1071,19 @@ async function openPopDetailsModal(popId) {
                     <p class="text-sm text-gray-300 font-mono break-all">${popIp}</p>
                 </div>
                 <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
-                    <p class="text-[10px] text-gray-500 uppercase mb-1">Localização</p>
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">LocalizaÃ§Ã£o</p>
                     <p class="text-sm text-gray-300">${pop.location || '-'}</p>
                 </div>
             </div>
 
             <div class="bg-gray-900/50 rounded-xl p-3 border border-gray-800">
-                <p class="text-[10px] text-gray-500 uppercase mb-1">Última atividade</p>
+                <p class="text-[10px] text-gray-500 uppercase mb-1">Ãšltima atividade</p>
                 <p class="text-sm text-gray-300">${formatPopDate(lastActivity)}</p>
             </div>
 
             <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
                 <p class="text-xs text-blue-300">
-                    Este card mostra os dados rápidos do POP sem sair do dashboard. Para editar, gerar script ou revisar configurações completas, abra o módulo POPs.
+                    Este card mostra os dados rÃ¡pidos do POP sem sair do dashboard. Para editar, gerar script ou revisar configuraÃ§Ãµes completas, abra o mÃ³dulo POPs.
                 </p>
             </div>
         </div>
@@ -1087,7 +1117,7 @@ async function saveProfile() {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas não coincidem');
+    if (newPassword && newPassword !== confirmPassword) return alert('As novas senhas nÃ£o coincidem');
     if (newPassword && !currentPassword) return alert('Digite a senha atual para alterar');
     try {
         const response = await fetch(`${API_URL}/api/profile`, {
@@ -1133,8 +1163,8 @@ async function logout() {
 // ============================================
 function openNewVoucherModal() { window.location.href = 'vouchers.html'; }
 function closeNewVoucherModal() { document.getElementById('newVoucherModal').classList.add('hidden'); }
-function generateVoucher() { alert('A geração de vouchers foi movida para o módulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
-function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('Código copiado!'); }
+function generateVoucher() { alert('A geraÃ§Ã£o de vouchers foi movida para o mÃ³dulo dedicado de vouchers.'); window.location.href = 'vouchers.html'; }
+function copyVoucherCode() { const code = document.getElementById('voucherCode').innerText; navigator.clipboard.writeText(code); alert('CÃ³digo copiado!'); }
 
 // ============================================
 // BUSCA
@@ -1184,5 +1214,7 @@ setInterval(loadDashboard, 30000);
 <script src="globals.js"></script>
 </body>
 </html>
+
+
 
 

@@ -456,7 +456,7 @@
         if (cliente.is_vip === true || s === 'vip') return 'vip';
         const expiresAt = cliente.expires_at ? new Date(cliente.expires_at).getTime() : 0;
         if ((expiresAt > 0 && expiresAt < Date.now()) || s === 'inactive' || s === 'expired') return 'inactive';
-        if (['active', 'paid', 'trial'].includes(s)) return 'active';
+        if (['active', 'paid', 'trial', 'confirmed', 'pago'].includes(s)) return 'active';
         return 'inactive';
     }
 
@@ -465,6 +465,8 @@
         switch(s) {
             case 'active':
             case 'paid':
+            case 'confirmed':
+            case 'pago':
             case 'vip': return 'status-premium';
             case 'trial': return 'status-premium';
             case 'blocked': return 'status-blocked';
@@ -478,7 +480,9 @@
         const s = String(status || '').toLowerCase();
         switch(s) {
             case 'active': return 'Ativo';
-            case 'paid': return 'Pago';
+            case 'paid':
+            case 'confirmed':
+            case 'pago': return 'Pago';
             case 'trial': return 'Teste Grátis';
             case 'expired': return 'Expirado';
             case 'inactive': return 'Inativo';
