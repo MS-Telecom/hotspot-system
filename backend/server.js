@@ -1854,6 +1854,14 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
     if (error) throw error;
 
     await registerAuditLog(req.user.username, 'delete', 'user', `Usuário removido: ${id}`, getClientIp(req), req.headers['user-agent'], { user_id: id, mac_address: user?.mac_address || null, pop_id: disconnect.pop_id || user?.pop_id || user?.last_pop_id || null });
+    await registerSystemLog('info', 'users', 'Cliente excluído e acesso revogado', {
+      user_id: id,
+      mac_address: user?.mac_address || null,
+      pop_id: disconnect.pop_id || user?.pop_id || user?.last_pop_id || null,
+      radius_revoked: disconnect.radius_revoked,
+      disconnect_status: disconnect.disconnect_status,
+      disconnect_method: disconnect.disconnect_method
+    }, getClientIp(req), req.headers['user-agent']);
     res.json({
       success: true,
       user_id: id,
@@ -2791,6 +2799,35 @@ async function revokeAndDisconnectUser(user, reason = 'disconnect_user') {
   }
 
   const radiusRevoked = await revokeRadiusAccess(mac);
+  const nowIso = new Date().toISOString();
+
+  try {
+    await supabase
+      .from('hotspot_sessions')
+      .update({
+        status: 'revoked',
+        access_granted: false,
+        updated_at: nowIso,
+        revoked_at: nowIso,
+        revoked_reason: reason
+      })
+      .in('mac_address', getMacVariants(mac))
+      .in('status', ['active', 'payment_grace', 'payment_window']);
+  } catch (_err) {}
+
+  try {
+    await supabase
+      .from('payments')
+      .update({
+        status: 'canceled',
+        payment_status: 'canceled',
+        updated_at: nowIso,
+        revoked_at: nowIso,
+        access_revoked: true
+      })
+      .in('user_mac', getMacVariants(mac))
+      .eq('status', 'pending');
+  } catch (_err) {}
 
   let directDone = false;
   let directError = null;
@@ -5099,6 +5136,10 @@ app.get('/api/access/status', async (req, res) => {
       .limit(1)
       .maybeSingle();
 
+    if (!user || String(user.status || '').toLowerCase() === 'blocked' || user.blocked === true || String(user.status || '').toLowerCase() === 'deleted') {
+      return res.json({ allowed: false, reason: 'registration_required', show_free_trial: false });
+    }
+
     if (isActivePaidUser(user)) {
       const planName = user.plan_name || 'Premium';
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
@@ -5138,6 +5179,11 @@ app.get('/api/access/status', async (req, res) => {
       const approvedAt = new Date(payment.approved_at || payment.updated_at || payment.created_at || nowIso).getTime();
       const durationSecondsPlan = getPlanDurationSeconds(plan || {}, 1);
       const expiresAt = new Date(approvedAt + durationSecondsPlan * 1000).toISOString();
+      const userCreatedAt = user?.created_at ? new Date(user.created_at).getTime() : 0;
+      const paymentApprovedAt = new Date(payment.approved_at || payment.updated_at || payment.created_at || nowIso).getTime();
+      if (userCreatedAt && paymentApprovedAt < userCreatedAt) {
+        return res.json({ allowed: false, reason: 'registration_required', show_free_trial: false });
+      }
       if (new Date(expiresAt).getTime() > nowMs) {
         const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - nowMs) / 1000));
         await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);
@@ -5169,6 +5215,11 @@ app.get('/api/access/status', async (req, res) => {
       .maybeSingle();
 
     if (session) {
+      const sessionCreatedAt = session.created_at ? new Date(session.created_at).getTime() : 0;
+      const userCreatedAt = user?.created_at ? new Date(user.created_at).getTime() : 0;
+      if (userCreatedAt && sessionCreatedAt && sessionCreatedAt < userCreatedAt) {
+        return res.json({ allowed: false, reason: 'registration_required', show_free_trial: false });
+      }
       if (effectivePopId && (!session.pop_id || !session.pop_name || !session.pop_location)) {
         await saveHotspotSession({
           ...session,
