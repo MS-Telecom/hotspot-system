@@ -808,8 +808,8 @@
             } else if (key === 'payment') {
                 if (document.getElementById('paymentProvider')) document.getElementById('paymentProvider').value = value.payment_provider || value.provider || 'disabled';
                 if (document.getElementById('paymentMockNotice')) document.getElementById('paymentMockNotice').classList.toggle('hidden', String(value.payment_provider || value.provider || 'disabled') !== 'mock');
-                if (document.getElementById('paymentTokenStatus')) document.getElementById('paymentTokenStatus').textContent = value.mercado_pago_configured ? 'Configurado' : 'Não configurado';
-                if (document.getElementById('paymentTokenHint')) document.getElementById('paymentTokenHint').value = value.mercado_pago_token_hint ? `********${value.mercado_pago_token_hint}` : '********';
+                if (document.getElementById('paymentTokenStatus')) document.getElementById('paymentTokenStatus').textContent = String(value.payment_provider || value.provider || 'disabled') === 'mock' ? 'Mercado Pago não é usado no modo Mock/Teste' : (value.mercado_pago_configured ? 'Configurado' : 'Não configurado');
+                if (document.getElementById('paymentTokenHint')) document.getElementById('paymentTokenHint').value = String(value.payment_provider || value.provider || 'disabled') === 'mock' ? '********' : (value.mercado_pago_token_hint ? `********${value.mercado_pago_token_hint}` : '********');
                 if (document.getElementById('paymentGraceEnabled')) document.getElementById('paymentGraceEnabled').checked = value.payment_grace_enabled !== false;
                 if (document.getElementById('paymentGraceDuration')) {
                     const ds = value.payment_grace_duration_seconds ?? value.grace_duration_seconds ?? 300;

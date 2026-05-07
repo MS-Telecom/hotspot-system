@@ -1230,10 +1230,11 @@ async function finalizeApprovedPayment(payment, { source = 'mercadopago' } = {})
 
 async function maybeAutoApproveMockPayment(payment) {
   if (!payment || String(payment.provider || '').toLowerCase() !== 'mock') return payment;
-  const autoSeconds = Math.max(1, Number(payment.mock_approved_at ? 0 : (payment.mock_auto_approve_seconds || payment.payment_mock_auto_approve_seconds || 10)));
-  const approvedAt = payment.mock_approved_at ? new Date(payment.mock_approved_at).getTime() : Date.now() + autoSeconds * 1000;
+  const autoSeconds = Math.max(1, Number(payment.mock_auto_approve_seconds || payment.payment_mock_auto_approve_seconds || 10));
+  const createdAt = new Date(payment.created_at || payment.updated_at || Date.now()).getTime();
+  const approvedAt = createdAt + autoSeconds * 1000;
   if (Date.now() < approvedAt) return payment;
-  if (payment.status === 'approved') return payment;
+  if (payment.status === 'approved' || payment.status === 'paid') return payment;
 
   const nowIso = new Date().toISOString();
   const updatedPayment = {
@@ -2145,6 +2146,25 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
           pop_ip: popIp || existingPending.pop_ip || null,
           updated_at: new Date().toISOString()
         }).eq('id', existingPending.id);
+      }
+      if (provider === 'mock' || String(existingPending.provider || '').toLowerCase() === 'mock') {
+        const mockPix = existingPending.pix_copy_paste || existingPending.pix_code || `PIX-MOCK-${existingPending.id}-${cleanMac.replace(/:/g, '')}`;
+        return res.json({
+          success: true,
+          payment_id: existingPending.id,
+          provider: 'mock',
+          status: existingPending.status || 'pending',
+          mock: true,
+          pix_code: mockPix,
+          pix_copy_paste: mockPix,
+          qr_code: null,
+          qr_code_base64: null,
+          message: 'Pagamento mock gerado',
+          temporary_access: !!paymentSettings.payment_grace_enabled,
+          temporary_access_expires_at: existingPending.expires_at || pendingExpireAt,
+          payment_grace_seconds: paymentSettings.payment_grace_duration_seconds,
+          auto_approve_seconds: Math.max(1, Number(paymentSettings.payment_mock_auto_approve_seconds || 10))
+        });
       }
       return res.json({
         payment_id: existingPending.id,

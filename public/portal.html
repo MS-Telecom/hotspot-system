@@ -698,7 +698,7 @@ async function continueAfterRegistrationGate() {
                 clearPaymentGraceBanner();
                 paymentSection.classList.remove('hidden');
                 qrCodeInner.innerHTML = 'QR indisponível';
-                pixCode.textContent = 'Aguardando código PIX...';
+                pixCode.textContent = '';
                 setPixCopyState(false);
                 showStatusMessage('Não foi possível gerar o PIX. Nenhum acesso foi liberado.', 'error');
                 return;
@@ -737,8 +737,10 @@ async function continueAfterRegistrationGate() {
             selectedPaymentId = null;
             clearPaymentPolling();
             clearPaymentGraceBanner();
+            qrCodeInner.innerHTML = 'PIX não gerado';
+            pixCode.textContent = '';
             setPixCopyState(false);
-            showStatusMessage(error.message || 'Erro ao gerar PIX.', 'error');
+            showStatusMessage('Não foi possível gerar o PIX. Nenhum acesso foi liberado.', 'error');
           }
         });
       });
