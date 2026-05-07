@@ -2194,7 +2194,19 @@ app.post('/api/payments/generate-pix', paymentLimiter, async (req, res) => {
     const paymentDescription = description || selectedPlanName || 'Plano WiFi';
     const popRef = pop_id || pop || pop_unique_id || null;
     const popIp = ip_address || ip || null;
-    const { data: matchedUser } = await supabase.from('users').select('id, name, username').in('mac_address', getMacVariants(cleanMac)).order('updated_at', { ascending: false }).limit(1).maybeSingle().catch(() => ({ data: null }));
+    let matchedUser = null;
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, username')
+        .in('mac_address', getMacVariants(cleanMac))
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) matchedUser = data;
+    } catch (_error) {
+      matchedUser = null;
+    }
     const externalReference = `HS-${cleanMac.replace(/:/g, '')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const pendingExpireAt = new Date(Date.now() + paymentSettings.payment_pix_expires_minutes * 60 * 1000).toISOString();
     const { data: existingPending } = await supabase.from('payments').select('*').in('user_mac', getMacVariants(cleanMac)).eq('plan_name', selectedPlanName).eq('status', 'pending').order('created_at', { ascending: false }).limit(1).maybeSingle();
