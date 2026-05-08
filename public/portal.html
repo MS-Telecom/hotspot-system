@@ -913,37 +913,19 @@ async function continueAfterRegistrationGate() {
 
       const data = await res.json();
       if (data && data.allowed === true) {
-        if (data.expired === true || data.access_expired === true || data.reason === 'paid_plan_expired') {
-          selectedPaymentId = null;
-          clearPaymentPolling();
-          clearPaymentGraceBanner();
-          paymentSection.classList.remove('hidden');
-          return;
-        }
-        if (data.reason === 'payment_grace_active' || data.reason === 'temporary_access') {
-          showPaymentGraceBanner(data.expires_at, 'Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.');
-          showStatusMessage('Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
-          testeGratisBtn.classList.add('hidden');
-          return;
-        }
-        if (data.reason === 'paid_plan_active' || data.reason === 'active_paid_session') {
-          redirectInProgress = true;
-          showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
-          testeGratisBtn.classList.add('hidden');
-          setTimeout(() => redirectToMikrotik(macAddress), 1000);
-          return;
-        }
-        if (data.reason === 'free_trial_active' || data.reason === 'active_free_trial') {
-          redirectInProgress = true;
-          showStatusMessage('Teste grátis liberado. Autenticando...', 'info');
-          testeGratisBtn.classList.add('hidden');
-          setTimeout(() => redirectToMikrotik(macAddress), 1000);
-          return;
-        }
+        testeGratisBtn.classList.add('hidden');
+      } else if (data && data.show_free_trial === true) {
+        testeGratisBtn.classList.remove('hidden');
+      } else if (data && data.reason === 'cooldown') {
+        testeGratisBtn.classList.add('hidden');
+        showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`,'warning');
+      } else {
+        testeGratisBtn.classList.add('hidden');
       }
-    } catch (_e) {}
+    } catch (error) {
+      testeGratisBtn.classList.add('hidden');
+    }
   }
-
   jaPagueiBtn.addEventListener('click', async () => {
     if (!macAddress) {
       showStatusMessage('MAC nÃ£o detectado.', 'error');
