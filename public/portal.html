@@ -207,6 +207,10 @@
     return `${API_BASE}/api/access/status?${query.toString()}`;
   }
 
+  function isPaymentApprovedStatus(status) {
+    return ['approved', 'paid', 'confirmed', 'pago', 'active'].includes(String(status || '').toLowerCase());
+  }
+
   const registrationGate = document.getElementById('registrationGate');
   const registrationForm = document.getElementById('registrationForm');
   const registrationFieldsContainer = document.getElementById('registrationFieldsContainer');
@@ -353,11 +357,15 @@ async function checkSelectedPaymentStatus() {
   if (data && data.temporary_access === true && (data.temporary_access_expires_at || data.expires_at)) {
     showPaymentGraceBanner(data.temporary_access_expires_at || data.expires_at, 'Acesso temporário liberado para pagamento');
   }
-  if (data && (data.status === 'approved' || data.status === 'paid')) {
+  if (data && (isPaymentApprovedStatus(data.status) || isPaymentApprovedStatus(data.payment_status))) {
     clearPaymentPolling();
     clearPaymentGraceBanner();
-    showStatusMessage(data.mock ? 'Pagamento de teste aprovado. Liberando acesso...' : 'Pagamento aprovado, liberando acesso...', 'success');
-    setTimeout(() => redirectToMikrotik(macAddress), 1500);
+    showStatusMessage(data.mock ? 'Pagamento de teste aprovado. Liberando acesso...' : 'Pagamento aprovado. Liberando acesso...', 'success');
+    await fetch(accessStatusUrl(), { cache: 'no-store' }).catch(() => null);
+    if (!redirectInProgress) {
+      redirectInProgress = true;
+      setTimeout(() => redirectToMikrotik(macAddress), 800);
+    }
     return data;
   }
   return data;
@@ -929,7 +937,7 @@ async function continueAfterRegistrationGate() {
 
     try {
       const data = await checkSelectedPaymentStatus();
-      if (!data || (data.status !== 'approved' && data.status !== 'paid')) {
+      if (!data || (!isPaymentApprovedStatus(data.status) && !isPaymentApprovedStatus(data.payment_status))) {
         showStatusMessage('Pagamento ainda não encontrado. Faça o PIX e tente novamente.', 'warning');
         if (selectedPlan) {
           paymentSection.classList.remove('hidden');
