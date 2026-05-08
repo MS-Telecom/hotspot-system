@@ -858,6 +858,12 @@ async function openAllReleasesModal() {
 }
 function closeAllReleasesModal() { document.getElementById('allReleasesModal').classList.add('hidden'); }
 
+function closePlanDetailsModal() {
+    const modal = document.getElementById('planDetailsModal');
+    if (modal) modal.classList.add('hidden');
+}
+window.closePlanDetailsModal = closePlanDetailsModal;
+
 async function openPlanDetailsModal() {
     const modal = document.getElementById('planDetailsModal');
     const content = document.getElementById('planDetailsContent');
@@ -1230,5 +1236,4 @@ dashboardLiveRefreshTimer = setInterval(() => {
 <script src="globals.js"></script>
 </body>
 </html>
-
 

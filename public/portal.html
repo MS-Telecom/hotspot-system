@@ -353,10 +353,8 @@ async function loadPaymentSettings() {
 }
 
 async function checkSelectedPaymentStatus() {
-  if (!selectedPaymentId && !macAddress) return null;
-  const url = selectedPaymentId
-    ? `${API_BASE}/api/portal/check-payment/${encodeURIComponent(selectedPaymentId)}`
-    : `${API_BASE}/api/check-payment?mac=${encodeURIComponent(macAddress)}`;
+  if (!selectedPaymentId) return null;
+  const url = `${API_BASE}/api/portal/check-payment/${encodeURIComponent(selectedPaymentId)}`;
   const res = await fetch(url, { cache: 'no-store' });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Erro ao verificar pagamento');
@@ -371,6 +369,14 @@ async function checkSelectedPaymentStatus() {
     showPaymentGraceBanner(data.temporary_access_expires_at || data.expires_at, 'Acesso temporário liberado para pagamento');
   }
   if (isPaymentApproved(data)) {
+    if (data.access_expired === true || data.expired === true || data.access_granted === false) {
+      clearPaymentPolling();
+      clearPaymentGraceBanner();
+      selectedPaymentId = null;
+      showStatusMessage('Seu plano expirou. Escolha um novo plano para continuar.', 'warning');
+      paymentSection.classList.remove('hidden');
+      return data;
+    }
     clearPaymentPolling();
     clearPaymentGraceBanner();
     showStatusMessage(data.mock ? 'Pagamento de teste aprovado. Liberando acesso...' : 'Pagamento aprovado. Liberando acesso...', 'success');
@@ -832,144 +838,60 @@ async function continueAfterRegistrationGate() {
 
       const data = await res.json();
       if (data && data.allowed === true) {
-        testeGratisBtn.classList.add('hidden');
-      } else if (data && data.show_free_trial === true) {
-        testeGratisBtn.classList.remove('hidden');
-      } else if (data && data.reason === 'cooldown') {
-        testeGratisBtn.classList.add('hidden');
-        showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
-      } else {
-        testeGratisBtn.classList.add('hidden');
+        if (data.expired === true || data.access_expired === true || data.reason === 'paid_plan_expired') {
+          selectedPaymentId = null;
+          clearPaymentPolling();
+          clearPaymentGraceBanner();
+          paymentSection.classList.remove('hidden');
+          if (!options.skipTrialCheck) checkFreeTrialEligibility();
+          return;
+        }
+        if (data.reason === 'payment_grace_active' || data.reason === 'temporary_access') {
+          showPaymentGraceBanner(data.expires_at, 'Acesso temporÃ¡rio para pagamento ativo. Conclua o PIX para manter o plano.');
+          showStatusMessage('Acesso temporÃ¡rio para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
+          testeGratisBtn.classList.add('hidden');
+          return;
+        }
+        if (data.reason === 'paid_plan_active' || data.reason === 'active_paid_session') {
+          redirectInProgress = true;
+          showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
+          // Hide free trial button since user has active plan
+          testeGratisBtn.classList.add('hidden');
+          setTimeout(() => redirectToMikrotik(macAddress), 1000);
+          return;
+        }
+        if (data.reason === 'free_trial_active' || data.reason === 'active_free_trial') {
+          redirectInProgress = true;
+          showStatusMessage('Teste grátis liberado. Autenticando...', 'info');
+          testeGratisBtn.classList.add('hidden');
+          setTimeout(() => redirectToMikrotik(macAddress), 1000);
+          return;
+        }
+        if (!options.skipTrialCheck) {
+          // Check free trial eligibility after confirming no active plan
+          checkFreeTrialEligibility();
+        }
+      } else if (!options.skipTrialCheck) {
+        // Check free trial eligibility after confirming no active plan
+        checkFreeTrialEligibility();
       }
-    } catch (error) {
-      testeGratisBtn.classList.add('hidden');
-    }
+    } catch (_e) {}
   }
-
-  testeGratisBtn.addEventListener('click', async () => {
-    if (registrationGateActive) {
-      showStatusMessage('Complete seu cadastro para continuar.', 'warning');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    if (!macAddress) {
-      showStatusMessage('MAC não detectado.', 'error');
-      return;
-    }
-
-    if (redirectInProgress) {
-      showStatusMessage('Redirecionamento em progresso...', 'info');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/users/test-access`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mac_address: macAddress,
-          pop_id: popId,
-          pop: popId,
-          pop_unique_id: params.get('pop_unique_id') || '',
-          ip_address: clientIp
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        // Handle 403: MAC has active plan or already used
-        if (res.status === 403) {
-          const reason = data?.reason || 'unknown';
-          if (reason === 'manual_plan_active' || reason === 'paid_plan_active') {
-            showStatusMessage('Você já possui um plano ativo.', 'warning');
-            testeGratisBtn.classList.add('hidden');
-          } else {
-            showStatusMessage(data.error || 'Acesso negado.', 'error');
-          }
-          return;
-        }
-        // Handle 429: Cooldown or already used
-        if (res.status === 429) {
-          const reason = data?.reason || 'cooldown';
-          if (reason === 'already_used') {
-            showStatusMessage('Teste grátis já foi utilizado para este dispositivo.', 'warning');
-            testeGratisBtn.classList.add('hidden');
-          } else if (reason === 'cooldown' && typeof data.retry_after_seconds === 'number') {
-            showStatusMessage(`Teste grátis já utilizado. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
-            testeGratisBtn.classList.add('hidden');
-          } else {
-            showStatusMessage(data.error || 'Teste grátis já utilizado.', 'warning');
-          }
-          return;
-        }
-        throw new Error(data.error || 'Falha ao liberar teste');
-      }
-
-      const durationGrantedSeconds = Number(data.duration_seconds || window.__freeTrialCfg?.duration_seconds || 900);
-      const msgDuration = (Number.isFinite(durationGrantedSeconds) && durationGrantedSeconds < 60)
-        ? `${Math.max(10, Math.floor(durationGrantedSeconds))} segundos`
-        : `${Math.max(1, Math.ceil(durationGrantedSeconds / 60))} minutos`;
-      showStatusMessage(`Teste grátis de ${msgDuration} liberado! Autenticando...`, 'success');
-      redirectInProgress = true;
-      setTimeout(() => redirectToMikrotik(macAddress), 1500);
-    } catch (error) {
-      showStatusMessage(error.message || 'Erro ao liberar teste.', 'error');
-    }
-  });
-
-  liberar5minBtn.addEventListener('click', async () => {
-    if (!macAddress) {
-      showStatusMessage('MAC não detectado.', 'error');
-      return;
-    }
-
-    const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
-
-    if (lastFreeTest && (now - lastFreeTest) < oneHour) {
-      const remaining = Math.ceil((oneHour - (now - lastFreeTest)) / 60000);
-      showStatusMessage(`Aguarde ${remaining} minutos para outro teste gratuito.`, 'warning');
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/users/test-access`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mac_address: macAddress,
-          duration_minutes: 5,
-          pop_id: popId,
-          pop: popId,
-          pop_unique_id: params.get('pop_unique_id') || '',
-          ip_address: clientIp
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Falha ao liberar teste');
-
-      lastFreeTest = now;
-      localStorage.setItem('last_free_test', String(lastFreeTest));
-
-      showStatusMessage('5 minutos de acesso liberado! Autenticando...', 'success');
-      setTimeout(() => redirectToMikrotik(macAddress), 1500);
-    } catch (error) {
-      showStatusMessage(error.message || 'Erro ao liberar 5 minutos.', 'error');
-    }
-  });
 
   jaPagueiBtn.addEventListener('click', async () => {
     if (!macAddress) {
-      showStatusMessage('MAC não detectado.', 'error');
+      showStatusMessage('MAC nÃ£o detectado.', 'error');
+      return;
+    }
+    if (!selectedPaymentId) {
+      showStatusMessage('Escolha um plano e gere o PIX antes de verificar o pagamento.', 'warning');
       return;
     }
 
     try {
       const data = await checkSelectedPaymentStatus();
-      if (!data || (!isPaymentApprovedStatus(data.status) && !isPaymentApprovedStatus(data.payment_status))) {
-        showStatusMessage('Pagamento ainda não encontrado. Faça o PIX e tente novamente.', 'warning');
+      if (!data || !isPaymentApproved(data)) {
+        showStatusMessage('Pagamento ainda nÃ£o encontrado. FaÃ§a o PIX e tente novamente.', 'warning');
         if (selectedPlan) {
           paymentSection.classList.remove('hidden');
           paymentSection.scrollIntoView({ behavior: 'smooth' });
@@ -979,74 +901,6 @@ async function continueAfterRegistrationGate() {
       showStatusMessage('Erro ao verificar pagamento.', 'error');
     }
   });
-
-  document.getElementById('cancelarPagamentoBtn').addEventListener('click', () => {
-    paymentSection.classList.add('hidden');
-    selectedPlan = null;
-    selectedPaymentId = null;
-    clearPaymentPolling();
-    clearPaymentGraceBanner();
-    qrCodeInner.innerHTML = 'Gerando...';
-    pixCode.textContent = 'Aguardando código PIX...';
-    setPixCopyState(false);
-  });
-
-  // Refresh eligibility periodically or on user interaction
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !redirectInProgress) {
-      checkFreeTrialEligibility();
-    }
-  });
-
-  document.getElementById('copyPixBtn').addEventListener('click', async () => {
-    const code = pixCode.textContent || '';
-    if (!code || code.includes('Gerando') || code.includes('Aguardando')) {
-      showStatusMessage('Código PIX ainda não disponível.', 'warning');
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(code);
-      showStatusMessage('Código PIX copiado!', 'info');
-    } catch {
-      showStatusMessage('Erro ao copiar código.', 'error');
-    }
-  });
-
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
-
-  async function checkAccessStatus(options = {}) {
-    if (!macAddress) return;
-    try {
-      const res = await fetch(accessStatusUrl(), { cache: 'no-store' });
-      if (!res.ok) return;
-      
-      const data = await res.json();
-      if (data && data.allowed === true) {
-        if (data.reason === 'payment_grace_active') {
-          showPaymentGraceBanner(data.expires_at, 'Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.');
-          showStatusMessage('Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
-          testeGratisBtn.classList.add('hidden');
-          return;
-        }
-        redirectInProgress = true;
-        showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
-        // Hide free trial button since user has active plan
-        testeGratisBtn.classList.add('hidden');
-        setTimeout(() => redirectToMikrotik(macAddress), 1000);
-      } else if (!options.skipTrialCheck) {
-        // Check free trial eligibility after confirming no active plan
-        checkFreeTrialEligibility();
-      }
-    } catch (_e) {}
-  }
 
   registrationFieldsContainer.addEventListener('input', (event) => {
     const input = event.target;

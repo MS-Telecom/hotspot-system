@@ -243,15 +243,24 @@ function removeAccents(str) {
 }
 
 function isPaymentApprovedStatus(status) {
-  return ['approved', 'paid', 'confirmed', 'pago', 'active'].includes(String(status || '').toLowerCase());
+  return ['approved', 'paid', 'confirmed', 'pago'].includes(String(status || '').toLowerCase());
 }
 
 function isPaymentPendingStatus(status) {
   return ['pending', 'pending_payment', 'waiting_payment', 'aguardando'].includes(String(status || '').toLowerCase());
 }
 
+function isPaymentTemporaryReason(reason) {
+  return ['payment_grace_active', 'temporary_access', 'payment_grace'].includes(String(reason || '').toLowerCase());
+}
+
 function isPaymentCancelledStatus(status) {
   return ['cancelled', 'canceled', 'expired', 'failed', 'rejected'].includes(String(status || '').toLowerCase());
+}
+
+function isFutureDate(value) {
+  const ts = new Date(value || '').getTime();
+  return Number.isFinite(ts) && ts > Date.now();
 }
 
 function getPaymentDisplayAmount(payment = {}, plan = null) {
@@ -2464,13 +2473,14 @@ app.get('/api/check-payment', async (req, res) => {
         await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'portal-check' }).catch(() => null);
       }
       if (!maybePayment) return res.json({ status: 'not_found' });
+      const paymentApproved = isPaymentApprovedStatus(maybePayment.status);
       return res.json({
         ...maybePayment,
-        status: isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment.status,
-        payment_status: isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment.payment_status || maybePayment.status,
-        approved: isPaymentApprovedStatus(maybePayment.status) || maybePayment.approved === true,
-        paid: isPaymentApprovedStatus(maybePayment.status) || maybePayment.paid === true,
-        access_granted: true,
+        status: paymentApproved ? 'approved' : maybePayment.status,
+        payment_status: paymentApproved ? 'approved' : maybePayment.payment_status || maybePayment.status,
+        approved: paymentApproved || maybePayment.approved === true,
+        paid: paymentApproved || maybePayment.paid === true,
+        access_granted: paymentApproved || maybePayment.access_granted === true,
         mock: String(maybePayment.provider || '').toLowerCase() === 'mock' || maybePayment.mock_payment === true || !!maybePayment.mock_approved_at
       });
     }
@@ -2487,13 +2497,14 @@ app.get('/api/check-payment', async (req, res) => {
     if (maybePayment && isPaymentApprovedStatus(maybePayment.status)) {
       await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'check-payment' }).catch(() => null);
     }
+    const paymentApproved = maybePayment && isPaymentApprovedStatus(maybePayment.status);
     res.json({
       ...maybePayment,
-      status: maybePayment && isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment?.status,
-      payment_status: maybePayment && isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment?.payment_status || maybePayment?.status,
-      approved: maybePayment ? isPaymentApprovedStatus(maybePayment.status) || maybePayment.approved === true : false,
-      paid: maybePayment ? isPaymentApprovedStatus(maybePayment.status) || maybePayment.paid === true : false,
-      access_granted: true,
+      status: paymentApproved ? 'approved' : maybePayment?.status,
+      payment_status: paymentApproved ? 'approved' : maybePayment?.payment_status || maybePayment?.status,
+      approved: maybePayment ? paymentApproved || maybePayment.approved === true : false,
+      paid: maybePayment ? paymentApproved || maybePayment.paid === true : false,
+      access_granted: maybePayment ? paymentApproved || maybePayment.access_granted === true : false,
       mock: String(maybePayment?.provider || '').toLowerCase() === 'mock' || maybePayment?.mock_payment === true || !!maybePayment?.mock_approved_at
     });
   } catch (err) {
@@ -5319,9 +5330,13 @@ app.get('/api/access/status', async (req, res) => {
     if (isActivePaidUser(user)) {
       const planName = user.plan_name || 'Premium';
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
-      const durationForPlan = user.expires_at
-        ? Math.max(10, Math.ceil((new Date(user.expires_at).getTime() - nowMs) / 1000))
+      const userExpiresAt = user.expires_at && isFutureDate(user.expires_at) ? user.expires_at : null;
+      const durationForPlan = userExpiresAt
+        ? Math.max(10, Math.ceil((new Date(userExpiresAt).getTime() - nowMs) / 1000))
         : getPlanDurationSeconds(plan || {}, 30);
+      if (!userExpiresAt) {
+        return res.json({ allowed: false, reason: 'paid_plan_expired', expired: true, show_free_trial: false });
+      }
       await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
       await saveHotspotSession({
         ...(user?.id ? { user_id: user.id } : {}),
@@ -5337,7 +5352,7 @@ app.get('/api/access/status', async (req, res) => {
         created_at: nowIso,
         updated_at: nowIso
       });
-      return res.json({ allowed: true, reason: 'manual_plan_active', show_free_trial: false, expires_at: user.expires_at || null });
+      return res.json({ allowed: true, reason: 'paid_plan_active', show_free_trial: false, expires_at: userExpiresAt || null });
     }
 
     const { data: payment } = await supabase
@@ -5378,6 +5393,7 @@ app.get('/api/access/status', async (req, res) => {
         });
         return res.json({ allowed: true, reason: 'paid_plan_active', show_free_trial: false, expires_at: expiresAt });
       }
+      return res.json({ allowed: false, reason: 'paid_plan_expired', expired: true, show_free_trial: false, expires_at: expiresAt });
     }
 
     const { data: session } = await supabase
@@ -5407,6 +5423,25 @@ app.get('/api/access/status', async (req, res) => {
         });
       }
       return res.json({ allowed: true, reason: 'active_session', show_free_trial: false, expires_at: session.expires_at });
+    }
+
+    const { data: paidHistory } = await supabase
+      .from('payments')
+      .select('*')
+      .in('user_mac', variants)
+      .in('status', ['approved', 'confirmed', 'pago', 'paid'])
+      .order('approved_at', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (paidHistory) {
+      const { data: plan } = await supabase.from('plans').select('*').eq('name', paidHistory.plan_name).maybeSingle();
+      const approvedAt = new Date(paidHistory.approved_at || paidHistory.updated_at || paidHistory.created_at || nowIso).getTime();
+      const durationSecondsPlan = getPlanDurationSeconds(plan || {}, 1);
+      const expiresAt = new Date(approvedAt + durationSecondsPlan * 1000).toISOString();
+      if (!isFutureDate(expiresAt)) {
+        return res.json({ allowed: false, reason: 'paid_plan_expired', expired: true, access_expired: true, show_free_trial: false, expires_at: expiresAt });
+      }
     }
 
     const cfg = await getFreeTrialConfig();
