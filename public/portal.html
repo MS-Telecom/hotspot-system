@@ -215,7 +215,12 @@
     if (!data) return false;
     const statuses = [data.status, data.payment_status, data.paymentStatus];
     if (statuses.some(isPaymentApprovedStatus)) return true;
-    return data.approved === true || data.paid === true || data.confirmed === true || !!data.approved_at || !!data.paid_at || !!data.confirmed_at;
+    if (data.approved === true || data.paid === true || data.confirmed === true || !!data.approved_at || !!data.paid_at || !!data.confirmed_at) return true;
+    if (data.mock_approved_at) {
+      const ts = new Date(data.mock_approved_at).getTime();
+      return Number.isFinite(ts) && ts <= Date.now();
+    }
+    return false;
   }
 
   const registrationGate = document.getElementById('registrationGate');
