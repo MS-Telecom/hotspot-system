@@ -211,6 +211,13 @@
     return ['approved', 'paid', 'confirmed', 'pago', 'active'].includes(String(status || '').toLowerCase());
   }
 
+  function isPaymentApproved(data) {
+    if (!data) return false;
+    const statuses = [data.status, data.payment_status, data.paymentStatus];
+    if (statuses.some(isPaymentApprovedStatus)) return true;
+    return data.approved === true || data.paid === true || data.confirmed === true || !!data.approved_at || !!data.paid_at || !!data.confirmed_at;
+  }
+
   const registrationGate = document.getElementById('registrationGate');
   const registrationForm = document.getElementById('registrationForm');
   const registrationFieldsContainer = document.getElementById('registrationFieldsContainer');
@@ -348,6 +355,7 @@ async function checkSelectedPaymentStatus() {
   const res = await fetch(url, { cache: 'no-store' });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Erro ao verificar pagamento');
+  console.log('[payment-check]', data);
   if (data && data.reason === 'payment_grace_cooldown') {
     clearPaymentPolling();
     showStatusMessage(`Tempo para pagamento expirou. Tente novamente em ${formatRetryAfter(data.retry_after_seconds)}.`, 'warning');
@@ -357,14 +365,31 @@ async function checkSelectedPaymentStatus() {
   if (data && data.temporary_access === true && (data.temporary_access_expires_at || data.expires_at)) {
     showPaymentGraceBanner(data.temporary_access_expires_at || data.expires_at, 'Acesso temporário liberado para pagamento');
   }
-  if (data && (isPaymentApprovedStatus(data.status) || isPaymentApprovedStatus(data.payment_status))) {
+  if (isPaymentApproved(data)) {
     clearPaymentPolling();
     clearPaymentGraceBanner();
     showStatusMessage(data.mock ? 'Pagamento de teste aprovado. Liberando acesso...' : 'Pagamento aprovado. Liberando acesso...', 'success');
-    await fetch(accessStatusUrl(), { cache: 'no-store' }).catch(() => null);
+    try {
+      const accessRes = await fetch(accessStatusUrl(), { cache: 'no-store' });
+      const accessData = await accessRes.json().catch(() => ({}));
+      console.log('[access-status-after-payment]', accessData);
+      if (accessData && accessData.allowed === true) {
+        if (!redirectInProgress) {
+          redirectInProgress = true;
+          setTimeout(() => redirectToMikrotik(macAddress), 800);
+        }
+        return data;
+      }
+    } catch (_error) {
+      if (!redirectInProgress) {
+        redirectInProgress = true;
+        setTimeout(() => redirectToMikrotik(macAddress), 1200);
+      }
+      return data;
+    }
     if (!redirectInProgress) {
       redirectInProgress = true;
-      setTimeout(() => redirectToMikrotik(macAddress), 800);
+      setTimeout(() => redirectToMikrotik(macAddress), 1200);
     }
     return data;
   }
@@ -378,6 +403,7 @@ function startPaymentPolling() {
     if (!selectedPaymentId || redirectInProgress) return;
     checkSelectedPaymentStatus().catch(() => {});
   }, Math.max(2, intervalSeconds) * 1000);
+  checkSelectedPaymentStatus().catch(() => {});
 }
 
 function fieldInputType(field) {
