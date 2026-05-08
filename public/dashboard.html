@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>MS Telecom | Dashboard</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -147,10 +148,14 @@
         <!--CONTEÃšDO DO DASHBOARD -->
         <div class="p-8 space-y-8">
 
-            <!-- Header da PÃ¡gina-->
-            <div>
-                <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
-                <p class="text-gray-500 text-sm mt-1">VisÃ£o geral da rede e mÃ©tricas em tempo real</p>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-black tracking-tight">Dashboard</h1>
+                    <p class="text-gray-500 text-sm mt-1">Visão geral da rede e métricas em tempo real</p>
+                </div>
+                <div id="autoRefreshStatus" class="text-[10px] text-gray-500 font-medium sm:text-right">
+                    Atualizando automaticamente
+                </div>
             </div>
 
             <!--Cards de MÃ©tricas Financeiras -->
@@ -616,6 +621,9 @@ function initUsersPerHourChart(dataPoints = []) {
 }
 
 // ============================================
+let dashboardLiveRefreshTimer = null;
+let dashboardLiveRefreshInFlight = false;
+
 // CARREGAR DADOS DO DASHBOARD (CORRIGIDO)
 // ============================================
 function isPaidPayment(payment) {
@@ -811,6 +819,27 @@ async function loadDashboard() {
 // ============================================
 // FUNÃ‡Ã•ES DOS MODAIS
 // ============================================
+function isAnyDashboardModalOpen() {
+    return Array.from(document.querySelectorAll('.fixed[id$="Modal"]')).some(modal => !modal.classList.contains('hidden'));
+}
+
+function updateDashboardRefreshIndicator() {
+    const el = document.getElementById('autoRefreshStatus');
+    if (!el) return;
+    el.textContent = `Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
+}
+
+async function refreshDashboardLiveData() {
+    if (dashboardLiveRefreshInFlight || isAnyDashboardModalOpen()) return;
+    dashboardLiveRefreshInFlight = true;
+    try {
+        await loadDashboard();
+        updateDashboardRefreshIndicator();
+    } finally {
+        dashboardLiveRefreshInFlight = false;
+    }
+}
+
 async function openAllReleasesModal() {
     const modal = document.getElementById('allReleasesModal');
     const tableBody = document.getElementById('allReleasesTable');
@@ -1206,9 +1235,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSessionInfo();
     updateSessionIp();
     loadDashboard();
+    updateDashboardRefreshIndicator();
     if (typeof lucide !== 'undefined') lucide.createIcons();
 });
-setInterval(loadDashboard, 30000);
+dashboardLiveRefreshTimer = setInterval(() => {
+    if (document.hidden) return;
+    refreshDashboardLiveData().catch(() => {});
+}, 15000);
 </script>
 
 <script src="globals.js"></script>
