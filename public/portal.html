@@ -342,6 +342,73 @@ function showPaymentGraceBanner(expiresAt, prefix = 'Acesso temporário liberado
   paymentGraceTimer = setInterval(render, 1000);
 }
 
+async function checkAccessStatus(options = {}) {
+  if (!macAddress || redirectInProgress) return null;
+
+  try {
+    const res = await fetch(accessStatusUrl(), { cache: 'no-store' });
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    console.log('[access-status]', data);
+
+    if (!data || data.allowed !== true) {
+      if (data && (data.expired === true || data.access_expired === true || data.reason === 'paid_plan_expired' || data.reason === 'payment_expired')) {
+        selectedPaymentId = null;
+        clearPaymentPolling();
+        clearPaymentGraceBanner();
+        paymentSection.classList.add('hidden');
+        plansTitle.classList.remove('hidden');
+        plansContainer.classList.remove('hidden');
+        devicePanel.classList.remove('hidden');
+        showStatusMessage('Seu plano expirou. Escolha um novo plano para continuar.', 'warning');
+        await loadPlans();
+      }
+      if (!options.skipTrialCheck) checkFreeTrialEligibility();
+      return data;
+    }
+
+    if (data.reason === 'paid_plan_active' || data.reason === 'active_paid_session') {
+      redirectInProgress = true;
+      showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
+      setTimeout(() => redirectToMikrotik(macAddress), 1000);
+      return data;
+    }
+
+    if (data.reason === 'free_trial_active' || data.reason === 'active_free_trial') {
+      redirectInProgress = true;
+      showStatusMessage('Teste grátis liberado. Autenticando...', 'info');
+      setTimeout(() => redirectToMikrotik(macAddress), 1000);
+      return data;
+    }
+
+    if (data.reason === 'payment_grace_active' || data.reason === 'temporary_access') {
+      showPaymentGraceBanner(data.expires_at, 'Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.');
+      showStatusMessage('Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
+      testeGratisBtn.classList.add('hidden');
+      return data;
+    }
+
+    if (data.reason === 'paid_plan_expired' || data.reason === 'payment_expired') {
+      selectedPaymentId = null;
+      clearPaymentPolling();
+      clearPaymentGraceBanner();
+      paymentSection.classList.add('hidden');
+      plansTitle.classList.remove('hidden');
+      plansContainer.classList.remove('hidden');
+      devicePanel.classList.remove('hidden');
+      showStatusMessage('Seu plano expirou. Escolha um novo plano para continuar.', 'warning');
+      await loadPlans();
+    }
+
+    if (!options.skipTrialCheck) checkFreeTrialEligibility();
+    return data;
+  } catch (_e) {
+    if (!options.skipTrialCheck) checkFreeTrialEligibility();
+    return null;
+  }
+}
+
 async function loadPaymentSettings() {
   try {
     const res = await fetch(`${API_BASE}/api/portal/payment-settings`, { cache: 'no-store' });
@@ -843,19 +910,17 @@ async function continueAfterRegistrationGate() {
           clearPaymentPolling();
           clearPaymentGraceBanner();
           paymentSection.classList.remove('hidden');
-          if (!options.skipTrialCheck) checkFreeTrialEligibility();
           return;
         }
         if (data.reason === 'payment_grace_active' || data.reason === 'temporary_access') {
-          showPaymentGraceBanner(data.expires_at, 'Acesso temporÃ¡rio para pagamento ativo. Conclua o PIX para manter o plano.');
-          showStatusMessage('Acesso temporÃ¡rio para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
+          showPaymentGraceBanner(data.expires_at, 'Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.');
+          showStatusMessage('Acesso temporário para pagamento ativo. Conclua o PIX para manter o plano.', 'info');
           testeGratisBtn.classList.add('hidden');
           return;
         }
         if (data.reason === 'paid_plan_active' || data.reason === 'active_paid_session') {
           redirectInProgress = true;
           showStatusMessage('Plano ativo encontrado. Liberando acesso...', 'info');
-          // Hide free trial button since user has active plan
           testeGratisBtn.classList.add('hidden');
           setTimeout(() => redirectToMikrotik(macAddress), 1000);
           return;
@@ -867,13 +932,6 @@ async function continueAfterRegistrationGate() {
           setTimeout(() => redirectToMikrotik(macAddress), 1000);
           return;
         }
-        if (!options.skipTrialCheck) {
-          // Check free trial eligibility after confirming no active plan
-          checkFreeTrialEligibility();
-        }
-      } else if (!options.skipTrialCheck) {
-        // Check free trial eligibility after confirming no active plan
-        checkFreeTrialEligibility();
       }
     } catch (_e) {}
   }
