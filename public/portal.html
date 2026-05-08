@@ -287,6 +287,14 @@ function showStatusMessage(message, type = 'success') {
   setTimeout(() => msgDiv.classList.add('hidden'), 5000);
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 function formatRetryAfter(seconds) {
   const sec = Math.max(1, Number(seconds || 0));
   if (sec < 60) return `${Math.ceil(sec)} segundos`;
@@ -960,6 +968,110 @@ async function continueAfterRegistrationGate() {
     }
   });
 
+  testeGratisBtn.addEventListener('click', async () => {
+    if (registrationGateActive) {
+      showStatusMessage('Complete seu cadastro para continuar.', 'warning');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    if (redirectInProgress) {
+      showStatusMessage('Redirecionamento em progresso...', 'info');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/users/test-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mac_address: macAddress,
+          pop_id: popId,
+          pop: popId,
+          pop_unique_id: params.get('pop_unique_id') || '',
+          ip_address: clientIp
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Erro ao liberar teste grátis');
+
+      showStatusMessage(data.message || 'Teste grátis liberado.', 'success');
+      setTimeout(() => redirectToMikrotik(macAddress), 1000);
+    } catch (error) {
+      showStatusMessage(error.message || 'Erro ao liberar teste grátis.', 'error');
+    }
+  });
+
+  liberar5minBtn.addEventListener('click', async () => {
+    if (!macAddress) {
+      showStatusMessage('MAC não detectado.', 'error');
+      return;
+    }
+
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+
+    if (lastFreeTest && (now - lastFreeTest) < oneHour) {
+      const remaining = Math.ceil((oneHour - (now - lastFreeTest)) / 60000);
+      showStatusMessage(`Aguarde ${remaining} minutos para outro teste gratuito.`, 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/users/test-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mac_address: macAddress,
+          pop_id: popId,
+          pop: popId,
+          pop_unique_id: params.get('pop_unique_id') || '',
+          ip_address: clientIp
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Erro ao liberar o acesso temporário.');
+
+      lastFreeTest = Date.now();
+      localStorage.setItem('last_free_test', String(lastFreeTest));
+      showStatusMessage(data.message || '5 minutos liberados.', 'success');
+      setTimeout(() => redirectToMikrotik(macAddress), 1000);
+    } catch (error) {
+      showStatusMessage(error.message || 'Erro ao liberar o acesso temporário.', 'error');
+    }
+  });
+
+  document.getElementById('cancelarPagamentoBtn').addEventListener('click', () => {
+    paymentSection.classList.add('hidden');
+    selectedPlan = null;
+    selectedPaymentId = null;
+    clearPaymentPolling();
+    clearPaymentGraceBanner();
+    qrCodeInner.innerHTML = 'Gerando...';
+    pixCode.textContent = 'Aguardando código PIX...';
+    setPixCopyState(false);
+  });
+
+  document.getElementById('copyPixBtn').addEventListener('click', async () => {
+    const code = pixCode.textContent || '';
+    if (!code || code.includes('Gerando') || code.includes('Aguardando')) {
+      showStatusMessage('Código PIX ainda não disponível.', 'warning');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      showStatusMessage('Código PIX copiado.', 'success');
+    } catch {
+      showStatusMessage('Não foi possível copiar o código PIX.', 'error');
+    }
+  });
   registrationFieldsContainer.addEventListener('input', (event) => {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
