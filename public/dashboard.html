@@ -280,30 +280,9 @@
                         <h3 class="font-bold text-white">Faturamento por Plano (últimos 30 dias)</h3>
                         <button onclick="openPlanDetailsModal()" class="text-[10px] font-bold text-blue-500 hover:text-blue-400 transition">Ver detalhes</button>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gradient-to-br from-blue-600/20 to-blue-600/5 rounded-xl p-5 text-center border border-blue-500/20">
-                            <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i data-lucide="crown" class="w-6 h-6 text-blue-500"></i>
-                            </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Premium</p>
-                            <p id="premiumRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p class="text-[9px] text-gray-600 mt-1">assinantes premium</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-cyan-600/20 to-cyan-600/5 rounded-xl p-5 text-center border border-cyan-500/20">
-                            <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i data-lucide="calendar" class="w-6 h-6 text-cyan-500"></i>
-                            </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Diário</p>
-                            <p id="dailyRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p class="text-[9px] text-gray-600 mt-1">acessos diários</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-xl p-5 text-center border border-emerald-500/20">
-                            <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i data-lucide="flask" class="w-6 h-6 text-emerald-500"></i>
-                            </div>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider">Teste Grátis</p>
-                            <p id="trialRevenue" class="text-3xl font-bold text-white mt-2">R$ 0</p>
-                            <p class="text-[9px] text-gray-600 mt-1">testes ativos</p>
+                    <div id="plansRevenueSummary" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-900/40 rounded-xl p-5 text-center border border-gray-800 col-span-full">
+                            <p class="text-gray-500 text-sm">Carregando faturamento por plano...</p>
                         </div>
                     </div>
                 </div>
@@ -627,7 +606,8 @@ let dashboardLiveRefreshInFlight = false;
 // CARREGAR DADOS DO DASHBOARD (CORRIGIDO)
 // ============================================
 function isPaidPayment(payment) {
-    return payment && (payment.status === 'approved' || payment.status === 'confirmed' || payment.status === 'pago');
+    const status = String(payment?.status || payment?.payment_status || '').toLowerCase();
+    return ['approved', 'confirmed', 'pago', 'paid', 'active'].includes(status);
 }
 
 function isPopOnline(pop) {
@@ -648,7 +628,8 @@ async function loadDashboard() {
 
     try {
         // CORRIGIDO: Endpoints em inglês conforme tabela de mapeamento
-        const [paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes, metricsRes] = await Promise.all([
+        const [summaryRes, paymentsRes, plansRes, usersRes, popsRes, usersPerHourRes, metricsRes] = await Promise.all([
+            fetch(`${API_URL}/api/dashboard/summary`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/payments`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/plans`, { headers: buildAuthHeaders(false) }),
             fetch(`${API_URL}/api/users`, { headers: buildAuthHeaders(false) }),
@@ -657,6 +638,7 @@ async function loadDashboard() {
             fetch(`${API_URL}/api/dashboard/metrics`, { headers: buildAuthHeaders(false) }).catch(() => ({ ok: false }))
         ]);
 
+        const dashboardSummary = summaryRes.ok ? await summaryRes.json() : {};
         const payments = paymentsRes.ok ? await paymentsRes.json() : [];
         const plans = plansRes.ok ? await plansRes.json() : [];
         const users = usersRes.ok ? await usersRes.json() : [];
@@ -676,13 +658,13 @@ async function loadDashboard() {
         const sixtyDaysAgo = new Date(thirtyDaysAgo);
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 30);
 
-        const completedPayments = payments.filter(isPaidPayment).length;
-        const pendingPayments = payments.filter(p => p.status === 'pending').length;
-        const canceledPayments = payments.filter(p => p.status === 'canceled').length;
+        const completedPayments = Number(dashboardSummary.completed_payments ?? payments.filter(isPaidPayment).length);
+        const pendingPayments = Number(dashboardSummary.pending_payments ?? payments.filter(p => String(p.status || '').toLowerCase() === 'pending').length);
+        const canceledPayments = Number(dashboardSummary.canceled_payments ?? payments.filter(p => ['canceled', 'cancelled', 'expired', 'failed', 'rejected'].includes(String(p.status || '').toLowerCase())).length);
 
-        const totalRevenue = payments
+        const totalRevenue = Number(dashboardSummary.total_revenue ?? payments
             .filter(p => isPaidPayment(p) && new Date(p.created_at) >= thirtyDaysAgo)
-            .reduce((sum, p) => sum + (p.amount || 0), 0);
+            .reduce((sum, p) => sum + (p.amount || 0), 0));
 
         const previousRevenue = payments
             .filter(p => {
@@ -695,15 +677,7 @@ async function loadDashboard() {
         const revenueVariation = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : totalRevenue > 0 ? 100 : 0;
 
         // Faturamento por plano
-        let premiumRevenue = 0, dailyRevenue = 0, trialRevenue = 0;
-        payments.forEach(p => {
-            if (!isPaidPayment(p)) return;
-            const planName = (p.plan_name || '').toLowerCase();
-            const amount = p.amount || 0;
-            if (planName.includes('premium')) premiumRevenue += amount;
-            else if (planName.includes('diario') || planName.includes('daily')) dailyRevenue += amount;
-            else if (planName.includes('teste') || planName.includes('trial')) trialRevenue += amount;
-        });
+        const revenueByPlan = Array.isArray(dashboardSummary.revenue_by_plan) ? dashboardSummary.revenue_by_plan : [];
 
         // Métricas de rede
         const onlineUsers = Number(dashboardMetrics.online_users_count ?? dashboardMetrics.online_users ?? dashboardMetrics.active_clients_count ?? users.filter(u => ['active', 'online', 'paid', 'confirmed'].includes(String(u.status || '').toLowerCase())).length);
@@ -729,17 +703,26 @@ async function loadDashboard() {
         document.getElementById('peakBandwidth').innerText = peakBandwidth;
         document.getElementById('totalCustomers').innerText = totalCustomers;
 
-        document.getElementById('premiumRevenue').innerHTML = `R$ ${premiumRevenue.toFixed(0)}`;
-        document.getElementById('dailyRevenue').innerHTML = `R$ ${dailyRevenue.toFixed(0)}`;
-        document.getElementById('trialRevenue').innerHTML = `R$ ${trialRevenue.toFixed(0)}`;
+        const plansSummary = document.getElementById('plansRevenueSummary');
+        if (plansSummary) {
+            if (revenueByPlan.length === 0) {
+                plansSummary.innerHTML = '<div class="bg-gray-900/40 rounded-xl p-5 text-center border border-gray-800 col-span-full"><p class="text-gray-500 text-sm">Nenhum faturamento por plano encontrado</p></div>';
+            } else {
+                plansSummary.innerHTML = revenueByPlan.map((plan) => `
+                    <div class="bg-gray-900/40 rounded-xl p-5 text-center border border-gray-800">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider">${plan.name || 'Plano'}</p>
+                        <p class="text-3xl font-bold text-white mt-2">R$ ${(Number(plan.amount) || 0).toFixed(2)}</p>
+                    </div>
+                `).join('');
+            }
+        }
 
         initUsersPerHourChart(usersPerHourData);
 
         // Tabela de últimas liberações
-        const latestReleases = payments
-            .filter(isPaidPayment)
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 5);
+        const latestReleases = Array.isArray(dashboardSummary.latest_releases) && dashboardSummary.latest_releases.length
+            ? dashboardSummary.latest_releases
+            : payments.filter(isPaidPayment).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
 
         const releasesTable = document.getElementById('releasesTable');
         if (latestReleases.length === 0) {
@@ -750,10 +733,10 @@ async function loadDashboard() {
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">
-                                ${((release.customer_name || release.user_name || release.name || release.mac_address || 'U').substring(0, 2)).toUpperCase()}
+                                ${((release.customer || release.customer_name || release.user_name || release.name || release.mac_address || 'U').substring(0, 2)).toUpperCase()}
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-white">${release.customer_name || release.user_name || release.name || release.mac_address || 'Cliente'}</p>
+                                <p class="text-sm font-medium text-white">${release.customer || release.customer_name || release.user_name || release.name || release.mac_address || 'Cliente'}</p>
                                 <p class="text-[10px] text-gray-500 font-mono">${release.mac_address || release.user_mac || '-'}</p>
                             </div>
                         </div>
@@ -761,7 +744,7 @@ async function loadDashboard() {
                     <td class="px-6 py-4 text-sm text-gray-300">${release.pop_name || release.pop || '-'}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded-lg">${release.plan_name || '-'}</span></td>
                     <td class="px-6 py-4 font-bold text-emerald-400">R$ ${(release.amount || 0).toFixed(2)}</td>
-                    <td class="px-6 py-4 text-sm text-gray-400">${new Date(release.created_at).toLocaleString('pt-BR')}</td>
+                    <td class="px-6 py-4 text-sm text-gray-400">${new Date(release.created_at || release.approved_at || release.paid_at || Date.now()).toLocaleString('pt-BR')}</td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
                             <button onclick="blockCustomer('${release.user_id !== undefined && release.user_id !== null ? String(release.user_id) : ''}')" class="p-1.5 hover:bg-red-500/10 rounded-lg transition" title="Bloquear cliente">
@@ -1247,7 +1230,5 @@ dashboardLiveRefreshTimer = setInterval(() => {
 <script src="globals.js"></script>
 </body>
 </html>
-
-
 
 

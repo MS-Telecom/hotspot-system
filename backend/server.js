@@ -242,6 +242,40 @@ function removeAccents(str) {
   return String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function isPaymentApprovedStatus(status) {
+  return ['approved', 'paid', 'confirmed', 'pago', 'active'].includes(String(status || '').toLowerCase());
+}
+
+function isPaymentPendingStatus(status) {
+  return ['pending', 'pending_payment', 'waiting_payment', 'aguardando'].includes(String(status || '').toLowerCase());
+}
+
+function isPaymentCancelledStatus(status) {
+  return ['cancelled', 'canceled', 'expired', 'failed', 'rejected'].includes(String(status || '').toLowerCase());
+}
+
+function getPaymentDisplayAmount(payment = {}, plan = null) {
+  const directAmount = Number(payment.amount);
+  if (Number.isFinite(directAmount) && directAmount > 0) return directAmount;
+  const priceAmount = Number(payment.price);
+  if (Number.isFinite(priceAmount) && priceAmount > 0) return priceAmount;
+  const planAmount = Number(plan?.price);
+  if (Number.isFinite(planAmount) && planAmount > 0) return planAmount;
+  return 0;
+}
+
+async function updatePaymentSafely(paymentId, payload) {
+  let currentPayload = { ...payload };
+  for (let i = 0; i < 8; i++) {
+    const { error } = await supabase.from('payments').update(currentPayload).eq('id', paymentId);
+    if (!error) return { ok: true };
+    const next = removeMissingColumnFromPayload(currentPayload, error);
+    if (!next) return { ok: false, error };
+    currentPayload = next;
+  }
+  return { ok: false, error: new Error('Failed to update payment') };
+}
+
 // Gera slug a partir de um texto
 function slugify(value) {
   return removeAccents(String(value))
@@ -1277,9 +1311,10 @@ async function maybeAutoApproveMockPayment(payment) {
     access_granted: true,
     approved_at: payment.approved_at || payment.mock_approved_at || nowIso,
     paid_at: payment.paid_at || payment.mock_approved_at || nowIso,
+    confirmed_at: payment.confirmed_at || payment.mock_approved_at || nowIso,
     updated_at: nowIso
   };
-  await supabase.from('payments').update(updatedPayment).eq('id', payment.id);
+  await updatePaymentSafely(payment.id, updatedPayment);
   const { data: refreshed } = await supabase.from('payments').select('*').eq('id', payment.id).maybeSingle();
   const finalPayment = refreshed || { ...payment, ...updatedPayment };
   await finalizeApprovedPayment(finalPayment, { source: 'mock' }).catch(() => null);
@@ -2425,16 +2460,16 @@ app.get('/api/check-payment', async (req, res) => {
         .maybeSingle();
       if (error) throw error;
       const maybePayment = await maybeAutoApproveMockPayment(payment).catch(() => payment);
-      if (maybePayment && (maybePayment.status === 'approved' || maybePayment.status === 'paid' || maybePayment.status === 'confirmed' || maybePayment.status === 'pago')) {
+      if (maybePayment && isPaymentApprovedStatus(maybePayment.status)) {
         await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'portal-check' }).catch(() => null);
       }
       if (!maybePayment) return res.json({ status: 'not_found' });
       return res.json({
         ...maybePayment,
         status: isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment.status,
-        payment_status: 'approved',
-        approved: true,
-        paid: true,
+        payment_status: isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment.payment_status || maybePayment.status,
+        approved: isPaymentApprovedStatus(maybePayment.status) || maybePayment.approved === true,
+        paid: isPaymentApprovedStatus(maybePayment.status) || maybePayment.paid === true,
         access_granted: true,
         mock: String(maybePayment.provider || '').toLowerCase() === 'mock' || maybePayment.mock_payment === true || !!maybePayment.mock_approved_at
       });
@@ -2449,15 +2484,15 @@ app.get('/api/check-payment', async (req, res) => {
     const { data: payment, error } = await query.single();
     if (error || !payment) return res.status(404).json({ error: 'Pagamento não encontrado' });
     const maybePayment = await maybeAutoApproveMockPayment(payment).catch(() => payment);
-    if (maybePayment && (maybePayment.status === 'approved' || maybePayment.status === 'paid' || maybePayment.status === 'confirmed' || maybePayment.status === 'pago')) {
+    if (maybePayment && isPaymentApprovedStatus(maybePayment.status)) {
       await finalizeApprovedPayment(maybePayment, { source: maybePayment.provider || 'check-payment' }).catch(() => null);
     }
     res.json({
       ...maybePayment,
       status: maybePayment && isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment?.status,
-      payment_status: 'approved',
-      approved: true,
-      paid: true,
+      payment_status: maybePayment && isPaymentApprovedStatus(maybePayment.status) ? 'approved' : maybePayment?.payment_status || maybePayment?.status,
+      approved: maybePayment ? isPaymentApprovedStatus(maybePayment.status) || maybePayment.approved === true : false,
+      paid: maybePayment ? isPaymentApprovedStatus(maybePayment.status) || maybePayment.paid === true : false,
       access_granted: true,
       mock: String(maybePayment?.provider || '').toLowerCase() === 'mock' || maybePayment?.mock_payment === true || !!maybePayment?.mock_approved_at
     });
@@ -4518,6 +4553,88 @@ app.get('/api/settings/payment', authMiddleware, requireRole('owner'), async (re
     res.json(sanitizePaymentSettingsForClient(cfg));
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/dashboard/summary', authMiddleware, async (req, res) => {
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+
+    const [paymentsRes, usersRes, popsRes, sessionsRes, metricsRes] = await Promise.all([
+      supabase.from('payments').select('*').gte('created_at', monthStart).lt('created_at', nextMonthStart),
+      supabase.from('users').select('id, name, username, mac_address, status, plan_name, expires_at, updated_at, created_at, pop_id, hotspot_id'),
+      supabase.from('pops').select('id, name, location, status, last_heartbeat_at, last_heartbeat, last_seen_at, last_seen, updated_at'),
+      supabase.from('hotspot_sessions').select('id, user_id, user_name, user_mac, mac_address, plan_name, status, access_granted, created_at, updated_at, expires_at, pop_id, pop_name, pop_location, bytes_in, bytes_out, rx_bytes, tx_bytes').eq('status', 'active'),
+      supabase.from('pop_metrics').select('pop_id, active_users, peak_bandwidth_mbps, created_at').gte('created_at', monthStart)
+    ]);
+
+    const payments = paymentsRes.data || [];
+    const users = usersRes.data || [];
+    const pops = popsRes.data || [];
+    const sessions = sessionsRes.data || [];
+    const metrics = metricsRes.data || [];
+    const approvedPayments = payments.filter((payment) => isPaymentApprovedStatus(payment.status));
+    const pendingPayments = payments.filter((payment) => isPaymentPendingStatus(payment.status));
+    const canceledPayments = payments.filter((payment) => isPaymentCancelledStatus(payment.status));
+
+    let totalRevenue = 0;
+    const revenueByPlanMap = new Map();
+    const latestByKey = new Map();
+
+    for (const payment of approvedPayments) {
+      const { data: plan } = payment.plan_id ? await supabase.from('plans').select('id, name, price').eq('id', payment.plan_id).maybeSingle() : { data: null };
+      const planName = payment.plan_name || plan?.name || 'Sem plano';
+      const amount = getPaymentDisplayAmount(payment, plan);
+      totalRevenue += amount;
+      revenueByPlanMap.set(planName, (revenueByPlanMap.get(planName) || 0) + amount);
+
+      const key = String(payment.user_id || payment.user_name || payment.user_mac || payment.mac_address || payment.id);
+      const current = latestByKey.get(key);
+      const createdAt = new Date(payment.approved_at || payment.paid_at || payment.confirmed_at || payment.updated_at || payment.created_at || now).getTime();
+      if (!current || createdAt > current.sortTime) {
+        latestByKey.set(key, {
+          sortTime: createdAt,
+          customer: payment.user_name || payment.customer_name || payment.users?.name || payment.users?.username || payment.user_mac || payment.mac_address || 'Cliente',
+          plan_name: planName,
+          amount,
+          created_at: payment.approved_at || payment.paid_at || payment.confirmed_at || payment.updated_at || payment.created_at || now.toISOString(),
+          user_id: payment.user_id || null,
+          mac_address: payment.user_mac || payment.mac_address || null,
+          pop_name: payment.pop_name || null
+        });
+      }
+    }
+
+    const onlineUsers = sessions.length || metrics.reduce((sum, metric) => sum + Number(metric.active_users || 0), 0);
+    const onlinePops = pops.filter((pop) => {
+      const last = pop.last_heartbeat_at || pop.last_heartbeat || pop.last_seen_at || pop.last_seen || pop.updated_at;
+      if (!last) return String(pop.status || '').toLowerCase() === 'online';
+      return Date.now() - new Date(last).getTime() <= 5 * 60 * 1000;
+    }).length;
+
+    res.json({
+      total_revenue: totalRevenue,
+      completed_payments: approvedPayments.length,
+      pending_payments: pendingPayments.length,
+      canceled_payments: canceledPayments.length,
+      online_pops: onlinePops,
+      offline_pops: Math.max(0, pops.length - onlinePops),
+      online_users: onlineUsers,
+      total_customers: users.length,
+      latest_releases: [...latestByKey.values()]
+        .sort((a, b) => b.sortTime - a.sortTime)
+        .slice(0, 10)
+        .map(({ sortTime, ...item }) => item),
+      revenue_by_plan: Array.from(revenueByPlanMap.entries()).map(([name, amount]) => ({ name, amount })),
+      users_online_24h: metrics
+        .filter((metric) => metric.created_at && (Date.now() - new Date(metric.created_at).getTime()) <= 24 * 60 * 60 * 1000)
+        .map((metric) => ({ pop_id: metric.pop_id, active_users: Number(metric.active_users || 0), created_at: metric.created_at }))
+    });
+  } catch (err) {
+    console.error('❌ Erro ao buscar resumo do dashboard:', err.message);
+    res.status(500).json({ error: 'Erro ao buscar resumo do dashboard' });
   }
 });
 

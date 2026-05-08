@@ -396,6 +396,16 @@
         }
     }
 
+    function clienteDetalheAutoRefreshAllowed() {
+        if (document.getElementById('modalDetalhesCliente') && !document.getElementById('modalDetalhesCliente').classList.contains('hidden')) return false;
+        if (document.getElementById('modalNovoUsuario') && !document.getElementById('modalNovoUsuario').classList.contains('hidden')) return false;
+        if (document.getElementById('modalEditarCliente') && !document.getElementById('modalEditarCliente').classList.contains('hidden')) return false;
+        const active = document.activeElement;
+        if (!active) return true;
+        const tag = String(active.tagName || '').toLowerCase();
+        return !['input', 'textarea', 'select'].includes(tag);
+    }
+
     function escapeCsvValue(value) {
         const text = String(value ?? '');
         return `"${text.replace(/"/g, '""').replace(/\r?\n/g, ' ').replace(/;/g, ',')}"`;
@@ -855,6 +865,10 @@
         await carregarClientes();
         if (typeof lucide !== 'undefined') lucide.createIcons();
     };
+
+    setInterval(() => {
+        if (clienteDetalheAutoRefreshAllowed()) carregarClientes();
+    }, 15000);
 </script>
 <script src="globals.js"></script>
 </body>
