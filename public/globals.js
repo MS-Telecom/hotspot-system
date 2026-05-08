@@ -168,30 +168,23 @@
     var sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
 
-    var marker = sidebar.querySelector('[data-recent-accesses]');
-    if (marker) return;
-
-    var footerCandidate = null;
-    var children = sidebar.querySelectorAll(':scope > div');
-    if (children.length > 0) {
-      footerCandidate = children[children.length - 1];
+    var footer = sidebar.querySelector('[data-session-footer]');
+    if (!footer) {
+      footer = sidebar.querySelector(':scope > div.border-t') || document.createElement('div');
+      if (!footer.parentNode) sidebar.appendChild(footer);
     }
 
-    if (!footerCandidate || !footerCandidate.classList.contains('border-t')) {
-      footerCandidate = document.createElement('div');
-      sidebar.appendChild(footerCandidate);
-    }
-
-    footerCandidate.className = 'p-4 border-t border-gray-800 bg-black/30';
-    footerCandidate.setAttribute('data-recent-accesses', '1');
-    footerCandidate.innerHTML = '' +
+    footer.className = 'p-4 border-t border-gray-800 bg-black/30';
+    footer.setAttribute('data-session-footer', '1');
+    footer.innerHTML = '' +
       '<div class="flex items-center justify-between mb-3">' +
-      '<p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Acessos Recentes</p>' +
+      '<p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Sessão Atual</p>' +
       '<div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>' +
       '</div>' +
       '<div class="space-y-2 text-[10px] font-mono">' +
-      '<div class="flex justify-between text-gray-500"><span>Admin Master</span><span id="sessionIp" class="text-cyan-400">-</span></div>' +
-      '<div class="flex justify-between text-gray-500"><span>VPS Node</span><span class="text-gray-600">40.233.118.238</span></div>' +
+      '<div class="flex justify-between text-gray-500"><span>Usuário</span><span id="sessionUser" class="text-cyan-400">-</span></div>' +
+      '<div class="flex justify-between text-gray-500"><span>Início</span><span id="sessionStart" class="text-gray-600">-</span></div>' +
+      '<div class="flex justify-between text-gray-500"><span>IP</span><span id="sessionIp" class="text-gray-600">-</span></div>' +
       '</div>';
   }
 
@@ -282,7 +275,7 @@
     var confirmPassword = (document.getElementById('profileConfirmPassword') || {}).value || '';
 
     if (newPassword && newPassword !== confirmPassword) {
-      alert('As novas senhas nao coincidem');
+      alert('As novas senhas não coincidem');
       return Promise.resolve();
     }
 
