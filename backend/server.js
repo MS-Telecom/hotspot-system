@@ -1235,7 +1235,6 @@ async function createPaymentGraceSession(cleanMac, popId = null, popIp = null, p
       created_at: nowIso,
       updated_at: nowIso
     });
-    await syncFreeradiusClientsFromDb().catch(() => null);
   }
   return { expiresAt, cfg };
 }
@@ -1496,8 +1495,10 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       const planExpiresAt = user.expires_at || null;
       const durationForPlan = planExpiresAt ? Math.max(10, Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / 1000)) : 30 * 24 * 60 * 60;
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
-      await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
-      await syncFreeradiusClientsFromDb().catch(() => null);
+      const auth = await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
+      if (!auth?.success) {
+        return res.json({ allowed: false, reason: 'radius_authorization_failed', radius_failed: true, show_free_trial: false, expires_at: user.expires_at || null });
+      }
       await saveHotspotSession({
         ...(user?.id ? { user_id: user.id } : {}),
         mac_address: cleanMac,
@@ -1584,7 +1585,6 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
 
   const auth = await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
   if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS', reason: 'radius_error', details: auth.errors } };
-  await syncFreeradiusClientsFromDb().catch(() => null);
 
   let user = null;
   try {
@@ -5469,7 +5469,6 @@ app.get('/api/access/status', async (req, res) => {
       if (!userExpiresAt) {
         return res.json({ allowed: false, reason: 'paid_plan_expired', expired: true, show_free_trial: false });
       }
-      await syncFreeradiusClientsFromDb().catch(() => null);
       await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
       await saveHotspotSession({
         ...(user?.id ? { user_id: user.id } : {}),
@@ -5510,7 +5509,10 @@ app.get('/api/access/status', async (req, res) => {
       }
       if (new Date(expiresAt).getTime() > nowMs) {
         const durationSeconds = Math.max(10, Math.ceil((new Date(expiresAt).getTime() - nowMs) / 1000));
-        await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);
+        const auth = await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), plan?.speed_mbps || 10, payment.plan_name || 'paid_plan', durationSeconds);
+        if (!auth?.success) {
+          return res.json({ allowed: false, reason: 'radius_authorization_failed', radius_failed: true, show_free_trial: false, expires_at: expiresAt });
+        }
         await saveHotspotSession({
           mac_address: cleanMac,
           access_granted: true,
@@ -5552,8 +5554,10 @@ app.get('/api/access/status', async (req, res) => {
       const sessionPlanName = session.plan_name || user?.plan_name || 'paid_plan';
       const { data: sessionPlan } = await supabase.from('plans').select('*').eq('name', sessionPlanName).maybeSingle();
       const sessionDurationSeconds = Math.max(10, Math.ceil((new Date(sessionExpiresAt).getTime() - nowMs) / 1000));
-      await syncFreeradiusClientsFromDb().catch(() => null);
-      await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || session.pop_id || user?.hotspot_id || null, Math.ceil(sessionDurationSeconds / 60), sessionPlan?.speed_mbps || 10, sessionPlanName, sessionDurationSeconds);
+      const auth = await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || session.pop_id || user?.hotspot_id || null, Math.ceil(sessionDurationSeconds / 60), sessionPlan?.speed_mbps || 10, sessionPlanName, sessionDurationSeconds);
+      if (!auth?.success) {
+        return res.json({ allowed: false, reason: 'radius_authorization_failed', radius_failed: true, show_free_trial: false, expires_at: session.expires_at });
+      }
       if (effectivePopId && (!session.pop_id || !session.pop_name || !session.pop_location)) {
         await saveHotspotSession({
           ...session,
