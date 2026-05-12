@@ -3783,7 +3783,7 @@ ${userProfileTuningLine}${redirectLine}
 /system scheduler add comment="${tag}" interval=30s name="ms-heartbeat-${popId}" on-event="{/tool fetch http-method=post url=\\\"${heartbeatUrlForRouterOs}\\\" keep-result=no;}" policy=read,test start-time=startup
 
 :do { /system scheduler remove [find name="ms-commands-${popId}"] } on-error={}
-/system scheduler add comment="${tag}" interval=10s name="ms-commands-${popId}" on-event="{/tool fetch http-method=get url=\\\"${commandsUrlForRouterOs}\\\" dst-path=ms-commands.rsc keep-result=yes; /import file-name=ms-commands.rsc; :do { /file remove ms-commands.rsc } on-error={};}" policy=read,write,test start-time=startup
+/system scheduler add comment="${tag}" interval=10s name="ms-commands-${popId}" on-event="{/tool fetch http-method=get url=\\\"${commandsUrlForRouterOs}\\\" dst-path=ms-commands.rsc keep-result=yes; /import file-name=ms-commands.rsc; :do { /file remove ms-commands.rsc } on-error={};}" policy=read,write,test,policy start-time=startup
 
 :put \"OK - INSTALACAO CONCLUIDA\"
 :put \"POP ID: ${popId}\"
@@ -3887,15 +3887,16 @@ function buildPopRemovalScript(pop = {}) {
     ':do { /ip pool remove [find name="' + poolName + '"] } on-error={}',
     ':do { /ip pool remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
     ':do { /ip firewall nat remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
-    ':do { /file remove [find name~"ms-' + popId + '"] } on-error={}',
+    ':do { /ip dhcp-client remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
     ':do { /file remove [find name~"backup_pre_' + popId + '"] } on-error={}',
     ':do { /file remove [find name~"config_pre_' + popId + '"] } on-error={}',
+    ':do { /file remove [find name~"ms-' + popId + '"] } on-error={}',
     ':do { /user remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
     ':do { /user remove [find name="' + apiUserName + '"] } on-error={}',
     ':if ([:len [/ip hotspot find]] = 0) do={',
-    '  :do { /ip firewall filter remove [find chain="unused-hs-chain" comment="place hotspot rules here"] } on-error={}',
-    '  :do { /ip firewall nat remove [find chain="unused-hs-chain" comment="place hotspot rules here"] } on-error={}',
-    '  :do { /ip hotspot walled-garden remove [find comment="place hotspot rules here"] } on-error={}',
+      '  :do { /ip firewall filter remove [find chain="unused-hs-chain" comment="place hotspot rules here"] } on-error={}',
+      '  :do { /ip firewall nat remove [find chain="unused-hs-chain" comment="place hotspot rules here"] } on-error={}',
+      '  :do { /ip hotspot walled-garden remove [find comment="place hotspot rules here"] } on-error={}',
     '}',
     ':put "OK - REMOCAO CONCLUIDA"',
     ':put ("POP REMOVIDO: ' + hotspotName + '")'
