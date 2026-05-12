@@ -3689,24 +3689,22 @@ function buildPopInstallScript(pop, config = {}) {
       ? `"ms-vlan-${vlanId}"`
       : lanInterface;
 
-const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=${idleTimeout} interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
+const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no idle-timeout=1h interface="ms-bridge-${popId}" name="${popName}" profile="ms-profile-${popId}"\n`;
 
   const userProfileTuningLine = (() => {
     const profileName = `ms-user-profile-${popId}`;
-    const setParts = [
-      sessionTime ? ` session-timeout=${sessionTime}` : '',
-      rateLimit ? ` rate-limit=${rateLimit}` : '',
-      sharedUsers > 0 ? ` shared-users=${sharedUsers}` : ''
-    ].join('');
+    const tuningLines = [
+      rateLimit ? `:do { /ip hotspot user profile set [find name="${profileName}"] rate-limit="${rateLimit}" } on-error={}` : '',
+      sharedUsers > 0 ? `:do { /ip hotspot user profile set [find name="${profileName}"] shared-users=${sharedUsers} } on-error={}` : ''
+    ].filter(Boolean).join('\n');
 
     // Create/update a POP-specific user profile; do NOT touch the global "default" profile.
     return (
       `# Perfil de usuario (POP especifico - nao altera o default global)\n` +
       `:if ([:len [/ip hotspot user profile find name="${profileName}"]] = 0) do={\n` +
-      `  /ip hotspot user profile add name="${profileName}"${setParts} comment="${tag}"\n` +
-      `} else={\n` +
-      `  /ip hotspot user profile set [find name="${profileName}"]${setParts}\n` +
-      `}\n`
+      `  /ip hotspot user profile add name="${profileName}"\n` +
+      `}\n` +
+      `${tuningLines ? tuningLines + '\n' : ''}`
     );
   })();
 
@@ -3714,7 +3712,7 @@ const hotspotLine = `/ip hotspot add address-pool="ms-pool-${popId}" disabled=no
 
   // HTML do portal no MikroTik (login.html/alogin.html -> /entrypoint)
   const portalUrl = `${frontendUrl}/portal`;
-  const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${portalUrl}\\?mac=\\$(mac)&ip=\\$(ip)&hotspot=\\$(server-name)&pop_id=${encodeURIComponent(pop.id)}&pop=${encodeURIComponent(pop.id)}&pop_unique_id=${encodeURIComponent(pop.unique_id || pop.id)}&loginUrl=\\$(link-login-only)&orig=\\$(link-orig)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
+  const loginHtml = `<html><head><meta http-equiv="refresh" content="0; url=${portalUrl}.html\\?mac=\\$(mac)&ip=\\$(ip)&hotspot=\\$(server-name)&pop_id=${encodeURIComponent(pop.id)}&pop=${encodeURIComponent(pop.id)}&pop_unique_id=${encodeURIComponent(pop.unique_id || pop.id)}&loginUrl=\\$(link-login-only)&orig=\\$(link-orig)&error=\\$(error)" /><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"></head></html>`;
   const aloginHtml = `<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="refresh" content="2; url=\\$(link-redirect)"><meta http-equiv="pragma" content="no-cache"><meta http-equiv="expires" content="-1"><title>MS Telecom - Redirecionamento</title><style>body{margin:0;padding:24px;background-color:#dff2fd;font-family:Arial,sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center}.card{background-color:#fff;padding:30px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:left;display:flex;align-items:center;gap:10px}.success-icon{color:green;font-size:36px}.success-text{color:green;font-weight:bold;font-size:20px;line-height:1.4}.redirect{margin-top:20px;font-size:16px;font-weight:bold;color:#333;display:flex;align-items:center;gap:6px}.action{margin-top:24px;font-size:16px;color:#555}.spinner{width:16px;height:16px;border:2px solid #ccc;border-top:2px solid #333;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style><script>function startClock(){\\$(if popup=='true')open('\\$(link-status)','hotspot_status','toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');\\$(endif)location.href=unescape('\\$(link-redirect-esc)');}</script></head><body onLoad="startClock()"><div class="card"><div class="success-icon">?</div><div class="success-text">Autentica??o realizada com sucesso!</div></div><div class="redirect">Redirecionando ...<div class="spinner"></div></div><div class="action">Se nada acontecer, clique <a href="\\$(link-redirect)">aqui</a>.</div></body></html>`;
 
   const hotspotHtmlBlock =
