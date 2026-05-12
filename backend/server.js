@@ -1235,6 +1235,7 @@ async function createPaymentGraceSession(cleanMac, popId = null, popIp = null, p
       created_at: nowIso,
       updated_at: nowIso
     });
+    await syncFreeradiusClientsFromDb().catch(() => null);
   }
   return { expiresAt, cfg };
 }
@@ -1496,6 +1497,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
       const durationForPlan = planExpiresAt ? Math.max(10, Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / 1000)) : 30 * 24 * 60 * 60;
       const { data: plan } = await supabase.from('plans').select('*').eq('name', planName).maybeSingle();
       await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
+      await syncFreeradiusClientsFromDb().catch(() => null);
       await saveHotspotSession({
         ...(user?.id ? { user_id: user.id } : {}),
         mac_address: cleanMac,
@@ -1582,6 +1584,7 @@ async function handleFreeTrialAccess({ macAddress, ipAddress = null, popId = nul
 
   const auth = await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId, Math.ceil(durationSeconds / 60), 5, 'free_trial', durationSeconds);
   if (!auth.success) return { ok: false, status: 500, body: { error: 'Erro ao liberar RADIUS', reason: 'radius_error', details: auth.errors } };
+  await syncFreeradiusClientsFromDb().catch(() => null);
 
   let user = null;
   try {
@@ -3840,31 +3843,64 @@ app.put('/api/pops/:id', authMiddleware, async (req, res) => {
 function buildPopRemovalScript(pop = {}) {
   const popId = pop.unique_id || pop.id || 'POP';
   const tag = `MS-TELECOM-${popId}`;
-  return (
-    `# ============================================\n` +
-    `# MS TELECOM - SCRIPT FINAL DE REMOCAO\n` +
-    `# POP: ${pop.name || popId}\n` +
-    `# TAG: ${tag}\n` +
-    `# ============================================\n\n` +
-    `# Remove itens de hotspot criados pelo POP\n` +
-    `:foreach i in=[/system scheduler find where comment~\"${tag}\"] do={/system scheduler remove $i}\n` +
-    `:foreach i in=[/ip hotspot find where comment~\"${tag}\"] do={/ip hotspot remove $i}\n` +
-    `:foreach i in=[/ip hotspot profile find where comment~\"${tag}\"] do={/ip hotspot profile remove $i}\n` +
-    `:foreach i in=[/ip hotspot ip-binding find where comment~\"${tag}\"] do={/ip hotspot ip-binding remove $i}\n` +
-    `:foreach i in=[/ip hotspot active find where comment~\"${tag}\"] do={/ip hotspot active remove $i}\n` +
-    `:foreach i in=[/ip hotspot cookie find where comment~\"${tag}\"] do={/ip hotspot cookie remove $i}\n` +
-    `:foreach i in=[/ip hotspot host find where comment~\"${tag}\"] do={/ip hotspot host remove $i}\n` +
-    `:foreach i in=[/ip pool find where comment~\"${tag}\"] do={/ip pool remove $i}\n` +
-    `:foreach i in=[/ip dhcp-server find where comment~\"${tag}\"] do={/ip dhcp-server remove $i}\n` +
-    `:foreach i in=[/ip dhcp-server network find where comment~\"${tag}\"] do={/ip dhcp-server network remove $i}\n` +
-    `:foreach i in=[/ip address find where comment~\"${tag}\"] do={/ip address remove $i}\n` +
-    `:foreach i in=[/interface bridge port find where comment~\"${tag}\"] do={/interface bridge port remove $i}\n` +
-    `:foreach i in=[/interface bridge find where comment~\"${tag}\"] do={/interface bridge remove $i}\n` +
-    `:foreach i in=[/interface vlan find where comment~\"${tag}\"] do={/interface vlan remove $i}\n` +
-    `:foreach i in=[/ip firewall nat find where comment~\"${tag}\"] do={/ip firewall nat remove $i}\n` +
-    `:foreach i in=[/ip dhcp-client find where comment~\"${tag}\"] do={/ip dhcp-client remove $i}\n` +
-    `:put \"OK - REMOCAO CONCLUIDA\"\n`
-  );
+  const hotspotName = pop.name || popId;
+  const profileName = `ms-profile-${popId}`;
+  const userProfileName = `ms-user-profile-${popId}`;
+  const dhcpName = `ms-dhcp-${popId}`;
+  const poolName = `ms-pool-${popId}`;
+  const bridgeName = `ms-bridge-${popId}`;
+  const heartbeatScheduler = `ms-heartbeat-${popId}`;
+  const commandsScheduler = `ms-commands-${popId}`;
+  const backupFile = `backup_pre_${popId}`;
+  const configFile = `config_pre_${popId}`;
+  const apiUserName = pop.api_user || `API_${String(popId).replace(/[^A-Za-z0-9]/g, '_')}`;
+
+  const lines = [
+    '# ============================================',
+    '# MS TELECOM - SCRIPT FINAL DE REMOCAO',
+    `# POP: ${hotspotName}`,
+    `# TAG: ${tag}`,
+    '# ============================================',
+    '',
+    ':do { /system scheduler remove [find name="ms-heartbeat-' + popId + '"] } on-error={}',
+    ':do { /system scheduler remove [find name="ms-commands-' + popId + '"] } on-error={}',
+    ':do { /ip hotspot active remove [find server="' + hotspotName + '"] } on-error={}',
+    ':do { /ip hotspot host remove [find server="' + hotspotName + '"] } on-error={}',
+    ':do { /ip hotspot cookie remove [find server="' + hotspotName + '"] } on-error={}',
+    ':do { /ip hotspot remove [find name="' + hotspotName + '"] } on-error={}',
+    ':do { /ip hotspot remove [find profile="' + profileName + '"] } on-error={}',
+    ':do { /ip hotspot walled-garden ip remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip hotspot walled-garden ip remove [find server="' + hotspotName + '"] } on-error={}',
+    ':do { /ip hotspot walled-garden remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip hotspot profile remove [find name="' + profileName + '"] } on-error={}',
+    ':do { /ip hotspot user profile remove [find name="' + userProfileName + '"] } on-error={}',
+    ':do { /radius remove [find domain="' + popId + '"] } on-error={}',
+    ':do { /radius remove [find comment~"MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip dhcp-server remove [find name="' + dhcpName + '"] } on-error={}',
+    ':do { /ip dhcp-server remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip dhcp-server network remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip address remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /interface bridge port remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /interface bridge remove [find name="' + bridgeName + '"] } on-error={}',
+    ':do { /interface bridge remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /interface vlan remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip pool remove [find name="' + poolName + '"] } on-error={}',
+    ':do { /ip pool remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /ip firewall nat remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /file remove [find name~"ms-' + popId + '"] } on-error={}',
+    ':do { /file remove [find name~"backup_pre_' + popId + '"] } on-error={}',
+    ':do { /file remove [find name~"config_pre_' + popId + '"] } on-error={}',
+    ':do { /user remove [find comment="MS-TELECOM-' + popId + '"] } on-error={}',
+    ':do { /user remove [find name="' + apiUserName + '"] } on-error={}',
+    ':if ([:len [/ip hotspot find]] = 0) do={',
+    '  :do { /ip firewall filter remove [find chain="unused-hs-chain" comment="place hotspot rules here"] } on-error={}',
+    '  :do { /ip firewall nat remove [find chain="unused-hs-chain" comment="place hotspot rules here"] } on-error={}',
+    '  :do { /ip hotspot walled-garden remove [find comment="place hotspot rules here"] } on-error={}',
+    '}',
+    ':put "OK - REMOCAO CONCLUIDA"',
+    ':put ("POP REMOVIDO: ' + hotspotName + '")'
+  ];
+  return lines.join('\n') + '\n';
 }
 
 async function finalizePopDeletion(popId) {
@@ -5432,6 +5468,7 @@ app.get('/api/access/status', async (req, res) => {
       if (!userExpiresAt) {
         return res.json({ allowed: false, reason: 'paid_plan_expired', expired: true, show_free_trial: false });
       }
+      await syncFreeradiusClientsFromDb().catch(() => null);
       await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || user.hotspot_id || null, Math.ceil(durationForPlan / 60), plan?.speed_mbps || 10, planName, durationForPlan);
       await saveHotspotSession({
         ...(user?.id ? { user_id: user.id } : {}),
@@ -5514,6 +5551,7 @@ app.get('/api/access/status', async (req, res) => {
       const sessionPlanName = session.plan_name || user?.plan_name || 'paid_plan';
       const { data: sessionPlan } = await supabase.from('plans').select('*').eq('name', sessionPlanName).maybeSingle();
       const sessionDurationSeconds = Math.max(10, Math.ceil((new Date(sessionExpiresAt).getTime() - nowMs) / 1000));
+      await syncFreeradiusClientsFromDb().catch(() => null);
       await authorizeAccess(cleanMac, effectivePopIp || '192.168.32.1', null, null, effectivePopId || session.pop_id || user?.hotspot_id || null, Math.ceil(sessionDurationSeconds / 60), sessionPlan?.speed_mbps || 10, sessionPlanName, sessionDurationSeconds);
       if (effectivePopId && (!session.pop_id || !session.pop_name || !session.pop_location)) {
         await saveHotspotSession({
