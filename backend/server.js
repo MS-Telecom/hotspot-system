@@ -3928,7 +3928,7 @@ async function finalizePopDeletion(popId) {
 function buildPopCleanupCommandScript(pop, command, token, apiUrl = API_BASE_URL) {
   const script = buildPopRemovalScript(pop);
   const resultUrl = `${apiUrl}/api/pops/${pop.id}/commands/${command.id}/result\\?token=${encodeURIComponent(token)}&status=done`;
-  return `${script}\n:do { /tool fetch http-method=post url="${resultUrl}" keep-result=no } on-error={}\n`;
+  return `${script}\n:put "MS TELECOM POP CLEANUP ACK"\n:do { /tool fetch http-method=post url="${resultUrl}" keep-result=no } on-error={}\n`;
 }
 
 // Deletar POP
