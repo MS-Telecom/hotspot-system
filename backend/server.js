@@ -41,7 +41,7 @@ const PORT = process.env.PORT || 3000;
 const API_BASE_URL = process.env.API_BASE_URL || 'https://mstelecom-api.duckdns.org';
 const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'https://hotspot-system.vercel.app';
 const RADIUS_SERVER_IP = process.env.RADIUS_SERVER_IP || '40.233.118.238';
-const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerCase(); // global | vpn_legacy
+const RADIUS_CLIENT_MODE = (process.env.RADIUS_CLIENT_MODE || 'global').toLowerCase(); // global | vpn | vpn_legacy | dual
 const RADIUS_GLOBAL_SECRET = process.env.RADIUS_GLOBAL_SECRET || '';
 const RADIUS_VPN_SERVER_IP = process.env.RADIUS_VPN_SERVER_IP || process.env.RADIUS_VPN_SERVER_IP || '10.254.1.1';
 const RADIUS_GLOBAL_FALLBACK_SECRET = process.env.RADIUS_GLOBAL_FALLBACK_SECRET || RADIUS_GLOBAL_SECRET || '';
@@ -660,8 +660,8 @@ async function syncFreeradiusClientsFromDb() {
         return { ok: true, skipped: true };
       }
 
-      if (RADIUS_CLIENT_MODE !== 'vpn_legacy') {
-        throw new Error(`Invalid RADIUS_CLIENT_MODE: ${RADIUS_CLIENT_MODE}. Use global|vpn_legacy.`);
+      if (!['vpn', 'vpn_legacy', 'dual'].includes(RADIUS_CLIENT_MODE)) {
+        throw new Error(`Invalid RADIUS_CLIENT_MODE: ${RADIUS_CLIENT_MODE}. Use global|vpn|vpn_legacy|dual.`);
       }
 
       const { data: pops, error } = await supabase
@@ -3525,10 +3525,13 @@ function buildPopInstallScript(pop, config = {}) {
   const popId = pop.unique_id || `MS-${pop.id}`;
   const popName = pop.name || `POP-${popId}`;
   const tag = `MS-TELECOM-${popId}`;
+  const globalRadiusSecret = RADIUS_GLOBAL_SECRET || RADIUS_GLOBAL_FALLBACK_SECRET || '';
 
   const apiUser = pop.api_user || buildPopApiUsername(popId);
   const apiPass = pop.api_pass || generateStrongPassword(12);
-  const radiusSecret = (RADIUS_CLIENT_MODE === 'global') ? RADIUS_GLOBAL_SECRET : (pop.radius_secret || '');
+  const radiusSecret = (RADIUS_CLIENT_MODE === 'global')
+    ? globalRadiusSecret
+    : (pop.radius_secret || (RADIUS_CLIENT_MODE === 'dual' ? globalRadiusSecret : ''));
   const effectiveRadiusSecret = radiusSecret || generateStrongPassword(18);
 
   const wanInterface = config.wan_interface || 'ether1';
@@ -3569,10 +3572,11 @@ function buildPopInstallScript(pop, config = {}) {
   const vpnIp = String(pop.vpn_ip || '').trim();
   const vpnUsername = String(pop.vpn_username || '').trim();
   const vpnPassword = String(pop.vpn_password || '').trim();
+  const supportsVpnMode = ['vpn', 'vpn_legacy', 'dual'].includes(RADIUS_CLIENT_MODE);
   const vpnReady = vpnEnabled && vpnType === 'l2tp_ipsec'
-    ? (RADIUS_CLIENT_MODE === 'vpn_legacy' && !!vpnIp && !!vpnUsername && !!vpnPassword && !!VPN_PUBLIC_ENDPOINT && !!VPN_L2TP_IPSEC_PSK)
+    ? (supportsVpnMode && !!vpnIp && !!vpnUsername && !!vpnPassword && !!VPN_PUBLIC_ENDPOINT && !!VPN_L2TP_IPSEC_PSK)
     : vpnEnabled && vpnType === 'sstp'
-      ? (RADIUS_CLIENT_MODE === 'vpn_legacy' && !!vpnIp && !!vpnUsername && !!vpnPassword && !!VPN_PUBLIC_ENDPOINT)
+      ? (supportsVpnMode && !!vpnIp && !!vpnUsername && !!vpnPassword && !!VPN_PUBLIC_ENDPOINT)
       : false;
 
   const vpnBlock = vpnReady && vpnType === 'l2tp_ipsec'
